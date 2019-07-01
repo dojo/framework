@@ -1,6 +1,5 @@
 import './Destroyable';
 import './Evented';
-import './QueuingEvented';
 import './util';
 import './Container';
 import './WidgetBase';
@@ -17,3 +16,4 @@ import './NodeHandler';
 import './meta/all';
 import './vdom';
 import './registerCustomElement';
+import './middleware/all';

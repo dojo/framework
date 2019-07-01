@@ -1,12 +1,25 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
-import { match, spy, stub, SinonSpy, SinonStub } from 'sinon';
+import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
-import { create, renderer, invalidator, widgetInstanceMap, v, w, dom as d } from '../../../src/core/vdom';
+import {
+	create,
+	renderer,
+	diffProperty,
+	defer,
+	destroy,
+	getRegistry,
+	invalidator,
+	node,
+	widgetInstanceMap,
+	v,
+	w,
+	dom as d
+} from '../../../src/core/vdom';
 import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
@@ -23,7 +36,8 @@ function getWidget(renderResult: any) {
 			private _renderResult: any | (() => any) = renderResult;
 			private _nodeHandlerStub = {
 				add: stub(),
-				addRoot: stub()
+				addRoot: stub(),
+				remove: stub()
 			};
 			private _onElementCreatedStub = stub();
 			private _onElementUpdatedStub = stub();
@@ -1353,6 +1367,74 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.childNodes[1].childNodes[0].data, 'insert before me');
 		});
 
+		it('should insert deeply nested nodes in the correct position', () => {
+			class Qux extends WidgetBase {
+				render() {
+					return v('qux');
+				}
+			}
+			class Baz extends WidgetBase {
+				render() {
+					return v('baz');
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return w(Baz, {});
+				}
+			}
+
+			class Foo extends WidgetBase {
+				render() {
+					return [w(Bar, {}), w(Qux, {})];
+				}
+			}
+
+			class FooBaz extends WidgetBase {
+				render() {
+					return v('foobar');
+				}
+			}
+
+			class FooBar extends WidgetBase {
+				render() {
+					return w(FooBaz, {});
+				}
+			}
+
+			class Renderer extends WidgetBase {
+				render() {
+					return this.children;
+				}
+			}
+
+			let invalidator: any;
+			let count = 0;
+			class App extends WidgetBase {
+				constructor() {
+					super();
+					invalidator = () => {
+						this.invalidate();
+					};
+				}
+				render() {
+					if (count === 0) {
+						count++;
+						return w(Renderer, {}, [v('div')]);
+					}
+					return w(Renderer, {}, [v('div', [w(FooBar, {}), w(Foo, {})])]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			invalidator();
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div><foobar></foobar><baz></baz><qux></qux></div></div>');
+		});
+
 		it('Should insert result from widget in correct position', () => {
 			class Menu extends WidgetBase {
 				render() {
@@ -2556,6 +2638,7 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(deferredPropertyCallCount, 8);
 			invalidate();
 			resolvers.resolveRAF();
+			resolvers.resolveRAF();
 			assert.strictEqual(deferredPropertyCallCount, 12);
 			resolvers.resolveRIC();
 			assert.strictEqual(deferredPropertyCallCount, 12);
@@ -2977,6 +3060,30 @@ jsdomDescribe('vdom', () => {
 		});
 
 		describe('functional', () => {
+			it('children', () => {
+				const createWidget = create({ invalidator });
+
+				let text = 'first';
+				let updateText: any;
+
+				const Foo = createWidget(({ children }) => children);
+				const App = createWidget(({ middleware }) => {
+					updateText = () => {
+						text = 'second';
+						middleware.invalidator();
+					};
+					return v('div', [Foo({}, [text])]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>first</div></div>');
+				updateText();
+				resolvers.resolve();
+				assert.strictEqual(div.outerHTML, '<div><div>second</div></div>');
+			});
+
 			it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 				const createWidget = create();
 
@@ -3197,6 +3304,307 @@ jsdomDescribe('vdom', () => {
 				resolvers.resolve();
 				assert.strictEqual(div.outerHTML, '<div><div>barbar2</div></div>');
 			});
+
+			it('Should warn when adding nodes that are not distinguishable', () => {
+				const createWidget = create({ invalidator });
+
+				let visible = true;
+				let swap: any;
+
+				const App = createWidget(function App({ middleware }) {
+					swap = () => {
+						visible = !visible;
+						middleware.invalidator();
+					};
+					return v('div', [v('div'), visible && v('div'), v('div')]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				assert.isTrue(consoleWarnStub.notCalled);
+				swap();
+				resolvers.resolve();
+				assert.isTrue(consoleWarnStub.calledOnce);
+			});
+
+			it('Should warn when adding widgets that are not distinguishable', () => {
+				const createWidget = create({ invalidator });
+
+				let visible = true;
+				let swap: any;
+
+				const Foo = createWidget(function Foo() {
+					return v('div');
+				});
+
+				const App = createWidget(function App({ middleware }) {
+					swap = () => {
+						visible = !visible;
+						middleware.invalidator();
+					};
+					return v('div', [w(Foo, {}), visible && w(Foo, {}), w(Foo, {})]);
+				});
+				const r = renderer(() => App({}));
+				const div = document.createElement('div');
+				r.mount({ domNode: div });
+				assert.isTrue(consoleWarnStub.notCalled);
+				swap();
+				resolvers.resolve();
+				console.log(consoleWarnStub.firstCall.args);
+				assert.isTrue(consoleWarnStub.calledOnce);
+			});
+
+			describe('core middleware', () => {
+				describe('node', () => {
+					it('should invalidate widget once node is available', () => {
+						const createWidget = create({ node });
+						let divNode: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.node.get('div');
+							return v('div', [undefined, v('div', { key: 'div' }), undefined]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+					});
+
+					it('should remove nodes from the map', () => {
+						const createWidget = create({ node, invalidator });
+						let divNode: any;
+						let show = true;
+						let invalidate: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.node.get(1);
+							invalidate = middleware.invalidator;
+							return v('div', [show ? v('div', { key: 1 }) : null]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						let expectedDiv = root.childNodes[0].childNodes[0];
+						assert.strictEqual(expectedDiv, divNode);
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.strictEqual(expectedDiv, divNode);
+						show = true;
+						invalidate();
+						resolvers.resolve();
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+					});
+				});
+
+				describe('destroy', () => {
+					it('should invalidate widget once node is available', () => {
+						const createWidget = create({ destroy, invalidator });
+						let fooDestroyStub = stub();
+						let barDestroyStub = stub();
+						let show = true;
+						let invalidate: any;
+						let fooInvalidate: any;
+						const Bar = createWidget(({ middleware }) => {
+							middleware.destroy(() => barDestroyStub());
+							return v('div', { key: 'div' });
+						});
+						const Foo = createWidget(({ middleware }) => {
+							fooInvalidate = middleware.invalidator;
+							middleware.destroy(() => fooDestroyStub());
+							return v('div', { key: 'div' }, [Bar({})]);
+						});
+						const App = createWidget(({ middleware }) => {
+							invalidate = middleware.invalidator;
+							return show ? Foo({}) : null;
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isTrue(fooDestroyStub.notCalled);
+						assert.isTrue(barDestroyStub.notCalled);
+						fooInvalidate();
+						invalidate();
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.notCalled);
+						assert.isTrue(barDestroyStub.notCalled);
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.calledOnce);
+						assert.isTrue(barDestroyStub.notCalled);
+						resolvers.resolve();
+						assert.isTrue(fooDestroyStub.calledOnce);
+						assert.isTrue(barDestroyStub.calledOnce);
+					});
+				});
+
+				describe('getRegistry', () => {
+					it('should return the scoped registry handler', () => {
+						const registry = new Registry();
+						registry.defineInjector('test', () => () => 'hello world');
+						const createWidget = create({ getRegistry });
+						const App = createWidget(function App({ middleware }) {
+							const registry = middleware.getRegistry();
+							let result = '';
+							if (registry) {
+								const item = registry.getInjector<string>('test');
+								if (item) {
+									result = item.injector();
+								}
+							}
+							return result;
+						});
+						const r = renderer(() => App({}));
+						const div = document.createElement('div');
+						r.mount({ domNode: div, registry });
+						assert.strictEqual(div.outerHTML, '<div>hello world</div>');
+					});
+				});
+
+				describe('defer', () => {
+					it('should completely pause and resume rendering when merging', () => {
+						const iframe = document.createElement('iframe');
+						document.body.appendChild(iframe);
+						iframe.contentDocument!.write(`<div><div>Hello Dom Foo</div><div>Hello Dom Bar</div></div>`);
+						iframe.contentDocument!.close();
+						const createWidget = create({ defer, invalidator });
+						let shouldDefer = true;
+						let invalidateFoo: any;
+						const Foo = createWidget(function Foo({ middleware }) {
+							invalidateFoo = middleware.invalidator;
+							shouldDefer ? middleware.defer.pause() : middleware.defer.resume();
+							return v('div', ['Hello Foo']);
+						});
+						const Bar = createWidget(function Foo() {
+							return v('div', ['Hello Bar']);
+						});
+
+						const App = createWidget(function App() {
+							return v('div', [Foo({}), Bar({})]);
+						});
+						const r = renderer(() => App({}));
+						r.mount({ domNode: iframe.contentDocument!.body });
+						assert.strictEqual(
+							iframe.contentDocument!.body.outerHTML,
+							'<body><div><div>Hello Dom Foo</div><div>Hello Dom Bar</div></div></body>'
+						);
+						shouldDefer = false;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							iframe.contentDocument!.body.outerHTML,
+							'<body><div><div>Hello Foo</div><div>Hello Bar</div></div></body>'
+						);
+						document.body.removeChild(iframe);
+					});
+
+					it('should only pause the specific widget when not merging', () => {
+						const createWidget = create({ defer, invalidator });
+						let shouldDefer = true;
+						let invalidateFoo: any;
+						const Foo = createWidget(function Foo({ middleware }) {
+							invalidateFoo = middleware.invalidator;
+							shouldDefer ? middleware.defer.pause() : middleware.defer.resume();
+							return v('div', ['Hello Foo']);
+						});
+						const Bar = createWidget(function Foo() {
+							return v('div', ['Hello Bar']);
+						});
+
+						const App = createWidget(function App() {
+							return v('div', [Foo({}), Bar({})]);
+						});
+						const r = renderer(() => App({}));
+						const div = document.createElement('div');
+						r.mount({ domNode: div });
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+						shouldDefer = false;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							div.outerHTML,
+							'<div><div><div>Hello Foo</div><div>Hello Bar</div></div></div>'
+						);
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(
+							div.outerHTML,
+							'<div><div><div>Hello Foo</div><div>Hello Bar</div></div></div>'
+						);
+						shouldDefer = true;
+						invalidateFoo();
+						resolvers.resolve();
+						assert.strictEqual(div.outerHTML, '<div><div><div>Hello Bar</div></div></div>');
+					});
+				});
+
+				describe('diffProperty', () => {
+					it('Should call registered custom diff property function before rendering', () => {
+						const createWidget = create({ diffProperty, invalidator });
+						let counter = 0;
+						const Foo = createWidget(({ middleware }) => {
+							middleware.diffProperty('key', (current: any, properties: any) => {
+								assert.deepEqual(current, { key: 'foo' });
+								assert.deepEqual(properties, { key: 'foo' });
+								middleware.invalidator();
+							});
+							return v('div', [`${counter++}`]);
+						});
+						const App = createWidget(({ middleware }) => {
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										middleware.invalidator();
+									}
+								}),
+								Foo({ key: 'foo' })
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>0</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
+					});
+
+					it('Should skip properties from the standard diff that have a custom diff registered', () => {
+						const createWidget = create({ diffProperty, invalidator }).properties<any>();
+						const Foo = createWidget(({ middleware, properties }) => {
+							middleware.diffProperty('text', (current: any, properties: any) => {});
+							return v('div', [properties.text]);
+						});
+						let text = 'first';
+						const App = createWidget(({ middleware }) => {
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										text = 'second';
+										middleware.invalidator();
+									}
+								}),
+								Foo({ key: 'foo', text })
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
+					});
+				});
+			});
 		});
 	});
 
@@ -3304,6 +3712,53 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.innerHTML, expected);
 			assert.lengthOf(appendedHtml, 1);
 			assert.strictEqual(appendedHtml[0], expected);
+		});
+	});
+
+	describe('virtual node', () => {
+		it('can use a virtual node', () => {
+			const [Widget, meta] = getWidget(v('virtual', [v('div', ['one', 'two', v('div', ['three'])])]));
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>onetwo<div>three</div></div>');
+			meta.setRenderResult(v('virtual', [v('div', ['four', 'five', v('div', ['six'])])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>fourfive<div>six</div></div>');
+			meta.setRenderResult(v('div', ['one', 'two', v('div', ['three'])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>onetwo<div>three</div></div>');
+			meta.setRenderResult(v('virtual', [v('div', ['four', 'five', v('div', ['six'])])]));
+			resolvers.resolve();
+			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>fourfive<div>six</div></div>');
+		});
+
+		it('can use a virtual node with widgets', () => {
+			class Foo extends WidgetBase<any> {
+				render() {
+					return v('div', [this.properties.text]);
+				}
+			}
+			const [Widget, meta] = getWidget(
+				v('virtual', [w(Foo, { text: 'one' }), w(Foo, { text: 'two' }), w(Foo, { text: 'three' })])
+			);
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual(div.outerHTML, '<div><div>one</div><div>two</div><div>three</div></div>');
+			meta.setRenderResult(
+				v('virtual', [w(Foo, { text: 'four' }), w(Foo, { text: 'five' }), w(Foo, { text: 'six' })])
+			);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>four</div><div>five</div><div>six</div></div>');
+			meta.setRenderResult([w(Foo, { text: 'one' }), w(Foo, { text: 'two' }), w(Foo, { text: 'three' })]);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>one</div><div>two</div><div>three</div></div>');
+			meta.setRenderResult(
+				v('virtual', [w(Foo, { text: 'four' }), w(Foo, { text: 'five' }), w(Foo, { text: 'six' })])
+			);
+			resolvers.resolve();
+			assert.strictEqual(div.outerHTML, '<div><div>four</div><div>five</div><div>six</div></div>');
 		});
 	});
 
@@ -5250,11 +5705,6 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
-			meta.nodeHandlerStub.add.resetHistory();
-			meta.setRenderResult(v('div', { key: '1' }));
-
-			assert.isTrue(meta.nodeHandlerStub.add.called);
-			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
 		});
 
 		it('element added on update to node handler for nodes with a key of 0', () => {
@@ -5264,11 +5714,18 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
 			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '0'));
-			meta.nodeHandlerStub.add.resetHistory();
-			meta.setRenderResult(v('div', { key: 0 }));
+		});
 
+		it('element removed when dom node removed', () => {
+			const [Widget, meta] = getWidget(v('div', { key: '1' }));
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.add.called);
-			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '0'));
+			assert.isTrue(meta.nodeHandlerStub.add.calledWith(div.childNodes[0] as Element, '1'));
+			meta.setRenderResult(null);
+			assert.isTrue(meta.nodeHandlerStub.remove.called);
+			assert.isTrue(meta.nodeHandlerStub.remove.calledWith('1'));
 		});
 
 		it('addRoot called on node handler for created widgets with a zero key', () => {
@@ -5277,11 +5734,6 @@ jsdomDescribe('vdom', () => {
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
-			meta.invalidate();
-
-			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
 		});
 
 		it('addRoot called on node handler for updated widgets with key', () => {
@@ -5290,23 +5742,11 @@ jsdomDescribe('vdom', () => {
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
 			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
-			meta.nodeHandlerStub.addRoot.resetHistory();
-			meta.invalidate();
-			assert.isTrue(meta.nodeHandlerStub.addRoot.called);
 		});
 	});
 
 	describe('animations', () => {
 		describe('enterAnimation', () => {
-			it('is invoked when a new node is added to an existing parent node', () => {
-				const enterAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', []));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.mount({ domNode: div, sync: true });
-				meta.setRenderResult(v('div', [v('span', { enterAnimation })]));
-				assert.isTrue(enterAnimation.calledWith((div.childNodes[0] as Element).childNodes[0], match({})));
-			});
 			it('Does not invoke transition when null passed as enterAnimation', () => {
 				const transition = {
 					enter: stub(),
@@ -5353,20 +5793,6 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 		describe('exitAnimation', () => {
-			it('is invoked when a node is removed from an existing parent node', () => {
-				const exitAnimation = stub();
-				const [Widget, meta] = getWidget(v('div', [v('span', { exitAnimation })]));
-				const r = renderer(() => w(Widget, {}));
-				const div = document.createElement('div');
-				r.mount({ domNode: div, sync: true });
-				meta.setRenderResult(v('div', []));
-				assert.isTrue(
-					exitAnimation.calledWithExactly((div.childNodes[0] as Element).childNodes[0], match({}), match({}))
-				);
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 1);
-				exitAnimation.lastCall.callArg(1); // arg1: removeElement
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
-			});
 			it('Does not invoke transition when null passed as exitAnimation', () => {
 				const transition = {
 					enter: stub(),
@@ -5427,8 +5853,8 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).firstChild,
-						match({}),
-						'fadeIn'
+						'fadeIn',
+						undefined
 					)
 				);
 			});
@@ -5442,13 +5868,10 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.exit.calledWithExactly(
 						(div.childNodes[0] as Element).firstChild,
-						match({}),
 						'fadeOut',
-						match({})
+						undefined
 					)
 				);
-				transitionStrategy.exit.lastCall.callArg(3);
-				assert.lengthOf((div.childNodes[0] as Element).childNodes, 0);
 			});
 			it('Should run enter animations when a widget is added', () => {
 				const transitionStrategy = { enter: stub(), exit: stub() };
@@ -5479,16 +5902,16 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).children[0],
-						match({}),
-						'enter'
+						'enter',
+						undefined
 					)
 				);
 				addItem();
 				assert.isTrue(
 					transitionStrategy.enter.calledWithExactly(
 						(div.childNodes[0] as Element).children[1],
-						match({}),
-						'enter'
+						'enter',
+						undefined
 					)
 				);
 			});
@@ -5520,7 +5943,7 @@ jsdomDescribe('vdom', () => {
 				r.mount({ domNode: div, sync: true, transition: transitionStrategy });
 				const node = (div.childNodes[0] as Element).children[1];
 				removeItem();
-				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, match({}), 'exit', match({})));
+				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, 'exit', undefined));
 			});
 		});
 	});
@@ -5563,6 +5986,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(focusSpy.notCalled);
 			meta.setRenderResult(v('input', { focus: true }));
 			resolvers.resolve();
+			assert.isTrue(focusSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(focusSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5583,6 +6008,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(focusSpy.calledOnce);
 			meta.setRenderResult(v('input', { focus: shouldFocus }));
+			resolvers.resolve();
+			assert.isTrue(focusSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(focusSpy.calledTwice);
 			document.body.removeChild(input);
@@ -5640,6 +6067,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(blurSpy.notCalled);
 			meta.setRenderResult(v('input', { blur: true }));
 			resolvers.resolve();
+			assert.isTrue(blurSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(blurSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5660,6 +6089,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(blurSpy.calledOnce);
 			meta.setRenderResult(v('input', { blur: shouldBlur }));
+			resolvers.resolve();
+			assert.isTrue(blurSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(blurSpy.calledTwice);
 			document.body.removeChild(input);
@@ -5719,6 +6150,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(scrollIntoViewStub.notCalled);
 			meta.setRenderResult(v('input', { scrollIntoView: true }));
 			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.notCalled);
+			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5740,6 +6173,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledOnce);
 			meta.setRenderResult(v('input', { scrollIntoView: shouldScroll }));
+			resolvers.resolve();
+			assert.isTrue(scrollIntoViewStub.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(scrollIntoViewStub.calledTwice);
 			document.body.removeChild(input);
@@ -5798,6 +6233,8 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(clickSpy.notCalled);
 			meta.setRenderResult(v('input', { click: true }));
 			resolvers.resolve();
+			assert.isTrue(clickSpy.notCalled);
+			resolvers.resolve();
 			assert.isTrue(clickSpy.calledOnce);
 			document.body.removeChild(input);
 		});
@@ -5818,6 +6255,8 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.isTrue(clickSpy.calledOnce);
 			meta.setRenderResult(v('input', { click: shouldClick }));
+			resolvers.resolve();
+			assert.isTrue(clickSpy.calledOnce);
 			resolvers.resolve();
 			assert.isTrue(clickSpy.calledTwice);
 			document.body.removeChild(input);

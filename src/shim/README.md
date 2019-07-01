@@ -2,7 +2,7 @@
 
 This package provides functional shims for ECMAScript, access to the Typescript helpers, and a quick way to include the polyfills needed to run Dojo in the browser.
 
-It is targeted at providing function shims for ECMAScript 6 and beyond targeted at ECMAScript 5. It is different than other solutions of shimming or polyfilling functionality, in that it does not provide the functionality via augmenting the built-in classes in the global namespace.
+It is targeted at providing polyfills for ECMAScript 6 and beyond targeted at ECMAScript 5. For backwards compatibility function shims are also provided in some cases.
 
 There are two exceptions to this. One is the `Promise` object, which needs to be globally available for async/await operations. The other exception is the `Symbol` functionality, in that the well-known symbols need to be located off of the global `Symbol` object in order to ensure that the correct symbol is referenced.
 

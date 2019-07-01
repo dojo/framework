@@ -58,8 +58,8 @@ export type ScrollEventHandler = (event?: UIEvent) => EventHandlerResult;
 export type SubmitEventHandler = EventHandler;
 
 export interface TransitionStrategy {
-	enter(element: Element, properties: VNodeProperties, enterAnimation: string): void;
-	exit(element: Element, properties: VNodeProperties, exitAnimation: string, removeElement: () => void): void;
+	enter(element: Element, enterAnimation: string, enterAnimationActive?: SupportedClassName): void;
+	exit(element: Element, exitAnimation: string, exitAnimationActive?: SupportedClassName): void;
 }
 
 export interface ProjectorOptions {
@@ -109,34 +109,14 @@ export interface VDomOptions {
 }
 
 export interface VNodeProperties {
-	/**
-	 * The animation to perform when this node is added to an already existing parent.
-	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the
-	 * projector using [[createProjector]].
-	 * @param element - Element that was just added to the DOM.
-	 * @param properties - The properties object that was supplied to the [[h]] method
-	 */
-	enterAnimation?: ((element: Element, properties?: VNodeProperties) => void) | SupportedClassName;
-	/**
-	 * The animation to perform when this node is removed while its parent remains.
-	 * When this value is a string, you must pass a `projectionOptions.transitions` object when creating the projector using [[createProjector]].
-	 * @param element - Element that ought to be removed from the DOM.
-	 * @param removeElement - Function that removes the element from the DOM.
-	 * This argument is provided purely for convenience.
-	 * You may use this function to remove the element when the animation is done.
-	 * @param properties - The properties object that was supplied to the [[v]] method that rendered this [[VNode]] the previous time.
-	 */
-	exitAnimation?:
-		| ((element: Element, removeElement: () => void, properties?: VNodeProperties) => void)
-		| SupportedClassName;
-	/**
-	 * The animation to perform when the properties of this node change.
-	 * This also includes attributes, styles, css classes. This callback is also invoked when node contains only text and that text changes.
-	 * @param element - Element that was modified in the DOM.
-	 * @param properties - The last properties object that was supplied to the [[h]] method
-	 * @param previousProperties - The previous properties object that was supplied to the [[h]] method
-	 */
-	updateAnimation?: (element: Element, properties?: VNodeProperties, previousProperties?: VNodeProperties) => void;
+	enterAnimation?: SupportedClassName;
+
+	exitAnimation?: SupportedClassName;
+
+	enterAnimationActive?: SupportedClassName;
+
+	exitAnimationActive?: SupportedClassName;
+
 	/**
 	 * Used to uniquely identify a DOM node among siblings.
 	 * A key is required when there are more children with the same selector and these children are added or removed dynamically.
@@ -365,7 +345,9 @@ export type LazyDefine<W extends WidgetBaseTypes = DefaultWidgetBaseInterface> =
 	registryItem: LazyWidget<W>;
 };
 
-export interface MiddlewareMap<Middleware extends () => { api: any; properties: any }> {
+export interface MiddlewareMap<
+	Middleware extends () => { api: {}; properties: {} } = () => { api: {}; properties: {} }
+> {
 	[index: string]: Middleware;
 }
 

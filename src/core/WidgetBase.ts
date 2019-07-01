@@ -298,7 +298,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 		}
 		const render = this._runBeforeRenders();
 		const dNode = this._runAfterRenders(render());
-		this._nodeHandler.clear();
 		return dNode;
 	}
 

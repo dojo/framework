@@ -1,6 +1,5 @@
-import global from './global';
+`!has('es6-iterator')`;
 import { isArrayLike, isIterable, Iterable } from './iterator';
-import { MAX_SAFE_INTEGER } from './number';
 import has from '../core/has';
 import { wrapNative } from './support/util';
 
@@ -23,11 +22,6 @@ export interface FindCallback<T> {
 	 * @param array The source array
 	 */
 	(element: T, index: number, array: ArrayLike<T>): boolean;
-}
-
-interface WritableArrayLike<T> {
-	readonly length: number;
-	[n: number]: T;
 }
 
 /* ES6 Array static methods */
@@ -119,16 +113,14 @@ export let findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thisA
  */
 export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean;
 
-if (has('es6-array') && has('es6-array-fill')) {
-	from = global.Array.from;
-	of = global.Array.of;
-	copyWithin = wrapNative(global.Array.prototype.copyWithin);
-	fill = wrapNative(global.Array.prototype.fill);
-	find = wrapNative(global.Array.prototype.find);
-	findIndex = wrapNative(global.Array.prototype.findIndex);
-} else {
-	// It is only older versions of Safari/iOS that have a bad fill implementation and so aren't in the wild
-	// To make things easier, if there is a bad fill implementation, the whole set of functions will be filled
+// Util functions for filled implementations
+
+let toLength: any;
+let toInteger: any;
+let normalizeOffset: any;
+
+if (!has('es6-array') || !has('es6-array-fill') || !has('es7-array')) {
+	const MAX_SAFE_INTEGER = Math.pow(2, 53) - 1;
 
 	/**
 	 * Ensures a non-negative, non-infinite, safe integer.
@@ -136,7 +128,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 	 * @param length The number to validate
 	 * @return A proper length
 	 */
-	const toLength = function toLength(length: number): number {
+	toLength = function toLength(length: number): number {
 		if (isNaN(length)) {
 			return 0;
 		}
@@ -155,7 +147,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 	 * @param value A value to convert
 	 * @return An integer
 	 */
-	const toInteger = function toInteger(value: any): number {
+	toInteger = function toInteger(value: any): number {
 		value = Number(value);
 		if (isNaN(value)) {
 			return 0;
@@ -174,11 +166,13 @@ if (has('es6-array') && has('es6-array-fill')) {
 	 * @param length The total length to normalize against
 	 * @return If negative, provide a distance from the end (length); otherwise provide a distance from 0
 	 */
-	const normalizeOffset = function normalizeOffset(value: number, length: number): number {
+	normalizeOffset = function normalizeOffset(value: number, length: number): number {
 		return value < 0 ? Math.max(length + value, 0) : Math.min(value, length);
 	};
+}
 
-	from = function from(
+if (!has('es6-array')) {
+	Array.from = function from(
 		this: ArrayConstructor,
 		arrayLike: Iterable<any> | ArrayLike<any>,
 		mapFunction?: MapCallback<any, any>,
@@ -229,25 +223,20 @@ if (has('es6-array') && has('es6-array-fill')) {
 		return array;
 	};
 
-	of = function of<T>(...items: T[]): Array<T> {
+	Array.of = function of<T>(...items: T[]): Array<T> {
 		return Array.prototype.slice.call(items);
 	};
 
-	copyWithin = function copyWithin<T>(
-		target: ArrayLike<T>,
-		offset: number,
-		start: number,
-		end?: number
-	): ArrayLike<T> {
-		if (target == null) {
+	Array.prototype.copyWithin = function copyWithin(offset: number, start: number, end?: number) {
+		if (this == null) {
 			throw new TypeError('copyWithin: target must be an array-like object');
 		}
 
-		const length = toLength(target.length);
+		const length = toLength(this.length);
 		offset = normalizeOffset(toInteger(offset), length);
 		start = normalizeOffset(toInteger(start), length);
 		end = normalizeOffset(end === undefined ? length : toInteger(end), length);
-		let count = Math.min(end - start, length - offset);
+		let count = Math.min(end! - start, length - offset);
 
 		let direction = 1;
 		if (offset > start && offset < start + count) {
@@ -257,10 +246,10 @@ if (has('es6-array') && has('es6-array-fill')) {
 		}
 
 		while (count > 0) {
-			if (start in target) {
-				(target as WritableArrayLike<T>)[offset] = target[start];
+			if (start in this) {
+				this[offset] = this[start];
 			} else {
-				delete (target as WritableArrayLike<T>)[offset];
+				delete this[offset];
 			}
 
 			offset += direction;
@@ -268,28 +257,18 @@ if (has('es6-array') && has('es6-array-fill')) {
 			count--;
 		}
 
-		return target;
+		return this;
 	};
 
-	fill = function fill<T>(target: ArrayLike<T>, value: any, start?: number, end?: number): ArrayLike<T> {
-		const length = toLength(target.length);
-		let i = normalizeOffset(toInteger(start), length);
-		end = normalizeOffset(end === undefined ? length : toInteger(end), length);
+	type Predicate = (this: void, value: any, index: number, obj: any[]) => boolean;
 
-		while (i < end) {
-			(target as WritableArrayLike<T>)[i++] = value;
-		}
-
-		return target;
+	Array.prototype.find = function find(callback: Predicate, thisArg?: {}) {
+		const index = this.findIndex(callback, thisArg);
+		return index !== -1 ? this[index] : undefined;
 	};
 
-	find = function find<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): T | undefined {
-		const index = findIndex<T>(target, callback, thisArg);
-		return index !== -1 ? target[index] : undefined;
-	};
-
-	findIndex = function findIndex<T>(target: ArrayLike<T>, callback: FindCallback<T>, thisArg?: {}): number {
-		const length = toLength(target.length);
+	Array.prototype.findIndex = function findIndex(callback: Predicate, thisArg?: {}): number {
+		const length = toLength(this.length);
 
 		if (!callback) {
 			throw new TypeError('find: second argument must be a function');
@@ -300,7 +279,7 @@ if (has('es6-array') && has('es6-array-fill')) {
 		}
 
 		for (let i = 0; i < length; i++) {
-			if (callback(target[i], i, target)) {
+			if (callback(this[i], i, this)) {
 				return i;
 			}
 		}
@@ -309,32 +288,26 @@ if (has('es6-array') && has('es6-array-fill')) {
 	};
 }
 
-if (has('es7-array')) {
-	includes = wrapNative(global.Array.prototype.includes);
-} else {
-	/**
-	 * Ensures a non-negative, non-infinite, safe integer.
-	 *
-	 * @param length The number to validate
-	 * @return A proper length
-	 */
-	const toLength = function toLength(length: number): number {
-		length = Number(length);
-		if (isNaN(length)) {
-			return 0;
-		}
-		if (isFinite(length)) {
-			length = Math.floor(length);
-		}
-		// Ensure a non-negative, real, safe integer
-		return Math.min(Math.max(length, 0), MAX_SAFE_INTEGER);
-	};
+if (!has('es6-array-fill')) {
+	Array.prototype.fill = function fill(value: any, start?: number, end?: number) {
+		const length = toLength(this.length);
+		let i = normalizeOffset(toInteger(start), length);
+		end = normalizeOffset(end === undefined ? length : toInteger(end), length);
 
-	includes = function includes<T>(target: ArrayLike<T>, searchElement: T, fromIndex: number = 0): boolean {
-		let len = toLength(target.length);
+		while (i < (end || 0)) {
+			this[i++] = value;
+		}
+
+		return this;
+	};
+}
+
+if (!has('es7-array')) {
+	Array.prototype.includes = function includes(searchElement, fromIndex = 0) {
+		let len = toLength(this.length);
 
 		for (let i = fromIndex; i < len; ++i) {
-			const currentElement = target[i];
+			const currentElement = this[i];
 			if (
 				searchElement === currentElement ||
 				(searchElement !== searchElement && currentElement !== currentElement)
@@ -346,3 +319,13 @@ if (has('es7-array')) {
 		return false;
 	};
 }
+
+from = Array.from;
+of = Array.of;
+copyWithin = wrapNative(Array.prototype.copyWithin);
+fill = wrapNative(Array.prototype.fill);
+find = wrapNative(Array.prototype.find);
+findIndex = wrapNative(Array.prototype.findIndex);
+includes = wrapNative(Array.prototype.includes);
+
+export default Array;

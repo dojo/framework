@@ -25,17 +25,19 @@ export function createResolvers() {
 	let rICStub: SinonStub;
 
 	function resolveRAFCallbacks() {
-		for (let i = 0; i < rAFStub.callCount; i++) {
-			rAFStub.getCall(i).callArg(0);
-		}
+		const calls = rAFStub.getCalls();
 		rAFStub.resetHistory();
+		for (let i = 0; i < calls.length; i++) {
+			calls[i].callArg(0);
+		}
 	}
 
 	function resolveRICCallbacks() {
-		for (let i = 0; i < rICStub.callCount; i++) {
-			rICStub.getCall(i).callArg(0);
-		}
+		const calls = rICStub.getCalls();
 		rICStub.resetHistory();
+		for (let i = 0; i < calls.length; i++) {
+			calls[i].callArg(0);
+		}
 	}
 
 	return {

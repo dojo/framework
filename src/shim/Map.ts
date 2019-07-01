@@ -1,7 +1,9 @@
+`!has('es6-iterator')`;
 import { isArrayLike, Iterable, IterableIterator, ShimIterator } from './iterator';
 import global from './global';
 import { is as objectIs } from './object';
 import has from '../core/has';
+`!has('es6-symbol')`;
 import './Symbol';
 
 export interface Map<K, V> {
@@ -125,7 +127,7 @@ export interface MapConstructor {
 export let Map: MapConstructor = global.Map;
 
 if (!has('es6-map')) {
-	Map = class Map<K, V> {
+	Map = global.Map = class Map<K, V> {
 		protected readonly _keys: K[] = [];
 		protected readonly _values: V[] = [];
 

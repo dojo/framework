@@ -1,6 +1,8 @@
 import global from '../shim/global';
 import has from '../core/has';
-import { WeakMap } from '../shim/WeakMap';
+import WeakMap from '../shim/WeakMap';
+import Set from '../shim/Set';
+import Map from '../shim/Map';
 import {
 	WNode,
 	VNode,
@@ -24,7 +26,6 @@ import {
 	DeferredVirtualProperties,
 	DomOptions
 } from './interfaces';
-import transitionStrategy from './animations/cssTransitions';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
@@ -69,10 +70,17 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 export interface WidgetMeta {
 	dirty: boolean;
 	invalidator: () => void;
-	middleware: any;
-	registryHandler: any;
+	middleware?: any;
+	registryHandler?: RegistryHandler;
+	registry: Registry;
 	properties: any;
 	children?: DNode[];
+	rendering: boolean;
+	nodeMap?: Map<string | number, HTMLElement>;
+	destroyMap?: Map<string, () => void>;
+	deferRefs: number;
+	customDiffProperties?: Set<string>;
+	customDiffMap?: Map<string, Map<string, (current: any, next: any) => void>>;
 }
 
 export interface WidgetData {
@@ -98,9 +106,9 @@ export type DNodeWrapper = VNodeWrapper | WNodeWrapper;
 export interface MountOptions {
 	sync: boolean;
 	merge: boolean;
-	transition: TransitionStrategy;
+	transition?: TransitionStrategy;
 	domNode: HTMLElement;
-	registry: Registry | null;
+	registry: Registry;
 }
 
 export interface Renderer {
@@ -165,13 +173,15 @@ interface RemoveDomInstruction {
 
 interface AttachApplication {
 	type: 'attach';
-	instance: WidgetBaseInterface;
-	attached: boolean;
+	id: string;
+	instance?: WidgetBaseInterface;
+	attached?: boolean;
 }
 
 interface DetachApplication {
 	type: 'detach';
 	current: WNodeWrapper;
+	instance?: WidgetBaseInterface;
 }
 
 interface CreateDomApplication {
@@ -202,7 +212,7 @@ type ApplicationInstruction =
 	| CreateDomApplication
 	| UpdateDomApplication
 	| DeleteDomApplication
-	| AttachApplication
+	| Required<AttachApplication>
 	| DetachApplication;
 
 const EMPTY_ARRAY: DNodeWrapper[] = [];
@@ -430,11 +440,10 @@ export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
 	}
 }
 
-function diffProperties(current: any, next: any, invalidator: () => void) {
+export function propertiesDiff(current: any, next: any, invalidator: () => void, ignoreProperties: string[]) {
 	const propertyNames = [...Object.keys(current), ...Object.keys(next)];
-	let diffedProperties = [];
 	for (let i = 0; i < propertyNames.length; i++) {
-		if (diffedProperties.indexOf(propertyNames[i]) > -1) {
+		if (ignoreProperties.indexOf(propertyNames[i]) > -1) {
 			continue;
 		}
 		const result = auto(current[propertyNames[i]], next[propertyNames[i]]);
@@ -442,7 +451,7 @@ function diffProperties(current: any, next: any, invalidator: () => void) {
 			invalidator();
 			break;
 		}
-		diffedProperties.push(propertyNames[i]);
+		ignoreProperties.push(propertyNames[i]);
 	}
 }
 
@@ -592,67 +601,9 @@ function updateAttribute(domNode: Element, attrName: string, attrValue: string |
 	}
 }
 
-function runEnterAnimation(next: VNodeWrapper, transitions: TransitionStrategy) {
-	const {
-		domNode,
-		node: { properties },
-		node: {
-			properties: { enterAnimation }
-		}
-	} = next;
-	if (enterAnimation && enterAnimation !== true) {
-		if (typeof enterAnimation === 'function') {
-			return enterAnimation(domNode as Element, properties);
-		}
-		transitions.enter(domNode as Element, properties, enterAnimation);
-	}
-}
-
-function runExitAnimation(current: VNodeWrapper, transitions: TransitionStrategy, exitAnimation: string | Function) {
-	const {
-		domNode,
-		node: { properties }
-	} = current;
-	const removeDomNode = () => {
-		domNode && domNode.parentNode && domNode.parentNode.removeChild(domNode);
-		current.domNode = undefined;
-	};
-	if (typeof exitAnimation === 'function') {
-		return exitAnimation(domNode as Element, removeDomNode, properties);
-	}
-	transitions.exit(domNode as Element, properties, exitAnimation, removeDomNode);
-}
-
 function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
-
-const factory = create();
-
-function wrapNodes(renderer: () => RenderResult) {
-	const result = renderer();
-	const isWNodeWrapper = isWNode(result);
-	const callback = () => {
-		return result;
-	};
-	callback.isWNodeWrapper = isWNodeWrapper;
-	return factory(callback);
-}
-
-export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
-const widgetMetaMap = new Map<string, WidgetMeta>();
-let wrapperId = 0;
-let metaId = 0;
-
-export const invalidator = factory(({ id }) => {
-	const [widgetId] = id.split('-');
-	return () => {
-		const widgetMeta = widgetMetaMap.get(widgetId);
-		if (widgetMeta) {
-			return widgetMeta.invalidator();
-		}
-	};
-});
 
 function createFactory(callback: any, middlewares: any): any {
 	const factory = (properties: any, children?: any) => {
@@ -671,7 +622,7 @@ function createFactory(callback: any, middlewares: any): any {
 	return factory;
 }
 
-export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
+export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
 ) {
 	function properties<Props extends {}>() {
@@ -702,13 +653,156 @@ export function create<T extends MiddlewareMap<any>, MiddlewareProps = ReturnTyp
 	return returns;
 }
 
+const factory = create();
+
+function wrapNodes(renderer: () => RenderResult) {
+	const result = renderer();
+	const isWNodeWrapper = isWNode(result);
+	const callback = () => {
+		return result;
+	};
+	callback.isWNodeWrapper = isWNodeWrapper;
+	return factory(callback);
+}
+
+export const widgetInstanceMap = new WeakMap<WidgetBaseInterface, WidgetData>();
+const widgetMetaMap = new Map<string, WidgetMeta>();
+const requestedDomNodes = new Set();
+let wrapperId = 0;
+let metaId = 0;
+
+function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
+	const widgetMeta = widgetMetaMap.get(id);
+	if (widgetMeta) {
+		widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
+		const existingNode = widgetMeta.nodeMap.get(key);
+		if (!existingNode) {
+			widgetMeta.nodeMap.set(key, node);
+		}
+		if (requestedDomNodes.has(`${id}-${key}`)) {
+			widgetMeta.invalidator();
+			requestedDomNodes.delete(`${id}-${key}`);
+		}
+	}
+}
+
+function destroyHandles(destroyMap: Map<string, () => void>) {
+	destroyMap.forEach((destroy) => destroy());
+	destroyMap.clear();
+}
+
+function runDiffs(meta: WidgetMeta, current: any, next: any) {
+	meta.customDiffMap = meta.customDiffMap || new Map();
+	if (meta.customDiffMap.size) {
+		meta.customDiffMap.forEach((diffMap) => {
+			diffMap.forEach((diff) => diff({ ...current }, { ...next }));
+		});
+	}
+}
+
+export const invalidator = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	return () => {
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			return widgetMeta.invalidator();
+		}
+	};
+});
+
+export const node = factory(({ id }) => {
+	return {
+		get(key: string | number): HTMLElement | null {
+			const [widgetId] = id.split('-');
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (widgetMeta) {
+				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
+				const node = widgetMeta.nodeMap.get(key);
+				if (node) {
+					return node;
+				}
+				requestedDomNodes.add(`${widgetId}-${key}`);
+			}
+			return null;
+		}
+	};
+});
+
+export const diffProperty = factory(({ id }) => {
+	return (propertyName: string, diff: (current: any, next: any) => void) => {
+		const [widgetId] = id.split('-');
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			widgetMeta.customDiffMap = widgetMeta.customDiffMap || new Map();
+			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
+			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
+			if (!propertyDiffMap.has(propertyName)) {
+				propertyDiffMap.set(propertyName, diff);
+				widgetMeta.customDiffProperties.add(propertyName);
+			}
+			widgetMeta.customDiffMap.set(id, propertyDiffMap);
+		}
+	};
+});
+
+export const destroy = factory(({ id }) => {
+	return (destroyFunction: () => void): void => {
+		const [widgetId] = id.split('-');
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			widgetMeta.destroyMap = widgetMeta.destroyMap || new Map();
+			if (!widgetMeta.destroyMap.has(id)) {
+				widgetMeta.destroyMap.set(id, destroyFunction);
+			}
+		}
+	};
+});
+
+export const getRegistry = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	return (): RegistryHandler | null => {
+		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (widgetMeta) {
+			if (!widgetMeta.registryHandler) {
+				widgetMeta.registryHandler = new RegistryHandler();
+				widgetMeta.registryHandler.base = widgetMeta.registry;
+				widgetMeta.registryHandler.on('invalidate', widgetMeta.invalidator);
+			}
+			widgetMeta.registryHandler = widgetMeta.registryHandler || new RegistryHandler();
+			return widgetMeta.registryHandler;
+		}
+		return null;
+	};
+});
+
+export const defer = factory(({ id }) => {
+	const [widgetId] = id.split('-');
+	let isDeferred = false;
+	return {
+		pause() {
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (!isDeferred && widgetMeta) {
+				widgetMeta.deferRefs = widgetMeta.deferRefs + 1;
+				isDeferred = true;
+			}
+		},
+		resume() {
+			const widgetMeta = widgetMetaMap.get(widgetId);
+			if (isDeferred && widgetMeta) {
+				widgetMeta.deferRefs = widgetMeta.deferRefs - 1;
+				isDeferred = false;
+			}
+		}
+	};
+});
+
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions = {
 		sync: false,
 		merge: true,
-		transition: transitionStrategy,
+		transition: undefined,
 		domNode: global.document.body,
-		registry: null
+		registry: new Registry()
 	};
 	let _invalidationQueue: InvalidationQueueItem[] = [];
 	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
@@ -786,29 +880,34 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function resolveRegistryItem(wrapper: WNodeWrapper, instance?: any, id?: string) {
-		const owningNode = _nodeToWrapperMap.get(wrapper.node);
-		if (owningNode) {
-			if (owningNode.instance) {
-				instance = owningNode.instance;
-			} else {
-				id = owningNode.id;
+		if (!isWidget(wrapper.node.widgetConstructor)) {
+			const owningNode = _nodeToWrapperMap.get(wrapper.node);
+			if (owningNode) {
+				if (owningNode.instance) {
+					instance = owningNode.instance;
+				} else {
+					id = owningNode.id;
+				}
 			}
-		}
-		let registry: RegistryHandler | undefined;
-		if (instance) {
-			const instanceData = widgetInstanceMap.get(instance);
-			if (instanceData) {
-				registry = instanceData.registry;
+			let registry: RegistryHandler | undefined;
+			if (instance) {
+				const instanceData = widgetInstanceMap.get(instance);
+				if (instanceData) {
+					registry = instanceData.registry;
+				}
+			} else if (id !== undefined) {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					if (!widgetMeta.registryHandler) {
+						widgetMeta.registryHandler = new RegistryHandler();
+						widgetMeta.registryHandler.base = widgetMeta.registry;
+						widgetMeta.registryHandler.on('invalidate', widgetMeta.invalidator);
+					}
+					registry = widgetMeta.registryHandler;
+				}
 			}
-		} else if (id !== undefined) {
-			const widgetMeta = widgetMetaMap.get(id);
-			if (widgetMeta) {
-				registry = widgetMeta.registryHandler;
-			}
-		}
 
-		if (registry) {
-			if (!isWidget(wrapper.node.widgetConstructor)) {
+			if (registry) {
 				let registryLabel: symbol | string;
 				if (isLazyDefine(wrapper.node.widgetConstructor)) {
 					const { label, registryItem } = wrapper.node.widgetConstructor;
@@ -833,8 +932,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function mapNodeToInstance(nodes: DNode[], wrapper: WNodeWrapper) {
-		let node: DNode;
-		while ((node = nodes.pop())) {
+		while (nodes.length) {
+			let node = nodes.pop();
 			if (isWNode(node) || isVNode(node)) {
 				if (!_nodeToWrapperMap.has(node)) {
 					_nodeToWrapperMap.set(node, wrapper);
@@ -896,7 +995,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 				}
 			}
-			if (owningNode && isVNodeWrapper(wrapper)) {
+			if (owningNode) {
 				wrapper.owningId = owningNode.id;
 			}
 			if (isWNode(renderedItem)) {
@@ -911,19 +1010,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			previousItem = wrapper;
 		}
 		return wrappedRendered;
-	}
-
-	function findParentWNodeWrapper(currentNode: DNodeWrapper): WNodeWrapper | undefined {
-		let parentWNodeWrapper: WNodeWrapper | undefined;
-		let parentWrapper = _parentWrapperMap.get(currentNode);
-
-		while (!parentWNodeWrapper && parentWrapper) {
-			if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
-				parentWNodeWrapper = parentWrapper;
-			}
-			parentWrapper = _parentWrapperMap.get(parentWrapper);
-		}
-		return parentWNodeWrapper;
 	}
 
 	function findParentDomNode(currentNode: DNodeWrapper): Node | undefined {
@@ -944,11 +1030,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (deferredPropertiesCallback) {
 			const properties = next.node.properties;
 			_deferredRenderCallbacks.push(() => {
-				const deferredProperties = next.deferredProperties;
-				next.deferredProperties = deferredPropertiesCallback(true);
-				processProperties(next, {
-					properties: { ...deferredProperties, ...properties }
-				});
+				if (_idToWrapperMap.has(next.owningId)) {
+					const deferredProperties = next.deferredProperties;
+					next.deferredProperties = deferredPropertiesCallback(true);
+					processProperties(next, {
+						properties: { ...deferredProperties, ...properties }
+					});
+				}
 			});
 		}
 	}
@@ -1196,7 +1284,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _runInvalidationQueue() {
 		_renderScheduled = undefined;
-		const invalidationQueue = [..._invalidationQueue];
+		let invalidationQueue = [..._invalidationQueue];
 		const previouslyRendered = [];
 		_invalidationQueue = [];
 		invalidationQueue.sort((a, b) => {
@@ -1206,6 +1294,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			return result;
 		});
+		if (_deferredProcessQueue.length) {
+			_processQueue = [..._deferredProcessQueue];
+			_deferredProcessQueue = [];
+			_runProcessQueue();
+			if (_deferredProcessQueue.length) {
+				_invalidationQueue = [...invalidationQueue];
+				invalidationQueue = [];
+			}
+		}
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
 			let { id } = item;
@@ -1232,13 +1329,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 				parent && _parentWrapperMap.set(next, parent);
 				sibling && _wrapperSiblingMap.set(next, sibling);
-				const { item } = _updateWidget({ current, next });
-				if (item) {
-					_processQueue.push(item);
-					if (_deferredProcessQueue.length) {
-						_processQueue = [..._processQueue, ..._deferredProcessQueue];
-						_deferredProcessQueue = [];
-					}
+				const result = _updateWidget({ current, next });
+				if (result && result.item) {
+					_processQueue.push(result.item);
 					_idToWrapperMap.set(id, next);
 					_runProcessQueue();
 				}
@@ -1263,7 +1356,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let item: DetachApplication | AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
-				_applicationQueue.push(item);
+				item.type === 'attach' && setDomNodeOnParentWrapper(item.id);
+				if (item.instance) {
+					_applicationQueue.push(item as any);
+				}
 			} else {
 				const { current, next, meta } = item;
 				_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
@@ -1299,11 +1395,18 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if ((domNode as HTMLElement).tagName === 'OPTION' && domNode!.parentElement) {
 					setValue(domNode!.parentElement);
 				}
-				runEnterAnimation(next, _mountOptions.transition);
+				const { enterAnimation, enterAnimationActive } = node.properties;
+				if (_mountOptions.transition && enterAnimation && enterAnimation !== true) {
+					_mountOptions.transition.enter(domNode as HTMLElement, enterAnimation, enterAnimationActive);
+				}
 				const owningWrapper = _nodeToWrapperMap.get(next.node);
-				if (owningWrapper && owningWrapper.instance && node.properties.key != null) {
-					const instanceData = widgetInstanceMap.get(owningWrapper.instance);
-					instanceData && instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+				if (owningWrapper && node.properties.key != null) {
+					if (owningWrapper.instance) {
+						const instanceData = widgetInstanceMap.get(owningWrapper.instance);
+						instanceData && instanceData.nodeHandler.add(domNode as HTMLElement, `${node.properties.key}`);
+					} else {
+						addNodeToMap(owningWrapper.id, node.properties.key, domNode as HTMLElement);
+					}
 				}
 				item.next.inserted = true;
 			} else if (item.type === 'update') {
@@ -1312,28 +1415,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next: { domNode },
 					current
 				} = item;
-				const parent = _parentWrapperMap.get(next);
-				if (parent && isWNodeWrapper(parent) && parent.instance) {
-					const instanceData = widgetInstanceMap.get(parent.instance);
-					instanceData && instanceData.nodeHandler.addRoot();
-				}
-
 				const previousProperties = buildPreviousProperties(domNode, current);
 				processProperties(next, previousProperties);
 				runDeferredProperties(next);
-
-				const owningWrapper = _nodeToWrapperMap.get(next.node);
-				if (owningWrapper && owningWrapper.instance) {
-					const instanceData = widgetInstanceMap.get(owningWrapper.instance);
-					if (instanceData && next.node.properties.key != null) {
-						instanceData.nodeHandler.add(next.domNode as HTMLElement, `${next.node.properties.key}`);
-					}
-				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
-				const { exitAnimation } = current.node.properties;
-				if (exitAnimation && exitAnimation !== true) {
-					runExitAnimation(current, _mountOptions.transition, exitAnimation);
+				const { exitAnimation, exitAnimationActive } = current.node.properties;
+				if (_mountOptions.transition && exitAnimation && exitAnimation !== true) {
+					_mountOptions.transition.exit(current.domNode as HTMLElement, exitAnimation, exitAnimationActive);
 				} else {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
 					current.domNode = undefined;
@@ -1341,8 +1430,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			} else if (item.type === 'attach') {
 				const { instance, attached } = item;
 				const instanceData = widgetInstanceMap.get(instance);
-				instanceData && instanceData.nodeHandler.addRoot();
-				attached && instanceData && instanceData.onAttach();
+				if (instanceData) {
+					instanceData.nodeHandler.addRoot();
+					attached && instanceData.onAttach();
+				}
 			} else if (item.type === 'detach') {
 				if (item.current.instance) {
 					const instanceData = widgetInstanceMap.get(item.current.instance);
@@ -1389,7 +1480,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
 		_idleCallbacks.push(() => {
-			const parentWNodeWrapper = findParentWNodeWrapper(childNodes[index]);
+			const parentWNodeWrapper = _idToWrapperMap.get(childNodes[index].owningId);
 			checkDistinguishable(childNodes, index, parentWNodeWrapper);
 		});
 	}
@@ -1582,55 +1673,59 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let rendered: RenderResult;
 		let invalidate: () => void;
 		next.properties = next.node.properties;
-		next.id = `${wrapperId++}`;
+		next.id = next.id || `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
-		let processResult: ProcessResult = {};
 		if (!isWidgetBaseConstructor(Constructor)) {
-			invalidate = () => {
-				const widgetMeta = widgetMetaMap.get(next.id);
-				if (widgetMeta) {
-					widgetMeta.dirty = true;
-				}
-				_invalidationQueue.push({
-					id: next.id,
-					depth: next.depth,
-					order: next.order
-				});
-				_schedule();
-			};
-			const registryHandler = new RegistryHandler();
-			registryHandler.on('invalidate', invalidate);
-			if (registry) {
-				registryHandler.base = registry;
-			}
+			let widgetMeta = widgetMetaMap.get(next.id);
+			if (!widgetMeta) {
+				invalidate = () => {
+					const widgetMeta = widgetMetaMap.get(next.id);
+					if (widgetMeta) {
+						widgetMeta.dirty = true;
+						if (!widgetMeta.rendering && _idToWrapperMap.has(next.id)) {
+							_invalidationQueue.push({
+								id: next.id,
+								depth: next.depth,
+								order: next.order
+							});
+							_schedule();
+						}
+					}
+				};
 
-			let widgetData = {
-				dirty: false,
-				invalidator: invalidate,
-				registryHandler,
-				middleware: {},
-				properties: next.node.properties,
-				children: next.node.children
-			};
-			widgetMetaMap.set(next.id, widgetData);
-			widgetData.middleware = (Constructor as any).middlewares
-				? resolveMiddleware((Constructor as any).middlewares, next.id)
-				: {};
+				widgetMeta = {
+					dirty: false,
+					invalidator: invalidate,
+					properties: next.node.properties,
+					children: next.node.children,
+					deferRefs: 0,
+					rendering: false,
+					registry: _mountOptions.registry
+				};
+
+				widgetMetaMap.set(next.id, widgetMeta);
+				widgetMeta.middleware = (Constructor as any).middlewares
+					? resolveMiddleware((Constructor as any).middlewares, next.id)
+					: {};
+			} else {
+				invalidate = widgetMeta.invalidator;
+			}
 
 			rendered = Constructor({
 				id: next.id,
 				properties: next.node.properties,
 				children: next.node.children,
-				middleware: widgetData.middleware
+				middleware: widgetMeta.middleware
 			});
+			if (widgetMeta.deferRefs > 0) {
+				return false;
+			}
 		} else {
 			let instance = new Constructor() as WidgetBaseInterface & {
 				invalidate: any;
 				registry: any;
 			};
-			if (registry) {
-				instance.registry.base = registry;
-			}
+			instance.registry.base = registry;
 			const instanceData = widgetInstanceMap.get(instance)!;
 			invalidate = () => {
 				instanceData.dirty = true;
@@ -1650,7 +1745,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			next.instance = instance;
 			rendered = instance.__render__();
 			instanceData.rendering = false;
-			processResult.widget = { type: 'attach', instance, attached: true };
 		}
 
 		if (rendered) {
@@ -1662,11 +1756,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			parentInvalidate = invalidate;
 		}
 
-		processResult.item = {
-			next: next.childrenWrappers,
-			meta: { mergeNodes: next.mergeNodes }
+		return {
+			item: {
+				next: next.childrenWrappers,
+				meta: { mergeNodes: next.mergeNodes }
+			},
+			widget: { type: 'attach', instance: next.instance, id: next.id, attached: true }
 		};
-		return processResult;
 	}
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
@@ -1695,9 +1791,21 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(next.id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
-				diffProperties(current.properties, next.properties, () => {
+				widgetMeta.rendering = true;
+				runDiffs(widgetMeta, current.properties, next.properties);
+				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
-				});
+				}
+				if (!widgetMeta.dirty) {
+					propertiesDiff(
+						current.properties,
+						next.properties,
+						() => {
+							widgetMeta.dirty = true;
+						},
+						widgetMeta.customDiffProperties ? [...widgetMeta.customDiffProperties.values()] : []
+					);
+				}
 				if (widgetMeta.dirty) {
 					next.childrenWrappers = undefined;
 					didRender = true;
@@ -1708,7 +1816,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						children: next.node.children,
 						middleware: widgetMeta.middleware
 					});
+					if (widgetMeta.deferRefs > 0) {
+						rendered = null;
+					}
 				}
+				widgetMeta.rendering = false;
 			}
 		} else {
 			const instanceData = widgetInstanceMap.get(instance!)!;
@@ -1721,10 +1833,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = undefined;
 				rendered = instance!.__render__();
 			}
-			processResult.widget = { type: 'attach', instance, attached: false };
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
+		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
 
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
@@ -1747,34 +1859,45 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_parentWrapperMap.delete(current);
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
+		let processResult: ProcessResult = {
+			item: {
+				current: current.childrenWrappers,
+				meta: {}
+			}
+		};
 		if (meta) {
-			meta.registryHandler.destroy();
-			meta.invalidator = undefined as any;
+			meta.registryHandler && meta.registryHandler.destroy();
+			meta.destroyMap && destroyHandles(meta.destroyMap);
 			widgetMetaMap.delete(current.id);
+		} else {
+			processResult.widget = { type: 'detach', current, instance: current.instance };
 		}
 
-		return {
-			item: { current: current.childrenWrappers, meta: {} },
-			widget: { type: 'detach', current }
-		};
+		return processResult;
 	}
 
-	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
-		let parentWNodeWrapper = findParentWNodeWrapper(next);
-		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
-			parentWNodeWrapper.domNode = next.domNode;
-			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
-			if (nextParent && isWNodeWrapper(nextParent)) {
-				parentWNodeWrapper = nextParent;
-				continue;
+	function setDomNodeOnParentWrapper(id: string) {
+		let wrapper = _idToWrapperMap.get(id)!;
+		let children = wrapper && wrapper.childrenWrappers ? [...wrapper.childrenWrappers] : [];
+		let child: DNodeWrapper | undefined;
+		while (children.length && !wrapper.domNode) {
+			child = children.shift();
+			if (child) {
+				if (child.domNode) {
+					wrapper.domNode = child.domNode;
+					break;
+				}
+				if (child.childrenWrappers) {
+					children = [...child.childrenWrappers, ...children];
+				}
 			}
-			parentWNodeWrapper = undefined;
 		}
 	}
 
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
+		const isVirtual = next.node.tag === 'virtual';
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1782,7 +1905,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (next.node.tag === 'svg') {
 					next.namespace = NAMESPACE_SVG;
 				}
-				if (next.node.tag) {
+				if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
 						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
 					} else {
@@ -1810,17 +1933,18 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
 		}
-		if (next.domNode) {
-			if (next.node.children) {
+		if (next.domNode || isVirtual) {
+			if (next.node.children && next.node.children.length) {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		setDomNodeOnParentWrapper(next);
-		const dom: ApplicationInstruction = {
-			next: next!,
-			parentDomNode: parentDomNode,
-			type: 'create'
-		};
+		const dom: ApplicationInstruction | undefined = isVirtual
+			? undefined
+			: {
+					next: next!,
+					parentDomNode: parentDomNode,
+					type: 'create'
+			  };
 		if (next.childrenWrappers) {
 			return {
 				item: {
@@ -1857,12 +1981,23 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
+		const isVirtual = current.node.tag === 'virtual';
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
-		if (current.hasAnimations) {
+		if (current.node.properties.key) {
+			const widgetMeta = widgetMetaMap.get(current.owningId);
+			const parentWrapper = _idToWrapperMap.get(current.owningId);
+			if (widgetMeta) {
+				widgetMeta.nodeMap && widgetMeta.nodeMap.delete(current.node.properties.key);
+			} else if (parentWrapper && parentWrapper.instance) {
+				const instanceData = widgetInstanceMap.get(parentWrapper.instance);
+				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
+			}
+		}
+		if (current.hasAnimations || isVirtual) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
-				dom: { type: 'delete', current }
+				dom: isVirtual ? undefined : { type: 'delete', current }
 			};
 		}
 
@@ -1881,7 +2016,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						} else {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
-								meta.registryHandler.destroy();
+								meta.registryHandler && meta.registryHandler.destroy();
+								meta.destroyMap && destroyHandles(meta.destroyMap);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}

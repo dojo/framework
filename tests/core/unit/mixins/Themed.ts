@@ -20,6 +20,7 @@ import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
 import { VNode } from '../../../../src/core/interfaces';
+import Injector from '../../../../src/core/Injector';
 
 (baseThemeClasses1 as any)[' _key'] = 'testPath1';
 (baseThemeClasses2 as any)[' _key'] = 'testPath2';
@@ -238,7 +239,7 @@ registerSuite('ThemedMixin', {
 		},
 		'injecting a theme': {
 			'theme can be injected by defining a ThemeInjector with registry'() {
-				const injector = () => () => testTheme1;
+				const injector = () => () => new Injector(testTheme1);
 				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 				class InjectedTheme extends TestWidget {
 					render() {

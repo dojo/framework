@@ -4,7 +4,6 @@ import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
 import has from '../core/has';
-import Symbol, { isSymbol } from '../shim/Symbol';
 
 /**
  * Default Payload interface
@@ -125,7 +124,7 @@ export interface ProcessCallbackAfter<T = any> {
 }
 
 export interface ProcessCallbackBefore<T = any, P extends object = DefaultPayload> {
-	(payload: P, store: Store<T>): void | Promise<void>;
+	(payload: P, store: Store<T>, id: string): void | Promise<void>;
 }
 
 /**
@@ -171,11 +170,37 @@ export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P
 const processMap = new Map();
 const valueSymbol = Symbol('value');
 
+export function isStateProxy(value: any) {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	return Boolean(value[valueSymbol]);
+}
+
 export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
 const proxyError = 'State updates are not available on legacy browsers';
+
+function removeProxies(value: any) {
+	if (typeof value === 'object' && value !== null) {
+		if (value[valueSymbol]) {
+			value = value[valueSymbol];
+		}
+
+		const newValue: typeof value = Array.isArray(value) ? [] : {};
+		const keys = Object.keys(value);
+		for (let i = 0; i < keys.length; i++) {
+			newValue[keys[i]] = removeProxies(value[keys[i]]);
+		}
+
+		value = newValue;
+	}
+
+	return value;
+}
 
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
@@ -203,7 +228,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
 
 		if (before) {
-			let result = before(payload, store);
+			let result = before(payload, store, id);
 			if (result) {
 				await result;
 			}
@@ -219,7 +244,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
 					const stringPath = fullPath.path;
 
-					if (isSymbol(prop) && prop === valueSymbol) {
+					if (typeof prop === 'symbol' && prop === valueSymbol) {
 						return proxied.get(stringPath);
 					}
 
@@ -249,9 +274,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				},
 
 				set(obj: any, prop: string, value: any) {
-					if (typeof value === 'object' && value !== null && value[valueSymbol]) {
-						value = value[valueSymbol];
-					}
+					value = removeProxies(value);
 
 					proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
 					obj[prop] = value;
@@ -375,7 +398,7 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
 
 	const callback = callbacks.length
 		? callbacks.reduce((callback, nextCallback) => {
-				return combineCallbacks(nextCallback)(callback);
+				return combineCallbacks(nextCallback, id)(callback);
 		  })
 		: undefined;
 
@@ -404,8 +427,9 @@ export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
 /**
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
+ * @param id process id to be passed to the before callback
  */
-function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDecorator {
+function combineCallbacks(processCallback: ProcessCallback, id: string): ProcessCallbackDecorator {
 	const { before, after } = processCallback();
 	return (previousCallback?: ProcessCallback) => {
 		const { before: previousBefore = undefined, after: previousAfter = undefined } = previousCallback
@@ -423,11 +447,11 @@ function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDeco
 			},
 			before(payload: DefaultPayload, store: Store<any>) {
 				if (previousBefore) {
-					previousBefore(payload, store);
+					previousBefore(payload, store, id);
 				}
 
 				if (before) {
-					before(payload, store);
+					before(payload, store, id);
 				}
 			}
 		});

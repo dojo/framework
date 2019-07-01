@@ -1,4 +1,4 @@
-import { VNodeProperties } from './../interfaces';
+import { SupportedClassName } from './../interfaces';
 
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
@@ -42,8 +42,8 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 	element.addEventListener(browserSpecificTransitionEndEventName, transitionEnd);
 }
 
-function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: string, removeNode: () => void) {
-	const activeClass = properties.exitAnimationActive || `${exitAnimation}-active`;
+function exit(node: HTMLElement, exitAnimation: string, active?: SupportedClassName) {
+	const activeClass = active && active !== true ? active : `${exitAnimation}-active`;
 
 	runAndCleanUp(
 		node,
@@ -55,13 +55,13 @@ function exit(node: HTMLElement, properties: VNodeProperties, exitAnimation: str
 			});
 		},
 		() => {
-			removeNode();
+			node && node.parentNode && node.parentNode.removeChild(node);
 		}
 	);
 }
 
-function enter(node: HTMLElement, properties: VNodeProperties, enterAnimation: string) {
-	const activeClass = properties.enterAnimationActive || `${enterAnimation}-active`;
+function enter(node: HTMLElement, enterAnimation: string, active?: SupportedClassName) {
+	const activeClass = active && active !== true ? active : `${enterAnimation}-active`;
 
 	runAndCleanUp(
 		node,

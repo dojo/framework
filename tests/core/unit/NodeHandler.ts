@@ -27,6 +27,12 @@ registerSuite('NodeHandler', {
 			nodeHandler.add(element, 'foo');
 			assert.equal(nodeHandler.get('foo'), element);
 		},
+		'remove node from nodehandler map'() {
+			nodeHandler.add(element, 'foo');
+			assert.isTrue(nodeHandler.has('foo'));
+			nodeHandler.remove('foo');
+			assert.isFalse(nodeHandler.has('foo'));
+		},
 		'clear removes nodes from map'() {
 			nodeHandler.add(element, 'foo');
 			assert.isTrue(nodeHandler.has('foo'));

@@ -18,23 +18,27 @@ export type NodeHandlerEventMap = {
 };
 
 export class NodeHandler extends Evented<NodeHandlerEventMap> implements NodeHandlerInterface {
-	private _nodeMap = new Map<string, Element>();
+	private _nodeMap = new Map<string | number, Element>();
 
-	public get(key: string): Element | undefined {
+	public get(key: string | number): Element | undefined {
 		return this._nodeMap.get(key);
 	}
 
-	public has(key: string): boolean {
+	public has(key: string | number): boolean {
 		return this._nodeMap.has(key);
 	}
 
-	public add(element: Element, key: string): void {
+	public add(element: Element, key: string | number): void {
 		this._nodeMap.set(key, element);
-		this.emit({ type: key });
+		this.emit({ type: `${key}` });
 	}
 
 	public addRoot(): void {
 		this.emit({ type: NodeEventType.Widget });
+	}
+
+	public remove(key: string | number) {
+		this._nodeMap.delete(key);
 	}
 
 	public addProjector(): void {
