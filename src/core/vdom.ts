@@ -70,16 +70,17 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 export interface WidgetMeta {
 	dirty: boolean;
 	invalidator: () => void;
-	middleware: any;
-	registryHandler: RegistryHandler;
+	middleware?: any;
+	registryHandler?: RegistryHandler;
+	registry: Registry;
 	properties: any;
 	children?: DNode[];
 	rendering: boolean;
-	nodeMap: Map<string | number, HTMLElement>;
-	destroyMap: Map<string, () => void>;
+	nodeMap?: Map<string | number, HTMLElement>;
+	destroyMap?: Map<string, () => void>;
 	deferRefs: number;
-	customDiffProperties: Set<string>;
-	customDiffMap: Map<string, Map<string, (current: any, next: any) => void>>;
+	customDiffProperties?: Set<string>;
+	customDiffMap?: Map<string, Map<string, (current: any, next: any) => void>>;
 }
 
 export interface WidgetData {
@@ -671,6 +672,7 @@ let metaId = 0;
 function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	const widgetMeta = widgetMetaMap.get(id);
 	if (widgetMeta) {
+		widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
 		const existingNode = widgetMeta.nodeMap.get(key);
 		if (!existingNode) {
 			widgetMeta.nodeMap.set(key, node);
@@ -688,6 +690,7 @@ function destroyHandles(destroyMap: Map<string, () => void>) {
 }
 
 function runDiffs(meta: WidgetMeta, current: any, next: any) {
+	meta.customDiffMap = meta.customDiffMap || new Map();
 	if (meta.customDiffMap.size) {
 		meta.customDiffMap.forEach((diffMap) => {
 			diffMap.forEach((diff) => diff({ ...current }, { ...next }));
@@ -711,6 +714,7 @@ export const node = factory(({ id }) => {
 			const [widgetId] = id.split('-');
 			const widgetMeta = widgetMetaMap.get(widgetId);
 			if (widgetMeta) {
+				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
 				const node = widgetMeta.nodeMap.get(key);
 				if (node) {
 					return node;
@@ -727,6 +731,8 @@ export const diffProperty = factory(({ id }) => {
 		const [widgetId] = id.split('-');
 		const widgetMeta = widgetMetaMap.get(widgetId);
 		if (widgetMeta) {
+			widgetMeta.customDiffMap = widgetMeta.customDiffMap || new Map();
+			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
 				propertyDiffMap.set(propertyName, diff);
@@ -742,6 +748,7 @@ export const destroy = factory(({ id }) => {
 		const [widgetId] = id.split('-');
 		const widgetMeta = widgetMetaMap.get(widgetId);
 		if (widgetMeta) {
+			widgetMeta.destroyMap = widgetMeta.destroyMap || new Map();
 			if (!widgetMeta.destroyMap.has(id)) {
 				widgetMeta.destroyMap.set(id, destroyFunction);
 			}
@@ -754,6 +761,12 @@ export const getRegistry = factory(({ id }) => {
 	return (): RegistryHandler | null => {
 		const widgetMeta = widgetMetaMap.get(widgetId);
 		if (widgetMeta) {
+			if (!widgetMeta.registryHandler) {
+				widgetMeta.registryHandler = new RegistryHandler();
+				widgetMeta.registryHandler.base = widgetMeta.registry;
+				widgetMeta.registryHandler.on('invalidate', widgetMeta.invalidator);
+			}
+			widgetMeta.registryHandler = widgetMeta.registryHandler || new RegistryHandler();
 			return widgetMeta.registryHandler;
 		}
 		return null;
@@ -865,29 +878,34 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function resolveRegistryItem(wrapper: WNodeWrapper, instance?: any, id?: string) {
-		const owningNode = _nodeToWrapperMap.get(wrapper.node);
-		if (owningNode) {
-			if (owningNode.instance) {
-				instance = owningNode.instance;
-			} else {
-				id = owningNode.id;
+		if (!isWidget(wrapper.node.widgetConstructor)) {
+			const owningNode = _nodeToWrapperMap.get(wrapper.node);
+			if (owningNode) {
+				if (owningNode.instance) {
+					instance = owningNode.instance;
+				} else {
+					id = owningNode.id;
+				}
 			}
-		}
-		let registry: RegistryHandler | undefined;
-		if (instance) {
-			const instanceData = widgetInstanceMap.get(instance);
-			if (instanceData) {
-				registry = instanceData.registry;
+			let registry: RegistryHandler | undefined;
+			if (instance) {
+				const instanceData = widgetInstanceMap.get(instance);
+				if (instanceData) {
+					registry = instanceData.registry;
+				}
+			} else if (id !== undefined) {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					if (!widgetMeta.registryHandler) {
+						widgetMeta.registryHandler = new RegistryHandler();
+						widgetMeta.registryHandler.base = widgetMeta.registry;
+						widgetMeta.registryHandler.on('invalidate', widgetMeta.invalidator);
+					}
+					registry = widgetMeta.registryHandler;
+				}
 			}
-		} else if (id !== undefined) {
-			const widgetMeta = widgetMetaMap.get(id);
-			if (widgetMeta) {
-				registry = widgetMeta.registryHandler;
-			}
-		}
 
-		if (registry) {
-			if (!isWidget(wrapper.node.widgetConstructor)) {
+			if (registry) {
 				let registryLabel: symbol | string;
 				if (isLazyDefine(wrapper.node.widgetConstructor)) {
 					const { label, registryItem } = wrapper.node.widgetConstructor;
@@ -1670,24 +1688,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						}
 					}
 				};
-				const registryHandler = new RegistryHandler();
-				registryHandler.base = registry;
-				registryHandler.on('invalidate', invalidate);
 
 				widgetMeta = {
 					dirty: false,
 					invalidator: invalidate,
-					registryHandler,
-					middleware: {},
 					properties: next.node.properties,
 					children: next.node.children,
-					nodeMap: new Map(),
-					destroyMap: new Map(),
 					deferRefs: 0,
-					customDiffMap: new Map(),
-					customDiffProperties: new Set(),
-					rendering: false
+					rendering: false,
+					registry: _mountOptions.registry
 				};
+
 				widgetMetaMap.set(next.id, widgetMeta);
 				widgetMeta.middleware = (Constructor as any).middlewares
 					? resolveMiddleware((Constructor as any).middlewares, next.id)
@@ -1787,7 +1798,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						() => {
 							widgetMeta.dirty = true;
 						},
-						[...widgetMeta.customDiffProperties.values()]
+						widgetMeta.customDiffProperties ? [...widgetMeta.customDiffProperties.values()] : []
 					);
 				}
 				if (widgetMeta.dirty) {
@@ -1844,9 +1855,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
 		if (meta) {
-			meta.registryHandler.destroy();
-			destroyHandles(meta.destroyMap);
-			meta.invalidator = undefined as any;
+			meta.registryHandler && meta.registryHandler.destroy();
+			meta.destroyMap && destroyHandles(meta.destroyMap);
 			widgetMetaMap.delete(current.id);
 		}
 
@@ -1964,7 +1974,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(current.owningId);
 			const parentWrapper = _idToWrapperMap.get(current.owningId);
 			if (widgetMeta) {
-				widgetMeta.nodeMap.delete(current.node.properties.key);
+				widgetMeta.nodeMap && widgetMeta.nodeMap.delete(current.node.properties.key);
 			} else if (parentWrapper && parentWrapper.instance) {
 				const instanceData = widgetInstanceMap.get(parentWrapper.instance);
 				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
@@ -1992,8 +2002,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						} else {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
-								meta.registryHandler.destroy();
-								destroyHandles(meta.destroyMap);
+								meta.registryHandler && meta.registryHandler.destroy();
+								meta.destroyMap && destroyHandles(meta.destroyMap);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}
