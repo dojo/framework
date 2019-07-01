@@ -174,12 +174,14 @@ interface RemoveDomInstruction {
 interface AttachApplication {
 	type: 'attach';
 	id: string;
-	attached: boolean;
+	instance?: WidgetBaseInterface;
+	attached?: boolean;
 }
 
 interface DetachApplication {
 	type: 'detach';
 	current: WNodeWrapper;
+	instance?: WidgetBaseInterface;
 }
 
 interface CreateDomApplication {
@@ -210,7 +212,7 @@ type ApplicationInstruction =
 	| CreateDomApplication
 	| UpdateDomApplication
 	| DeleteDomApplication
-	| AttachApplication
+	| Required<AttachApplication>
 	| DetachApplication;
 
 const EMPTY_ARRAY: DNodeWrapper[] = [];
@@ -1355,7 +1357,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
 				item.type === 'attach' && setDomNodeOnParentWrapper(item.id);
-				_applicationQueue.push(item);
+				if (item.instance) {
+					_applicationQueue.push(item as any);
+				}
 			} else {
 				const { current, next, meta } = item;
 				_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
@@ -1424,14 +1428,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					current.domNode = undefined;
 				}
 			} else if (item.type === 'attach') {
-				const { id, attached } = item;
-				const wrapper = _idToWrapperMap.get(id);
-				if (wrapper) {
-					const instanceData = widgetInstanceMap.get(wrapper.instance);
-					if (instanceData) {
-						instanceData.nodeHandler.addRoot();
-						attached && instanceData.onAttach();
-					}
+				const { instance, attached } = item;
+				const instanceData = widgetInstanceMap.get(instance);
+				if (instanceData) {
+					instanceData.nodeHandler.addRoot();
+					attached && instanceData.onAttach();
 				}
 			} else if (item.type === 'detach') {
 				if (item.current.instance) {
@@ -1760,7 +1761,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next: next.childrenWrappers,
 				meta: { mergeNodes: next.mergeNodes }
 			},
-			widget: { type: 'attach', id: next.id, attached: true }
+			widget: { type: 'attach', instance: next.instance, id: next.id, attached: true }
 		};
 	}
 
@@ -1835,7 +1836,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
-		processResult.widget = { type: 'attach', id: next.id, attached: false };
+		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
 
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
@@ -1858,16 +1859,21 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_parentWrapperMap.delete(current);
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
+		let processResult: ProcessResult = {
+			item: {
+				current: current.childrenWrappers,
+				meta: {}
+			}
+		};
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
 			meta.destroyMap && destroyHandles(meta.destroyMap);
 			widgetMetaMap.delete(current.id);
+		} else {
+			processResult.widget = { type: 'detach', current, instance: current.instance };
 		}
 
-		return {
-			item: { current: current.childrenWrappers, meta: {} },
-			widget: { type: 'detach', current }
-		};
+		return processResult;
 	}
 
 	function setDomNodeOnParentWrapper(id: string) {
