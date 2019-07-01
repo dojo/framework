@@ -975,7 +975,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 				}
 			}
-			if (owningNode && isVNodeWrapper(wrapper)) {
+			if (owningNode) {
 				wrapper.owningId = owningNode.id;
 			}
 			if (isWNode(renderedItem)) {
@@ -990,19 +990,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			previousItem = wrapper;
 		}
 		return wrappedRendered;
-	}
-
-	function findParentWNodeWrapper(currentNode: DNodeWrapper): WNodeWrapper | undefined {
-		let parentWNodeWrapper: WNodeWrapper | undefined;
-		let parentWrapper = _parentWrapperMap.get(currentNode);
-
-		while (!parentWNodeWrapper && parentWrapper) {
-			if (!parentWNodeWrapper && isWNodeWrapper(parentWrapper)) {
-				parentWNodeWrapper = parentWrapper;
-			}
-			parentWrapper = _parentWrapperMap.get(parentWrapper);
-		}
-		return parentWNodeWrapper;
 	}
 
 	function findParentDomNode(currentNode: DNodeWrapper): Node | undefined {
@@ -1470,7 +1457,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
 		_idleCallbacks.push(() => {
-			const parentWNodeWrapper = findParentWNodeWrapper(childNodes[index]);
+			const parentWNodeWrapper = _idToWrapperMap.get(childNodes[index].owningId);
 			checkDistinguishable(childNodes, index, parentWNodeWrapper);
 		});
 	}
@@ -1870,7 +1857,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
-		let parentWNodeWrapper = findParentWNodeWrapper(next);
+		let parentWNodeWrapper = _idToWrapperMap.get(next.owningId);
 		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
 			parentWNodeWrapper.domNode = next.domNode;
 			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
