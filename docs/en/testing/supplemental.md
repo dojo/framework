@@ -33,12 +33,12 @@ npm run test:functional
 ```
 
 Dojo comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
- of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of
- the testing services will run tests against IE11, Firefox, and Chrome. You can use the `dojo` command of the [Dojo CLI].
- 
+of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of
+the testing services will run tests against IE11, Firefox, and Chrome. You can use the `dojo` command of the [Dojo CLI].
+
 ### BrowserStack
 
-[BrowserStack] requires an access key and username to use its services. These may be provided on the command line or as 
+[BrowserStack] requires an access key and username to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
 > Command Line
@@ -57,7 +57,7 @@ BROWSERSTACK_USERNAME=<username> BROWSERSTACK_ACCESS_KEY=<key> dojo test -a -c b
 
 ### SauceLabs
 
-[SauceLabs] requires an access key and username to use its services. These may be provided on the command line or as 
+[SauceLabs] requires an access key and username to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
 > Command Line
@@ -76,7 +76,7 @@ SAUCE_USERNAME=<username> SAUCE_ACCESS_KEY=<key> dojo test -a -c saucelabs
 
 ### TestingBot
 
-[TestingBot] requires an key and a secret to use its services. These may be provided on the command line or as 
+[TestingBot] requires an key and a secret to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
 > Command Line
@@ -134,8 +134,6 @@ const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
 
 The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the [unit tests](./blob/master/tests/unit/harnessWithTsx.tsx).
-
-
 
 ```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
@@ -267,31 +265,31 @@ Example usage:
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 
 export interface HelloWorldProperties {
-    foo?: boolean;
-    bar?: boolean;
+	foo?: boolean;
+	bar?: boolean;
 }
 
 export default class HelloWorld extends WidgetBase<HelloWorldProperties> {
-    render() {
-        const { foo, bar } = this.properties;
-        return (
-            <div>
-                { foo && <span key="foo">Foo</span> }
-                <ul>
-                    <li>Hello</li>
-                    <li>World</li>
-                </ul>
-                { bar && <span key="bar">Bar</span> }
-            </div>
-        );
-    }
+	render() {
+		const { foo, bar } = this.properties;
+		return (
+			<div>
+				{foo && <span key="foo">Foo</span>}
+				<ul>
+					<li>Hello</li>
+					<li>World</li>
+				</ul>
+				{bar && <span key="bar">Bar</span>}
+			</div>
+		);
+	}
 }
 ```
 
 ```ts
 it('should render foo', () => {
-    const h = harness(() => <HelloWorld foo={ true } />);
-    h.expectPartial('~foo', () => <span>Foo</span>);
+	const h = harness(() => <HelloWorld foo={true} />);
+	h.expectPartial('~foo', () => <span>Foo</span>);
 });
 ```
 
@@ -401,18 +399,15 @@ import { v } from '@dojo/framework/widget-core/d';
 import * as css from './styles/Profile.m.css';
 
 export interface ProfileProperties {
-  username?: string;
+	username?: string;
 }
 
 export default class Profile extends WidgetBase<ProfileProperties> {
-  protected render() {
-    const { username } = this.properties;
-    return v('h1', { classes: [css.root] }, [
-      `Welcome ${username || 'Stranger'}!`
-    ]);
-  }
+	protected render() {
+		const { username } = this.properties;
+		return v('h1', { classes: [css.root] }, [`Welcome ${username || 'Stranger'}!`]);
+	}
 }
-
 ```
 
 The base assertion might look like:
@@ -429,7 +424,7 @@ import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/styles/Profile.m.css';
 
 const profileAssertion = assertionTemplate(() =>
-  v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
+	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
 );
 ```
 
@@ -439,14 +434,14 @@ and in a test would look like:
 
 ```ts
 const profileAssertion = assertionTemplate(() =>
-  v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
+	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
 );
 
 describe('Profile', () => {
-  it('default renders correctly', () => {
-    const h = harness(() => w(Profile, {}));
-    h.expect(profileAssertion);
-  });
+	it('default renders correctly', () => {
+		const h = harness(() => w(Profile, {}));
+		h.expect(profileAssertion);
+	});
 });
 it('default renders correctly', () => {
 	const h = harness(() => w(Profile, {}));
@@ -499,15 +494,13 @@ You may have noticed that when testing widgets, we are testing that the user int
 ```ts
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { v, w } from '@dojo/framework/widget-core/d';
-import Button from '@dojo/widgets/button'
+import Button from '@dojo/widgets/button';
 
 import * as css from './styles/Action.m.css';
 
 export default class Action extends WidgetBase<{ fetchItems: () => void }> {
 	protected render() {
-		return	v('div', { classes: [css.root] }, [
-			w(Button, { onClick: this.handleClick, key: 'button' }, ['Fetch'])
-		])
+		return v('div', { classes: [css.root] }, [w(Button, { onClick: this.handleClick, key: 'button' }, ['Fetch'])]);
 	}
 	private handleClick() {
 		this.properties.fetchItems();
@@ -520,7 +513,6 @@ You would want to test that the button will call the `this.properties.fetchItems
 > tests/unit/widgets/Action.ts
 
 ```ts
-
 const { describe, it } = intern.getInterface('bdd');
 import harness from '@dojo/framework/testing/harness';
 import { w, v } from '@dojo/framework/widget-core/d';
@@ -531,11 +523,7 @@ describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
 		const h = harness(() => w(Home, { fetchItems }));
-		h.expect(() => (
-			v('div', { classes: [css.root] }, [
-				w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])
-			])
-		));
+		h.expect(() => v('div', { classes: [css.root] }, [w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])]));
 		h.trigger('@button', 'onClick');
 		assert.isTrue(fetchItems.calledOnce);
 	});
@@ -551,7 +539,6 @@ For more details on mocking, please read the [Sinon] documentation.
 Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
 
 If you want to validate the content of your page for a certain route, you can update the links to make this easier to test.
-
 
 > src/widgets/Menu.ts
 
@@ -571,30 +558,30 @@ export default class Menu extends WidgetBase {
 				{
 					id: 'home', // add id attribute
 					to: 'home',
-					classes: [ css.link ],
-					activeClasses: [ css.selected ]
+					classes: [css.link],
+					activeClasses: [css.selected]
 				},
-				[ 'Home' ]
+				['Home']
 			),
 			w(
 				Link,
 				{
 					id: 'about', // add id attribute
 					to: 'about',
-					classes: [ css.link ],
-					activeClasses: [ css.selected ]
+					classes: [css.link],
+					activeClasses: [css.selected]
 				},
-				[ 'About' ]
+				['About']
 			),
 			w(
 				Link,
 				{
 					id: 'profile', // add id attribute
 					to: 'profile',
-					classes: [ css.link ],
-					activeClasses: [ css.selected ]
+					classes: [css.link],
+					activeClasses: [css.selected]
 				},
-				[ 'Profile' ]
+				['Profile']
 			)
 		]);
 	}
@@ -650,10 +637,10 @@ Functional tests are very useful to to make sure that your application code work
 
 You can read more details in the [Intern Function tests](https://theintern.io/docs.html#Intern/4/docs/docs%2Fwriting_tests.md/functional-tests) guide.
 
-[BrowserStack]: https://www.browserstack.com/
-[Dojo CLI]: https://github.com/dojo/cli
-[Intern]: https://theintern.io/
-[SauceLabs]: https://saucelabs.com/
-[Selenium]: http://www.seleniumhq.org/
-[Sinon]: https://sinonjs.org/
-[TestingBot]: https://testingbot.com/
+[browserstack]: https://www.browserstack.com/
+[dojo cli]: https://github.com/dojo/cli
+[intern]: https://theintern.io/
+[saucelabs]: https://saucelabs.com/
+[selenium]: http://www.seleniumhq.org/
+[sinon]: https://sinonjs.org/
+[testingbot]: https://testingbot.com/
