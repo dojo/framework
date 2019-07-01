@@ -173,7 +173,7 @@ interface RemoveDomInstruction {
 
 interface AttachApplication {
 	type: 'attach';
-	instance: WidgetBaseInterface;
+	id: string;
 	attached: boolean;
 }
 
@@ -1354,6 +1354,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let item: DetachApplication | AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
+				item.type === 'attach' && setDomNodeOnParentWrapper(item.id);
 				_applicationQueue.push(item);
 			} else {
 				const { current, next, meta } = item;
@@ -1423,11 +1424,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					current.domNode = undefined;
 				}
 			} else if (item.type === 'attach') {
-				const { instance, attached } = item;
-				const instanceData = widgetInstanceMap.get(instance);
-				if (instanceData) {
-					instanceData.nodeHandler.addRoot();
-					attached && instanceData.onAttach();
+				const { id, attached } = item;
+				const wrapper = _idToWrapperMap.get(id);
+				if (wrapper) {
+					const instanceData = widgetInstanceMap.get(wrapper.instance);
+					if (instanceData) {
+						instanceData.nodeHandler.addRoot();
+						attached && instanceData.onAttach();
+					}
 				}
 			} else if (item.type === 'detach') {
 				if (item.current.instance) {
@@ -1670,7 +1674,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		next.properties = next.node.properties;
 		next.id = next.id || `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
-		let processResult: ProcessResult = {};
 		if (!isWidgetBaseConstructor(Constructor)) {
 			let widgetMeta = widgetMetaMap.get(next.id);
 			if (!widgetMeta) {
@@ -1741,7 +1744,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			next.instance = instance;
 			rendered = instance.__render__();
 			instanceData.rendering = false;
-			processResult.widget = { type: 'attach', instance, attached: true };
 		}
 
 		if (rendered) {
@@ -1753,11 +1755,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			parentInvalidate = invalidate;
 		}
 
-		processResult.item = {
-			next: next.childrenWrappers,
-			meta: { mergeNodes: next.mergeNodes }
+		return {
+			item: {
+				next: next.childrenWrappers,
+				meta: { mergeNodes: next.mergeNodes }
+			},
+			widget: { type: 'attach', id: next.id, attached: true }
 		};
-		return processResult;
 	}
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
@@ -1828,10 +1832,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = undefined;
 				rendered = instance!.__render__();
 			}
-			processResult.widget = { type: 'attach', instance, attached: false };
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
+		processResult.widget = { type: 'attach', id: next.id, attached: false };
 
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
@@ -1866,16 +1870,21 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		};
 	}
 
-	function setDomNodeOnParentWrapper(next: VNodeWrapper) {
-		let parentWNodeWrapper = _idToWrapperMap.get(next.owningId);
-		while (parentWNodeWrapper && !parentWNodeWrapper.domNode) {
-			parentWNodeWrapper.domNode = next.domNode;
-			const nextParent = _parentWrapperMap.get(parentWNodeWrapper);
-			if (nextParent && isWNodeWrapper(nextParent)) {
-				parentWNodeWrapper = nextParent;
-				continue;
+	function setDomNodeOnParentWrapper(id: string) {
+		let wrapper = _idToWrapperMap.get(id)!;
+		let children = wrapper && wrapper.childrenWrappers ? [...wrapper.childrenWrappers] : [];
+		let child: DNodeWrapper | undefined;
+		while (children.length && !wrapper.domNode) {
+			child = children.shift();
+			if (child) {
+				if (child.domNode) {
+					wrapper.domNode = child.domNode;
+					break;
+				}
+				if (child.childrenWrappers) {
+					children = [...child.childrenWrappers, ...children];
+				}
 			}
-			parentWNodeWrapper = undefined;
 		}
 	}
 
@@ -1923,7 +1932,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		setDomNodeOnParentWrapper(next);
 		const dom: ApplicationInstruction | undefined = isVirtual
 			? undefined
 			: {
