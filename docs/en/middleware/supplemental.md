@@ -167,7 +167,7 @@ Dojo provides a variety of middleware within the framework that implement many u
 
 ## Core render middleware
 
-The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin [additional middleware](#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
+The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
 
 ### `invalidator`
 
@@ -242,7 +242,9 @@ import destroy from '@dojo/framework/core/vdom';
 
 ### `getRegistry`
 
-Provides access to the widget's own `Registry` instance, as well as the root application `Registry` if required, via a handler interface. The Registry is an advanced concept that is not typically required when writing Dojo applications; it is mainly a framework-internal concept.
+Provides access to the widget's own `Registry` instance, as well as the root application `Registry` if required, via a handler interface.
+
+**Note:** The registry is an advanced concept not typically required when writing Dojo applications. It is mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](../stores/basic-usage.md).
 
 **API:**
 
@@ -259,6 +261,8 @@ Dojo provides a variety of optional middleware that widgets can include when nee
 
 ### `block`
 
+TODO - covered elsewhere
+
 **API:**
 
 ```ts
@@ -267,11 +271,20 @@ import block from '@dojo/framework/core/middleware/block';
 
 ### `cache`
 
+Provides a simple widget-scoped cache that can persist small amounts of data between widget renders.
+
 **API:**
 
 ```ts
 import cache from '@dojo/framework/core/middleware/cache';
 ```
+
+-   `cache.get<T = any>(key: any): T | null`
+    -   Retrieves the currently cached value for the specified `key`, or `null` on a cache miss.
+-   `cache.set<T = any>(key: any, value: T)`
+    -   Stores the provided `value` in the cache against the specified `key`.
+-   `cache.clear()`
+    -   Clears all values currently stored in the widget's local cache.
 
 ### `dimensions`
 
@@ -311,57 +324,7 @@ The returned `DimensionResults` contains the following properties, mapped from t
 
 ### `focus`
 
-The `Focus` meta determines whether a given node is focused or contains document focus. Calling `this.meta(Focus).get(key)` returns the following results object:
-
-| Property        | Description                                                                                                                                |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `active`        | A boolean indicating whether the specified node itself is focused.                                                                         |
-| `containsFocus` | A boolean indicating whether one of the descendants of the specified node is currently focused. This will return true if `active` is true. |
-
-An example usage that opens a tooltip if the trigger is focused might look like this:
-
-```ts
-class MyWidget extends WidgetBase {
-	// ...
-	render() {
-		// run your meta
-		const buttonFocus = this.meta(FocusMeta).get('button');
-		return v('div', {
-			w(Button, {
-			key: 'button'
-			}, [ 'Open TooSltip' ]),
-			w(Tooltip, {
-			content: 'Foo',
-			open: buttonFocus.active
-			}, [ 'modal content' ])
-		});
-	}
-	// ...
-}
-```
-
-The `Focus` meta also provides a `set` method to call focus on a given node. This is most relevant when it is necessary to shift focus in response to a user action, e.g. when opening a modal or navigating to a new page. You can use it like this:
-
-```ts
-class MyWidget extends WidgetBase {
-	// ...
-	render() {
-		// run your meta
-		return v('div', {
-		w(Button, {
-			onClick: () => {
-			this.meta(Focus).set('modal');
-			}
-		}, [ 'Open Modal' ]),
-		v('div', {
-			key: 'modal',
-			tabIndex: -1
-		}, [ 'modal content' ])
-		});
-	}
-	// ...
-}
-```
+Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](../creating-widgets/supplemental.md#handling-focus).
 
 **API:**
 
@@ -370,10 +333,15 @@ import focus from '@dojo/framework/core/middleware/focus';
 ```
 
 -   `focus.shouldFocus(): boolean`
+    -   Returns `true` if focus should be specified within the current render cycle. Will only return `true` once, after which `false` is returned from future calls until `focus.focus()` is called again. This function is typically passed as the [`focus` property](../creating-widgets/supplemental.md#handling-focus) to a specific VDOM node, allowing the widget to direct where focus should be applied.
 -   `focus.focus()`
+    -   Can be called to indicate that the widget or one of its children requires focus in the next render cycle. This function is typically passed as the `onfocus` event handler to outputted VDOM nodes, allowing widgets to respond to user-driven focus change events.
 -   `focus.isFocused(key: string | number): boolean`
+    -   Returns `true` if the widget's VDOM node identified by the specified `key` currently has focus. Returns `false` if the relevant VDOM node does not have focus, or does not exist for the current widget.
 
 ### `i18n`
+
+TODO - covered elsewhere
 
 **API:**
 
@@ -383,19 +351,39 @@ import i18n from '@dojo/framework/core/middleware/i18n';
 
 ### `icache`
 
+Composes [`cache`](#cache) and [`invalidator`](#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
+
 **API:**
 
 ```ts
 import icache from '@dojo/framework/core/middleware/icache';
 ```
 
+-   `icache.getOrSet<T = any>(key: any, value: any): T | undefined`
+    -   Retrieves the cached value for the given `key`, if one exists, otherwise `value` is set. In both instances, `undefined` is returned if the cached value has not yet been resolved.
+-   `icache.get<T = any>(key: any): T | undefined`
+    -   Retrieves the cached value for the given `key`, or `undefined` if either no value has been set, or if the value is still pending resolution.
+-   `icache.set(key: any, value: any)`
+    -   Sets the provided `value` for the given `key`. If `value` is a function, it will be invoked in order to obtain the actual value to cache. If the function returns a promise, a 'pending' value will be cached until the final value is fully resolved. In all scenarios, once a value is available and has been stored in the cache, the widget will be marked as invalid so it can be re-rendered with the final value available.
+-	`clear()`
+    -   Clears all values currently stored in the widget's local cache.
+
 ### `injector`
+
+Allows retrieving injectors from the Dojo registry and assigning invalidation callback functions to then.
+
+**Note:** Injectors and the registry are advanced concepts not typically required when writing Dojo applications. They are mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](../stores/basic-usage.md).
 
 **API:**
 
 ```ts
 import injector from '@dojo/framework/core/middleware/injector';
 ```
+
+-   `injector.subscribe(label: RegistryLabel, callback: Function = invalidator)`
+    -   Subscribes the given `callback` invalidation function against the specified registry `label` injector (if one exists). If a `callback` is not specified, the [`invalidator`](#invalidator) middleware is used by default so that the current widget will be marked as invalid and re-rendered when the injector makes its data available.
+-   `injector.get<T>(label: RegistryLabel): T | null`
+    -   Retrieves the current injector associated with the given registry `label`, or `null` if no such injector exists.
 
 ### `intersection`
 
@@ -409,7 +397,7 @@ As this is still an upcoming web standard, the framework automatically ensures t
 import intersection from '@dojo/framework/core/middleware/intersection';
 ```
 
--   `get(key: string | number, options: IntersectionGetOptions = {}): IntersectionResult`
+-   `intersection.get(key: string | number, options: IntersectionGetOptions = {}): IntersectionResult`
     -   Returns intersection information for the widget's specified DOM element, identified by the node's `key` property. If the node does not exist for the current widget (either has not yet been rendered or an invalid key was specified), a result is returned indicating zero intersection.
 
 The `options` argument allows for more control on how intersection is calculated. The available fields are the same as those for the [intersection observer API options](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API#Intersection_observer_options).
@@ -433,10 +421,12 @@ As this is still an upcoming web standard, the framework automatically ensures t
 import resize from '@dojo/framework/core/middleware/resize';
 ```
 
--   `get(key: string | number): DOMRectReadOnly | null`
+-   `resize.get(key: string | number): DOMRectReadOnly | null`
     -   Returns size information for the widget's specified DOM element, identified by the node's `key` property. If the node does not exist for the current widget (either has not yet been rendered or an invalid key was specified), `null` is returned. The returned object is a standard [`DOMRectReadOnly`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRectReadOnly) structure.
 
 ### `store`
+
+TODO - covered elsewhere
 
 **API:**
 
@@ -445,6 +435,8 @@ import store from '@dojo/framework/core/middleware/store';
 ```
 
 ### `theme`
+
+TODO - covered elsewhere
 
 **API:**
 
