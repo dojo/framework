@@ -1,4 +1,5 @@
 import './block';
+import './breakpoint';
 import './cache';
 import './dimensions';
 import './i18n';
