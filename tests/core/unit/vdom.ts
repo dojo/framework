@@ -3789,25 +3789,25 @@ jsdomDescribe('vdom', () => {
 			r.mount({ domNode: div });
 			assert.strictEqual(
 				div.outerHTML,
-				'<div><div><h2>List</h2><span>Yay 0</span><button>Add</button></div></div>'
+				'<div><div><h2>List</h2><span>Yay 0</span><button>toggle</button></div></div>'
 			);
 			buttonClick();
 			resolvers.resolve();
 			assert.strictEqual(
 				div.outerHTML,
-				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><button>Add</button></div></div>'
+				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><button>toggle</button></div></div>'
 			);
 			buttonClick();
 			resolvers.resolve();
 			assert.strictEqual(
 				div.outerHTML,
-				'<div><div><h2>List</h2><span>Yay 0</span><span>Yay 1</span><span>Yay 2</span><button>Add</button></div></div>'
+				'<div><div><h2>List</h2><span>Yay 0</span><span>Yay 1</span><span>Yay 2</span><button>toggle</button></div></div>'
 			);
 			buttonClick();
 			resolvers.resolve();
 			assert.strictEqual(
 				div.outerHTML,
-				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><span>Yay 2</span><div>Toggled</div><span>Yay 3</span><div>Toggled</div><button>Add</button></div></div>'
+				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><span>Yay 2</span><div>Toggled</div><span>Yay 3</span><div>Toggled</div><button>toggle</button></div></div>'
 			);
 		});
 	});
