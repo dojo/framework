@@ -3760,6 +3760,56 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolve();
 			assert.strictEqual(div.outerHTML, '<div><div>four</div><div>five</div><div>six</div></div>');
 		});
+
+		it('can use virtual node in maps', () => {
+			let buttonClick: any;
+			class App extends WidgetBase {
+				private _items = [0];
+				private _toggled = false;
+
+				constructor() {
+					super();
+					buttonClick = () => {
+						this._toggled = !this._toggled;
+						this._items.push(this._items.length);
+						this.invalidate();
+					};
+				}
+				protected render() {
+					const nodes = this._items.map((item) => {
+						return v('virtual', [v('span', [`Yay ${item}`]), this._toggled && v('div', ['Toggled'])]);
+					});
+
+					return v('div', [v('h2', ['List']), ...nodes, v('button', ['toggle'])]);
+				}
+			}
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			document.body.appendChild(div);
+			r.mount({ domNode: div });
+			assert.strictEqual(
+				div.outerHTML,
+				'<div><div><h2>List</h2><span>Yay 0</span><button>toggle</button></div></div>'
+			);
+			buttonClick();
+			resolvers.resolve();
+			assert.strictEqual(
+				div.outerHTML,
+				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><button>toggle</button></div></div>'
+			);
+			buttonClick();
+			resolvers.resolve();
+			assert.strictEqual(
+				div.outerHTML,
+				'<div><div><h2>List</h2><span>Yay 0</span><span>Yay 1</span><span>Yay 2</span><button>toggle</button></div></div>'
+			);
+			buttonClick();
+			resolvers.resolve();
+			assert.strictEqual(
+				div.outerHTML,
+				'<div><div><h2>List</h2><span>Yay 0</span><div>Toggled</div><span>Yay 1</span><div>Toggled</div><span>Yay 2</span><div>Toggled</div><span>Yay 3</span><div>Toggled</div><button>toggle</button></div></div>'
+			);
+		});
 	});
 
 	describe('properties', () => {

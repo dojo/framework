@@ -95,6 +95,7 @@ export interface WidgetData {
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
+	id?: string;
 	node: VNode | DomVNode;
 	merged?: boolean;
 	inserted?: boolean;
@@ -238,6 +239,10 @@ function isWNodeWrapper(child: DNodeWrapper): child is WNodeWrapper {
 
 function isVNodeWrapper(child?: DNodeWrapper | null): child is VNodeWrapper {
 	return !!child && isVNode(child.node);
+}
+
+function isVirtualWrapper(child?: DNodeWrapper | null): boolean {
+	return isVNodeWrapper(child) && child.node.tag === 'virtual';
 }
 
 function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
@@ -809,7 +814,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _deferredProcessQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _applicationQueue: ApplicationInstruction[] = [];
 	let _eventMap = new WeakMap<Function, EventListener>();
-	let _idToWrapperMap = new Map<string, WNodeWrapper>();
+	let _idToWrapperMap = new Map<string, DNodeWrapper>();
 	let _parentWrapperMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
@@ -953,10 +958,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const { requiresInsertBefore, hasPreviousSiblings, namespace, depth } = parent;
 		const wrappedRendered: DNodeWrapper[] = [];
 		const hasParentWNode = isWNodeWrapper(parent);
+		const hasVirtualParentNode = isVirtualWrapper(parent);
 		const currentParentChildren = (isVNodeWrapper(currentParent) && currentParent.childrenWrappers) || [];
 		const hasCurrentParentChildren = currentParentChildren.length > 0;
 		const insertBefore =
-			((requiresInsertBefore || hasPreviousSiblings !== false) && hasParentWNode) ||
+			((requiresInsertBefore || hasPreviousSiblings !== false) && (hasParentWNode || hasVirtualParentNode)) ||
 			(hasCurrentParentChildren && rendered.length > 1);
 		let previousItem: DNodeWrapper | undefined;
 		if (isWNodeWrapper(parent) && rendered.length) {
@@ -1017,7 +1023,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let parentWrapper = _parentWrapperMap.get(currentNode);
 
 		while (!parentDomNode && parentWrapper) {
-			if (!parentDomNode && isVNodeWrapper(parentWrapper) && parentWrapper.domNode) {
+			if (
+				!parentDomNode &&
+				isVNodeWrapper(parentWrapper) &&
+				!isVirtualWrapper(parentWrapper) &&
+				parentWrapper.domNode
+			) {
 				parentDomNode = parentWrapper.domNode;
 			}
 			parentWrapper = _parentWrapperMap.get(parentWrapper);
@@ -1063,7 +1074,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				continue;
 			}
 			searchNode = _parentWrapperMap.get(searchNode);
-			if (!searchNode || isVNodeWrapper(searchNode)) {
+			if (!searchNode || (isVNodeWrapper(searchNode) && !isVirtualWrapper(searchNode))) {
 				break;
 			}
 		}
@@ -1282,6 +1293,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
+	function getWNodeWrapper(id: string) {
+		const wrapper = _idToWrapperMap.get(id);
+		if (wrapper && isWNodeWrapper(wrapper)) {
+			return wrapper;
+		}
+	}
+
 	function _runInvalidationQueue() {
 		_renderScheduled = undefined;
 		let invalidationQueue = [..._invalidationQueue];
@@ -1308,7 +1326,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			let { id } = item;
 			if (previouslyRendered.indexOf(id) === -1 && _idToWrapperMap.has(id!)) {
 				previouslyRendered.push(id);
-				const current = _idToWrapperMap.get(id)!;
+				const current = getWNodeWrapper(id)!;
 				const parent = _parentWrapperMap.get(current);
 				const sibling = _wrapperSiblingMap.get(current);
 				const next = {
@@ -1480,7 +1498,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
 		_idleCallbacks.push(() => {
-			const parentWNodeWrapper = _idToWrapperMap.get(childNodes[index].owningId);
+			const parentWNodeWrapper = getWNodeWrapper(childNodes[index].owningId);
 			checkDistinguishable(childNodes, index, parentWNodeWrapper);
 		});
 	}
@@ -1766,7 +1784,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
-		current = _idToWrapperMap.get(current.id) || current;
+		current = getWNodeWrapper(current.id) || current;
 		const { instance, domNode, hasAnimations } = current;
 		let {
 			node: { widgetConstructor }
@@ -1854,7 +1872,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeWidget({ current }: RemoveWidgetInstruction): ProcessResult {
-		current = _idToWrapperMap.get(current.id) || current;
+		current = getWNodeWrapper(current.id) || current;
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		_idToWrapperMap.delete(current.id);
@@ -1897,7 +1915,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
-		const isVirtual = next.node.tag === 'virtual';
+		const isVirtual = isVirtualWrapper(next);
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1934,6 +1952,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 		}
 		if (next.domNode || isVirtual) {
+			if (isVirtual) {
+				next.id = `${wrapperId++}`;
+				_idToWrapperMap.set(next.id, next);
+			}
 			if (next.node.children && next.node.children.length) {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
@@ -1952,7 +1974,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next: next.childrenWrappers,
 					meta: { mergeNodes }
 				},
-				dom
+				dom,
+				widget: isVirtual ? { type: 'attach', id: (next as any).id, attached: false } : undefined
 			};
 		}
 		return { dom };
@@ -1981,12 +2004,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
-		const isVirtual = current.node.tag === 'virtual';
+		const isVirtual = isVirtualWrapper(current);
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
+		if (current.id) {
+			_idToWrapperMap.delete(current.id);
+		}
 		if (current.node.properties.key) {
 			const widgetMeta = widgetMetaMap.get(current.owningId);
-			const parentWrapper = _idToWrapperMap.get(current.owningId);
+			const parentWrapper = getWNodeWrapper(current.owningId);
 			if (widgetMeta) {
 				widgetMeta.nodeMap && widgetMeta.nodeMap.delete(current.node.properties.key);
 			} else if (parentWrapper && parentWrapper.instance) {
@@ -2007,8 +2033,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				let wrapper: DNodeWrapper | undefined;
 				while ((wrapper = wrappers.pop())) {
 					if (isWNodeWrapper(wrapper)) {
-						wrapper = _idToWrapperMap.get(wrapper.id) || wrapper;
-						_idToWrapperMap.delete(wrapper.id);
+						wrapper = getWNodeWrapper(wrapper.id) || wrapper;
 						if (wrapper.instance) {
 							const instanceData = widgetInstanceMap.get(wrapper.instance);
 							instanceData && instanceData.onDetach();
@@ -2025,6 +2050,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					if (wrapper.childrenWrappers) {
 						wrappers.push(...wrapper.childrenWrappers);
 						wrapper.childrenWrappers = undefined;
+					}
+					if (wrapper.id) {
+						_idToWrapperMap.delete(wrapper.id);
 					}
 					_wrapperSiblingMap.delete(wrapper);
 					_parentWrapperMap.delete(wrapper);
