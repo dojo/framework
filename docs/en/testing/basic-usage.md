@@ -16,7 +16,7 @@ dojo test
 
 Dojo supports two types of testing approaches, unit and functional. Unit tests are tests run via node and the local
 [Selenium] tunnel and test isolated blocks of code. Functional tests are run using Selenium in the browser and test
-the overall functionality of the software as a user would interact with it. Running unit and functional tests against selenium requires running the appropriate build using `@dojo/cli-build-app`.
+the overall functionality of the software as a user would interact with it. Running unit and functional tests against Selenium requires running the appropriate build using `@dojo/cli-build-app`.
 
 This command will execute only your unit tests.
 

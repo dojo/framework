@@ -125,7 +125,7 @@ describe('MyWidget', () => {
 
 ### Mocking Middleware
 
-When initializing the harness mock middleware can be specified as part of the `HarnessOptions`. The mock middleware is defined as a tuple of the original middleware and the mock middleware implementation. Mock middleware is created in the same way as any other middleware.
+When initializing the harness, mock middleware can be specified as part of the `HarnessOptions`. The mock middleware is defined as a tuple of the original middleware and the mock middleware implementation. Mock middleware is created in the same way as any other middleware.
 
 ```ts
 import myMiddleware from './myMiddleware';
@@ -209,7 +209,7 @@ describe('MyWidget', () => {
 
 Using `createMockStoreMiddleware` from `@dojo/framework/testing/mocks/middleware/store` creates a typed mock store middleware, which optionally supports mocking processes. To mock a store process pass a tuple of the original store process and the stub process. The middleware will swap out the call to the original process for the passed stub. If no stubs are passed, the middleware will simply no-op all process calls.
 
-To make changes to the mock store, call the `mockStore` with a function that returns an array of store operations. This is injected with the stores `path` function, that should be used to create the pointer to the state that needs changing.
+To make changes to the mock store, call the `mockStore` with a function that returns an array of store operations. This is injected with the stores `path` function to create the pointer to the state that needs changing.
 
 ```tsx
 mockStore((path) => [replace(path('details', { id: 'id' })]);
@@ -247,7 +247,7 @@ export default factory(function MyWidget({ properties: { id }, middleware: store
 });
 ```
 
-Using the mock store middleware would look like:
+Using the mock store middleware:
 
 > tests/unit/MyWidget.tsx
 
@@ -261,7 +261,7 @@ import MyWidget from './MyWidget';
 import MyState from './interfaces';
 import store from './store';
 
-// import a stub/mock lib, doesn't have to sinon
+// import a stub/mock lib, doesn't have to be sinon
 import { stub } from 'sinon';
 
 describe('MyWidget', () => {
@@ -272,7 +272,7 @@ describe('MyWidget', () => {
          const myProcessStub = stub();
          // type safe mock store middleware
          // pass through an array of tuples `[originalProcess, stub]` for mocked processes
-         // calls to processes not stubbed/mocked will just be ignored
+         // calls to processes not stubbed/mocked get ignored
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
          const h = harness(() => <MyWidget {...properties} />, {
              middleware: [store, mockStore]
@@ -476,7 +476,7 @@ h.getRender(1);
 
 ## Assertion Templates
 
-Assertion Templates allow you to build expected render functions to pass to `h.expect()`. The idea behind Assertion Templates is to always assert against the entire render output, and modify portions of the assertion itself has needed.
+Assertion Templates allow you to build expected render functions to pass to `h.expect()`. The idea behind Assertion Templates is to always assert against the entire render output, and modify portions of the assertion itself as needed.
 
 To use Assertion Templates first import the module:
 
