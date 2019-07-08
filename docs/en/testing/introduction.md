@@ -1,6 +1,6 @@
 # Introduction
 
-Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allows you to efficiently test the output of your widgets and validate your expecations.
+Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allows you to efficiently test the output of your widgets and validate your expectations.
 
 | Feature             | Description                                                                                                                                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
