@@ -407,51 +407,6 @@ registerSuite('d', {
 				assert.strictEqual(children[4], 'my text');
 				assert.isNull(children[5]);
 			}
-		},
-		'returning a new node replaces the node, and new children will be checked'() {
-			const childOne = v('div', { id: 'child-one' });
-			const nodeOne = w(WidgetBase, {}, [childOne]);
-			const nodeTwo = 'text node';
-			const childTwo = v('div');
-			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
-			const nodeFour = v('div', { id: 'node-four' });
-			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
-			const newGrandChild = v('div', { id: 'grand-child' });
-			const newChildOne = w(WidgetBase, {}, [newGrandChild]);
-			const newChildFour = v('div', { id: 'new-child-four' });
-			const newNodeFour = v('div', { id: 'new-node-four' }, [newChildFour]);
-			const newNodes = decorate(nodes, {
-				modifier: (node: DNode) => {
-					if (node === 'text node') {
-						return 'new text node';
-					}
-
-					if (isVNode(node) || isWNode(node)) {
-						if (node.properties.id === 'child-one') {
-							return newChildOne;
-						}
-
-						if (node.properties.id === 'grand-child') {
-							node.properties = { id: 'new-grand-child-id' };
-						}
-
-						if (node.properties.id === 'node-four') {
-							return newNodeFour;
-						}
-
-						if (node.properties.id === 'node-three' || node.properties.id === 'new-child-four') {
-							return false;
-						}
-					}
-				}
-			});
-			assert.strictEqual(newNodes.length, 4);
-			assert.strictEqual(nodeOne.children[0], newChildOne);
-			assert.strictEqual(newGrandChild.properties.id, 'new-grand-child-id');
-			assert.strictEqual(newNodes[1], 'new text node');
-			assert.isFalse(newNodes[2]);
-			assert.strictEqual(newNodes[3], newNodeFour);
-			assert.isFalse(newNodeFour.children![0]);
 		}
 	},
 	'isVNode and isWNode': {

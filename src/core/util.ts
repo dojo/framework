@@ -1,12 +1,16 @@
 import { Handle } from './Destroyable';
-import { DNode, RenderResult, VNode, WNode } from './interfaces';
+import { DNode, RenderResult } from './interfaces';
 import { isWNode, isVNode } from './vdom';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 export interface Modifier<T extends DNode> {
-	(dNode: T, breaker: () => void): void | VNode | WNode | null | string | boolean;
+	(dNode: T, breaker: () => void): void;
+}
+
+export interface Replace<T extends DNode> {
+	(dNode: T, breaker: () => void): DNode;
 }
 
 export interface Predicate<T extends DNode> {
@@ -15,6 +19,12 @@ export interface Predicate<T extends DNode> {
 
 export interface DecorateOptions<T extends DNode> {
 	modifier: Modifier<T>;
+	predicate?: Predicate<T>;
+	shallow?: boolean;
+}
+
+export interface ReplaceOptions<T extends DNode> {
+	replace: Replace<T>;
 	predicate?: Predicate<T>;
 	shallow?: boolean;
 }
@@ -368,23 +378,69 @@ export function decorate(
 		shallow = optionsOrModifier.shallow || false;
 	}
 
+	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
+	function breaker() {
+		nodes = [];
+	}
+	while (nodes.length) {
+		const node = nodes.shift();
+		if (node && node !== true) {
+			if (!shallow && (isWNode(node) || isVNode(node)) && node.children) {
+				nodes = [...nodes, ...node.children];
+			}
+			if (!predicate || predicate(node)) {
+				modifier(node, breaker);
+			}
+		}
+	}
+	return dNodes;
+}
+
+/**
+ * Generic replacement function for DNodes. The nodes are replaced with whatever node is returned in the provided replacement
+ * functions.
+ *
+ * The children of each node will also be checked, unless `shallow` is true. If a node is replaced the new node's children
+ * will be checked instead of the old node
+ */
+export function replace<T extends DNode>(dNodes: DNode, options: ReplaceOptions<T>): DNode;
+export function replace<T extends DNode>(dNodes: DNode[], options: ReplaceOptions<T>): DNode[];
+export function replace<T extends DNode>(dNodes: DNode | DNode[], options: ReplaceOptions<T>): DNode | DNode[];
+export function replace<T extends DNode>(dNodes: DNode, replace: Replace<T>, predicate: Predicate<T>): DNode;
+export function replace<T extends DNode>(dNodes: DNode[], replace: Replace<T>, predicate: Predicate<T>): DNode[];
+export function replace<T extends DNode>(
+	dNodes: RenderResult,
+	replace: Replace<T>,
+	predicate: Predicate<T>
+): RenderResult;
+export function replace(dNodes: DNode, replace: Replace<DNode>): DNode;
+export function replace(dNodes: DNode[], replace: Replace<DNode>): DNode[];
+export function replace(dNodes: RenderResult, replace: Replace<DNode>): RenderResult;
+export function replace(
+	dNodes: DNode | DNode[],
+	optionsOrReplace: Replace<DNode> | ReplaceOptions<DNode>,
+	predicate?: Predicate<DNode>
+): DNode | DNode[] {
+	let shallow = false;
+	let replace;
+	if (typeof optionsOrReplace === 'function') {
+		replace = optionsOrReplace;
+	} else {
+		replace = optionsOrReplace.replace;
+		predicate = optionsOrReplace.predicate;
+		shallow = optionsOrReplace.shallow || false;
+	}
+
 	let shouldDrain = false;
 	function breaker() {
 		shouldDrain = true;
 	}
 
-	function modifyNode(modifier: Modifier<DNode>, node: DNode) {
-		const modifiedNode = modifier(node, breaker);
-		return modifiedNode === undefined ? node : modifiedNode;
-	}
-
 	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
 	for (let i = 0; i < nodes.length; i++) {
 		const node = nodes[i];
-		if (node && node !== true) {
-			if (!predicate || predicate(node)) {
-				nodes[i] = modifyNode(modifier, node);
-			}
+		if (!predicate || predicate(node)) {
+			nodes[i] = replace(node, breaker);
 		}
 		if (shouldDrain) {
 			break;
@@ -393,20 +449,21 @@ export function decorate(
 
 	const rootNodes = nodes.slice();
 
-	if (!shallow) {
+	if (!shallow && !shouldDrain) {
 		while (nodes.length) {
 			const node = nodes.shift();
 			if ((isWNode(node) || isVNode(node)) && node.children) {
 				for (let i = 0; i < node.children.length; i++) {
 					const child = node.children[i];
-					if (child && child !== true) {
+					if (child) {
 						if (!predicate || predicate(child)) {
-							node.children[i] = modifyNode(modifier, child);
+							node.children[i] = replace(child, breaker);
 						}
 					}
 					nodes.push(node.children[i]);
 					if (shouldDrain) {
 						nodes = [];
+						break;
 					}
 				}
 			}

@@ -1,3 +1,5 @@
+import { isVNode, isWNode, v, w } from '../../../src/core/vdom';
+
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
@@ -9,9 +11,12 @@ import {
 	uuid,
 	mixin,
 	partial,
-	guaranteeMinimumTimeout
+	guaranteeMinimumTimeout,
+	replace
 } from '../../../src/core/util';
 import { Handle } from '../../../src/core/Destroyable';
+import WidgetBase from '../../../src/core/WidgetBase';
+import { DNode, VNode, WNode } from '../../../src/core/interfaces';
 
 const TIMEOUT = 3000;
 let timerHandle: Handle | null;
@@ -539,6 +544,245 @@ registerSuite('util functions', {
 
 			run();
 			assert.strictEqual(callCount, 1, 'Function should be called as soon as it is first invoked');
+		}
+	},
+	replace: {
+		'returning a new node replaces the node, and new children will be checked'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const newGrandChild = v('div', { id: 'grand-child' });
+			const newChildOne = w(WidgetBase, {}, [newGrandChild]);
+			const newNewGrandChild = v('div', { id: 'new-grand-child' });
+			const newChildFour = v('div', { id: 'new-child-four' });
+			const newNodeFour = v('div', { id: 'new-node-four' }, [newChildFour]);
+			const newNodes = replace(nodes, {
+				replace: (node: DNode) => {
+					if (node === 'text node') {
+						return 'new text node';
+					}
+
+					if (isVNode(node) || isWNode(node)) {
+						if (node.properties.id === 'child-one') {
+							return newChildOne;
+						}
+
+						if (node.properties.id === 'node-four') {
+							return newNodeFour;
+						}
+
+						if (node.properties.id === 'node-three') {
+							return false;
+						}
+
+						if (node.properties.id === 'grand-child') {
+							return newNewGrandChild;
+						}
+
+						if (node.properties.id === 'new-child-four') {
+							return undefined;
+						}
+					}
+
+					return node;
+				}
+			});
+			assert.strictEqual(newNodes.length, 4);
+			assert.strictEqual(nodeOne.children[0], newChildOne);
+			assert.strictEqual(newChildOne.children[0], newNewGrandChild);
+			assert.strictEqual(newNodes[1], 'new text node');
+			assert.isFalse(newNodes[2]);
+			assert.strictEqual(newNodes[3], newNodeFour);
+			assert.isUndefined(newNodeFour.children![0]);
+		},
+
+		'should accept a replace function'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const newGrandChild = v('div', { id: 'grand-child' });
+			const newChildOne = w(WidgetBase, {}, [newGrandChild]);
+			const newNewGrandChild = v('div', { id: 'new-grand-child' });
+			const newChildFour = v('div', { id: 'new-child-four' });
+			const newNodeFour = v('div', { id: 'new-node-four' }, [newChildFour]);
+			const newNodes = replace(nodes, (node: DNode) => {
+				if (node === 'text node') {
+					return 'new text node';
+				}
+
+				if (isVNode(node) || isWNode(node)) {
+					if (node.properties.id === 'child-one') {
+						return newChildOne;
+					}
+
+					if (node.properties.id === 'node-four') {
+						return newNodeFour;
+					}
+
+					if (node.properties.id === 'node-three') {
+						return false;
+					}
+
+					if (node.properties.id === 'grand-child') {
+						return newNewGrandChild;
+					}
+
+					if (node.properties.id === 'new-child-four') {
+						return undefined;
+					}
+				}
+
+				return node;
+			});
+			assert.strictEqual(newNodes.length, 4);
+			assert.strictEqual(nodeOne.children[0], newChildOne);
+			assert.strictEqual(newChildOne.children[0], newNewGrandChild);
+			assert.strictEqual(newNodes[1], 'new text node');
+			assert.isFalse(newNodes[2]);
+			assert.strictEqual(newNodes[3], newNodeFour);
+			assert.isUndefined(newNodeFour.children![0]);
+		},
+
+		'should not recurse if "shallow" option is true'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const newNodeFour = v('div', { id: 'new-node-four' });
+			const newNodes = replace(nodes, {
+				shallow: true,
+				replace: (node: DNode) => {
+					if (node === 'text node') {
+						return 'new text node';
+					}
+
+					if (isVNode(node) || isWNode(node)) {
+						if (node.properties.id && node.properties.id.indexOf('child') > -1) {
+							return null;
+						}
+
+						if (node.properties.id === 'node-four') {
+							return newNodeFour;
+						}
+
+						if (node.properties.id === 'node-three') {
+							return false;
+						}
+					}
+
+					return node;
+				}
+			});
+			assert.strictEqual(newNodes.length, 4);
+			assert.strictEqual(nodeOne.children[0], childOne);
+			assert.strictEqual(newNodes[1], 'new text node');
+			assert.isFalse(newNodes[2]);
+			assert.strictEqual(newNodes[3], newNodeFour);
+		},
+
+		'replaces only nodes that match predicate'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div', { id: 'child-two' });
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const newNodes = replace(nodes, () => null, function(node: any): node is VNode {
+				return Boolean(node.properties && node.properties.id && node.properties.id.indexOf('child') > -1);
+			});
+			assert.strictEqual(newNodes.length, 4);
+			assert.strictEqual(newNodes[0], nodeOne);
+			assert.strictEqual(newNodes[1], nodeTwo);
+			assert.strictEqual(newNodes[2], nodeThree);
+			assert.strictEqual(newNodes[3], nodeFour);
+			assert.strictEqual(nodeOne.children[0], null);
+			assert.strictEqual((nodeThree as any).children[0], null);
+		},
+
+		'replaces no node when predicate not matched'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const predicate = (node: DNode): node is WNode => {
+				return false;
+			};
+			const newNodes = replace(nodes, () => null, predicate);
+			assert.strictEqual(newNodes.length, 4);
+			assert.strictEqual(newNodes[0], nodeOne);
+			assert.strictEqual(newNodes[1], nodeTwo);
+			assert.strictEqual(newNodes[2], nodeThree);
+			assert.strictEqual(newNodes[3], nodeFour);
+			assert.strictEqual(nodeOne.children[0], childOne);
+			assert.strictEqual((nodeThree as any).children[0], childTwo);
+		},
+
+		'Calling the breaker drains the node queue'() {
+			const childOne = v('div', { id: 'child-one' });
+			const nodeOne = w(WidgetBase, {}, [childOne]);
+			const nodeTwo = 'text node';
+			const childTwo = v('div');
+			const nodeThree = v('div', { id: 'node-three' }, [childTwo]);
+			const nodeFour = v('div', { id: 'node-four' });
+			const nodes = [nodeOne, nodeTwo, nodeThree, nodeFour];
+			const newNodes = replace(nodes, (node: DNode, breaker) => {
+				if (node === 'text node') {
+					breaker();
+					return 'new text node';
+				}
+
+				return null;
+			});
+			assert.strictEqual(newNodes.length, 4);
+			assert.isNull(newNodes[0]);
+			assert.strictEqual(newNodes[1], 'new text node');
+			assert.strictEqual(newNodes[2], nodeThree);
+			assert.strictEqual(newNodes[3], nodeFour);
+			assert.strictEqual((newNodes[2] as any).children[0], childTwo);
+		},
+
+		'Calling the breaker drains the node queue when editing child nodes'() {
+			const childOne = v('div', { id: 'child-one' });
+			const childTwo = v('div', { id: 'child-two' });
+			const childThree = v('div', { id: 'child-three' });
+			const nodeOne = w(WidgetBase, {}, [childOne, childTwo]);
+			const nodeTwo = 'text node';
+			const nodeThree = w(WidgetBase, {}, [childThree]);
+			const nodes = [nodeOne, nodeTwo, nodeThree];
+			const newNodes = replace(nodes, (node: DNode, breaker) => {
+				if (node === 'text node') {
+					return 'new text node';
+				}
+
+				if (isVNode(node) && node.properties.id && node.properties.id.indexOf('child') > -1) {
+					breaker();
+					return null;
+				}
+
+				return node;
+			});
+			assert.strictEqual(newNodes.length, 3);
+			assert.strictEqual(newNodes[0], nodeOne);
+			assert.strictEqual(newNodes[1], 'new text node');
+			assert.strictEqual(newNodes[2], nodeThree);
+			assert.isNull((newNodes[0] as any).children[0]);
+			assert.strictEqual((newNodes[0] as any).children[1], childTwo);
+			assert.strictEqual((newNodes[2] as any).children[0], childThree);
 		}
 	}
 });
