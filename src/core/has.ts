@@ -476,3 +476,5 @@ add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== 
 add('build-elide', false);
 
 add('test', false);
+
+add('global-this', () => typeof global.globalThis !== 'undefined');
