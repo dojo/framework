@@ -279,9 +279,7 @@ describe('MyWidget', () => {
          });
          h.expect(/* assertion template for `Loading`*/);
 
-         // would be useful to assert the calls to processes effectively stubbed
-         // at the moment there are two APIs from `mockStore` that just return details
-         // that need to be asserted in user land
+         // assert again the stubbed process
          expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
 
          mockStore((path) => [replace(path('isLoading', true)]);
