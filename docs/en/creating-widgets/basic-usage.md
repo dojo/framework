@@ -10,11 +10,11 @@
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
-export const MyWidget = renderFactory(() => <div>Hello from a Dojo widget!</div>);
-
-export default MyWidget;
+export default factory(function MyWidget() {
+	return <div>Hello from a Dojo widget!</div>;
+});
 ```
 
 ## Specifying widget properties
@@ -26,12 +26,12 @@ export default MyWidget;
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 
-const renderFactory = create().properties<{
+const factory = create().properties<{
 	name: string;
 	onNameChange?(newName: string): void;
 }>();
 
-export const NameChanger = renderFactory(({ properties: { name, onNameChange } }) => {
+export default factory(function NameChanger({ properties: { name, onNameChange } }) {
 	let newName: string = '';
 
 	return (
@@ -53,8 +53,6 @@ export const NameChanger = renderFactory(({ properties: { name, onNameChange } }
 		</div>
 	);
 });
-
-export default NameChanger;
 ```
 
 ## Composing widgets
@@ -69,21 +67,21 @@ import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
 
 import NameChanger from './NameChanger';
 
-const renderFactory = create({ invalidator });
+const factory = create({ invalidator });
 
 let currentName: string = 'Alice';
 
-export const NameHandler = renderFactory(({ middleware: { invalidator } }) => (
-	<NameChanger
-		name={currentName}
-		onNameChange={(newName) => {
-			currentName = newName;
-			invalidator();
-		}}
-	/>
-));
-
-export default NameHandler;
+export default factory(function NameHandler({ middleware: { invalidator } }) {
+	return (
+		<NameChanger
+			name={currentName}
+			onNameChange={(newName) => {
+				currentName = newName;
+				invalidator();
+			}}
+		/>
+	);
+});
 ```
 
 ## Rendering to the DOM
