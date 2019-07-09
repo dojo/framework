@@ -22,9 +22,9 @@ At their heart, widgets are simply render functions which return VDOM nodes that
 
 Widgets are typically housed within their own self-named TypeScript modules, with the widget definition as the default export from each module.
 
-The simplest way of representing widgets is based on plain functions, starting from a render function factory definition. Dojo provides a `create()` primitive in the `@dojo/framework/core/vdom` module that allows authors to define their widget render function factories.
+The simplest way of representing widgets is based on plain functions, starting from a render function factory definition. Dojo provides a `create()` primitive in the `@dojo/framework/core/vdom` module that allows authors to define their widget render function factories. Named render functions are preferred as they can help with debugging, but this is not a requirement; widgets can also by identified via an exported variable holding their factory definition.
 
-Dojo also supports class-based widgets for applications that prefer the structure of classes over functions. Such widgets inherit from `WidgetBase`, provided by the `@dojo/framework/core/WidgetBase` module, and are required to implement a `render()` method.
+Dojo optionally supports class-based widgets for applications that prefer the structure of classes over functions. Such widgets inherit from `WidgetBase`, provided by the `@dojo/framework/core/WidgetBase` module, and are required to implement a `render()` method.
 
 The following example shows a trivial yet complete widget within a Dojo application:
 
@@ -35,11 +35,11 @@ The following example shows a trivial yet complete widget within a Dojo applicat
 ```ts
 import { create } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
-export const MyWidget = renderFactory(() => []);
-
-export default MyWidget;
+export default factory(function MyWidget() {
+	return [];
+});
 ```
 
 **Class-based variant:**
@@ -58,7 +58,7 @@ This widget returns an empty array from its render function, so has no structura
 
 The process of translating virtual DOM nodes to output on a web page is handled by [Dojo's rendering system](#rendering-in-dojo).
 
-### Widget styling
+## Widget styling
 
 Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both function- and class-based widget variants. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
 
@@ -141,11 +141,11 @@ Widgets with a `.tsx` file extension can output TSX from their render function b
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
-export const MyTsxWidget = renderFactory(() => <div>Hello from a TSX widget!</div>);
-
-export default MyTsxWidget;
+export default factory(function MyTsxWidget() {
+	return <div>Hello from a TSX widget!</div>;
+});
 ```
 
 **Class-based variant:**
@@ -197,11 +197,11 @@ The following sample widget includes a more typical render function that returns
 ```ts
 import { create, v } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
-export const MyWidget = renderFactory(() => v('div', ['Hello, Dojo!']));
-
-export default MyWidget;
+export default factory(function MyWidget() {
+	return v('div', ['Hello, Dojo!']);
+});
 ```
 
 **Class-based variant:**
@@ -228,15 +228,13 @@ Similarly, widgets can compose one another using the `w()` method, and also outp
 ```ts
 import { create, v, w } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
 import MyWidget from './MyWidget';
 
-export const MyComposingWidget = renderFactory(() =>
+export default factory(function MyComposingWidget() =>
 	v('div', ['This widget outputs several virtual nodes in a hierarchy', w(MyWidget, {})])
 );
-
-export default MyComposingWidget;
 ```
 
 **Class-based variant:**
@@ -397,17 +395,17 @@ Given element ordering, the following 'firstFocus' input will receive focus on t
 ```tsx
 import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
 
-const renderFactory = create({ invalidator });
+const factory = create({ invalidator });
 
-export const FocusExample = renderFactory(({ middleware: { invalidator } }) => (
-	<div>
-		<input key="subsequentFocus" type="text" focus={() => true} />
-		<input key="firstFocus" type="text" focus={true} />
-		<button onclick={() => invalidator()}>Re-render</button>
-	</div>
-));
-
-export default FocusExample;
+export default factory(function FocusExample({ middleware: { invalidator } }) {
+	return (
+		<div>
+			<input key="subsequentFocus" type="text" focus={() => true} />
+			<input key="firstFocus" type="text" focus={true} />
+			<button onclick={() => invalidator()}>Re-render</button>
+		</div>
+	);
+});
 ```
 
 **Class-based variant:**
@@ -561,26 +559,26 @@ The following example illustrates these patterns:
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 
-const renderFactory = create();
+const factory = create();
 
 let myState: string = 'Hello from a stateful widget!';
 let counter: number = 0;
 
-export const MyEncapsulatedStateWidget = renderFactory(() => (
-	<div>
-		Current widget state: {myState}
-		<br />
-		<button
-			onclick={() => {
-				myState = 'State change iteration #' + ++counter;
-			}}
-		>
-			Change State
-		</button>
-	</div>
-));
-
-export default MyEncapsulatedStateWidget;
+export default factory(function MyEncapsulatedStateWidget() {
+	return (
+		<div>
+			Current widget state: {myState}
+			<br />
+			<button
+				onclick={() => {
+					myState = 'State change iteration #' + ++counter;
+				}}
+			>
+				Change State
+			</button>
+		</div>
+	);
+});
 ```
 
 **Class-based variant:**
@@ -634,27 +632,27 @@ The following is an updated `MyEncapsulatedStateWidget` example that will correc
 ```tsx
 import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
 
-const renderFactory = create({ invalidator });
+const factory = create({ invalidator });
 
 let myState: string = 'Hello from a stateful widget!';
 let counter: number = 0;
 
-export const MyEncapsulatedStateWidget = renderFactory(({ middleware: { invalidator } }) => (
-	<div>
-		Current widget state: {myState}
-		<br />
-		<button
-			onclick={() => {
-				myState = 'State change iteration #' + ++counter;
-				invalidator();
-			}}
-		>
-			Change State
-		</button>
-	</div>
-));
-
-export default MyEncapsulatedStateWidget;
+export default factory(function MyEncapsulatedStateWidget({ middleware: { invalidator } }) {
+	return (
+		<div>
+			Current widget state: {myState}
+			<br />
+			<button
+				onclick={() => {
+					myState = 'State change iteration #' + ++counter;
+					invalidator();
+				}}
+			>
+				Change State
+			</button>
+		</div>
+	);
+});
 ```
 
 **Class-based variant:**
@@ -671,8 +669,7 @@ import { tsx } from '@dojo/framework/core/vdom';
 export default class MyEncapsulatedStateWidget extends WidgetBase {
 	private myState: string = 'Hello from a stateful widget!';
 
-	@watch()
-	private counter: number = 0;
+	@watch() private counter: number = 0;
 
 	protected render() {
 		return (
@@ -711,12 +708,12 @@ For example, a widget supporting state and event handler properties:
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 
-const renderFactory = create().properties<{
+const factory = create().properties<{
 	name: string;
 	onNameChange?(newName: string): void;
 }>();
 
-export const MyWidget = renderFactory(({ properties: { name, onNameChange } }) => {
+export default factory(function MyWidget({ properties: { name, onNameChange } }) {
 	let newName: string = '';
 
 	return (
@@ -738,8 +735,6 @@ export const MyWidget = renderFactory(({ properties: { name, onNameChange } }) =
 		</div>
 	);
 });
-
-export default MyWidget;
 ```
 
 **Class-based variant:**
@@ -791,21 +786,21 @@ import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
 
 import MyWidget from './MyWidget';
 
-const renderFactory = create({ invalidator });
+const factory = create({ invalidator });
 
 let currentName: string = 'Alice';
 
-export const NameHandler = renderFactory(({ middleware: { invalidator } }) => (
-	<MyWidget
-		name={currentName}
-		onNameChange={(newName) => {
-			currentName = newName;
-			invalidator();
-		}}
-	/>
-));
-
-export default NameHandler;
+export default factory(function NameHandler({ middleware: { invalidator } }) {
+	return (
+		<MyWidget
+			name={currentName}
+			onNameChange={(newName) => {
+				currentName = newName;
+				invalidator();
+			}}
+		/>
+	);
+});
 ```
 
 **Class-based variant:**
@@ -817,8 +812,7 @@ import watch from '@dojo/framework/core/decorators/watch';
 import MyWidget from './MyWidget';
 
 export default class NameHandler extends WidgetBase {
-	@watch()
-	private currentName: string = 'Alice';
+	@watch() private currentName: string = 'Alice';
 
 	protected render() {
 		return (
