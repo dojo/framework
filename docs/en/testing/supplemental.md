@@ -154,15 +154,81 @@ There are a number of mock middlewares available to support testing widgets that
 
 ##### Mock `node` Middleware
 
-Using `createMockNodeMiddleware` from `@dojo/framework/testing/mocks/middleware/node` creates a mock node middleware. To set the expected return from the node mock, call the `mockNode` with a `key` and expected node.
+Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+
+```ts
+import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+
+// create the mock node middleware
+const mockNode = createNodeMock();
+
+// create a mock DOM node
+const domNode = {};
+
+// call the mock middleware with a key and the DOM
+// to return.
+mockNode('key', domNode);
+```
 
 ##### Mock `intersection` Middleware
 
-Using `createMockIntersectionMiddleware` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the `mockIntersection` with a `key` and expected intersection details.
+Using `createIntersectionMock` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the created mock intersection middleware with a `key` and expected intersection details.
+
+Consider the following widget:
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import intersection from '@dojo/framework/core/middleware/intersection';
+
+const factory = create({ intersection });
+
+const App = factory(({ middleware: { intersection } }) => {
+	const details = intersection.get('root');
+	return <div key="root">{JSON.stringify(details)}</div>;
+});
+```
+
+Using the mock intersection middleware:
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
+import intersection from '@dojo/framework/core/middleware/intersection';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('test', () => {
+		// create the intersection mock
+		const intersectionMock = createIntersectionMock();
+		// pass the intersection mock to the harness so it knows to
+		// replace the original middleware
+		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+
+		// call harness.expect as usual, asserting the default response
+		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
+
+		// use the intersection mock to set the expected return
+		// of the intersection middleware by key
+		intersectionMock('root', { isIntersecting: true });
+
+		// assert again with the updated expectation
+		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
+	});
+});
+```
 
 ##### Mock `resize` Middleware
 
-Using `createMockResizeMiddleware` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the `mockResize` with a `key` and expected content rects.
+Using `createResizeMock` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the created mock resize middleware with a `key` and expected content rects.
+
+```ts
+const mockResize = createResizeMock();
+mockResize('key', { width: 100 });
+```
+
+Consider the following widget:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom'
@@ -177,9 +243,12 @@ export const MyWidget = factory(function MyWidget({ middleware }) => {
 });
 ```
 
+Using the mock resize middleware:
+
 ```tsx
 import { tsx } from '@dojo/framework/core/vdom';
-import createMockResizeMiddleware from '@dojo/framework/testing/mocks/middleware/resize';
+import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
+import resize from '@dojo/framework/core/middleware/resize';
 import harness from '@dojo/framework/testing/harness';
 
 import MyWidget from './MyWidget';
