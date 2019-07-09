@@ -9,7 +9,7 @@ Dojo differentiates between several types of styling, each representing a differ
 -   [Widget non-themeable styles](#structural-widget-styling) (_granularity:_ per-widget)
     -   The minimum styles necessary for a widget to function, that are not intended to be overridden by a theme. Widgets refer to these style classes directly from their CSS module imports when rendering.
 -   [Widget themeable styles](#making-themeable-widgets) (_granularity:_ per-widget)
-    -   Widget styles that can be overridden via theming. Widgets use the [`theme.classes(css)`](#theme-middleware-classes) API from the `theme` middleware, passing in the CSS that requires theming and using the returned class names against allowing users of the widget can override some or all of these classes, as required.
+    -   Widget styles that can be overridden via theming. Widgets use the [`theme.classes(css)`](#theme-middleware-classes) API from the `theme` middleware, passing in the CSS that requires theming and using the returned class names when rendering. .Users of the widget can override some or all of these classes, as required.
 -   [Cross-cutting styles](#making-themeable-applications) (_granularity:_ application-wide)
     -   Styles that apply across several widgets, whether widgets of different types, or multiple instances of a single widget type. These styles usually provide a consistent visual presentation for all themeable widgets used within an application. Cross-cutting styles can be provided/referenced via several mechanisms:
         -   Providing [an application-wide theme](#making-themeable-applications)
@@ -240,7 +240,7 @@ export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 	return (
 		<div
 			classes={[
-				/* requirement 2: */
+				/* requirement 3: */
 				root,
 				myWidgetExtraThemeableClass,
 				css.myWidgetExtraThemeableClass
@@ -412,7 +412,7 @@ Note that it is a widget author's responsibility to explicitly pass the `classes
 
 ## Making themeable applications
 
-In order to specify a theme for all themeable widgets in an application, the `theme.set` API from the `theme` middleware can be used in the applications top level widget. Setting a default or initial theme, can be done by checking `theme.get` before calling `theme.set`.
+In order to specify a theme for all themeable widgets in an application, the `theme.set` API from the `theme` middleware can be used in the applications top level widget. Setting a default or initial theme can be done by checking `theme.get` before calling `theme.set`.
 
 For example, specifying a primary application theme:
 
@@ -432,7 +432,7 @@ export default factory(function App({ middleware: { theme }}) {
 		theme.set(myTheme);
 	}
 	return (
-		// you application's widgets
+		// the application's widgets
 	);
 });
 ```

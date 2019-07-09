@@ -131,12 +131,12 @@ export default factory(function App({ middleware: { theme }}) {
 		theme.set(myTheme);
 	}
 	return (
-		// you application's widgets
+		// the application's widgets
 	);
 });
 ```
 
-**Note:** When using both function-based and class-based widgets, the theme needs to be registered with the application registry. This is true if any widget dependencies, such as `@dojo/widgets` are classed-based also. Please see the [class-based theming section]() for more details.
+**Note:** When using both function-based and class-based widgets, the theme needs to be registered with the application registry. This is true when using any class-based widget dependencies such as `@dojo/widgets`. Please see the [class-based theming section]() for more details.
 
 ## Changing the theme within an application
 
