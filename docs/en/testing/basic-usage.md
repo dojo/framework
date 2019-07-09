@@ -160,9 +160,6 @@ describe('Profile', () => {
 
 Using the `setChildren` method of an Assertion Template with the `~key` value you assigned will return a assertion template with the updated virtual DOM structure that you can test your widget output against.
 
-[browserstack]: https://www.browserstack.com/
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/
-[saucelabs]: https://saucelabs.com/
 [selenium]: http://www.seleniumhq.org/
-[testingbot]: https://testingbot.com/
