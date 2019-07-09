@@ -5596,6 +5596,38 @@ jsdomDescribe('vdom', () => {
 			assert.isTrue(onclickListener.called, 'onclickListener should have been called');
 			document.body.removeChild(iframe);
 		});
+		it('supports merging svg nodes', () => {
+			const iframe = document.createElement('iframe');
+			document.body.appendChild(iframe);
+			iframe.contentDocument!.write(`<div><svg></svg></div>`);
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
+			const svg = root.childNodes[0];
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [v('svg')]);
+				}
+			}
+			const r = renderer(() => w(Foo, {}));
+			r.mount({ domNode: iframe.contentDocument!.body });
+			assert.strictEqual(root.childNodes[0], svg);
+		});
+		it('supports inserting before nodes that are not merged', () => {
+			const iframe = document.createElement('iframe');
+			document.body.appendChild(iframe);
+			iframe.contentDocument!.write(`<div><div></div></div>`);
+			iframe.contentDocument!.close();
+			const root = iframe.contentDocument!.body.firstChild as HTMLElement;
+			const span = root.childNodes[0];
+			class Foo extends WidgetBase {
+				render() {
+					return v('div', [v('span')]);
+				}
+			}
+			const r = renderer(() => w(Foo, {}));
+			r.mount({ domNode: iframe.contentDocument!.body });
+			assert.notStrictEqual(root.childNodes[0], span);
+		});
 		it('Removes unknown nodes when merging', () => {
 			const iframe = document.createElement('iframe');
 			document.body.appendChild(iframe);

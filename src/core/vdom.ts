@@ -1272,8 +1272,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			meta: { mergeNodes: arrayFrom(domNode.childNodes) }
 		});
 		_runProcessQueue();
-		_cleanUpMergedNodes();
 		_runDomInstructionQueue();
+		_cleanUpMergedNodes();
 		_insertBeforeMap = undefined;
 		_runCallbacks();
 	}
@@ -1355,8 +1355,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 			}
 		}
-		_cleanUpMergedNodes();
 		_runDomInstructionQueue();
+		_cleanUpMergedNodes();
 		_runCallbacks();
 	}
 
@@ -1480,7 +1480,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				} = next;
 				for (let i = 0; i < mergeNodes.length; i++) {
 					const domElement = mergeNodes[i] as Element;
-					if (tag.toUpperCase() === (domElement.tagName || '')) {
+					const tagName = domElement.tagName || '';
+					if (tag.toUpperCase() === tagName.toUpperCase()) {
 						const mergeNodeIndex = _allMergedNodes.indexOf(domElement);
 						if (mergeNodeIndex !== -1) {
 							_allMergedNodes.splice(mergeNodeIndex, 1);
