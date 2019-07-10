@@ -175,19 +175,15 @@ The `theme` middleware is imported from the `@dojo/framework/core/middleware/the
 
 ### `theme.classes` method
 
+The `theme.classes` transforms widgets CSS class names to the the application or widget's theme class name.
+
 ```ts
-type ClassNames = {
-	[key: string]: string;
-};
+theme.classes<T extends ClassNames>(css: T): T;
 ```
 
--   `theme.classes<T extends ClassNames>(css: T): T`
-
-    -   **Note 1:** Theme overrides are at the level of CSS classes only, not individual style properties within a class.
-
-    -   **Note 2:** If the currently active theme does **not** provide an override for a given styling class, the widget will fall back to using its default style properties for that class.
-
-    -   **Note 3:** If the currently active theme does provide an override for a given styling class, the widget will _only_ have the set of CSS properties specified in the theme applied to it. For example, if a widget's default styling class contains ten CSS properties but the current theme only specifies one, the widget will render with a single CSS property and lose the other nine that were not specified in the theme override.
+-   **Note 1:** Theme overrides are at the level of CSS classes only, not individual style properties within a class.
+-   **Note 2:** If the currently active theme does **not** provide an override for a given styling class, the widget will fall back to using its default style properties for that class.
+-   **Note 3:** If the currently active theme does provide an override for a given styling class, the widget will _only_ have the set of CSS properties specified in the theme applied to it. For example, if a widget's default styling class contains ten CSS properties but the current theme only specifies one, the widget will render with a single CSS property and lose the other nine that were not specified in the theme override.
 
 ### `theme` Middleware Properties
 
@@ -282,18 +278,7 @@ const factory = create({ theme });
 export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 	const { root } = theme.classes(css);
 	const { commonBase } = theme.classes(commonCss);
-	return (
-		<div
-			classes={[
-				/* requirement 2: */
-				root,
-				commonBase,
-				css.myWidgetExtraThemeableClass
-			]}
-		>
-			Hello from a themed Dojo widget!
-		</div>
-	);
+	return <div classes={[root, commonBase, css.myWidgetExtraThemeableClass]}>Hello from a themed Dojo widget!</div>;
 });
 ```
 
