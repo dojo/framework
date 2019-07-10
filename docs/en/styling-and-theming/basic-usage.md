@@ -113,7 +113,7 @@ export default {
 
 ## Specifying a default application theme
 
-The `theme` middleware can be used to set the application theme. To set a "default" or initial theme the `theme.set` function can be used with the `theme.get` function to determine if the theme needs to be set. Setting the default theme should be done in the application's top level widget.
+The `theme` middleware can be used to set the application theme. To set a "default" or initial theme, the `theme.set` function can be used with the `theme.get` function to determine if the theme needs to be set. Setting the default theme should be done in the application's top level widget.
 
 > src/App.tsx
 
