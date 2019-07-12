@@ -36,17 +36,20 @@ export default [
 
 > src/App.ts
 
-```ts
+```tsx
 export default class App extends WidgetBase {
 	protected render() {
-		return v('div', { classes: [css.root] }, [
-			w(Menu, {}),
-			v('div', [
-				w(Outlet, { key: 'home', id: 'home', renderer: () => w(Home, {}) }),
-				w(Outlet, { key: 'about', id: 'about', renderer: () => w(About, {}) }),
-				w(Outlet, { key: 'profile', id: 'profile', renderer: () => w(Profile, { username: 'Dojo User' }) })
-			])
-		]);
+		return (
+			<div classes={[css.root]}>
+				<Menu />
+				<div>
+					<Outlet key="home" id="home" renderer={() => <Home />} />
+					<Outlet key="about" id="about" renderer={() => <About />} />
+					<Outlet key="profile" id="profile" renderer={() => <Profile username="Dojo User" />} />
+				</div>
+				w(Menu, {}),
+			</div>
+		);
 	}
 }
 ```
@@ -96,70 +99,15 @@ In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. F
 
 <!-- TODO I am not confident in what I am saying here. Under what conditions will duplication of common/shared resources occur? How do we avoid this? Can we define a bundle for common widgets? Should I talk about the [bundle analyzer](https://github.com/dojo/cli-build-app/blob/master/README.md#bundle-analyzer) -->
 
-Under the covers Dojo uses Webpack with a number of custom plugins to provide intelligent application bundling. However, sometimes decisions made by the build tool or manually defined in `.dojorc` can create duplication of common resources shared by multiple bundles. Some of this is unavoidable. A good general rule of thumb for avoid duplication is to try to ensure that common code is at the outermost edges of your dependency tree. In other words, minimize dependencies as much as possible among shared code. If a significant amount of code may be shared among bundles (e.g. common widgets) consider bundling these assets together.
+Sometimes decisions made by the build tool or manually defined in `.dojorc` can create duplication of common resources shared by multiple bundles. Some of this is unavoidable. A good general rule of thumb for avoid duplication is to try to ensure that common code is at the outermost edges of your dependency tree. In other words, minimize dependencies as much as possible among shared code. If a significant amount of code may be shared among bundles (e.g. common widgets) consider bundling these assets together.
 
-# Assets and Externals
-
-## Assets
+# Assets
 
 Many assets like CSS and images will be imported by modules and inlined automatically by the build process. However, sometimes it is necessary to serve static assets like the favicon or video files.
 
 Static assets can be added to an `assets/` directory at the project root. At build time, these assets are copied to an `assets/` directory along-side the built application.
 
 The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
-
-## Externals
-
-Non-modular libraries or standalone applications that cannot be bundled normally can be included in a Dojo application by providing an implementation of `require` or `define` when needed, and some configuration in the project's `.dojorc` file.
-
-Configuration for external dependencies can be provided under the `externals` property of the `build-app` config. `externals` is an object with two allowed properties:
-
--   `outputPath`: An optional property specifying an output path to which files should be copied.
-
--   `dependencies`: A required array that defines which modules should be loaded via the external loader, and what files should be included in the build. Each entry can be one of two types:
-    _ A string that indicates that this path, and any children of this path, should be loaded via the external loader.
-    _ An object that provides additional configuration for dependencies that need to be copied into the built application. This object has the following properties:
-
-| Property | Type                                                    | optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| -------- | ------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `from`   | `string`                                                | false    | A path relative to the root of the project specifying the location of the files or folders to copy into the build application.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `to`     | `string`                                                | true     | A path that replaces `from` as the location to copy this dependency to. By default, dependencies will be copied to `${externalsOutputPath}/${to}` or `${externalsOutputPath}/${from}` if `to` is not specified. If there are any `.` characters in the path and it is a directory, it needs to end with a forward slash.                                                                                                                                                                                                                |
-| `name`   | `string`                                                | true     | Either the module id or the name of the global variable referenced in the application source.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `inject` | `string, string[], or boolean`                          | true     | This property indicates that this dependency defines, or includes, scripts or stylesheets that should be loaded on the page. If `inject` is set to `true`, then the file at the location specified by `to` or `from` will be loaded on the page. If this dependency is a folder, then `inject` can be set to a string or array of strings to define one or more files to inject. Each path in `inject` should be relative to `${externalsOutputPath}/${to}` or `${externalsOutputPath}/${from}` depending on whether `to` was provided. |
-| `type`   | `'root' or 'umd' or 'amd' or 'commonjs' or 'commonjs2'` | true     | Force this module to a specific method of resolution. For AMD style require use `umd` or `amd`. For node style require use `commonjs`, and to access the object as a global use `root`                                                                                                                                                                                                                                                                                                                                                  |
-
-As an example the following configuration will inject `src/legacy/layer.js` into the application page, inject the file that defines the `MyGlobal` global variable, declare that modules `a` and `b` are external and should be delegated to the external layer, and then copy the folder `node_modules/legacy-dep`, from which several files are injected. All of these files will be copied into the `externals` folder, which could be overridden by specifying the `outputPath` property in the `externals` configuration.
-
-```json
-{
-	"build-app": {
-		"externals": {
-			"dependencies": [
-				"a",
-				"b",
-				{
-					"from": "node_modules/GlobalLibrary.js",
-					"to": "GlobalLibrary.js",
-					"name": "MyGlobal",
-					"inject": true
-				},
-				{ "from": "src/legacy/layer.js", "to": "legacy/layer.js", "inject": true },
-				{
-					"from": "node_modules/legacy-dep",
-					"to": "legacy-dep/",
-					"inject": ["moduleA/layer.js", "moduleA/layer.css", "moduleB/layer.js"]
-				}
-			]
-		}
-	}
-}
-```
-
-Types for any dependencies included in `externals` can be installed in `node_modules/@types`, like any other dependency.
-
-Because these files are external to the main build, no versioning or hashing will be performed on files in a production build, with the exception
-of the links to any `inject`ed assets. The `to` property can be used to specify a versioned directory to copy dependencies to in order to avoid different
-versions of files being cached.
 
 # Progressive Web Apps
 
@@ -283,129 +231,13 @@ Four routing strategies are currently supported:
 -   `networkOnly` forces the resource to always be retrieved over the network, and is useful for requests that have no offline equivalent.
 -   `staleWhileRevalidate` requests resources from both the cache and the network simulaneously. The cache is updated with each successful network response. This strategy is best for resources that do not need to be continuously up-to-date, like user avatars. However, when fetching third-party resources that do not send CORS headers, it is not possible to read the contents of the response or verify the status code. As such, it is possible that a bad response could be cached. In such cases, the `networkFirst` strategy may be a better fit.
 
-# Conditional code
-
-Webpack's static code analyzer is capable of removing dead code branch from the bundles it creates. The Dojo build tool leverages this capability to create branches of conditional code that can be removed at build time. Named conditional blocks are defined using Dojo framework's `has` module. Then those conditional blocks can be statically set to true or false through `.dojorc` and removed at build time.
-
-> main.ts
-
-```ts
-import has from '@dojo/framework/has';
-
-if (has('production')) {
-	console.log('Starting in production');
-} else {
-	console.log('Starting in dev mode');
-}
-
-export const mode = has('production') ? 'dist' : 'dev';
-```
-
-> .dojorc
-
-```json
-{
-	"build-app": {
-		"features": {
-			"production": true
-		}
-	}
-}
-```
-
-The above `production` feature will be set `true` for **production builds** (`dist` mode). The Dojo build system uses the [static-build-loader](https://github.com/dojo/webpack-contrib/#static-build-loader) to rewrite `has()` calls that have been statically asserted by the system as `true` or `false`. This allows Webpack to conditionally identify code as unreachable and remove those dead code branches from the build.
-
-For example, the above code would be rewritten as:
-
-> static-build-loader output
-
-```js
-import has from '@dojo/framework/has';
-
-if (true) {
-	console.log('Starting in production');
-} else {
-	console.log('Starting in dev mode');
-}
-
-export const mode = true ? 'dist' : 'dev';
-```
-
-Webpack's dead branch removal would then remove the unreachable code.
-
-> Uglify output
-
-```js
-console.log('Starting in production');
-export const mode = 'dist';
-```
-
-Any features which are not statically asserted, are not re-written. This allows the code to determine at run-time if the feature is present.
-
-## Elided Imports
-
-The Dojo build process allows for imports to be conditionally removed through the use of _has pragmas_. These pragmas are simply strings that refer to a specific feature. If the feature is statically set at build time then the build system will evaluate the pragma and if `true` the next import is removed.
-
-> .dojorc
-
-```json
-{
-	"build-app": {
-		"features": {
-			"foo": true,
-			"bar": false
-		}
-	}
-}
-```
-
-> main.ts
-
-```ts
-"has('foo')";
-import 'a'; // removed
-'!has("bar")';
-import 'b'; // removed
-'!has("foo")';
-import 'c';
-'has("baz")';
-import 'd';
-```
-
-In the above example, imports `a` and `b` would be removed because their values evaluate to `true`. Import `c` will remain because it evaluates to `false`. Import `d` will remain because the `baz` feature has not been statically defined.
-
-## Known features
-
-The following features are recognized by the Dojo system and may be used internally to optimize code or shim features. If multiple features are specified then the intersection of available features will be returned.
-
--   android
--   chrome
--   edge
--   firefox
--   ie11
--   ios
--   node
--   node8
--   safari
-
-## Provided Features
-
-These features are provided by the build system to help identify a specific environment or mode of operation.
-
-| Feature Flag        | Description                                                                                                                                                                                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `debug`             | Provides a way to create a code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a _production_ build. Defaults to `true` but should be configured statically as `false` in production builds. |
-| `host-browser`      | Determines if the current environment contains a `window` and `document` object in the global context, therefore it is generally safe to assume the code is running in a browser environment.                                                            |
-| `host-node`         | Attempts to detect if the environment appears to be a node environment.                                                                                                                                                                                  |
-| `build-time-render` | Statically defined by the build-time rendering system during build-time rendering.                                                                                                                                                                       |
-
 # Build-time Rendering
 
-BTR renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately. Skipping the initial render by creating it during the build process gives us many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
+BTR renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately, resulting in many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
 
 ## Using BTR
 
-First make sure `index.html` includes a DOM node with an `id` attribute. This node will be used by Dojo's virtual DOM to compare and render the application's HTML. BTR requires this setup so it can render the HTML generated at build time. This creates a very fast and responsive initial rendering of the route. Once the route has had a change to load and render the virtual DOM is able to diff against the BTR.
+First make sure `index.html` includes a DOM node with an `id` attribute. This node will be used by Dojo's virtual DOM to compare and render the application's HTML. BTR requires this setup so it can render the HTML generated at build time. This creates a very fast and responsive initial rendering of the route.
 
 > index.html
 
@@ -458,7 +290,7 @@ This configuration describes two routes. A `home` route and a more complex `comm
 
 BTR generates a screenshot for each of the paths rendered during the build in the output/info/screenshots directory of your project.
 
-### Hash history
+### History Manager
 
 Build time rendering supports applications that use either the `@dojo/framework/routing/history/HashHistory` or `@dojo/framework/routing/history/StateHistory` history managers. If your application uses the HashHistory, ensure that all paths are prefixed with a # character.
 
@@ -518,9 +350,125 @@ export default class MyBlockWidget extends WidgetBase {
 
 This widget runs the `read-file.block.ts` module at build time, loading the file path passed which gets used as the children in the widget.
 
-## Snapshots
+# Conditional code
 
-Build time rendering creates HTML snapshots by rendering an application at the provided route and capturing the output from the virtual DOM. Snapshots are not taken immediately after render, instead the BTR system waits until there hasn't been any active network request and all `Block` metas have been resolved.
+The build tool's static code analyzer is capable of removing dead code branches from the bundles it creates. Named conditional blocks are defined using Dojo framework's `has` module and can be statically set to true or false through `.dojorc` and removed at build time.
+
+> main.ts
+
+```ts
+import has from '@dojo/framework/has';
+
+if (has('production')) {
+	console.log('Starting in production');
+} else {
+	console.log('Starting in dev mode');
+}
+
+export const mode = has('production') ? 'dist' : 'dev';
+```
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"features": {
+			"production": true
+		}
+	}
+}
+```
+
+The above `production` feature will be set `true` for **production builds** (`dist` mode). The Dojo build system uses the [static-build-loader](https://github.com/dojo/webpack-contrib/#static-build-loader) to identify code as unreachable and remove those dead code branches from the build.
+
+For example, the above code would be rewritten as:
+
+> static-build-loader output
+
+```js
+import has from '@dojo/framework/has';
+
+if (true) {
+	console.log('Starting in production');
+} else {
+	console.log('Starting in dev mode');
+}
+
+export const mode = true ? 'dist' : 'dev';
+```
+
+The build tool's dead branch removal would then remove the unreachable code.
+
+> Uglify output
+
+```js
+console.log('Starting in production');
+export const mode = 'dist';
+```
+
+Any features which are not statically asserted, are not re-written. This allows the code to determine at run-time if the feature is present.
+
+## Provided Features
+
+These features are provided by the build system to help identify a specific environment or mode of operation.
+
+| Feature Flag        | Description                                                                                                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `debug`             | Provides a way to create a code path for code that is only usable when debugging or providing enhanced diagnostics that are not desired in a _production_ build. Defaults to `true` but should be configured statically as `false` in production builds. |
+| `host-browser`      | Determines if the current environment contains a `window` and `document` object in the global context, therefore it is generally safe to assume the code is running in a browser environment.                                                            |
+| `host-node`         | Attempts to detect if the environment appears to be a node environment.                                                                                                                                                                                  |
+| `build-time-render` | Statically defined by the build-time rendering system during build-time rendering.                                                                                                                                                                       |
+
+# Externals
+
+Non-modular libraries or standalone applications that cannot be bundled normally can be included in a Dojo application by providing an implementation of `require` or `define` when needed, and some configuration in the project's `.dojorc` file.
+
+Configuration for external dependencies can be provided under the `externals` property of the `build-app` config. `externals` is an object with two allowed properties:
+
+-   `outputPath`: An optional property specifying an output path to which files should be copied.
+-   `dependencies`: A required array that defines which modules should be loaded via the external loader, and what files should be included in the build. Each entry can be one of two types:
+    _ A string that indicates that this path, and any children of this path, should be loaded via the external loader.
+    _ An object that provides additional configuration for dependencies that need to be copied into the built application. This object has the following properties:
+
+| Property | Type                                                    | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| -------- | ------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `from`   | `string`                                                | No       | A path relative to the root of the project specifying the location of the files or folders to copy into the build application.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `to`     | `string`                                                | Yes      | A path that replaces `from` as the location to copy this dependency to. By default, dependencies will be copied to `${externalsOutputPath}/${to}` or `${externalsOutputPath}/${from}` if `to` is not specified. If there are any `.` characters in the path and it is a directory, it needs to end with a forward slash.                                                                                                                                                                                                                |
+| `name`   | `string`                                                | Yes      | Either the module id or the name of the global variable referenced in the application source.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `inject` | `string, string[], or boolean`                          | Yes      | This property indicates that this dependency defines, or includes, scripts or stylesheets that should be loaded on the page. If `inject` is set to `true`, then the file at the location specified by `to` or `from` will be loaded on the page. If this dependency is a folder, then `inject` can be set to a string or array of strings to define one or more files to inject. Each path in `inject` should be relative to `${externalsOutputPath}/${to}` or `${externalsOutputPath}/${from}` depending on whether `to` was provided. |
+| `type`   | `'root' or 'umd' or 'amd' or 'commonjs' or 'commonjs2'` | Yes      | Force this module to a specific method of resolution. For AMD style require use `umd` or `amd`. For node style require use `commonjs`, and to access the object as a global use `root`                                                                                                                                                                                                                                                                                                                                                  |
+
+As an example the following configuration will inject `src/legacy/layer.js` into the application page, inject the file that defines the `MyGlobal` global variable, declare that modules `a` and `b` are external and should be delegated to the external layer, and then copy the folder `node_modules/legacy-dep`, from which several files are injected. All of these files will be copied into the `externals` folder, which could be overridden by specifying the `outputPath` property in the `externals` configuration.
+
+```json
+{
+	"build-app": {
+		"externals": {
+			"dependencies": [
+				"a",
+				"b",
+				{
+					"from": "node_modules/GlobalLibrary.js",
+					"to": "GlobalLibrary.js",
+					"name": "MyGlobal",
+					"inject": true
+				},
+				{ "from": "src/legacy/layer.js", "to": "legacy/layer.js", "inject": true },
+				{
+					"from": "node_modules/legacy-dep",
+					"to": "legacy-dep/",
+					"inject": ["moduleA/layer.js", "moduleA/layer.css", "moduleB/layer.js"]
+				}
+			]
+		}
+	}
+}
+```
+
+Types for any dependencies included in `externals` can be installed in `node_modules/@types`, like any other dependency.
+
+Because these files are external to the main build, no versioning or hashing will be performed on files in a production build, with the exception of the links to any `inject`ed assets. The `to` property can be used to specify a versioned directory to copy dependencies to in order to avoid different versions of files being cached.
 
 # Ejecting
 

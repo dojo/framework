@@ -30,31 +30,18 @@ The application will also have source maps available. This allows the debugger t
 
 Dojo uses [Intern](https://theintern.io/) for running unit and functional tests.
 
-The fastest way to run unit tests in `tests/unit` is by running them using uses [ts-node](https://www.npmjs.com/package/ts-node) with [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern)'s JIT builder.
+The fastest way to run unit tests in `tests/unit` is by using the NPM scripts that are created with a new Dojo app.
+
+> Command Line
 
 ```bash
-> dojo test
+# execute unit tests
+npm run test:unit
+# execute functional tests locally using headless Chrome and Selenium
+npm run test:functional
 ```
 
-Unit and functional tests
-
-```bash
-> dojo build --mode unit
-> dojo test --unit --config local
-```
-
-This command will build the Dojo application and tests into `dojo\test\unit` and use Intern to run tests locally using node and Chrome.
-
-```bash
-> dojo build --mode functional
-> dojo test --functional --config local
-```
-
-This command will build the Dojo application and functional tests into `dojo\test\functional` and use Intern to execute tests in Chrome using Selenium.
-
-Intern comes with support for running tests remotely on [BrowserStack](https://www.browserstack.com), [SauceLabs](https://saucelabs.com/), and [TestingBot](https://testingbot.com/). You may use one of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of the testing services will run tests against IE11, Firefox, and Chrome.
-
-More detailed information is available in the [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern) repository and from [Intern](https://theintern.io/).
+More detailed information is available in the [testing basic usage guide](https://github.com/dojo/framework/blob/master/docs/en/testing/basic-usage.md).
 
 ## Browser Support
 
@@ -83,4 +70,4 @@ Additional configuration options can be added in `.dojorc`. The options generall
 }
 ```
 
-In this example we have a section for each of the three CLI command modules: [@dojo/cli-build-app](https://github.com/dojo/cli-build-app/), [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern), and [@dojo/cli-create-widget](https://github.com/dojo/cli-create-widget). Configuration is _always_ hierarchical and in the order of command => feature => configuration.
+In this example there is a section for each of the three CLI command modules: [@dojo/cli-build-app](https://github.com/dojo/cli-build-app/), [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern), and [@dojo/cli-create-widget](https://github.com/dojo/cli-create-widget). Configuration is _always_ hierarchical and in the order of command => feature => configuration.
