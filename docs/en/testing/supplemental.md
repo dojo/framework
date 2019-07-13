@@ -1,55 +1,21 @@
 # Testing Dojo Applications
 
-## Running Tests
+## Testing services
 
-Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
-
-You can quickly run your tests in node.
-
-> Command Line
-
-```bash
-npm test
-```
-
-Dojo supports two types of testing approaches unit and functional. Unit tests are tests run via node and the local
-[Selenium] tunnel and test isolated blocks of code. Functional tests are run using [Selenium] in the browser and test
-the overall functionality of the software as a user would interact with it.
-
-This command will execute only your unit tests.
-
-> Command Line
-
-```bash
-npm run test:unit
-```
-
-This command will execute your functional tests locally in a headless Chrome instance using [Selenium].
-
-> Command Line
-
-```bash
-npm run test:functional
-```
-
-Dojo comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
+Intern comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
 of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of
-the testing services will run tests against IE11, Firefox, and Chrome. You can use the `dojo` command of the [Dojo CLI].
+the testing services will run tests against IE11, Firefox, and Chrome.
 
 ### BrowserStack
 
 [BrowserStack] requires an access key and username to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
-> Command Line
-
 ```bash
 dojo test -a -c browserstack -k <accesskey> --userName <username>
 ```
 
 or with environment variables
-
-> Command Line
 
 ```bash
 BROWSERSTACK_USERNAME=<username> BROWSERSTACK_ACCESS_KEY=<key> dojo test -a -c browserstack
@@ -60,15 +26,11 @@ BROWSERSTACK_USERNAME=<username> BROWSERSTACK_ACCESS_KEY=<key> dojo test -a -c b
 [SauceLabs] requires an access key and username to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
-> Command Line
-
 ```bash
 dojo test -a -c saucelabs -k <accesskey> --userName <username>
 ```
 
 or with environment variables
-
-> Command Line
 
 ```bash
 SAUCE_USERNAME=<username> SAUCE_ACCESS_KEY=<key> dojo test -a -c saucelabs
@@ -79,15 +41,11 @@ SAUCE_USERNAME=<username> SAUCE_ACCESS_KEY=<key> dojo test -a -c saucelabs
 [TestingBot] requires an key and a secret to use its services. These may be provided on the command line or as
 environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
 
-> Command Line
-
 ```bash
 dojo test -a -c testingbot -k <key> -s <secret>
 ```
 
 or with environment variables
-
-> Command Line
 
 ```bash
 TESTINGBOT_SECRET=<secret> TESTINGBOT_KEY=<key> dojo test -a -c saucelabs
@@ -100,11 +58,18 @@ TESTINGBOT_SECRET=<secret> TESTINGBOT_KEY=<key> dojo test -a -c saucelabs
 ### API
 
 ```ts
+interface HarnessOptions {
+	customComparators?: CustomComparator[];
+	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
+}
+
 harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Harness;
+harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
 -   `renderFunction`: A function that returns a WNode for the widget under test
 -   [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
+-   `options`: Expanded options for the harness which includes `customComparators` and an array of middleware/mocks tuples.
 
 The harness returns a `Harness` object that provides a small API for interacting with the widget under test:
 
@@ -155,6 +120,254 @@ describe('MyWidget', () => {
 		foo = 'foo';
 		h.expect(/** assertion that includes foo **/)
   });
+});
+```
+
+### Mocking Middleware
+
+When initializing the harness, mock middleware can be specified as part of the `HarnessOptions`. The mock middleware is defined as a tuple of the original middleware and the mock middleware implementation. Mock middleware is created in the same way as any other middleware.
+
+```ts
+import myMiddleware from './myMiddleware';
+import myMockMiddleware from './myMockMiddleware';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('renders', () => {
+		const h = harness(() => <MyWidget />, { middleware: [[myMiddleware, myMockMiddleware]] });
+		h.expect(/** assertion that executes the mock middleware instead of the normal middleware **/);
+	});
+});
+```
+
+The harness automatically mocks a number of core middlewares that will be injected into any middleware that requires them:
+
+-   invalidator
+-   setProperty
+-   destroy
+
+#### Dojo Mock Middleware
+
+There are a number of mock middlewares available to support testing widgets that use Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
+
+##### Mock `node` Middleware
+
+Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+
+```ts
+import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+
+// create the mock node middleware
+const mockNode = createNodeMock();
+
+// create a mock DOM node
+const domNode = {};
+
+// call the mock middleware with a key and the DOM
+// to return.
+mockNode('key', domNode);
+```
+
+##### Mock `intersection` Middleware
+
+Using `createIntersectionMock` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the created mock intersection middleware with a `key` and expected intersection details.
+
+Consider the following widget:
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import intersection from '@dojo/framework/core/middleware/intersection';
+
+const factory = create({ intersection });
+
+const App = factory(({ middleware: { intersection } }) => {
+	const details = intersection.get('root');
+	return <div key="root">{JSON.stringify(details)}</div>;
+});
+```
+
+Using the mock intersection middleware:
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
+import intersection from '@dojo/framework/core/middleware/intersection';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('test', () => {
+		// create the intersection mock
+		const intersectionMock = createIntersectionMock();
+		// pass the intersection mock to the harness so it knows to
+		// replace the original middleware
+		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+
+		// call harness.expect as usual, asserting the default response
+		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
+
+		// use the intersection mock to set the expected return
+		// of the intersection middleware by key
+		intersectionMock('root', { isIntersecting: true });
+
+		// assert again with the updated expectation
+		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
+	});
+});
+```
+
+##### Mock `resize` Middleware
+
+Using `createResizeMock` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the created mock resize middleware with a `key` and expected content rects.
+
+```ts
+const mockResize = createResizeMock();
+mockResize('key', { width: 100 });
+```
+
+Consider the following widget:
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom'
+import resize from '@dojo/framework/core/middleware/resize'
+
+const factory = create({ resize });
+
+export const MyWidget = factory(function MyWidget({ middleware }) => {
+	const  { resize } = middleware;
+	const contentRects = resize.get('root');
+	return <div key="root">{JSON.stringify(contentRects)}</div>;
+});
+```
+
+Using the mock resize middleware:
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
+import resize from '@dojo/framework/core/middleware/resize';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('test', () => {
+		// create the resize mock
+		const resizeMock = createResizeMock();
+		// pass the resize mock to the harness so it knows to replace the original
+		// middleware
+		const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
+
+		// call harness.expect as usual
+		h.expect(() => <div key="root">null</div>);
+
+		// use the resize mock to set the expected return of the resize middleware
+		// by key
+		resizeMock('root', { width: 100 });
+
+		// assert again with the updated expectation
+		h.expect(() => <div key="root">{`{"width":100}`}</div>);
+	});
+});
+```
+
+##### Mock `Store` Middleware
+
+Using `createMockStoreMiddleware` from `@dojo/framework/testing/mocks/middleware/store` creates a typed mock store middleware, which optionally supports mocking processes. To mock a store process pass a tuple of the original store process and the stub process. The middleware will swap out the call to the original process for the passed stub. If no stubs are passed, the middleware will simply no-op all process calls.
+
+To make changes to the mock store, call the `mockStore` with a function that returns an array of store operations. This is injected with the stores `path` function to create the pointer to the state that needs changing.
+
+```tsx
+mockStore((path) => [replace(path('details', { id: 'id' })]);
+```
+
+Consider the following widget:
+
+> src/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom'
+import { myProcess } from './processes';
+import MyState from './interfaces';
+// application store middleware typed with the state interface
+// Example: `const store = createStoreMiddleware<MyState>();`
+import store from './store';
+
+const factory = create({ store }).properties<{ id: string }>();
+
+export default factory(function MyWidget({ properties: { id }, middleware: store }) {
+    const { path, get, executor } = store;
+    const details = get(path('details');
+    let isLoading = get(path('isLoading'));
+
+    if ((!details || details.id !== id) && !isLoading) {
+        executor(myProcess)({ id });
+        isLoading = true;
+    }
+
+    if (isLoading) {
+        return <Loading />;
+    }
+
+    return <ShowDetails {...details} />;
+});
+```
+
+Using the mock store middleware:
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom'
+import createMockStoreMiddleware from '@dojo/framework/testing/mocks/middleware/store';
+import harness from '@dojo/framework/testing/harness';
+
+import { myProcess } from './processes';
+import MyWidget from './MyWidget';
+import MyState from './interfaces';
+import store from './store';
+
+// import a stub/mock lib, doesn't have to be sinon
+import { stub } from 'sinon';
+
+describe('MyWidget', () => {
+     it('test', () => {
+          const properties = {
+               id: 'id'
+          };
+         const myProcessStub = stub();
+         // type safe mock store middleware
+         // pass through an array of tuples `[originalProcess, stub]` for mocked processes
+         // calls to processes not stubbed/mocked get ignored
+         const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
+         const h = harness(() => <MyWidget {...properties} />, {
+             middleware: [store, mockStore]
+         });
+         h.expect(/* assertion template for `Loading`*/);
+
+         // assert again the stubbed process
+         expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
+
+         mockStore((path) => [replace(path('isLoading', true)]);
+         h.expect(/* assertion template for `Loading`*/);
+         expect(myProcessStub.calledOnce()).toBeTruthy();
+
+         // use the mock store to apply operations to the store
+         mockStore((path) => [replace(path('details', { id: 'id' })]);
+         mockStore((path) => [replace(path('isLoading', true)]);
+
+         h.expect(/* assertion template for `ShowDetails`*/);
+
+         properties.id = 'other';
+         h.expect(/* assertion template for `Loading`*/);
+         expect(myProcessStub.calledTwice()).toBeTruthy();
+         expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
+         mockStore((path) => [replace(path('details', { id: 'other' })]);
+         h.expect(/* assertion template for `ShowDetails`*/);
+     });
 });
 ```
 
@@ -243,56 +456,6 @@ v('div', {
 ])
 ```
 
-### `harness.expectPartial`
-
-`expectPartial` asserts against a section of the widget's render output based on a [`selector`](#selectors).
-
-API
-
-```ts
-expectPartial(selector: string, expectedRenderFunction: () => DNode | DNode[]);
-```
-
--   `selector`: The selector query to find the node to target
--   `expectedRenderFunction`: A function that returns the expected `DNode` structure of the queried node
--   `actualRenderFunction`: An optional function that returns the actual `DNode` structure to be asserted
-
-Example usage:
-
-> HelloWorld.tsx
-
-```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-
-export interface HelloWorldProperties {
-	foo?: boolean;
-	bar?: boolean;
-}
-
-export default class HelloWorld extends WidgetBase<HelloWorldProperties> {
-	render() {
-		const { foo, bar } = this.properties;
-		return (
-			<div>
-				{foo && <span key="foo">Foo</span>}
-				<ul>
-					<li>Hello</li>
-					<li>World</li>
-				</ul>
-				{bar && <span key="bar">Bar</span>}
-			</div>
-		);
-	}
-}
-```
-
-```ts
-it('should render foo', () => {
-	const h = harness(() => <HelloWorld foo={true} />);
-	h.expectPartial('~foo', () => <span>Foo</span>);
-});
-```
-
 #### `harness.trigger`
 
 `harness.trigger()` calls a function with the `name` on the node targeted by the `selector`.
@@ -328,9 +491,9 @@ A `functionalSelector` can be used return a function that is nested in a widget'
 
 Example Usage:
 
-Given a VDOM tree like,
+Given the following VDOM structure:
 
-```typescript
+```ts
 v(Toolbar, {
 	key: 'toolbar',
 	buttons: [
@@ -353,6 +516,8 @@ h.trigger('@buttons', (renderResult: DNode<Toolbar>) => {
 	return renderResult.properties.buttons[0].onClick;
 });
 ```
+
+**Note:** If the specified selector cannot be found, `trigger` will throw an error.
 
 #### `harness.getRender`
 
@@ -378,7 +543,7 @@ h.getRender(1);
 
 ## Assertion Templates
 
-Assertion Templates allow you to build expected render functions to pass to `h.expect()`. The idea behind Assertion Templates is to always assert against the entire render output, and modify portions of the assertion itslef has needed.
+Assertion Templates allow you to build expected render functions to pass to `h.expect()`. The idea behind Assertion Templates is to always assert against the entire render output, and modify portions of the assertion itself as needed.
 
 To use Assertion Templates first import the module:
 
@@ -470,19 +635,23 @@ describe('Profile', () => {
 
 Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `the number 5`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
 
-Assertion Template has the following api's:
+Assertion Template has the following APIs:
 
 ```
-insertBefore(selector: string, children: DNode[]): AssertionTemplateResult;
-insertAfter(selector: string, children: DNode[]): AssertionTemplateResult;
-insertSiblings(selector: string, children: DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
-append(selector: string, children: DNode[]): AssertionTemplateResult;
-prepend(selector: string, children: DNode[]): AssertionTemplateResult;
-replace(selector: string, children: DNode[]): AssertionTemplateResult;
-setChildren(selector: string, children: DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
+insertBefore(selector: string, children: () => DNode[]): AssertionTemplateResult;
+insertAfter(selector: string, children: () => DNode[]): AssertionTemplateResult;
+insertSiblings(selector: string, children: () => DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
+append(selector: string, children: () => DNode[]): AssertionTemplateResult;
+prepend(selector: string, children: () => DNode[]): AssertionTemplateResult;
+replaceChildren(selector: string, children: () => DNode[]): AssertionTemplateResult;
+setChildren(selector: string, children: () => DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
 setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
+setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
 getChildren(selector: string): DNode[];
 getProperty(selector: string, property: string): any;
+getProperties(selector: string): any;
+replace(selector: string, node: DNode): AssertionTemplateResult;
+remove(selector: string): AssertionTemplateResult;
 ```
 
 ## Mocking
