@@ -154,7 +154,7 @@ There are a number of mock middlewares available to support testing widgets that
 
 ##### Mock `node` Middleware
 
-Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
 
 ```ts
 import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
