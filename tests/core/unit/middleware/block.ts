@@ -69,11 +69,11 @@ describe('block middleware', () => {
 
 		const waiter = waitForCall(3, invalidatorStub);
 
-		const resultOne = block.run(testModule)('test');
+		const resultOne = block(testModule)('test');
 		assert.isTrue(deferStub.pause.calledOnce);
-		const resultTwo = block.run(testModuleOther)('test');
+		const resultTwo = block(testModuleOther)('test');
 		assert.isTrue(deferStub.pause.calledTwice);
-		const resultThree = block.run(testModule)('other');
+		const resultThree = block(testModule)('other');
 		assert.isTrue(deferStub.pause.calledThrice);
 		assert.isNull(resultOne);
 		assert.isNull(resultTwo);
@@ -86,11 +86,11 @@ describe('block middleware', () => {
 		return waiter.then(() => {
 			assert.isTrue(deferStub.resume.calledThrice);
 			assert.isTrue(invalidatorStub.calledThrice);
-			const resultOne = block.run(testModule)('test');
+			const resultOne = block(testModule)('test');
 			assert.strictEqual(resultOne, 'resultOne');
-			const resultTwo = block.run(testModuleOther)('test');
+			const resultTwo = block(testModuleOther)('test');
 			assert.strictEqual(resultTwo, 'resultTwo');
-			const resultThree = block.run(testModule)('other');
+			const resultThree = block(testModule)('other');
 			assert.strictEqual(resultThree, 'resultThree');
 			assert.isTrue(deferStub.pause.calledThrice);
 		});
