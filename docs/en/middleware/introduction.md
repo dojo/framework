@@ -1,0 +1,12 @@
+# Introduction
+
+Dojo's middleware system provides a way to deal with asynchronous or imperative APIs in a reactive way, as well as influence behavior and the property API of any composing function-based widgets or other middleware.
+
+Several core and optional middleware are provided by the framework, however application developers can easily write their own.
+
+| Feature                                    | Description                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reactive DOM access                        | Via middleware, function-based widgets can work with concrete information and APIs from the sections of the DOM that corresponding to their output nodes.                                                                                                                                                               |
+| Widget render lifecycle control            | Middleware can control the portions of Dojo's rendering pipeline for any composing widgets, such as invalidating the widgets when they require a rendering update. Widget rendering can also be paused and resumed, allowing short-circuiting render output while waiting for critical information to become available. |
+| A variety of framework-provided middleware | Dojo provides optional middleware that allow widgets to implement a range of functionality such as responding to and controlling focus, simple value caching, responding to element intersection and resize events, CSS theming, internationalization and build-time rendering amongst others.                          |
+| Easy composition and re-use                | The middleware design is closely aligned with function-based widgets, allowing consistent composition within a widget hierarchy as well as re-using when developing custom middleware.                                                                                                                                  |
