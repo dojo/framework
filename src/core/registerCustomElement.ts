@@ -276,7 +276,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 }
 
 export function register(WidgetConstructor: any): void {
-	const descriptor = WidgetConstructor.prototype && WidgetConstructor.prototype.__customElementDescriptor;
+	const descriptor = WidgetConstructor.__customElementDescriptor;
 
 	if (!descriptor) {
 		throw new Error(
