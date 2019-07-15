@@ -5,8 +5,6 @@ import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
-
-import global from '../../../src/shim/global';
 import {
 	create,
 	renderer,
@@ -3720,11 +3718,11 @@ jsdomDescribe('vdom', () => {
 		let root = document.createElement('div');
 		beforeEach(() => {
 			root = document.createElement('div');
-			global.document.body.appendChild(root);
+			document.body.appendChild(root);
 		});
 
 		afterEach(() => {
-			global.document.body.removeChild(root);
+			document.body.removeChild(root);
 		});
 
 		it('can attach a node to the body', () => {
@@ -3743,14 +3741,14 @@ jsdomDescribe('vdom', () => {
 			});
 			const r = renderer(() => w(App, {}));
 			r.mount({ domNode: root });
-			let bodyNode = global.document.getElementById('my-body-node');
+			let bodyNode = document.getElementById('my-body-node')!;
 			assert.isOk(bodyNode);
 			assert.strictEqual(bodyNode.outerHTML, '<div id="my-body-node">My Body Div</div>');
-			assert.strictEqual(bodyNode.parentNode, global.document.body);
+			assert.strictEqual(bodyNode.parentNode, document.body);
 			assert.isNull(root.querySelector('#my-body-node'));
 			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
 			resolvers.resolve();
-			bodyNode = global.document.getElementById('my-body-node');
+			bodyNode = document.getElementById('my-body-node')!;
 			assert.isNull(bodyNode);
 			assert.isNull(root.querySelector('#my-body-node'));
 		});
