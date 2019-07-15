@@ -6,6 +6,7 @@ import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
 
+import global from '../../../src/shim/global';
 import {
 	create,
 	renderer,
@@ -3712,6 +3713,46 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.innerHTML, expected);
 			assert.lengthOf(appendedHtml, 1);
 			assert.strictEqual(appendedHtml[0], expected);
+		});
+	});
+
+	describe('body node', () => {
+		let root = document.createElement('div');
+		beforeEach(() => {
+			root = document.createElement('div');
+			global.document.body.appendChild(root);
+		});
+
+		afterEach(() => {
+			global.document.body.removeChild(root);
+		});
+
+		it('can attach a node to the body', () => {
+			let show = true;
+			const factory = create({ invalidator });
+			const App = factory(function App({ middleware: { invalidator } }) {
+				return v('div', [
+					v('button', {
+						onclick: () => {
+							show = !show;
+							invalidator();
+						}
+					}),
+					v('body', [show ? v('div', { id: 'my-body-node' }, ['My Body Div']) : null])
+				]);
+			});
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			let bodyNode = global.document.getElementById('my-body-node');
+			assert.isOk(bodyNode);
+			assert.strictEqual(bodyNode.outerHTML, '<div id="my-body-node">My Body Div</div>');
+			assert.strictEqual(bodyNode.parentNode, global.document.body);
+			assert.isNull(root.querySelector('#my-body-node'));
+			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
+			resolvers.resolve();
+			bodyNode = global.document.getElementById('my-body-node');
+			assert.isNull(bodyNode);
+			assert.isNull(root.querySelector('#my-body-node'));
 		});
 	});
 

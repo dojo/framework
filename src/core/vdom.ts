@@ -245,6 +245,10 @@ function isVirtualWrapper(child?: DNodeWrapper | null): boolean {
 	return isVNodeWrapper(child) && child.node.tag === 'virtual';
 }
 
+function isBodyWrapper(wrapper?: DNodeWrapper): boolean {
+	return isVNodeWrapper(wrapper) && wrapper.node.tag === 'body';
+}
+
 function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
 	return !!value.type;
 }
@@ -1917,6 +1921,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let mergeNodes: Node[] = [];
 		const parentDomNode = findParentDomNode(next)!;
 		const isVirtual = isVirtualWrapper(next);
+		const isBody = isBodyWrapper(next);
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1924,7 +1929,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (next.node.tag === 'svg') {
 					next.namespace = NAMESPACE_SVG;
 				}
-				if (next.node.tag && !isVirtual) {
+				if (isBody) {
+					next.domNode = global.document.body;
+				} else if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
 						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
 					} else {
@@ -1961,13 +1968,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
 			}
 		}
-		const dom: ApplicationInstruction | undefined = isVirtual
-			? undefined
-			: {
-					next: next!,
-					parentDomNode: parentDomNode,
-					type: 'create'
-			  };
+		const dom: ApplicationInstruction | undefined =
+			isVirtual || isBody
+				? undefined
+				: {
+						next: next!,
+						parentDomNode: parentDomNode,
+						type: 'create'
+				  };
 		if (next.childrenWrappers) {
 			return {
 				item: {
@@ -2006,6 +2014,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
 		const isVirtual = isVirtualWrapper(current);
+		const isBody = isBodyWrapper(current);
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
 		if (current.id) {
@@ -2021,10 +2030,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
 			}
 		}
-		if (current.hasAnimations || isVirtual) {
+		if (current.hasAnimations || isVirtual || isBody) {
 			return {
 				item: { current: current.childrenWrappers, meta: {} },
-				dom: isVirtual ? undefined : { type: 'delete', current }
+				dom: isVirtual || isBody ? undefined : { type: 'delete', current }
 			};
 		}
 
