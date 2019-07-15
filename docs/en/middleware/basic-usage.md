@@ -63,10 +63,12 @@ import myComposingMiddleware from '../middleware/myComposingMiddleware';
 const factory = create({ myComposingMiddleware });
 
 export default factory(function MyWidget({ properties, middleware: { myComposingMiddleware } }) {
-	return [
-		<div>{`Middleware property value: ${properties.middlewareProp}`}</div>,
-		<div>{`Middleware usage: ${myComposingMiddleware.get()}`}</div>
-	];
+	return (
+		<div>
+			<div>{`Middleware property value: ${properties.middlewareProp}`}</div>
+			<div>{`Middleware usage: ${myComposingMiddleware.get()}`}</div>
+		</div>
+	);
 });
 ```
 
