@@ -175,7 +175,7 @@ The `theme` middleware is imported from the `@dojo/framework/core/middleware/the
 
 ### `theme.classes` method
 
-The `theme.classes` transforms widgets CSS class names to the the application or widget's theme class name.
+The `theme.classes` transforms widgets CSS class names to the application or widget's theme class names.
 
 ```ts
 theme.classes<T extends ClassNames>(css: T): T;
