@@ -3736,21 +3736,30 @@ jsdomDescribe('vdom', () => {
 							invalidator();
 						}
 					}),
-					v('body', [show ? v('div', { id: 'my-body-node' }, ['My Body Div']) : null])
+					v('body', [show ? v('div', { id: 'my-body-node-1' }, ['My Body Div 1']) : null]),
+					v('body', [show ? v('div', { id: 'my-body-node-2' }, ['My Body Div 2']) : null])
 				]);
 			});
 			const r = renderer(() => w(App, {}));
 			r.mount({ domNode: root });
-			let bodyNode = document.getElementById('my-body-node')!;
-			assert.isOk(bodyNode);
-			assert.strictEqual(bodyNode.outerHTML, '<div id="my-body-node">My Body Div</div>');
-			assert.strictEqual(bodyNode.parentNode, document.body);
-			assert.isNull(root.querySelector('#my-body-node'));
+			let bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isOk(bodyNodeOne);
+			assert.strictEqual(bodyNodeOne.outerHTML, '<div id="my-body-node-1">My Body Div 1</div>');
+			assert.strictEqual(bodyNodeOne.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			let bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isOk(bodyNodeTwo);
+			assert.strictEqual(bodyNodeTwo.outerHTML, '<div id="my-body-node-2">My Body Div 2</div>');
+			assert.strictEqual(bodyNodeTwo.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-2'));
 			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
 			resolvers.resolve();
-			bodyNode = document.getElementById('my-body-node')!;
-			assert.isNull(bodyNode);
-			assert.isNull(root.querySelector('#my-body-node'));
+			bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isNull(bodyNodeOne);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isNull(bodyNodeTwo);
+			assert.isNull(root.querySelector('#my-body-node-2'));
 		});
 	});
 
