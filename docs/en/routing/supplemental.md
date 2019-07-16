@@ -267,49 +267,48 @@ export default [
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet
-					id="home"
-					renderer={(matchDetails) => {
-						const { params, queryParams, isExact, isError, router } = matchDetails;
+const factory = create();
 
-						const gotoHome = () => {
-							const link = router.link('home');
-							if (link) {
-								router.setPath(link);
-							}
-						};
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet
+				id="home"
+				renderer={(matchDetails) => {
+					const { params, queryParams, isExact, isError, router } = matchDetails;
 
-						if (isExact()) {
-							// The path `home` was matched
-							return <div>Home Page</div>;
+					const gotoHome = () => {
+						const link = router.link('home');
+						if (link) {
+							router.setPath(link);
 						}
-						if (isError()) {
-							// The `home` segment of the path was matched but the next segment was not matched
-							// for example, `home/other`
-							return (
-								<div>
-									<button onclick={gotoHome}>Goto Home</button>
-									<div>Unknown Page</div>
-								</div>
-							);
-						}
-						// The `home` segment of the path was matched and the next segment was also matched
-						// for example, `home/details`
-						return <div>Partial Match for Home</div>;
-					}}
-				/>
-			</div>
-		);
-	}
-}
+					};
+
+					if (isExact()) {
+						// The path `home` was matched
+						return <div>Home Page</div>;
+					}
+					if (isError()) {
+						// The `home` segment of the path was matched but the
+						// next segment was not matched for example, `home/other`
+						return (
+							<div>
+								<button onclick={gotoHome}>Goto Home</button>
+								<div>Unknown Page</div>
+							</div>
+						);
+					}
+					// The `home` segment of the path was matched and the next
+					// segment was also matched for example, `home/details`
+					return <div>Partial Match for Home</div>;
+				}}
+			/>
+		</div>
+	);
+});
 ```
 
 # History Managers
@@ -415,24 +414,23 @@ These history managers work like adapters, meaning that custom history managers 
 A special `outlet` called `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet
-					id="errorOutlet"
-					renderer={() => {
-						return <div>Unknown Page</div>;
-					}}
-				/>
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet
+				id="errorOutlet"
+				renderer={() => {
+					return <div>Unknown Page</div>;
+				}}
+			/>
+		</div>
+	);
+});
 ```
 
 If there is a default route registered, this will take precedence over the error outlet on the initial application load.
