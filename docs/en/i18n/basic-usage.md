@@ -102,7 +102,7 @@ export default {
 
 ## Specifying a root locale within an application
 
-Using function-based widgets and `i18n` middleware exclusively within an application means that there is no requirement to add bootstrapping code to the applications `main.ts`/`main.tsx`. To set the default locale within an application, use the `i18n` middleware from `@dojo/framework/core/middleware/i18n` and set the default locale when no locale is defined.
+Using function-based widgets and `i18n` middleware exclusively within an application means that there is no requirement to add bootstrapping code to the application's `main.ts`/`main.tsx`. To set the default locale within an application, use the `i18n` middleware from `@dojo/framework/core/middleware/i18n` and set the default locale when no locale is defined.
 
 > src/App.tsx
 
@@ -119,7 +119,7 @@ export default factory(function App({ middleware: { i18n } }) {
 });
 ```
 
-However if the application use class-based widgets or a combination of both function-based and class-based widgets, the default locale details will need to be defined in the application registry. This can be done using the utility function, `registryI18nInjector` available from `@dojo/framework/core/mixins/I18n`.
+However, if the application uses class-based widgets or a combination of both function-based and class-based widgets, the default locale details will need to be defined in the application registry. This can be done using the utility function, `registryI18nInjector` available from `@dojo/framework/core/mixins/I18n`.
 
 > src/main.tsx
 
@@ -141,7 +141,7 @@ r.mount({ registry });
 
 Using the [i18n middleware](#changing-locales) to allow users to to choose between supported locales, and enact a locale change via the middleware's `.set` API.
 
-**Reminder:** When using both class-based and function-based, this should be used together with [registeri18ninjector](#providing-locale-data-to-i18n-aware-widgets) to reactively propagate locale changes to all i18n-aware widgets.
+**Reminder:** When using both class-based and function-based widgets, this middleware should be used together with [registeri18ninjector](#providing-locale-data-to-i18n-aware-widgets) to reactively propagate locale changes to all i18n-aware widgets.
 
 > src/widgets/LocaleChanger.tsx
 
