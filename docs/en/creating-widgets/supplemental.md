@@ -161,6 +161,27 @@ export default class MyTsxWidget extends WidgetBase {
 }
 ```
 
+Widgets that need to return multiple top-level TSX nodes can wrap them in a `<virtual>` container element. This is a clearer option than returning an array of nodes as it allows for more natural automated code formatting within TSX blocks. For example:
+
+> src/widgets/MyTsxWidget.tsx
+
+**Function-based variant:**
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+
+const factory = create();
+
+export default factory(function MyTsxWidget() {
+	return (
+		<virtual>
+			<div>First top-level widget element</div>
+			<div>Second top-level widget element</div>
+		</virtual>
+	);
+});
+```
+
 ## Working with the VDOM
 
 ### VDOM node types
