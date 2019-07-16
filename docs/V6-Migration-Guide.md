@@ -51,7 +51,7 @@ The `@dojo/cli-upgrade-app` command should automatically migrate your project's 
 
 #### [`WNode` are no longer decorated with `bind`](https://github.com/dojo/framework/pull/290)
 
-In previous versions of Dojo virtual Dom nodes created by widgets have been decorated with additional meta data, such as `bind`. These extra properties were never meant to be exposed to the end user, however as they are added by mutating the `DNodes` it exposed these the properties inadvertently. As of Dojo 6 we no longer mutate `DNodes` to ensure that this implementation detail of the framework is exposed to the end user.
+In previous versions of Dojo, virtual DOM nodes created by widgets get decorated with additional metadata such as `bind`. These extra properties were never meant to get exposed to the end user. However, as this metadata was added by mutating the `DNodes`, they were inadvertently exposed. As of Dojo version 6, we no longer mutate `DNodes` to ensure that this implementation detail of the framework is not exposed to the end user.
 
 We don't envisage this change affecting many projects, however, if it does please raise an issue with your use case so we can investigate an officially supported mechanism.
 
@@ -72,6 +72,30 @@ base.setChildren('@div', [v('span')]);
 // recommended API
 base.setChildren('@div', () => [v('span')]);
 ```
+
+#### [Router no longer uses extends `QueueingEvented`](https://github.com/dojo/framework/pull/402)
+
+In Dojo 6, the Dojo router has changed from extending the `QueueingEvented` as a way to enable users to subscribe to events that occur when the router started automatically. Instead an extra option is available, `autostart` which can be used to control when the router actually starts up. This is defaulted to `true` as this is the most common use case. For scenarios where the initial routing events need to be captured, `autostart` can be set to `false` and then `.start()` explicitly called on the router instance.
+
+```ts
+import Registry from '@dojo/framework/core/Registry';
+import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
+import routes from './routes.ts';
+
+const registry = new Registry();
+const router = registerRouterInjector(routes, registry, { autostart: false });
+
+// wire up to any router events
+router.on('nav', () => {
+	// do something on router nav, this will catch the initial routing event
+});
+
+router.start();
+```
+
+#### [`QueueingEvented` has been removed](https://github.com/dojo/framework/pull/402)
+
+The `QueueingEvented` module has been removed from Dojo, this was only ever intended to be used internally and not something that we recommend using externally.
 
 #### [Transition strategy not automatically imported](https://github.com/dojo/framework/pull/418)
 
