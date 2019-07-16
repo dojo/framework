@@ -102,7 +102,7 @@ export default {
 
 ## Specifying a root locale within an application
 
-Using function-based widgets and `i18n` middleware exclusively within an application means that there is no requirement to add bootstrapping code to the application's `main.ts`/`main.tsx`. To set the default locale within an application, use the `i18n` middleware from `@dojo/framework/core/middleware/i18n` and set the default locale when no locale is defined.
+Using function-based widgets and `i18n` middleware exclusively within an application means there is no requirement to add bootstrapping code to the application's `main.ts`/`main.tsx` entry point. The default application locale can instead be set in a top-level `App` widget, using the `i18n` middleware from `@dojo/framework/core/middleware/i18n`. A default locale can be set when a locale has not already been defined.
 
 > src/App.tsx
 
@@ -119,7 +119,7 @@ export default factory(function App({ middleware: { i18n } }) {
 });
 ```
 
-However, if the application uses class-based widgets or a combination of both function-based and class-based widgets, the default locale details will need to be defined in the application registry. This can be done using the utility function, `registryI18nInjector` available from `@dojo/framework/core/mixins/I18n`.
+However, if the application uses any class-based widgets, such as those from the `@dojo/widgets` suite, the default locale details will need to be defined in the application registry. This can be done using the `registryI18nInjector` utility function, available from `@dojo/framework/core/mixins/I18n`.
 
 > src/main.tsx
 

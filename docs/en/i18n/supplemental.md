@@ -151,7 +151,7 @@ For example, with the following configuration, an application specifies that its
 
 ## Creating i18n-aware Widgets
 
-Individual widgets can be internationalized by using the `i18n` middleware from `@dojo/framework/core/middleware/i18n`. Using the middleware adds some optional i18n-related properties to the widget property interface. The API for the `i18n` middleware includes a method, `localize(bundle)` to get the localized nls values given a message bundle and two methods that can be used to get and set the applications locale details.
+Individual widgets can be internationalized by using the `i18n` middleware from `@dojo/framework/core/middleware/i18n`. Using the middleware adds some optional i18n-related properties to the widget property interface. The API for the `i18n` middleware includes a method, `localize(bundle)` to get the localized nls values given a message bundle and two methods that can be used to get and set the application's locale details.
 
 ### `i18n` Widget Properties
 
@@ -305,7 +305,7 @@ export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 
 ## Providing locale data to i18n-aware widgets
 
-For applications that use i18n enabled class-based widgets, whether in the application source base or as part of an application dependency, the application wide locale details need to be managed via a Dojo registry. The Dojo registry is used to manage i18n locale data throughout an application, where locale data is injected into all i18n-aware widgets that use `I18nMixin`. When the application locale is changed, the i18n `Injector` will propagate new locale properties to all `I18nMixin` widgets, after which the affected widgets will be invalidated and re-rendered with the updated locale data.
+Locale details also need to be managed via a Dojo registry when applications use i18n-aware class-based widgets (specifically, those that use `I18nMixin`). This applies to any such widgets contained within the application itself or as part of an external dependency - including any widgets used from Dojo's `@dojo/widgets` suite. Locale data is injected into all such widgets through the Dojo registry system; these widgets will be invalidated and re-rendered with updated locale data when the application locale is changed.
 
 This mechanism is enabled through `registerI18nInjector`, a convenience method provided by `@dojo/framework/core/mixins/I18n`. Calling this method will register the `i18n` injector within a specific registry instance. Typically this is done at application bootstrap, where the i18n injector is registered against the global registry passed to the `renderer.mount()` method.
 
@@ -328,7 +328,7 @@ r.mount({ registry });
 
 ## Changing locales
 
-To change the locale for an application the `i18n` middleware can be used. When using `.set({ locale: string, rtl: boolean });`, changes to the locale get propoagated to all widgets that are using either the `i18n` middleware or the `I18nMixin`.
+The `i18n` middleware can be used to change the application's locale. Calling `i18n.set({ locale: string, rtl: boolean });` will propagate the new locale to all widgets that are using the `i18n` middleware, as well as any using `I18nMixin` (assuming [registerI18nInjector](#providing-locale-data-to-i18n-aware-widgets) has previously been setup in the application).
 
 ### Example Usage
 
