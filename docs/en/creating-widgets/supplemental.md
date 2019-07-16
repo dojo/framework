@@ -177,14 +177,14 @@ Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's vir
 If [TSX output](#tsx-support) is not desired, widgets can import one or both of the `v()` and `w()` primitives provided by the `@dojo/framework/core/vdom` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a [widget's render function](#basic-widget-structure). Their signatures, in abstract terms, are:
 
 -   `v(tagName | VNode, properties?, children?)`:
--   `w(Widget | constructor, properties?, children?)`
+-   `w(Widget | constructor, properties, children?)`
 
-| Argument               | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tagName | VNode`      | No       | Typically, components will pass in `tagName` as a string, which identifies the corresponding DOM element tag that will be rendered for the `VNode`. If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children in the new copy. |
-| `Widget | constructor` | No       | Typically, components will pass in `Widget` as a generic type reference to an imported widget. Several types of `constructor`s can also be passed, allowing Dojo to instantiate widgets in a variety of different ways. These allow for advanced features such as deferred or lazy loading.                                                                                                                                                                                                                                                    |
-| `properties`           | Yes      | The [set of properties used to configure the newly created VDOM node](#virtual-node-properties). These also allow the framework to determine whether the node has been updated and should therefore be re-rendered.                                                                                                                                                                                                                                                                                                                            |
-| `children`             | Yes      | An array of nodes to render as children of the newly created node. This can also include any text node children as literal strings, if required. Widgets typically encapsulate their own children, so this argument is more likely to be used with `v()` than `w()`.                                                                                                                                                                                                                                                                           |
+| Argument               | Optional          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tagName | VNode`      | No                | Typically, components will pass in `tagName` as a string, which identifies the corresponding DOM element tag that will be rendered for the `VNode`. If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children in the new copy. |
+| `Widget | constructor` | No                | Typically, components will pass in `Widget` as a generic type reference to an imported widget. Several types of `constructor`s can also be passed, allowing Dojo to instantiate widgets in a variety of different ways. These allow for advanced features such as deferred or lazy loading.                                                                                                                                                                                                                                                    |
+| `properties`           | `v`: Yes, `w`: No | The [set of properties used to configure the newly created VDOM node](#virtual-node-properties). These also allow the framework to determine whether the node has been updated and should therefore be re-rendered.                                                                                                                                                                                                                                                                                                                            |
+| `children`             | Yes               | An array of nodes to render as children of the newly created node. This can also include any text node children as literal strings, if required. Widgets typically encapsulate their own children, so this argument is more likely to be used with `v()` than `w()`.                                                                                                                                                                                                                                                                           |
 
 ### Virtual nodes example
 
@@ -546,7 +546,7 @@ For large applications, state management can be one of the most challenging aspe
 
 ## Basic: self-encapsulated widget state
 
-Widgets can maintain their own internal state as locally-scoped variables.
+Widgets can maintain their own internal state in a variety of ways. Function-based widgets can use the [`cache`](../middleware/supplemental.md#cache) or [`icache`](../middleware/supplemental.md#icache) middleware to store widget-local state, and class-based widgets can use internal class fields.
 
 Internal state data may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
 
@@ -558,20 +558,21 @@ The following example illustrates these patterns:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
+import cache from '@dojo/framework/core/middleware/cache';
 
-const factory = create();
+const factory = create({ cache });
 
-let myState: string = 'Hello from a stateful widget!';
-let counter: number = 0;
-
-export default factory(function MyEncapsulatedStateWidget() {
+export default factory(function MyEncapsulatedStateWidget({ middleware: { cache } }) {
 	return (
 		<div>
-			Current widget state: {myState}
+			Current widget state: {cache.get<string>('myState') || 'Hello from a stateful widget!'}
 			<br />
 			<button
 				onclick={() => {
-					myState = 'State change iteration #' + ++counter;
+					let counter = cache.get<number>('counter') || 0;
+					let myState = 'State change iteration #' + ++counter;
+					cache.set('myState', myState);
+					cache.set('counter', counter);
 				}}
 			>
 				Change State
@@ -588,8 +589,8 @@ import WidgetBase from '@dojo/framework/core/WidgetBase';
 import { tsx } from '@dojo/framework/core/vdom';
 
 export default class MyEncapsulatedStateWidget extends WidgetBase {
-	private myState: string = 'Hello from a stateful widget!';
-	private counter: number = 0;
+	private myState = 'Hello from a stateful widget!';
+	private counter = 0;
 
 	protected render() {
 		return (
@@ -615,7 +616,7 @@ In order to notify Dojo that a re-render is needed, widgets that encapsulate ren
 
 ### Invalidating a widget
 
-Function-based widgets can use the [`invalidator` middleware](../middleware/supplemental.md#invalidator) to mark themselves as invalid.
+Function-based widgets can use the [`icache` middleware](../middleware/supplemental.md#icache) to deal with local state management that automatically invalidates the widget when state is updated. `icache` composes [`cache`](../middleware/supplemental.md#cache) and [`invalidator` ](../middleware/supplemental.md#invalidator) middleware, with `cache` handling widget state management and `invalidator` handling widget invalidation on state change. Function-based widgets can also use `invalidator` directly, if desired.
 
 For class-based widgets, there are two ways to invalidate:
 
@@ -630,22 +631,22 @@ The following is an updated `MyEncapsulatedStateWidget` example that will correc
 **Function-based variant:**
 
 ```tsx
-import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
 
-const factory = create({ invalidator });
+const factory = create({ icache });
 
-let myState: string = 'Hello from a stateful widget!';
-let counter: number = 0;
-
-export default factory(function MyEncapsulatedStateWidget({ middleware: { invalidator } }) {
+export default factory(function MyEncapsulatedStateWidget({ middleware: { icache } }) {
 	return (
 		<div>
-			Current widget state: {myState}
+			Current widget state: {icache.getOrSet<string>('myState', 'Hello from a stateful widget!')}
 			<br />
 			<button
 				onclick={() => {
-					myState = 'State change iteration #' + ++counter;
-					invalidator();
+					let counter = icache.get<number>('counter') || 0;
+					let myState = 'State change iteration #' + ++counter;
+					icache.set('myState', myState);
+					icache.set('counter', counter);
 				}}
 			>
 				Change State
@@ -695,7 +696,7 @@ Passing state into a widget via virtual node [`properties`](#node-properties) is
 
 Widgets specify their own properties [interface](https://www.typescriptlang.org/docs/handbook/interfaces.html) which can include any fields the widget wants to publicly advertise to consumers, including configuration options, fields representing injectable state, as well as any event handler functions.
 
-Function-based widgets pass their properties interface as a generic type argument to the `create().properties()` call. The factory returned from this call chain then makes property values available via a `properties` argument in the render function definition.
+Function-based widgets pass their properties interface as a generic type argument to the `create().properties<MyPropertiesInterface>()` call. The factory returned from this call chain then makes property values available via a `properties` argument in the render function definition.
 
 Class-based widgets can define their properties interface as a generic type argument to `WidgetBase` in their class definition.
 
@@ -707,26 +708,28 @@ For example, a widget supporting state and event handler properties:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
 
 const factory = create().properties<{
 	name: string;
 	onNameChange?(newName: string): void;
 }>();
 
-export default factory(function MyWidget({ properties: { name, onNameChange } }) {
-	let newName: string = '';
-
+export default factory(function MyWidget({ middleware: { icache }, properties: { name, onNameChange } }) {
+	let newName = icache.get<string>('new-name') || '';
 	return (
 		<div>
 			<span>Hello, {name}! Not you? Set your name:</span>
 			<input
 				type="text"
+				value={newName}
 				oninput={(e: Event) => {
-					newName = (e.target as HTMLInputElement).value;
+					icache.set('new-name', (e.target as HTMLInputElement).value);
 				}}
 			/>
 			<button
 				onclick={() => {
+					icache.set('new-name', undefined);
 					onNameChange && onNameChange(newName);
 				}}
 			>
@@ -749,21 +752,23 @@ export interface MyWidgetProperties {
 }
 
 export default class MyWidget extends WidgetBase<MyWidgetProperties> {
+	private newName = '';
 	protected render() {
 		const { name, onNameChange } = this.properties;
-		let newName: string = '';
-
 		return (
 			<div>
 				<span>Hello, {name}! Not you? Set your name:</span>
 				<input
 					type="text"
+					value={this.newName}
 					oninput={(e: Event) => {
-						newName = (e.target as HTMLInputElement).value;
+						this.newName = (e.target as HTMLInputElement).value;
+						this.invalidate();
 					}}
 				/>
 				<button
 					onclick={() => {
+						this.newName = '';
 						onNameChange && onNameChange(newName);
 					}}
 				>
@@ -782,21 +787,20 @@ A consumer of this example widget can interact with it by passing in appropriate
 **Function-based variant:**
 
 ```tsx
-import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
 
 import MyWidget from './MyWidget';
 
-const factory = create({ invalidator });
+const factory = create({ icache });
 
-let currentName: string = 'Alice';
-
-export default factory(function NameHandler({ middleware: { invalidator } }) {
+export default factory(function NameHandler({ middleware: { icache } }) {
+	let currentName = icache.get<string>('current-name') || 'Alice';
 	return (
 		<MyWidget
 			name={currentName}
 			onNameChange={(newName) => {
-				currentName = newName;
-				invalidator();
+				icache.set('current-name', newName);
 			}}
 		/>
 	);
@@ -850,7 +854,6 @@ When working with Dojo widgets, a few important principles should be kept in min
 
 -   The _`__render__`_, _`__setProperties__`_, and _`__setChildren__`_ functions are internal framework implementation details and should never be called nor overridden in application code.
 -   Applications should not instantiate widgets directly - Dojo fully manages the lifecycle of widget instances, including instantiation, caching and destruction.
-    -   Applications only need to provide widgets to the framework as generic type parameters when calling [the `w()` method](#instantiating-vdom-nodes), or implicitly via [TSX tags](#tsx-widget-example), as VDOM output from widgets' render functions.
 
 ## The Virtual DOM
 
@@ -865,5 +868,3 @@ When working with Dojo widgets, a few important principles should be kept in min
 
 -   Applications should have no need to use imperative DOM manipulation calls.
     -   The framework handles all concrete rendering responsibilities, and provides alternative mechanisms to widget authors for using a variety of DOM functionality in a more simplified, type-safe, and reactive manner.
--   Dojo does not support changing event listener functions after the first render.
-    -   Only changes to node properties and attributes are reflected against DOM nodes between subsequent render cycles - listener functions that need to vary their implementation between renders should be avoided.
