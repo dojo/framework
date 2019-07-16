@@ -139,10 +139,10 @@ import middlewareWithProperties from '../middleware/middlewareWithProperties';
 const render = create({ middlewareWithProperties });
 export const MiddlewarePropertiesWidget = render(({ properties, middleware: { middlewareWithProperties } }) => {
 	return (
-		<div>
+		<virtual>
 			<div>{`Middleware property value: ${properties.conditional}`}</div>
 			<div>{`Middleware property usage: ${middlewareWithProperties.getConditionalState()}`}</div>
-		</div>
+		</virtual>
 	);
 });
 

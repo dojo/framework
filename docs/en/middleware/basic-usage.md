@@ -64,10 +64,10 @@ const factory = create({ myComposingMiddleware });
 
 export default factory(function MyWidget({ properties, middleware: { myComposingMiddleware } }) {
 	return (
-		<div>
+		<virtual>
 			<div>{`Middleware property value: ${properties.middlewareProp}`}</div>
 			<div>{`Middleware usage: ${myComposingMiddleware.get()}`}</div>
-		</div>
+		</virtual>
 	);
 });
 ```
