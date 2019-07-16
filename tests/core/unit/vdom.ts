@@ -5,7 +5,6 @@ import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
-
 import {
 	create,
 	renderer,
@@ -3712,6 +3711,55 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.innerHTML, expected);
 			assert.lengthOf(appendedHtml, 1);
 			assert.strictEqual(appendedHtml[0], expected);
+		});
+	});
+
+	describe('body node', () => {
+		let root = document.createElement('div');
+		beforeEach(() => {
+			root = document.createElement('div');
+			document.body.appendChild(root);
+		});
+
+		afterEach(() => {
+			document.body.removeChild(root);
+		});
+
+		it('can attach a node to the body', () => {
+			let show = true;
+			const factory = create({ invalidator });
+			const App = factory(function App({ middleware: { invalidator } }) {
+				return v('div', [
+					v('button', {
+						onclick: () => {
+							show = !show;
+							invalidator();
+						}
+					}),
+					v('body', [show ? v('div', { id: 'my-body-node-1' }, ['My Body Div 1']) : null]),
+					v('body', [show ? v('div', { id: 'my-body-node-2' }, ['My Body Div 2']) : null])
+				]);
+			});
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			let bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isOk(bodyNodeOne);
+			assert.strictEqual(bodyNodeOne.outerHTML, '<div id="my-body-node-1">My Body Div 1</div>');
+			assert.strictEqual(bodyNodeOne.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			let bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isOk(bodyNodeTwo);
+			assert.strictEqual(bodyNodeTwo.outerHTML, '<div id="my-body-node-2">My Body Div 2</div>');
+			assert.strictEqual(bodyNodeTwo.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-2'));
+			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
+			resolvers.resolve();
+			bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isNull(bodyNodeOne);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isNull(bodyNodeTwo);
+			assert.isNull(root.querySelector('#my-body-node-2'));
 		});
 	});
 
