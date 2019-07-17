@@ -20,21 +20,22 @@ export default factory(function MyWidget() {
 ## Specifying widget properties
 
 -   Making widgets more reusable by abstracting out [state](./supplemental.md#managing-state), configuration and [event handling](./supplemental.md#interactivity) via a [typed properties interface](./supplemental.md#intermediate-passing-widget-properties)
--   Specifying [node `key`s](./supplemental.md##vdom-node-keys) to differentiate between sibling elements of the same type - here, two `div` elements. This allows the framework to more efficiently target only the relevant elements when updating the DOM as a result of an application state change.
+-   Providing [middleware](../middleware/introduction.md) to widgets via their `create` factory
+-   Specifying [node `key`s](./supplemental.md#vdom-node-keys) to differentiate between sibling elements of the same type - here, two `div` elements. This allows the framework to more efficiently target only the relevant elements when updating the DOM as a result of an application state change
 
 > src/widgets/Greeter.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
 
-const factory = create().properties<{
+const factory = create({ icache }).properties<{
 	name: string;
 	onNameChange?(newName: string): void;
 }>();
 
-export default factory(function Greeter({ properties: { name, onNameChange } }) {
-	let newName: string = '';
-
+export default factory(function Greeter({ middleware: { icache }, properties: { name, onNameChange } }) {
+	let newName = icache.get<string>('new-name') || '';
 	return (
 		<div>
 			<div key="appBanner">Welcome to a Dojo application!</div>
@@ -43,12 +44,14 @@ export default factory(function Greeter({ properties: { name, onNameChange } }) 
 			<input
 				id="nameEntry"
 				type="text"
+				value={newName}
 				oninput={(e: Event) => {
-					newName = (e.target as HTMLInputElement).value;
+					icache.set('new-name', (e.target as HTMLInputElement).value);
 				}}
 			/>
 			<button
 				onclick={() => {
+					icache.set('new-name', undefined);
 					onNameChange && onNameChange(newName);
 				}}
 			>
@@ -63,26 +66,25 @@ export default factory(function Greeter({ properties: { name, onNameChange } }) 
 
 -   Defining a hierarchy of widgets that combine to implement more complex application requirements
 -   Providing state and event handler [properties](./supplemental.md#node-properties) to child widgets
--   Making use of [`invalidator` middleware](../middleware/supplemental.md#invalidator) to flag when a widget is dirty and requires a re-render
+-   Making use of [`icache` middleware](../middleware/supplemental.md#icache) to manage state and invalidate/re-render affected widgets when the state is changed
 
 > src/widgets/NameHandler.tsx
 
 ```tsx
-import { create, tsx, invalidator } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
 
 import Greeter from './Greeter';
 
-const factory = create({ invalidator });
+const factory = create({ icache });
 
-let currentName: string;
-
-export default factory(function NameHandler({ middleware: { invalidator } }) {
+export default factory(function NameHandler({ middleware: { icache } }) {
+	let currentName = icache.get<string>('current-name') || '';
 	return (
 		<Greeter
 			name={currentName}
 			onNameChange={(newName) => {
-				currentName = newName;
-				invalidator();
+				icache.set('current-name', newName);
 			}}
 		/>
 	);
