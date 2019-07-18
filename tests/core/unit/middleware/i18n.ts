@@ -1,8 +1,10 @@
 const { it, describe, afterEach } = intern.getInterface('bdd');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 import bundle from '../../support/nls/greetings';
 
+import renderer, { v, w, create, invalidator } from '../../../../src/core/vdom';
 import i18nMiddleware from '../../../../src/core/middleware/i18n';
 import coreI18n, { switchLocale, invalidate, systemLocale } from '../../../../src/i18n/i18n';
 import Injector from '../../../../src/core/Injector';
@@ -299,5 +301,41 @@ describe('i18n middleware', () => {
 		assert.strictEqual(messages.hello, 'Bonjour');
 		assert.strictEqual(messages.goodbye, 'Au revoir');
 		assert.deepEqual<any>(i18n.get(), { locale: 'fr', rtl: true });
+	});
+
+	jsdomDescribe('integration', () => {
+		it('changing locales', async () => {
+			await coreI18n(overrideBundle, 'es');
+			const factory = create({ i18n: i18nMiddleware, invalidator });
+			const I18nWidget = factory(function I18nWidget({ middleware: { i18n } }) {
+				const { messages } = i18n.localize(overrideBundle);
+				return JSON.stringify(messages);
+			});
+			let shouldPassLocale = false;
+			let passLocale: any;
+			const App = factory(function App({ middleware: { i18n, invalidator } }) {
+				const locale = i18n.get();
+				if (!locale || !locale.locale) {
+					i18n.set({ locale: 'en' });
+				}
+				passLocale = () => {
+					shouldPassLocale = true;
+				};
+
+				return v('div', [shouldPassLocale ? w(I18nWidget, { locale: 'es' }) : w(I18nWidget, {})]);
+			});
+			const root = document.createElement('div');
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root, sync: true });
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div>{"hello":"Hi!","goodbye":"Bye!","welcome":"Salutations, {name}!"}</div></div>'
+			);
+			passLocale();
+			assert.strictEqual(
+				root.outerHTML,
+				'<div><div>{"hello":"Hola","goodbye":"Adiós","welcome":"Bienvenido, {name}!"}</div></div>'
+			);
+		});
 	});
 });
