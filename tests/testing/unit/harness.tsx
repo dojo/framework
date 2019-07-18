@@ -653,7 +653,7 @@ describe('harness', () => {
 				});
 				return (
 					<div>
-						<button key="click-me">{`${properties.key} ${id}`}</button>
+						<button key="click-me">{`${properties().key} ${id}`}</button>
 					</div>
 				);
 			});

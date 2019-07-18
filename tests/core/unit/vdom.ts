@@ -3065,7 +3065,7 @@ jsdomDescribe('vdom', () => {
 				let text = 'first';
 				let updateText: any;
 
-				const Foo = createWidget(({ children }) => children);
+				const Foo = createWidget(({ children }) => children());
 				const App = createWidget(({ middleware }) => {
 					updateText = () => {
 						text = 'second';
@@ -3117,7 +3117,7 @@ jsdomDescribe('vdom', () => {
 				let label = 'default';
 				const createWidget = create({ invalidator });
 				const Foo = createWidget.properties<{ label: string; other: boolean }>()(
-					({ properties }) => properties.label
+					({ properties }) => properties().label
 				);
 				const App = createWidget.properties()(({ middleware }) => {
 					const setLabel = () => {
@@ -3142,8 +3142,12 @@ jsdomDescribe('vdom', () => {
 			it('supports widget registry items', () => {
 				const registry = new Registry();
 				const createWidget = create();
-				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
-				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) =>
+					v('h1', [properties().text])
+				);
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) =>
+					v('h1', [properties().text])
+				);
 
 				registry.define('foo', Foo);
 				registry.define('bar', Bar);
@@ -3282,8 +3286,8 @@ jsdomDescribe('vdom', () => {
 				let visible = true;
 				let swap: any;
 
-				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
-				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => properties().text);
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => properties().text);
 				const App = createWidget(({ middleware }) => {
 					swap = () => {
 						visible = !visible;
@@ -3580,7 +3584,7 @@ jsdomDescribe('vdom', () => {
 						const createWidget = create({ diffProperty, invalidator }).properties<any>();
 						const Foo = createWidget(({ middleware, properties }) => {
 							middleware.diffProperty('text', (current: any, properties: any) => {});
-							return v('div', [properties.text]);
+							return v('div', [properties().text]);
 						});
 						let text = 'first';
 						const App = createWidget(({ middleware }) => {

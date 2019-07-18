@@ -32,7 +32,8 @@ describe('breakpoint middleware', () => {
 			middleware: {
 				resize: resizeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isNull(breakpoint.get('root'));
 	});
@@ -44,7 +45,8 @@ describe('breakpoint middleware', () => {
 			middleware: {
 				resize: resizeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		resizeStub.get
@@ -81,7 +83,8 @@ describe('breakpoint middleware', () => {
 			middleware: {
 				resize: resizeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		resizeStub.get
@@ -122,7 +125,8 @@ describe('breakpoint middleware', () => {
 			middleware: {
 				resize: resizeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		resizeStub.get

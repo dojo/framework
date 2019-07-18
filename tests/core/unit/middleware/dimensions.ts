@@ -24,7 +24,8 @@ describe('dimensions middleware', () => {
 			middleware: {
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const client = { clientLeft: 1, clientTop: 2, clientWidth: 3, clientHeight: 4 };
 		const offset = { offsetHeight: 10, offsetLeft: 10, offsetTop: 10, offsetWidth: 10 };
@@ -68,7 +69,8 @@ describe('dimensions middleware', () => {
 			middleware: {
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let defaultDims = dimensions.get('div');
 		assert.deepEqual(defaultDims, {

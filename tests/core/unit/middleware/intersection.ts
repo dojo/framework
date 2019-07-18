@@ -52,7 +52,8 @@ describe('intersection middleware', () => {
 
 	it('no intersection', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
@@ -64,7 +65,8 @@ describe('intersection middleware', () => {
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		const info = intersection.get('root');
@@ -76,7 +78,8 @@ describe('intersection middleware', () => {
 
 	it('no intersection with options', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
@@ -88,7 +91,8 @@ describe('intersection middleware', () => {
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		const info = intersection.get('root', { root: 'root' });
@@ -100,7 +104,8 @@ describe('intersection middleware', () => {
 
 	it('Should return the registered intersection', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
@@ -112,7 +117,8 @@ describe('intersection middleware', () => {
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		const mockNode = sb.stub();
@@ -142,7 +148,8 @@ describe('intersection middleware', () => {
 
 	it('intersections calls waits for root node before invalidating', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
@@ -154,7 +161,8 @@ describe('intersection middleware', () => {
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		let info = intersection.get('foo', { root: 'root' });
@@ -205,7 +213,8 @@ describe('intersection middleware', () => {
 
 	it('Should register disconnect with destroy', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: sb.stub() }
 		});
@@ -217,7 +226,8 @@ describe('intersection middleware', () => {
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		const mockNode = sb.stub();

@@ -22,11 +22,17 @@ function waitForCall(calls = 1, stub: SinonStub) {
 
 describe('block middleware', () => {
 	beforeEach(() => {
-		cache = cacheMiddleware().callback({ id: 'cache-test', middleware: { destroy: sb.stub() }, properties: {} });
+		cache = cacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => []
+		});
 		icache = icacheMiddleware().callback({
 			id: 'cache-test',
 			middleware: { cache, invalidator: invalidatorStub },
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 	});
 	afterEach(() => {
@@ -41,7 +47,8 @@ describe('block middleware', () => {
 				icache,
 				defer: deferStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		let resolverOne: any;

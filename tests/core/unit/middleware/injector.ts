@@ -38,7 +38,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			const injectorItem = injector.get<string>('test');
 			assert.strictEqual(injectorItem, 'Test Injector');
@@ -54,7 +55,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			const injectorItem = injector.get<string>('test');
 			assert.isNull(injectorItem);
@@ -70,7 +72,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			const injectorItem = injector.get<string>('test');
 			assert.isNull(injectorItem);
@@ -91,7 +94,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			injector.subscribe('test');
 			assert.isTrue(eventStub.calledOnce);
@@ -113,7 +117,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			const customCallback = sb.stub();
 			injector.subscribe('test', customCallback);
@@ -132,7 +137,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			injector.subscribe('test');
 			assert.isTrue(eventStub.notCalled);
@@ -153,7 +159,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			injector.subscribe('test');
 			assert.isTrue(eventStub.notCalled);
@@ -176,7 +183,8 @@ describe('injector middleware', () => {
 					invalidator,
 					destroy
 				},
-				properties: {}
+				properties: () => ({}),
+				children: () => []
 			});
 			const customCallback = sb.stub();
 			const injectorHandle = injector.subscribe('test', customCallback);
