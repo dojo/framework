@@ -8,8 +8,7 @@ import { I18nProperties, LocaleData, LocalizedMessages, INJECTOR_KEY, registerI1
 
 const factory = create({ invalidator, injector, getRegistry }).properties<I18nProperties>();
 
-export const i18n = factory((options) => {
-	const { invalidator, injector, getRegistry } = options.middleware;
+export const i18n = factory(({ properties, middleware: { invalidator, injector, getRegistry } }) => {
 	const i18nInjector = injector.get(INJECTOR_KEY);
 	if (!i18nInjector) {
 		const registry = getRegistry();
@@ -20,8 +19,7 @@ export const i18n = factory((options) => {
 	injector.subscribe(INJECTOR_KEY);
 
 	function getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
-		const { properties } = options;
-		let locale = properties.locale;
+		let { locale } = properties();
 		if (!locale) {
 			const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
 			if (injectedLocale) {
@@ -41,8 +39,7 @@ export const i18n = factory((options) => {
 	}
 
 	function resolveBundle<T extends Messages>(bundle: Bundle<T>): Bundle<T> {
-		const { properties } = options;
-		let { i18nBundle } = properties;
+		let { i18nBundle } = properties();
 		if (i18nBundle) {
 			if (i18nBundle instanceof Map) {
 				i18nBundle = i18nBundle.get(bundle);
@@ -67,11 +64,10 @@ export const i18n = factory((options) => {
 
 	return {
 		localize<T extends Messages>(bundle: Bundle<T>, useDefaults = false): LocalizedMessages<T> {
-			const { properties } = options;
+			let { locale } = properties();
 			bundle = resolveBundle(bundle);
 			const messages = getLocaleMessages(bundle);
 			const isPlaceholder = !messages;
-			let locale = properties.locale;
 			if (!locale) {
 				const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
 				if (injectedLocale) {

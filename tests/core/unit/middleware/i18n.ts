@@ -58,7 +58,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const { format, isPlaceholder, messages } = i18n.localize(bundle);
 
@@ -78,7 +79,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const { format, isPlaceholder, messages } = i18n.localize(bundle, true);
 
@@ -98,7 +100,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const { isPlaceholder, messages } = i18n.localize({
 			messages: {
@@ -121,9 +124,10 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {
+			properties: () => ({
 				locale: 'fr'
-			}
+			}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'fr');
 		const { isPlaceholder, messages } = i18n.localize(bundle);
@@ -142,7 +146,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'fr');
 		const { isPlaceholder, messages } = i18n.localize(bundle);
@@ -161,7 +166,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'fr');
 		const { format } = i18n.localize(bundle);
@@ -178,9 +184,10 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {
+			properties: () => ({
 				i18nBundle: overrideBundle
-			}
+			}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'es');
 		await coreI18n(overrideBundle, 'es');
@@ -202,9 +209,10 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {
+			properties: () => ({
 				i18nBundle: i18nBundleMap
-			}
+			}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'es');
 		await coreI18n(overrideBundle, 'es');
@@ -225,9 +233,10 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {
+			properties: () => ({
 				i18nBundle: i18nBundleMap
-			}
+			}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'es');
 		await coreI18n(overrideBundle, 'es');
@@ -248,7 +257,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'fr');
 		const { isPlaceholder, messages } = i18n.localize(bundle);
@@ -268,9 +278,10 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {
+			properties: () => ({
 				locale: 'fr'
-			}
+			}),
+			children: () => []
 		});
 		await coreI18n(bundle, 'fr');
 		const { isPlaceholder, messages } = i18n.localize(bundle);
@@ -291,7 +302,8 @@ describe('i18n middleware', () => {
 				invalidator: invalidatorStub,
 				getRegistry: getRegistryStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isTrue(defineInjector.calledOnce);
 		await coreI18n(bundle, 'fr');

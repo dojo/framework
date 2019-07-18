@@ -34,7 +34,8 @@ describe('store middleware', () => {
 				invalidator: invalidatorStub,
 				injector: injectorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let result = store.get(store.path('my-state'));
 		assert.isUndefined(result);
@@ -58,7 +59,8 @@ describe('store middleware', () => {
 				invalidator: invalidatorStub,
 				injector: injectorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let result = store.get(store.path('my-state'));
 		assert.isUndefined(result);
@@ -91,7 +93,8 @@ describe('store middleware', () => {
 				invalidator: invalidatorStub,
 				injector: injectorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let result = store.get(store.path('my-state'));
 		assert.isUndefined(result);
@@ -133,7 +136,8 @@ describe('store middleware', () => {
 				invalidator: invalidatorStub,
 				injector: injectorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const result = store.get(store.path('my', 'nested', 'state'));
 		assert.strictEqual(result, 'existing-data');
@@ -144,7 +148,8 @@ describe('store middleware', () => {
 				invalidator: invalidatorStub,
 				injector: injectorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const resultTwo = otherStore.get(store.path('my', 'nested', 'state'));
 		assert.strictEqual(resultTwo, 'existing-data');

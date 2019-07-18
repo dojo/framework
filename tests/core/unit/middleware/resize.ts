@@ -51,12 +51,14 @@ describe('resize middleware', () => {
 
 	it('Should observe node with with resize and invalidate when the resize callback is called ', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: destroyStub }
 		});
 		const icache = icacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { invalidator: invalidatorStub, cache }
 		});
@@ -68,7 +70,8 @@ describe('resize middleware', () => {
 				icache,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isNull(resize.get('key'));
 		const mockNode = sb.stub();
@@ -94,12 +97,14 @@ describe('resize middleware', () => {
 
 	it('Should register disconnect with destroy', () => {
 		const cache = cacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { destroy: sb.stub() }
 		});
 		const icache = icacheMiddleware().callback({
-			properties: {},
+			properties: () => ({}),
+			children: () => [],
 			id: 'test-cache',
 			middleware: { invalidator: invalidatorStub, cache }
 		});
@@ -111,7 +116,8 @@ describe('resize middleware', () => {
 				icache,
 				node: nodeStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		const mockNode = sb.stub();

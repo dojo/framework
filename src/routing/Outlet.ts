@@ -17,7 +17,7 @@ export const Outlet = factory(function Outlet({
 	middleware: { cache, injector, diffProperty, invalidator },
 	properties
 }) {
-	const { renderer, id, routerKey = 'router' } = properties;
+	const { renderer, id, routerKey = 'router' } = properties();
 	const currentHandle = cache.get<Function>('handle');
 	if (!currentHandle) {
 		const handle = injector.subscribe(routerKey);

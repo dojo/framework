@@ -355,7 +355,12 @@ export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: R
 
 export interface Callback<Props, Middleware, ReturnValue> {
 	(
-		options: { id: string; middleware: MiddlewareApiMap<Middleware>; properties: Props; children?: DNode[] }
+		options: {
+			id: string;
+			middleware: MiddlewareApiMap<Middleware>;
+			properties: () => Props;
+			children: () => DNode[];
+		}
 	): ReturnValue;
 }
 

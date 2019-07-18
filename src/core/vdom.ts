@@ -1646,28 +1646,22 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		for (let i = 0; i < keys.length; i++) {
 			const middleware = middlewares[keys[i]]();
 			const payload: any = {
-				id: uniqueId
-			};
-			Object.defineProperty(payload, 'properties', {
-				get() {
+				id: uniqueId,
+				properties: () => {
 					const widgetMeta = widgetMetaMap.get(id);
 					if (widgetMeta) {
 						return { ...widgetMeta.properties };
 					}
+					return {};
 				},
-				enumerable: true,
-				configurable: true
-			});
-			Object.defineProperty(payload, 'children', {
-				get() {
+				children: () => {
 					const widgetMeta = widgetMetaMap.get(id);
 					if (widgetMeta) {
 						return widgetMeta.children;
 					}
-				},
-				enumerable: true,
-				configurable: true
-			});
+					return [];
+				}
+			};
 			if (middleware.middlewares) {
 				const resolvedMiddleware = resolveMiddleware(middleware.middlewares, id);
 				payload.middleware = resolvedMiddleware;
@@ -1736,8 +1730,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 			rendered = Constructor({
 				id: next.id,
-				properties: next.node.properties,
-				children: next.node.children,
+				properties: () => next.node.properties,
+				children: () => next.node.children,
 				middleware: widgetMeta.middleware
 			});
 			widgetMeta.rendering = false;
@@ -1836,8 +1830,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					widgetMeta.dirty = false;
 					rendered = Constructor({
 						id: next.id,
-						properties: next.node.properties,
-						children: next.node.children,
+						properties: () => next.node.properties,
+						children: () => next.node.children,
 						middleware: widgetMeta.middleware
 					});
 					if (widgetMeta.deferRefs > 0) {

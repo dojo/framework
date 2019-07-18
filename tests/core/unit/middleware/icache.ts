@@ -18,7 +18,8 @@ describe('icache middleware', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
 			middleware: { destroy: sb.stub() },
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const icache = callback({
 			id: 'test',
@@ -26,7 +27,8 @@ describe('icache middleware', () => {
 				cache,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isUndefined(icache.get('test'));
 		assert.strictEqual('test', icache.getOrSet('test', 'test'));
@@ -39,7 +41,8 @@ describe('icache middleware', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
 			middleware: { destroy: sb.stub() },
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const icache = callback({
 			id: 'test',
@@ -47,7 +50,8 @@ describe('icache middleware', () => {
 				cache,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let resolverOne: any;
 		let resolverTwo: any;
@@ -74,7 +78,8 @@ describe('icache middleware', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
 			middleware: { destroy: sb.stub() },
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const icache = callback({
 			id: 'test',
@@ -82,7 +87,8 @@ describe('icache middleware', () => {
 				cache,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		let resolverOne: any;
 		let resolverTwo: any;
@@ -111,7 +117,8 @@ describe('icache middleware', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
 			middleware: { destroy: sb.stub() },
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const icache = callback({
 			id: 'test',
@@ -119,7 +126,8 @@ describe('icache middleware', () => {
 				cache,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isUndefined(icache.get('test'));
 		icache.set('test', 'value');

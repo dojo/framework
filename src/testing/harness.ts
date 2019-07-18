@@ -96,22 +96,14 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 					isMock = true;
 				}
 				const payload: any = {
-					id: uniqueId
-				};
-				Object.defineProperty(payload, 'properties', {
-					get() {
+					id: uniqueId,
+					properties: () => {
 						return { ...properties };
 					},
-					enumerable: true,
-					configurable: true
-				});
-				Object.defineProperty(payload, 'children', {
-					get() {
+					children: () => {
 						return children;
-					},
-					enumerable: true,
-					configurable: true
-				});
+					}
+				};
 				if (middleware.middlewares) {
 					const resolvedMiddleware = resolveMiddleware(middleware.middlewares, mocks);
 					payload.middleware = resolvedMiddleware;
@@ -199,7 +191,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			properties = { ...wNode.properties };
 			children = wNode.children;
 			if (invalidated) {
-				render = widget({ id: 'test', middleware, properties, children });
+				render = widget({ id: 'test', middleware, properties: () => properties, children: () => children });
 			}
 		} else {
 			widget.__setProperties__(wNode.properties);
