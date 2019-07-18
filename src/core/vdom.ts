@@ -1722,7 +1722,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					properties: next.node.properties,
 					children: next.node.children,
 					deferRefs: 0,
-					rendering: false,
+					rendering: true,
 					registry: _mountOptions.registry
 				};
 
@@ -1740,6 +1740,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				children: next.node.children,
 				middleware: widgetMeta.middleware
 			});
+			widgetMeta.rendering = false;
 			if (widgetMeta.deferRefs > 0) {
 				return false;
 			}
