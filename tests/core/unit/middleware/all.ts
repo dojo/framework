@@ -10,3 +10,4 @@ import './intersection';
 import './resize';
 import './store';
 import './theme';
+import './validity';
