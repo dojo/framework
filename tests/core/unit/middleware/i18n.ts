@@ -320,6 +320,7 @@ describe('i18n middleware', () => {
 				}
 				passLocale = () => {
 					shouldPassLocale = true;
+					invalidator();
 				};
 
 				return v('div', [shouldPassLocale ? w(I18nWidget, { locale: 'es' }) : w(I18nWidget, {})]);
@@ -334,7 +335,7 @@ describe('i18n middleware', () => {
 			passLocale();
 			assert.strictEqual(
 				root.outerHTML,
-				'<div><div>{"hello":"Hola","goodbye":"Adiós","welcome":"Bienvenido, {name}!"}</div></div>'
+				'<div><div>{"hello":"Hola","goodbye":"Adiós","welcome":"Bienvenido, {name}"}</div></div>'
 			);
 		});
 	});
