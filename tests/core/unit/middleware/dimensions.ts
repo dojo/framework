@@ -8,9 +8,6 @@ const sb = sandbox.create();
 const nodeStub = {
 	get: sb.stub()
 };
-const resizeStub = {
-	get: sb.stub()
-};
 
 describe('dimensions middleware', () => {
 	afterEach(() => {
@@ -43,15 +40,6 @@ describe('dimensions middleware', () => {
 			})
 		};
 		nodeStub.get.withArgs('root').returns(domNode);
-		const contentRec = {};
-		resizeStub.get
-			.withArgs('root')
-			.onFirstCall()
-			.returns(contentRec)
-			.onSecondCall()
-			.returns(contentRec)
-			.onThirdCall()
-			.returns({});
 		const dims = dimensions.get('root');
 		assert.deepEqual(dims, {
 			offset: { height: 10, left: 10, top: 10, width: 10 },
