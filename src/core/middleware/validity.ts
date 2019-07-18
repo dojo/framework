@@ -12,9 +12,6 @@ const validity = factory(function({ middleware: { node, invalidator } }) {
 			}
 
 			if (value !== domNode.value) {
-				// if the vdom is out of sync with the real dom our
-				// validation check will be one render behind.
-				// Call invalidate on the next loop.
 				setTimeout(() => invalidator());
 			}
 
