@@ -6,24 +6,20 @@ Stores provide a clean interface for storing, modifying, and retrieving data fro
 
 ## The Store
 
-The store hold the global, atomic state for the entire application. It is created when the application is created and defined in the `Registry` with an injector.
+The store holds the global, atomic state for the entire application. It is created when the application is created and defined in the `Registry` with an injector.
 
 > main.ts
 
 ```ts
-import Registry from '@dojo/framework/widget-core/Registry';
+import { registerStoreInjector } from '@dojo/framework/store/StoreInjector';
 import Store from '@dojo/framework/stores/Store';
 import { State } from './interfaces';
 
-const registry = new Registry();
 const store = new Store<State>();
-registry.defineInjector('state', (invalidator) => {
-	store.on('invalidate', () => invalidator());
-	return () => store;
-});
+const registry = registerStoreInjector(store);
 ```
 
-`State` defines the shape of the global store using an interface. In general state should be serializable. This improves performance and makes it easier for Dojo to determine when changes to the data occur.
+`State` defines the shape of the global store using an interface. It is important that everything inside `State` is serializable, as this improves performance and makes it easier for Dojo to determine when changes to the data occur.
 
 > interfaces.d.ts
 
@@ -54,125 +50,9 @@ To work with Dojo Stores there are three core concepts.
 -   **Commands** are simple functions that perform business logic and return operations
 -   **Processes** execute a group of commands and represent application behavior
 
-### Operations
+### Commands & Operations
 
-Stores cannot be modified directly. Instead four operations are available for modifying state: `add`, `remove`, `replace`, and `test`. These operations are represented by simple objects based on the [JSON patch](http://jsonpatch.com/) format, but in practice helper functions will always be used.
-
-#### `path` and `at`
-
-The path is a `string` that describes the location where an operation is applied. The `path` and `at` functions are part of the `Store` and are accessible inside of a `Command` (which we will talk about later).
-
-Here are a couple examples to show how `path` and `at` describe a location in the store. The `State` is the same as defined above in `interface.d.ts`. It is used by the `Store` to understand the shape of the state data.
-
-> `path` of the current user name
-
-```ts
-const store = new Store<State>();
-const { path } = store;
-
-path('users', 'current', 'name');
-```
-
-This path refers to the `string` value located at `/users/current/name`. `path` is used to transverse the hierarchy in a type-safe way. It ensures only the property names defined in the `State` interface are used.
-
-> `at` is an offset
-
-```ts
-const store = new Store<State>();
-const { at, path } = store;
-
-at(path('users', 'list'), 1);
-```
-
-This path refers to the `User` located at `/users/list` at offset `1`.
-
-#### `add` operation
-
-Adds a value to an object or inserts it into an array.
-
-> `add` example
-
-```ts
-import { add } from '@dojo/framework/stores/state/operations';
-
-const store = new Store<State>();
-const { apply, at, path } = store;
-const user = { id: '0', name: 'Paul' };
-
-apply([add(at(path('users', 'list'), 0), user)]);
-```
-
-This will add `user` to the beginning of the user list.
-
-#### `remove` operation
-
-Removes a value from an object or an array
-
-> `remove` example
-
-```ts
-import { add, remove } from '@dojo/framework/stores/state/operations';
-
-const store = new Store<State>();
-const { apply, at, path } = store;
-const user = { id: '0', name: 'Paul' };
-
-apply([
-	add(path('users'), {
-		current: user,
-		list: [user]
-	}),
-	remove(at(path('users', 'list'), 0))
-]);
-```
-
-This example will add an initial state for `users` and remove the first `user` in the list.
-
-#### `replace` operation
-
-Replaces a value. Equivalent to a `remove` followed by an `add`.
-
-> `replace` example
-
-```ts
-import { add, replace } from '@dojo/framework/stores/state/operations';
-
-const store = new Store<State>();
-const { apply, at, path } = store;
-const users = [{ id: '0', name: 'Paul' }, { id: '1', name: 'Michael' }];
-const newUser = { id: '2', name: 'Shannon' };
-
-apply([
-	add(path('users'), {
-		current: user[0],
-		list: users
-	}),
-	replace(at(path('users', 'list'), 1), newUser)
-]);
-```
-
-This example will replace the second user in the `list` with `newUser`.
-
-#### `test` operation
-
-Tests that the specified value is set in the store. If the test fails then the entire set of operations should not apply.
-
-```ts
-import Store from '@dojo/framework/stores/Store';
-import { add } from '@dojo/framework/stores/state/operations';
-
-const store = new Store<State>();
-const { path, apply } = store;
-const user = { id: '0', name: 'Paul' };
-
-apply([test(path('users', 'current'), undefined), add(path('users', 'current'), user)]);
-```
-
-These operations set the current user unless a current user already exists.
-
-### Commands
-
-Commands are simply functions that are called while executing a process. They return an array of operations that modify the store. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
+Stores cannot be modified directly. Instead, operations that modify the store are returned from commands, which are simply functions that are called while executing a process. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
 
 #### The command factory
 
@@ -192,6 +72,112 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 ```
 
 `createCommand` will ensure that the wrapped command has the correct typing and the passed `CommandRequest` functions will be typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands this guide will use `createCommand` in its examples.
+
+#### `path`
+
+The path is a `string` that describes the location where an operation is applied. The `path` function is part of the `CommandRequest` and is accessible inside of a `Command`.
+
+Here is an example to show how `path` describes a location in the store. The `State` is the same as defined above in `interface.d.ts`. It is used by the `Store` to understand the shape of the state data.
+
+> `path` of the current user name
+
+```ts
+const store = new Store<State>();
+const { path } = store;
+
+path('users', 'current', 'name');
+```
+
+This path refers to the `string` value located at `/users/current/name`. `path` is used to transverse the hierarchy in a type-safe way. It ensures only the property names defined in the `State` interface are used.
+
+#### `at`
+
+The `at` function is used in conjunction with `path` to identify a location in an array. Here is an example of using the `at` function.
+
+```ts
+const store = new Store<State>();
+const { at, path } = store;
+
+at(path('users', 'list'), 1);
+```
+
+This path refers to the `User` located at `/users/list` at offset `1`.
+
+#### `add` operation
+
+Adds a value to an object or inserts it into an array.
+
+> `add` example
+
+```ts
+import { createCommandFactory } from '@dojo/framework/stores/process';
+import { State } from './interfaces';
+import { add } from '@dojo/framework/stores/state/operations';
+
+const createCommand = createCommandFactory<State>();
+const myCommand = createCommand(({ at, get, path, payload, state }) => {
+	const user = { id: '0', name: 'Paul' };
+
+	return [add(at(path('users', 'list'), 0), user)];
+});
+```
+
+This will add `user` to the beginning of the user list.
+
+#### `remove` operation
+
+Removes a value from an object or an array
+
+> `remove` example
+
+```ts
+import { createCommandFactory } from '@dojo/framework/stores/process';
+import { State } from './interfaces';
+import { add, remove } from '@dojo/framework/stores/state/operations';
+
+const createCommand = createCommandFactory<State>();
+const myCommand = createCommand(({ at, get, path, payload, state }) => {
+	const user = { id: '0', name: 'Paul' };
+
+	return [
+		add(path('users'), {
+			current: user,
+			list: [user]
+		}),
+		remove(at(path('users', 'list'), 0))
+	];
+});
+```
+
+This example will add an initial state for `users` and remove the first `user` in the list.
+
+#### `replace` operation
+
+Replaces a value. Equivalent to a `remove` followed by an `add`.
+
+> `replace` example
+
+```ts
+import { createCommandFactory } from '@dojo/framework/stores/process';
+import { State } from './interfaces';
+import { add, replace } from '@dojo/framework/stores/state/operations';
+
+const createCommand = createCommandFactory<State>();
+const myCommand = createCommand(({ at, get, path, payload, state }) => {
+	const users = [{ id: '0', name: 'Paul' }, { id: '1', name: 'Michael' }];
+	const newUser = { id: '2', name: 'Shannon' };
+
+	return [
+		add(path('users'), {
+			current: user[0],
+			list: users
+		}),
+		replace(at(path('users', 'list'), 1), newUser)
+	];
+});
+```
+
+This example will replace the second user in the `list` with `newUser`.
 
 #### `get`
 
@@ -239,25 +225,6 @@ const addUser = createCommand<User>(({ at, path, payload }) => {
 ```
 
 This example adds a user provided in the `payload` to the beginning of `/users/list`.
-
-#### `state`
-
-In modern browsers a `state` object is passed as part of the `CommandRequest`. Any modification to this object is translated to the appropriate patch operations and applied against the store.
-
-```ts
-import { createCommandFactory } from '@dojo/framework/stores/process';
-import { State } from './interfaces';
-import { remove, replace } from '@dojo/framework/stores/state/operations';
-
-const createCommand = createCommandFactory<State>();
-
-const addUser = createCommand<User>(({ payload, state }) => {
-	const currentUsers = state.users.list || [];
-	state.users.list = [...currentUsers, payload];
-});
-```
-
-Note that attempting to access state is not supported in IE and will immediately throw an error.
 
 #### Asynchronous commands
 
@@ -346,20 +313,6 @@ const resetUserOnError = () => {
 const login = createProcess('login', [ fetchUser, loadUserData ], [ resetUserOnError ]);
 ```
 
-#### Excuting a Process
-
-A process simply defines an execution flow for a set of data. To execute a process it needs access to the store to create an executor. Then the executor can be provided a payload to act upon.
-
-```ts
-import { login } from 'commands/login';
-import { store } from 'main.ts';
-
-login(store)({
-	username: 'Paul',
-	password: 'password'
-});
-```
-
 #### `payload` type
 
 The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explictly define the `payload` type.
@@ -388,13 +341,45 @@ There are two state containers available for widgets: `Container` and `StoreProv
 
 Note that the documentation in this section is intended to show how widgets and state are connected. For a more detailed look see the [Widgets]() reference guide.
 
+### StoreProvider
+
+A `StoreProvider` is a widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because a it does not have properties defined.
+
+> widget/User.ts
+
+```tsx
+import { tsx } from '@dojo/framework/widget-core/tsx';
+import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+
+import * as css from './styles/Hello.m.css';
+
+interface UserProperties {}
+
+export class User extends WidgetBase<UserProperties> {
+	protected render() {
+		return w<StoreProvider<State>>(StoreProvider, {
+			stateKey: 'state',
+			paths: (path) => [path('users', 'current')],
+			renderer: (store) => {
+				const { get, path } = store;
+				const name = get(path('users', 'current', 'name'));
+
+				return <h1 classes={[css.root]}>{`Hello, ${name}`}</h1>;
+			}
+		});
+	}
+}
+```
+
+The `StoreProvider` occurs as part of `User`'s render and provides its own renderer just like any other widget.
+
 ### Container
 
 A `Container` is a widget that fully encapsulates another widget. It connects the store to the widget with a `getProperties` function.
 
-> widget/User.ts
+> widget/User.tsx
 
-```ts
+```tsx
 import { tsx } from '@dojo/framework/widget-core/tsx';
 import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
 
@@ -406,7 +391,7 @@ interface UserProperties {
 
 export class User extends WidgetBase<UserProperties> {
 	protected render() {
-		const { name = 'stranger' } = this.properties;
+		const { name = 'Stranger' } = this.properties;
 		return <h1 classes={[css.root]}>{`Hello, ${name}`}</h1>;
 	}
 }
@@ -435,15 +420,12 @@ In this example `UserContainer` wraps `User` to display the current user's name.
 
 The most important thing to note about a `Container` is its properties are a 1:1 mapping to the widget it wraps. In other words, all properties that appear on the widget should be provided by the `Container`.
 
-### StoreProvider
+### Excuting a Process
 
-A `StoreProvider` is a widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because a it does not have properties defined.
-
-Using `User.ts` from the example above, we can use a `StoreProvider` to provide application state.
-
-> widget/User.provider.ts
+A process simply defines an execution flow for a set of data. To execute a process it needs access to the store to create an executor. Both the `Container` and `StoreProvider` widgets will provide you with access to the store.
 
 ```ts
+import { logout } from './processes/logout';
 import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
 import { w } from '@dojo/framework/widget-core/d';
 import StoreProvider from '@dojo/framework/stores/StoreProvider';
@@ -458,14 +440,15 @@ export class UserProvider extends WidgetBase {
 			renderer: (store) => {
 				const { get, path } = store;
 				const name = get(path('users', 'current', 'name'));
+				const onLogOut = () => {
+					logout(store)({});
+				};
 
-				return w(User, { name });
+				return w(User, { name, onLogOut });
 			}
 		});
 	}
 }
 ```
 
-`UserProvider` extends `WidgetBase` allowing us the opportunity to redefine the widget's properties. In this case `UserProvider` does not accept any properties. It gets all of the information it needs from the store. The `StoreProvider` occurs as part of `UserProvider`'s render and provides its own renderer just like any other widget.
-
-The `StoreProvider` is more robust than a `Container`. Since it is always wrapped by a widget it gives the opportunity to decide what properties should be provided by the outside widget and which should be provided from the store.
+####

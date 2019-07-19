@@ -1,3 +1,22 @@
+# State
+
+In modern browsers a `state` object is passed as part of the CommandRequest. Any modification to this object is translated to the appropriate patch operations and applied against the store.
+
+```ts
+import { createCommandFactory } from '@dojo/framework/stores/process';
+import { State } from './interfaces';
+import { remove, replace } from '@dojo/framework/stores/state/operations';
+
+const createCommand = createCommandFactory<State>();
+
+const addUser = createCommand<User>(({ payload, state }) => {
+	const currentUsers = state.users.list || [];
+	state.users.list = [...currentUsers, payload];
+});
+```
+
+Note that attempting to access state is not supported in IE and will immediately throw an error.
+
 # StoreProvider
 
 ## StoreProvider API
@@ -6,13 +25,13 @@ The StoreProvider accepts three properties
 
 -   `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
 -   `stateKey`: The key of the state in the registry.
--   `paths` (optional): A function to connect the Container to sections of the state.
+-   `paths` (optional): A function to connect the provider to sections of the state.
 
 ## Invalidation
 
 The `StoreProvider` has two main ways to trigger invalidation and cause a rerender.
 
-1.  The recommended approach is to register `path`s on container creation to ensure invalidation will only occur when state you are interested in changes.
+1.  The recommended approach is to register `path`s by passing the `paths` property to the provider to ensure invalidation will only occur when state you are interested in changes.
 1.  A catch-all when no `path`s are defined for the container, it will invalidate when _any_ data changes in the store.
 
 ## Pre-typing
@@ -27,7 +46,19 @@ import { State } from './interface';
 export class TypedStoreProvider extends StoreProvider<State> {}
 ```
 
-**However** in order for TypeScript to infer this correctly when using w(), the generic will need to be explicitly passed.
+If you are using `tsx`, this works as-is.
+
+```tsx
+<TypedStoreProvider
+	stateKey="state"
+	renderer={(store) => {
+		const { get, path } = store;
+		return <div>{get(path('users', 'current', 'name'))}</div>;
+	}}
+/>
+```
+
+If you are **not** using `tsx`, in order for TypeScript to infer this correctly when using w(), the generic will need to be explicitly passed.
 
 ```ts
 w<TypedStoreProvider>(TypedStoreProvider, {
@@ -320,7 +351,7 @@ store.on('invalidate', () => {
 
 # JSON Patch and Store operations
 
-In the basic usage guide we show how Dojo Stores use operations in detail to make changes to the underlying state of an application and state that these operations are based on [JSON patch](). However, Stores deviates from the JSON Patch specification, [RFC 6902](https://tools.ietf.org/html/rfc6902), in a number of ways.
+In the basic usage guide we show how Dojo Stores use operations in detail to make changes to the underlying state of an application. There are a few more advanced points that are not covered in the basic usage guide.
 
 First and foremost Dojo Stores was designed with simplicity in mind. For instance, operations will automatically create the underlying structure necessary to support an `add` or `replace` operation.
 
@@ -391,4 +422,4 @@ apply([
 ]);
 ```
 
-Access to state root is not permitted and will throw an error, for example, get(path('/')). This applies to Operations also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
+Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to Operations also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
