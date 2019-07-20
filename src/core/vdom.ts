@@ -44,10 +44,10 @@ declare global {
 }
 
 export interface BaseNodeWrapper {
+	id: string;
 	owningId: string;
 	node: WNode<any> | VNode;
 	domNode?: Node;
-	childrenWrappers?: DNodeWrapper[];
 	depth: number;
 	order: number;
 	requiresInsertBefore?: boolean;
@@ -58,7 +58,6 @@ export interface BaseNodeWrapper {
 }
 
 export interface WNodeWrapper extends BaseNodeWrapper {
-	id: string;
 	node: WNode<any>;
 	instance?: any;
 	mergeNodes?: Node[];
@@ -95,7 +94,6 @@ export interface WidgetData {
 }
 
 export interface VNodeWrapper extends BaseNodeWrapper {
-	id?: string;
 	node: VNode | DomVNode;
 	merged?: boolean;
 	inserted?: boolean;
@@ -825,6 +823,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _nodeToWrapperMap = new WeakMap<VNode | WNode<any>, WNodeWrapper>();
 	let _renderScheduled: number | undefined;
 	let _idleCallbacks: Function[] = [];
+	let _idToChildrenWrappers = new Map<string, DNodeWrapper[]>();
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
 	let _allMergedNodes: Node[] = [];
@@ -963,7 +962,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const wrappedRendered: DNodeWrapper[] = [];
 		const hasParentWNode = isWNodeWrapper(parent);
 		const hasVirtualParentNode = isVirtualWrapper(parent);
-		const currentParentChildren = (isVNodeWrapper(currentParent) && currentParent.childrenWrappers) || [];
+		const currentParentChildren =
+			(isVNodeWrapper(currentParent) && _idToChildrenWrappers.get(currentParent.id)) || [];
 		const hasCurrentParentChildren = currentParentChildren.length > 0;
 		const insertBefore =
 			((requiresInsertBefore || hasPreviousSiblings !== false) && (hasParentWNode || hasVirtualParentNode)) ||
@@ -1765,9 +1765,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instanceData.rendering = false;
 		}
 
+		let children: DNodeWrapper[] | undefined;
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
-			next.childrenWrappers = renderedToWrapper(rendered, next, null);
+			children = renderedToWrapper(rendered, next, null);
+			_idToChildrenWrappers.set(next.id, children);
 		}
 
 		if (!parentInvalidate && !(Constructor as any).isWNodeWrapper) {
@@ -1776,7 +1778,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 		return {
 			item: {
-				next: next.childrenWrappers,
+				next: children,
 				meta: { mergeNodes: next.mergeNodes }
 			},
 			widget: { type: 'attach', instance: next.instance, id: next.id, attached: true }
@@ -1797,10 +1799,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let rendered: RenderResult;
 		let processResult: ProcessResult = {};
 		let didRender = false;
+		let currentChildren = _idToChildrenWrappers.get(current.id);
 		next.hasAnimations = hasAnimations;
 		next.id = current.id;
 		next.properties = next.node.properties;
-		next.childrenWrappers = current.childrenWrappers;
 		if (domNode && domNode.parentNode) {
 			next.domNode = domNode;
 		}
@@ -1825,7 +1827,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					);
 				}
 				if (widgetMeta.dirty) {
-					next.childrenWrappers = undefined;
+					_idToChildrenWrappers.delete(next.id);
 					didRender = true;
 					widgetMeta.dirty = false;
 					rendered = Constructor({
@@ -1848,7 +1850,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instance!.__setChildren__(next.node.children);
 			if (instanceData.dirty) {
 				didRender = true;
-				next.childrenWrappers = undefined;
+				_idToChildrenWrappers.delete(next.id);
 				rendered = instance!.__render__();
 			}
 			instanceData.rendering = false;
@@ -1856,15 +1858,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_idToWrapperMap.set(next.id, next);
 		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
 
+		let children: DNodeWrapper[] | undefined;
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
-			next.childrenWrappers = renderedToWrapper(rendered, next, current);
+			children = renderedToWrapper(rendered, next, current);
+			_idToChildrenWrappers.set(next.id, children);
 		}
 
 		if (didRender) {
 			processResult.item = {
-				current: current.childrenWrappers,
-				next: next.childrenWrappers,
+				current: currentChildren,
+				next: children,
 				meta: {}
 			};
 		}
@@ -1877,9 +1881,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_parentWrapperMap.delete(current);
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
+		let currentChildren = _idToChildrenWrappers.get(current.id);
+		_idToChildrenWrappers.delete(current.id);
 		let processResult: ProcessResult = {
 			item: {
-				current: current.childrenWrappers,
+				current: currentChildren,
 				meta: {}
 			}
 		};
@@ -1896,7 +1902,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function setDomNodeOnParentWrapper(id: string) {
 		let wrapper = _idToWrapperMap.get(id)!;
-		let children = wrapper && wrapper.childrenWrappers ? [...wrapper.childrenWrappers] : [];
+		let children = [...(_idToChildrenWrappers.get(id) || [])];
 		let child: DNodeWrapper | undefined;
 		while (children.length && !wrapper.domNode) {
 			child = children.shift();
@@ -1905,8 +1911,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					wrapper.domNode = child.domNode;
 					break;
 				}
-				if (child.childrenWrappers) {
-					children = [...child.childrenWrappers, ...children];
+				let nextChildren = _idToChildrenWrappers.get(child.id);
+				if (nextChildren) {
+					children = [...nextChildren, ...children];
 				}
 			}
 		}
@@ -1917,6 +1924,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const parentDomNode = findParentDomNode(next)!;
 		const isVirtual = isVirtualWrapper(next);
 		const isBody = isBodyWrapper(next);
+		next.id = `${wrapperId++}`;
+		_idToWrapperMap.set(next.id, next);
 		if (!next.domNode) {
 			if ((next.node as any).domNode) {
 				next.domNode = (next.node as any).domNode;
@@ -1954,13 +1963,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
 		}
+		let children: DNodeWrapper[] | undefined;
 		if (next.domNode || isVirtual) {
-			if (isVirtual) {
-				next.id = `${wrapperId++}`;
-				_idToWrapperMap.set(next.id, next);
-			}
 			if (next.node.children && next.node.children.length) {
-				next.childrenWrappers = renderedToWrapper(next.node.children, next, null);
+				children = renderedToWrapper(next.node.children, next, null);
+				_idToChildrenWrappers.set(next.id, children);
 			}
 		}
 		const dom: ApplicationInstruction | undefined =
@@ -1971,11 +1978,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						parentDomNode: parentDomNode,
 						type: 'create'
 				  };
-		if (next.childrenWrappers) {
+		if (children) {
 			return {
 				item: {
 					current: [],
-					next: next.childrenWrappers,
+					next: children,
 					meta: { mergeNodes }
 				},
 				dom,
@@ -1989,18 +1996,21 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const parentDomNode = findParentDomNode(current);
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
+		next.id = current.id;
+		let children: DNodeWrapper[] | undefined;
+		let currentChildren = _idToChildrenWrappers.get(next.id);
 		if (next.node.text && next.node.text !== current.node.text) {
 			const updatedTextNode = parentDomNode!.ownerDocument!.createTextNode(next.node.text!);
 			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
 			next.domNode = updatedTextNode;
 		} else if (next.node.children) {
-			const children = renderedToWrapper(next.node.children, next, current);
-			next.childrenWrappers = children;
+			children = renderedToWrapper(next.node.children, next, current);
+			_idToChildrenWrappers.set(next.id, children);
 		}
 		return {
 			item: {
-				current: current.childrenWrappers,
-				next: next.childrenWrappers,
+				current: currentChildren,
+				next: children,
 				meta: {}
 			},
 			dom: { type: 'update', next, current }
@@ -2012,6 +2022,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const isBody = isBodyWrapper(current);
 		_wrapperSiblingMap.delete(current);
 		_parentWrapperMap.delete(current);
+		let children = _idToChildrenWrappers.get(current.id);
+		_idToChildrenWrappers.delete(current.id);
 		if (current.id) {
 			_idToWrapperMap.delete(current.id);
 		}
@@ -2027,14 +2039,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		if (current.hasAnimations || isVirtual || isBody) {
 			return {
-				item: { current: current.childrenWrappers, meta: {} },
+				item: { current: children, meta: {} },
 				dom: isVirtual || isBody ? undefined : { type: 'delete', current }
 			};
 		}
 
-		if (current.childrenWrappers) {
+		if (children) {
 			_deferredRenderCallbacks.push(() => {
-				let wrappers = current.childrenWrappers || [];
+				let wrappers = children || [];
 				let wrapper: DNodeWrapper | undefined;
 				while ((wrapper = wrappers.pop())) {
 					if (isWNodeWrapper(wrapper)) {
@@ -2052,13 +2064,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 							}
 						}
 					}
-					if (wrapper.childrenWrappers) {
-						wrappers.push(...wrapper.childrenWrappers);
-						wrapper.childrenWrappers = undefined;
+					let wrapperChildren = _idToChildrenWrappers.get(wrapper.id);
+					if (wrapperChildren) {
+						wrappers.push(...wrapperChildren);
 					}
-					if (wrapper.id) {
-						_idToWrapperMap.delete(wrapper.id);
-					}
+					_idToChildrenWrappers.delete(wrapper.id);
+					_idToWrapperMap.delete(wrapper.id);
 					_wrapperSiblingMap.delete(wrapper);
 					_parentWrapperMap.delete(wrapper);
 					wrapper.domNode = undefined;
