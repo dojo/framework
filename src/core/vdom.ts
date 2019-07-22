@@ -1913,10 +1913,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
-		let mergeNodes: Node[] = [];
-		const parentDomNode = findParentDomNode(next)!;
+		const parentDomNode = findParentDomNode(next);
+		if (!parentDomNode) {
+			return {};
+		}
 		const isVirtual = isVirtualWrapper(next);
 		const isBody = isBodyWrapper(next);
+		let mergeNodes: Node[] = [];
 		next.id = `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
 		if (!next.domNode) {
@@ -1987,6 +1990,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _updateDom({ current, next }: UpdateDomInstruction): ProcessResult {
 		const parentDomNode = findParentDomNode(current);
+		if (!parentDomNode) {
+			return {};
+		}
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		next.id = current.id;
