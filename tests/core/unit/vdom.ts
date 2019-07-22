@@ -3079,7 +3079,6 @@ jsdomDescribe('vdom', () => {
 				resolvers.resolve();
 				assert.strictEqual(div.outerHTML, '<div><div>first</div></div>');
 				updateText();
-				debugger;
 				resolvers.resolve();
 				assert.strictEqual(div.outerHTML, '<div><div>second</div></div>');
 			});
@@ -3774,7 +3773,6 @@ jsdomDescribe('vdom', () => {
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div });
-			debugger;
 			assert.strictEqual((div.childNodes[0] as Element).outerHTML, '<div>onetwo<div>three</div></div>');
 			meta.setRenderResult(v('virtual', [v('div', ['four', 'five', v('div', ['six'])])]));
 			resolvers.resolve();
