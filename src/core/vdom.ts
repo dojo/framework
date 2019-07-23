@@ -1330,34 +1330,35 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let item: InvalidationQueueItem | undefined;
 		while ((item = invalidationQueue.pop())) {
 			let { id } = item;
-			if (previouslyRendered.indexOf(id) === -1 && _idToWrapperMap.has(id!)) {
-				previouslyRendered.push(id);
-				const current = getWNodeWrapper(id)!;
-				const sibling = _wrapperSiblingMap.get(current);
-				const next = {
-					node: {
-						type: WNODE,
-						widgetConstructor: current.node.widgetConstructor,
-						properties: current.properties || {},
-						children: current.node.children || []
-					},
-					instance: current.instance,
-					id: current.id,
-					properties: current.properties,
-					depth: current.depth,
-					order: current.order,
-					owningId: current.owningId,
-					parentId: current.parentId,
-					registryItem: current.registryItem
-				};
+			const current = getWNodeWrapper(id);
+			if (!current || previouslyRendered.indexOf(id) !== -1 || !_idToWrapperMap.has(current.parentId)) {
+				continue;
+			}
+			previouslyRendered.push(id);
+			const sibling = _wrapperSiblingMap.get(current);
+			const next = {
+				node: {
+					type: WNODE,
+					widgetConstructor: current.node.widgetConstructor,
+					properties: current.properties || {},
+					children: current.node.children || []
+				},
+				instance: current.instance,
+				id: current.id,
+				properties: current.properties,
+				depth: current.depth,
+				order: current.order,
+				owningId: current.owningId,
+				parentId: current.parentId,
+				registryItem: current.registryItem
+			};
 
-				sibling && _wrapperSiblingMap.set(next, sibling);
-				const result = _updateWidget({ current, next });
-				if (result && result.item) {
-					_processQueue.push(result.item);
-					_idToWrapperMap.set(id, next);
-					_runProcessQueue();
-				}
+			sibling && _wrapperSiblingMap.set(next, sibling);
+			const result = _updateWidget({ current, next });
+			if (result && result.item) {
+				_processQueue.push(result.item);
+				_idToWrapperMap.set(id, next);
+				_runProcessQueue();
 			}
 		}
 		_runDomInstructionQueue();
@@ -1913,10 +1914,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _createDom({ next }: CreateDomInstruction): ProcessResult {
-		const parentDomNode = findParentDomNode(next);
-		if (!parentDomNode) {
-			return {};
-		}
+		const parentDomNode = findParentDomNode(next)!;
 		const isVirtual = isVirtualWrapper(next);
 		const isBody = isBodyWrapper(next);
 		let mergeNodes: Node[] = [];
@@ -1990,9 +1988,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _updateDom({ current, next }: UpdateDomInstruction): ProcessResult {
 		const parentDomNode = findParentDomNode(current);
-		if (!parentDomNode) {
-			return {};
-		}
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		next.id = current.id;
