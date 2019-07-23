@@ -136,6 +136,64 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('widgets', () => {
+		it('should not attempt to render widgets that have been orphaned', () => {
+			let invalidateChild: any;
+			let invalidateParent: any;
+
+			class Foo extends WidgetBase {
+				private _show = false;
+
+				constructor() {
+					super();
+					invalidateChild = () => {
+						this._show = true;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this._show ? v('div') : null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {})]);
+				}
+			}
+
+			class Qux extends WidgetBase {
+				private _show = true;
+
+				constructor() {
+					super();
+					invalidateParent = () => {
+						this._show = false;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return v('div', [this._show ? w(Bar, {}) : null]);
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return w(Qux, {});
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const root: any = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(root.outerHTML, '<div><div><div></div></div></div>');
+			invalidateChild();
+			invalidateParent();
+			resolvers.resolve();
+			assert.strictEqual(root.outerHTML, '<div><div></div></div>');
+		});
+
 		it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 			class WidgetOne extends WidgetBase {
 				render() {
