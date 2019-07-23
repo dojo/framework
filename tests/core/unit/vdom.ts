@@ -3823,6 +3823,53 @@ jsdomDescribe('vdom', () => {
 			assert.isNull(bodyNodeTwo);
 			assert.isNull(root.querySelector('#my-body-node-2'));
 		});
+
+		it('should detach nested body nodes from dom', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [v('span', { classes: ['body-span'] }, ['and im in the body!'])])]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private renderWidget = false;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.renderWidget = !this.renderWidget;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.renderWidget && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+		});
 	});
 
 	describe('virtual node', () => {

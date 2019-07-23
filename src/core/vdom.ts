@@ -2042,6 +2042,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			_deferredRenderCallbacks.push(() => {
 				let wrappers = children || [];
 				let wrapper: DNodeWrapper | undefined;
+				let bodyIds = [];
 				while ((wrapper = wrappers.pop())) {
 					if (isWNodeWrapper(wrapper)) {
 						wrapper = getWNodeWrapper(wrapper.id) || wrapper;
@@ -2061,6 +2062,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					let wrapperChildren = _idToChildrenWrappers.get(wrapper.id);
 					if (wrapperChildren) {
 						wrappers.push(...wrapperChildren);
+					}
+					if (isBodyWrapper(wrapper)) {
+						bodyIds.push(wrapper.id);
+					} else if (
+						bodyIds.indexOf(wrapper.parentId) !== -1 &&
+						wrapper.domNode &&
+						wrapper.domNode.parentNode
+					) {
+						wrapper.domNode.parentNode.removeChild(wrapper.domNode);
 					}
 					_idToChildrenWrappers.delete(wrapper.id);
 					_idToWrapperMap.delete(wrapper.id);
