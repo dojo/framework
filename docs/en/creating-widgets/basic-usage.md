@@ -34,7 +34,8 @@ const factory = create({ icache }).properties<{
 	onNameChange?(newName: string): void;
 }>();
 
-export default factory(function Greeter({ middleware: { icache }, properties: { name, onNameChange } }) {
+export default factory(function Greeter({ middleware: { icache }, properties }) {
+	const { name, onNameChange } = properties();
 	let newName = icache.get<string>('new-name') || '';
 	return (
 		<div>
