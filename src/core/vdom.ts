@@ -1987,16 +1987,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _updateDom({ current, next }: UpdateDomInstruction): ProcessResult {
-		const parentDomNode = findParentDomNode(current);
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		next.id = current.id;
 		next.childDomWrapperId = current.childDomWrapperId;
 		let children: DNodeWrapper[] | undefined;
 		let currentChildren = _idToChildrenWrappers.get(next.id);
-		if (next.node.text && next.node.text !== current.node.text) {
-			const updatedTextNode = parentDomNode!.ownerDocument!.createTextNode(next.node.text!);
-			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
+		if (next.domNode && next.domNode.parentNode && next.node.text && next.node.text !== current.node.text) {
+			const updatedTextNode = next.domNode.parentNode.ownerDocument!.createTextNode(next.node.text!);
+			next.domNode.parentNode.replaceChild(updatedTextNode, next.domNode);
 			next.domNode = updatedTextNode;
 		} else if (next.node.children) {
 			children = renderedToWrapper(next.node.children, next, current);

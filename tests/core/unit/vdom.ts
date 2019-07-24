@@ -3411,7 +3411,6 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(consoleWarnStub.notCalled);
 				swap();
 				resolvers.resolve();
-				console.log(consoleWarnStub.firstCall.args);
 				assert.isTrue(consoleWarnStub.calledOnce);
 			});
 
