@@ -2067,12 +2067,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 					if (isBodyWrapper(wrapper)) {
 						bodyIds.push(wrapper.id);
-					} else if (
-						bodyIds.indexOf(wrapper.parentId) !== -1 &&
-						wrapper.domNode &&
-						wrapper.domNode.parentNode
-					) {
-						wrapper.domNode.parentNode.removeChild(wrapper.domNode);
+					} else if (bodyIds.indexOf(wrapper.parentId) !== -1) {
+						if (isWNodeWrapper(wrapper) || isVirtualWrapper(wrapper)) {
+							bodyIds.push(wrapper.id);
+						} else if (wrapper.domNode && wrapper.domNode.parentNode) {
+							wrapper.domNode.parentNode.removeChild(wrapper.domNode);
+						}
 					}
 					_idToChildrenWrappers.delete(wrapper.id);
 					_idToWrapperMap.delete(wrapper.id);

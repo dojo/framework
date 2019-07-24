@@ -3868,6 +3868,113 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolveRAF();
 			results = document.querySelectorAll('.body-span');
 			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach widgets nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [w(B, {})])]);
+				}
+			}
+
+			class B extends WidgetBase<any> {
+				render() {
+					return v('span', { classes: ['body-span'] }, ['and im in the body!!']);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach virtual nodes nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						v('body', [v('virtual', [v('span', { classes: ['body-span'] }, ['and im in the body!!'])])])
+					]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
 		});
 	});
 
