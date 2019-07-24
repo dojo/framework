@@ -1438,7 +1438,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next,
 					next: { domNode },
 					current,
-					current: { domNode: currentDomNode },
+					current: { domNode: currentDomNode }
 				} = item;
 				if (isTextNode(domNode) && isTextNode(currentDomNode) && domNode !== currentDomNode) {
 					currentDomNode.parentNode && currentDomNode.parentNode.replaceChild(domNode, currentDomNode);
