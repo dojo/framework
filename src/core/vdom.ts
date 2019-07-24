@@ -226,7 +226,7 @@ const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
 
 function isTextNode(item: any): item is Text {
-	return item.nodeType === 3;
+	return item && item.nodeType === 3;
 }
 
 function isLazyDefine(item: any): item is LazyDefine<any> {
@@ -1437,11 +1437,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				const {
 					next,
 					next: { domNode },
-					current
+					current,
+					current: { domNode: currentDomNode }
 				} = item;
-				const previousProperties = buildPreviousProperties(domNode, current);
-				processProperties(next, previousProperties);
-				runDeferredProperties(next);
+				if (isTextNode(domNode) && isTextNode(currentDomNode) && domNode !== currentDomNode) {
+					currentDomNode.parentNode && currentDomNode.parentNode.replaceChild(domNode, currentDomNode);
+				} else {
+					const previousProperties = buildPreviousProperties(domNode, current);
+					processProperties(next, previousProperties);
+					runDeferredProperties(next);
+				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
 				const { exitAnimation, exitAnimationActive } = current.node.properties;
@@ -1987,17 +1992,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _updateDom({ current, next }: UpdateDomInstruction): ProcessResult {
-		const parentDomNode = findParentDomNode(current);
 		next.domNode = current.domNode;
 		next.namespace = current.namespace;
 		next.id = current.id;
 		next.childDomWrapperId = current.childDomWrapperId;
 		let children: DNodeWrapper[] | undefined;
 		let currentChildren = _idToChildrenWrappers.get(next.id);
-		if (next.node.text && next.node.text !== current.node.text) {
-			const updatedTextNode = parentDomNode!.ownerDocument!.createTextNode(next.node.text!);
-			parentDomNode!.replaceChild(updatedTextNode, next.domNode!);
-			next.domNode = updatedTextNode;
+		if (next.node.text != null && next.node.text !== current.node.text) {
+			next.domNode = global.document.createTextNode(next.node.text);
 		} else if (next.node.children) {
 			children = renderedToWrapper(next.node.children, next, current);
 			_idToChildrenWrappers.set(next.id, children);
