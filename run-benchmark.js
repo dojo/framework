@@ -1,9 +1,9 @@
 const { exec } = require('child_process');
 const rimraf = require('rimraf');
-const { runBench } = require('./dist/dev/tests/widget-core/benchmark/runner/src/benchmarkRunner.js');
+const { runBench } = require('./dist/dev/tests/core/benchmark/runner/src/benchmarkRunner.js');
 const {
 	processBenchmarkResults
-} = require('./dist/dev/tests/widget-core/benchmark/runner/process-benchmark-results.js');
+} = require('./dist/dev/tests/core/benchmark/runner/process-benchmark-results.js');
 const http = require('http');
 const url = require('url');
 const fs = require('fs');

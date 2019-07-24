@@ -387,7 +387,7 @@ There are two mechanisms to connect the `StoreProvider` to the `Store`:
 2.  A catch-all when no `paths` are defined for the container, it will invalidate when any data changes in the store.
 
 ```ts
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { WidgetBase } from '@dojo/framework/core/WidgetBase';
 import { Store } from '@dojo/framework/stores/Stores';
 import StoreProvider from '@dojo/framework/stores/StoreProvider';
 
@@ -574,7 +574,7 @@ const myProcess = createProcess('my-process', [commandOne, [concurrentCommandOne
 
 In this example, `commandOne` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order before continuing with the process and executing `commandTwo`.
 
-**Note:** Concurrent commands are always assumed to be asynchronous and resolved using `Promise.all`.
+**Note:** Concurrent commands are all assumed to be asynchronous and resolved using `Promise.all` if any returns a `Promise`.
 
 ### Providing an alternative State implementation
 

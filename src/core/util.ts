@@ -1,7 +1,23 @@
 import { Handle } from './Destroyable';
+import { DNode, RenderResult } from './interfaces';
+import { isWNode, isVNode } from './vdom';
 
 const slice = Array.prototype.slice;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
+
+export interface Modifier<T extends DNode> {
+	(dNode: T, breaker: () => void): void;
+}
+
+export interface Predicate<T extends DNode> {
+	(dNode: DNode): dNode is T;
+}
+
+export interface DecorateOptions<T extends DNode> {
+	modifier: Modifier<T>;
+	predicate?: Predicate<T>;
+	shallow?: boolean;
+}
 
 /**
  * Type guard that ensures that the value can be coerced to Object
@@ -277,7 +293,7 @@ export function debounce<T extends (this: any, ...args: any[]) => void>(callback
 		timer && timer.destroy();
 
 		let context = this;
-		let args: IArguments | null = arguments;
+		let args: any | null = arguments;
 
 		timer = guaranteeMinimumTimeout(function() {
 			callback.apply(context, args);
@@ -295,8 +311,9 @@ export function throttle<T extends (this: any, ...args: any[]) => void>(callback
 		}
 
 		ran = true;
+		let args: any | null = arguments;
 
-		callback.apply(this, arguments);
+		callback.apply(this, args);
 		guaranteeMinimumTimeout(function() {
 			ran = null;
 		}, delay);
@@ -309,4 +326,62 @@ export function uuid(): string {
 			v = c === 'x' ? r : (r & 0x3) | 0x8;
 		return v.toString(16);
 	});
+}
+
+/**
+ * Generic decorate function for DNodes. The nodes are modified in place based on the provided predicate
+ * and modifier functions.
+ *
+ * The children of each node are flattened and added to the array for decoration.
+ *
+ * If no predicate is supplied then the modifier will be executed on all nodes. A `breaker` function is passed to the
+ * modifier which will drain the nodes array and exit the decoration.
+ *
+ * When the `shallow` options is set to `true` the only the top node or nodes will be decorated (only supported using
+ * `DecorateOptions`).
+ */
+export function decorate<T extends DNode>(dNodes: DNode, options: DecorateOptions<T>): DNode;
+export function decorate<T extends DNode>(dNodes: DNode[], options: DecorateOptions<T>): DNode[];
+export function decorate<T extends DNode>(dNodes: DNode | DNode[], options: DecorateOptions<T>): DNode | DNode[];
+export function decorate<T extends DNode>(dNodes: DNode, modifier: Modifier<T>, predicate: Predicate<T>): DNode;
+export function decorate<T extends DNode>(dNodes: DNode[], modifier: Modifier<T>, predicate: Predicate<T>): DNode[];
+export function decorate<T extends DNode>(
+	dNodes: RenderResult,
+	modifier: Modifier<T>,
+	predicate: Predicate<T>
+): RenderResult;
+export function decorate(dNodes: DNode, modifier: Modifier<DNode>): DNode;
+export function decorate(dNodes: DNode[], modifier: Modifier<DNode>): DNode[];
+export function decorate(dNodes: RenderResult, modifier: Modifier<DNode>): RenderResult;
+export function decorate(
+	dNodes: DNode | DNode[],
+	optionsOrModifier: Modifier<DNode> | DecorateOptions<DNode>,
+	predicate?: Predicate<DNode>
+): DNode | DNode[] {
+	let shallow = false;
+	let modifier;
+	if (typeof optionsOrModifier === 'function') {
+		modifier = optionsOrModifier;
+	} else {
+		modifier = optionsOrModifier.modifier;
+		predicate = optionsOrModifier.predicate;
+		shallow = optionsOrModifier.shallow || false;
+	}
+
+	let nodes = Array.isArray(dNodes) ? [...dNodes] : [dNodes];
+	function breaker() {
+		nodes = [];
+	}
+	while (nodes.length) {
+		const node = nodes.shift();
+		if (node && node !== true) {
+			if (!shallow && (isWNode(node) || isVNode(node)) && node.children) {
+				nodes = [...nodes, ...node.children];
+			}
+			if (!predicate || predicate(node)) {
+				modifier(node, breaker);
+			}
+		}
+	}
+	return dNodes;
 }

@@ -1,8 +1,8 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import { v, WNODE } from '../../../src/widget-core/d';
-import { Registry } from '../../../src/widget-core/Registry';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { v } from '../../../src/core/vdom';
+import { Registry } from '../../../src/core/Registry';
 
 import DefaultStoreContainer, { createStoreContainer, StoreContainer } from '../../../src/stores/StoreContainer';
 import { Store } from '../../../src/stores/Store';
@@ -43,7 +43,7 @@ describe('StoreContainer', () => {
 			assert.deepEqual(renderResult, {
 				properties: { key: '1' },
 				children: [child],
-				type: WNODE,
+				type: '__WNODE_TYPE',
 				widgetConstructor: Foo
 			});
 		});
@@ -93,7 +93,7 @@ describe('StoreContainer', () => {
 			assert.deepEqual(renderResult, {
 				properties: { key: '1' },
 				children: [child],
-				type: WNODE,
+				type: '__WNODE_TYPE',
 				widgetConstructor: Foo
 			});
 		});
@@ -144,7 +144,7 @@ describe('StoreContainer', () => {
 			assert.deepEqual(renderResult, {
 				properties: { key: '1' },
 				children: [child],
-				type: WNODE,
+				type: '__WNODE_TYPE',
 				widgetConstructor: Foo
 			});
 		});

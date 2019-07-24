@@ -1,6 +1,6 @@
 import global from '../../../../src/shim/global';
 import wrapper from '../../../../src/shim/util/wrapper';
-import * as has from '../../../../src/has/has';
+import * as has from '../../../../src/core/has';
 import * as sinon from 'sinon';
 
 const { registerSuite } = intern.getInterface('object');

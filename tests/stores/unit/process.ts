@@ -1,24 +1,24 @@
 import { ImmutableState } from '../../../src/stores/state/ImmutableState';
-
-const { beforeEach, describe, it } = intern.getInterface('bdd');
-const { assert } = intern.getPlugin('chai');
-
 import { uuid } from '../../../src/core/util';
 import { Pointer } from './../../../src/stores/state/Pointer';
 import { OperationType, PatchOperation } from './../../../src/stores/state/Patch';
 import {
 	CommandRequest,
+	createCallbackDecorator,
 	createCommandFactory,
 	createProcess,
 	createProcessFactoryWith,
 	ProcessCallback,
+	ProcessCallbackAfter,
 	ProcessError,
 	ProcessResult,
-	ProcessCallbackAfter,
-	createCallbackDecorator
+	isStateProxy
 } from '../../../src/stores/process';
-import { Store, MutableState } from '../../../src/stores/Store';
-import { replace, add } from '../../../src/stores/state/operations';
+import { MutableState, Store } from '../../../src/stores/Store';
+import { add, replace } from '../../../src/stores/state/operations';
+
+const { beforeEach, describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
 
 let store: Store;
 let promises: Promise<any>[] = [];
@@ -180,20 +180,8 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			const createCommand = createCommandFactory<StateType>();
 
 			createProcess('test', [
-				createCommand(({ path }) => [
-					{
-						op: OperationType.ADD,
-						path: new Pointer(path('foo').path),
-						value: 3
-					}
-				]),
-				createCommand(({ path }) => [
-					{
-						op: OperationType.ADD,
-						path: new Pointer(path('a', 'b').path),
-						value: 'foo'
-					}
-				])
+				createCommand(({ path }) => [add(path('foo'), 3)]),
+				createCommand(({ path }) => [add(path('a', 'b'), 'foo')])
 			])(store)({});
 
 			assert.equal(store.get(store.path('a', 'b')), 'foo');
@@ -220,6 +208,38 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			});
 		});
 
+		it('handles nested async commands modifying the state proxy', async () => {
+			await assertProxyError(async () => {
+				await createProcess('test', [
+					({ state }) => {
+						state.foo = 0;
+					},
+					[
+						(({ state }: any) => {
+							return new Promise((resolve) => {
+								setTimeout(() => {
+									assert.equal(state.foo, 0);
+									state.foo += 10;
+									resolve();
+								}, 100);
+							});
+						}) as any,
+						(({ state }: any) => {
+							return new Promise((resolve) => {
+								setTimeout(() => {
+									assert.equal(state.foo, 0);
+									state.foo = state.foo / 2;
+									resolve();
+								}, 10);
+							});
+						}) as any
+					]
+				])(store)({});
+
+				assert.equal(store.get(store.path('foo')), 0);
+			});
+		});
+
 		it('Can set a proxied property to itself', async () => {
 			await assertProxyError(async () => {
 				const process = createProcess('test', [
@@ -238,6 +258,35 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 					assert.strictEqual(completedCount, 0);
 				} else {
 					await Promise.all(promises);
+				}
+			});
+		});
+
+		it('returns proxies when accessing state objects, and removes proxies from all store values', async () => {
+			await assertProxyError(async () => {
+				const process = createProcess('test', [
+					({ state }) => {
+						state.foo = [{ bar: 'baz' }, { bar: 'buzz' }, { bar: 'biz' }];
+					},
+					({ state }) => {
+						assert.isTrue(isStateProxy(state.foo));
+						assert.isTrue(isStateProxy(state.foo[0]));
+						state.foo = state.foo.filter(({ bar }: any) => bar !== 'baz');
+						assert.isTrue(isStateProxy(state.foo));
+						assert.isTrue(isStateProxy(state.foo[0]));
+						// Literals should be returned as is
+						assert.isFalse(isStateProxy(state.foo[0].bar));
+						state.bar = 0;
+					}
+				]);
+				await process(store)({});
+
+				if (typeof Proxy !== 'undefined') {
+					const foos = store.get(store.path('foo'));
+					assert.deepEqual(foos, [{ bar: 'buzz' }, { bar: 'biz' }]);
+					assert.isFalse(isStateProxy(foos));
+					assert.isFalse(isStateProxy(foos[0]));
+					assert.isFalse(isStateProxy(store.get(store.at(store.path('foo'), 0))));
 				}
 			});
 		});
@@ -794,6 +843,43 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			}));
 			const processExecutor = process(store);
 			return processExecutor({});
+		});
+
+		it('should be able to compose commands created by a command factory', () => {
+			const createCommand = createCommandFactory<any>();
+			const composedCommand = createCommand(({ path }) => {
+				return [add(path('foo'), 'bar')];
+			});
+			const command = createCommand((options) => {
+				return [...composedCommand(options)];
+			});
+			const process = createProcess('test', [command]);
+			const executor = process(store);
+			executor({});
+			assert.strictEqual(store.get(store.path('foo')), 'bar');
+		});
+
+		it('passes process id to middleware callbacks', () => {
+			let before: string[] = [];
+			let after: string[] = [];
+
+			function middleware(): ProcessCallback {
+				return () => ({
+					before(payload, store, id) {
+						before.push(id);
+					},
+					after(errorState, result) {
+						after.push(result.id);
+					}
+				});
+			}
+
+			const process = createProcess('test', [], [middleware(), middleware()]);
+			const executor = process(store);
+			executor({});
+
+			assert.deepEqual(before, ['test', 'test']);
+			assert.deepEqual(after, ['test', 'test']);
 		});
 	});
 };

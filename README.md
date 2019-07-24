@@ -11,15 +11,14 @@ Visit us at [dojo.io](https://dojo.io/) for documentation, tutorials, cookbooks,
 
 ## Sub-packages within `@dojo/framework`
 
-There are eight sub-packages that form the framework for building a Dojo application:
+There are seven sub-packages that form the framework for building a Dojo application:
 
--   [`dojo/core`](src/core/README.md) - The foundational code of the Dojo platform
+-   [`dojo/core`](src/core/README.md) - The foundational code of the Dojo framework
 -   [`dojo/has`](src/has/README.md) - A feature detection library
 -   [`dojo/i18n`](docs/en/i18n/) - A set of internationalization tooling
 -   [`dojo/routing`](src/routing/README.md) - A routing service to build web applications with
 -   [`dojo/shim`](src/shim/README.md) - Modules that provide fills of ES6+ functionality
 -   [`dojo/stores`](src/stores/README.md) - A lightweight state container
--   [`dojo/widget-core`](src/widget-core/README.md) - The foundation code of Dojo widgets
 -   [`dojo/testing`](src/testing/README.md) - A set of modules to help with testing Dojo
 
 ## External packages
@@ -91,7 +90,8 @@ TypeScript and Dojo both iterate rapidly. In general Dojo strives for maximum co
 | 3.0          | 2.6.x                        | 2.6.x                        |
 | 4.0          | 2.6.x                        | 3.1.x                        |
 | 5.0          | 2.6.x                        | 3.2.x                        |
+| 6.0          | 3.4.5                        | 3.4.5                        |
 
 ## Licensing information
 
-© 2018 [JS Foundation](https://js.foundation/) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2019 [OpenJS Foundation](https://openjsf.org) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.

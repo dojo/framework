@@ -1,10 +1,10 @@
-import WidgetBase from '../widget-core/WidgetBase';
-import { DNode } from '../widget-core/interfaces';
+import WidgetBase from '../core/WidgetBase';
+import { DNode } from '../core/interfaces';
 import { Store, StatePaths, Path } from './Store';
-import { diffProperty } from '../widget-core/decorators/diffProperty';
+import { diffProperty } from '../core/decorators/diffProperty';
 import { Handle } from '../core/Destroyable';
-import { shallow } from '../widget-core/diff';
-import { alwaysRender } from '../widget-core/decorators/alwaysRender';
+import { shallow } from '../core/diff';
+import { alwaysRender } from '../core/decorators/alwaysRender';
 
 export interface GetPaths<S = any> {
 	(path: StatePaths<S>): Path<S, any>[];

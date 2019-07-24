@@ -1,3 +1,4 @@
+`!has('es6-symbol')`;
 import './Symbol';
 import { HIGH_SURROGATE_MAX, HIGH_SURROGATE_MIN } from './string';
 
@@ -109,13 +110,13 @@ export interface ForOfCallback<T> {
 /**
  * Shims the functionality of `for ... of` blocks
  *
- * @param iterable The object the provides an interator interface
+ * @param iterable The object the provides an iterator interface
  * @param callback The callback which will be called for each item of the iterable
  * @param thisArg Optional scope to pass the callback
  */
 export function forOf<T>(
 	iterable: Iterable<T> | ArrayLike<T> | string,
-	callback: ForOfCallback<T>,
+	callback: ForOfCallback<T | string>,
 	thisArg?: any
 ): void {
 	let broken = false;

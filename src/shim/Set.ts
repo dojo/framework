@@ -1,6 +1,8 @@
 import global from './global';
+`!has('es6-iterator')`;
 import { isArrayLike, Iterable, IterableIterator, ShimIterator } from './iterator';
-import has from '../has/has';
+import has from '../core/has';
+`!has('es6-symbol')`;
 import './Symbol';
 
 export interface Set<T> {
@@ -103,7 +105,7 @@ export interface SetConstructor {
 export let Set: SetConstructor = global.Set;
 
 if (!has('es6-set')) {
-	Set = class Set<T> {
+	Set = global.Set = class Set<T> {
 		private readonly _setData: T[] = [];
 
 		static [Symbol.species] = Set;

@@ -1,13 +1,13 @@
 import WeakMap from '../shim/WeakMap';
-import { WidgetBase } from '../widget-core/WidgetBase';
-import { w } from '../widget-core/d';
-import { handleDecorator } from '../widget-core/decorators/handleDecorator';
-import { beforeProperties } from '../widget-core/decorators/beforeProperties';
-import { alwaysRender } from '../widget-core/decorators/alwaysRender';
-import { InjectorItem, RegistryLabel, Constructor, DNode } from '../widget-core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
+import { handleDecorator } from '../core/decorators/handleDecorator';
+import { beforeProperties } from '../core/decorators/beforeProperties';
+import { alwaysRender } from '../core/decorators/alwaysRender';
+import { InjectorItem, RegistryLabel, Constructor, DNode } from '../core/interfaces';
 import { Store, Path } from './Store';
-import { Registry } from '../widget-core/Registry';
+import { Registry } from '../core/Registry';
 import { GetPaths } from './StoreProvider';
+import { w } from '../core/vdom';
 export { GetPaths } from './StoreProvider';
 const registeredInjectorsMap: WeakMap<WidgetBase, InjectorItem<Store>[]> = new WeakMap();
 

@@ -1,6 +1,7 @@
-import { DNode, DefaultWidgetBaseInterface, WNode, VNode } from '../../widget-core/interfaces';
-import { decorate, isVNode, isWNode } from '../../widget-core/d';
+import { DNode, DefaultWidgetBaseInterface, WNode, VNode } from '../../core/interfaces';
 import * as cssSelect from 'css-select-umd';
+import { isVNode, isWNode } from '../../core/vdom';
+import { decorate } from '../../core/util';
 
 export type TestFunction = (elem: DNode<DefaultWidgetBaseInterface>) => boolean;
 

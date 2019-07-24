@@ -1,7 +1,7 @@
 const { suite, test } = intern.getInterface('tdd');
 const { assert } = intern.getPlugin('chai');
 import { spy } from 'sinon';
-import { Registry } from '../../../src/widget-core/Registry';
+import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 

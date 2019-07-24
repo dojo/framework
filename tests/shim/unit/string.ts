@@ -1,16 +1,88 @@
-import * as stringUtil from '../../../src/shim/string';
+import global from '../../../src/shim/global';
+import String, * as stringUtil from '../../../src/shim/string';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 
+function testCodePointAt(text: string, codePoint?: number, expected?: number) {
+	assert.strictEqual(stringUtil.codePointAt(text, codePoint as any), expected);
+
+	if (typeof codePoint !== 'undefined') {
+		assert.strictEqual(text.codePointAt(codePoint), expected);
+	}
+}
+
+function getPositionAndExpected(
+	position: number | boolean | undefined,
+	expected?: boolean
+): { positionArg: number | undefined; expectedValue: boolean } {
+	let positionArg: number | undefined = position as any;
+	let expectedValue = expected;
+	if (arguments.length === 1) {
+		expectedValue = position as any;
+		positionArg = undefined;
+	}
+
+	return { positionArg, expectedValue: Boolean(expectedValue) };
+}
+
+function testEndsWith(text: string, endsWith: string, position: number | boolean | undefined, expected?: boolean) {
+	const { expectedValue, positionArg } = getPositionAndExpected(position, expected);
+	assert.strictEqual(stringUtil.endsWith(text, endsWith, positionArg), expectedValue);
+
+	assert.strictEqual(text.endsWith(endsWith, positionArg), expectedValue);
+}
+
+function testFromCodePoint(codePoints: number[], expected: string) {
+	assert.equal(stringUtil.fromCodePoint(...codePoints), expected);
+	assert.equal(String.fromCodePoint(...codePoints), expected);
+}
+
+function testInclude(text: string, includes: string, position: number | boolean | undefined, expected?: boolean) {
+	const { positionArg, expectedValue } = getPositionAndExpected(position, expected);
+	assert.strictEqual(stringUtil.includes(text, includes, positionArg), expectedValue);
+
+	assert.strictEqual(text.includes(includes, positionArg), expectedValue);
+}
+
+function testStartsWith(text: string, startsWith: string, position: number | boolean | undefined, expected?: boolean) {
+	const { positionArg, expectedValue } = getPositionAndExpected(position, expected);
+	assert.strictEqual(stringUtil.startsWith(text, startsWith, positionArg), expectedValue);
+
+	assert.strictEqual(text.startsWith(startsWith, positionArg), expectedValue);
+}
+
+function testPadEnd(text: string, maxLength: number, fillString?: string, expected?: string) {
+	if (expected === undefined) {
+		expected = fillString;
+		fillString = undefined;
+	}
+
+	assert.strictEqual(stringUtil.padEnd(text, maxLength, fillString), expected);
+	assert.strictEqual(text.padEnd(maxLength, fillString), expected);
+}
+
+function testPadStart(text: string, maxLength: number, fillString?: string, expected?: string) {
+	if (expected === undefined) {
+		expected = fillString;
+		fillString = undefined;
+	}
+
+	assert.strictEqual(stringUtil.padStart(text, maxLength, fillString), expected);
+	assert.strictEqual(text.padStart(maxLength, fillString), expected);
+}
+
 registerSuite('shim - string functions', {
+	polyfill() {
+		assert.equal(String, global.String);
+	},
 	'.codePointAt()': {
 		'throws on undefined or null string'() {
 			assert.throws(function() {
-				stringUtil.codePointAt(<any>undefined);
+				stringUtil.codePointAt(<any>undefined, <any>undefined);
 			}, TypeError);
 			assert.throws(function() {
-				stringUtil.codePointAt(<any>null);
+				stringUtil.codePointAt(<any>null, <any>undefined);
 			}, TypeError);
 		},
 
@@ -18,33 +90,33 @@ registerSuite('shim - string functions', {
 			const text = 'abc\uD834\uDF06def';
 
 			// Cases expected to return the first code point (i.e. position 0)
-			assert.strictEqual(stringUtil.codePointAt(text), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, 0), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, NaN), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, <any>null), 0x61);
-			assert.strictEqual(stringUtil.codePointAt(text, <any>undefined), 0x61);
+			testCodePointAt(text, undefined, 0x61);
+			testCodePointAt(text, 0, 0x61);
+			testCodePointAt(text, NaN, 0x61);
+			testCodePointAt(text, <any>null, 0x61);
+			testCodePointAt(text, <any>undefined, 0x61);
 
 			// Cases expected to return undefined (i.e. position out of range)
-			assert.strictEqual(stringUtil.codePointAt(text, -Infinity), <any>undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, Infinity), <any>undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, -1), <any>undefined);
-			assert.strictEqual(stringUtil.codePointAt(text, 42), <any>undefined);
+			testCodePointAt(text, -Infinity, <any>undefined);
+			testCodePointAt(text, Infinity, <any>undefined);
+			testCodePointAt(text, -1, <any>undefined);
+			testCodePointAt(text, 42, <any>undefined);
 
 			// Test various code points in the string
-			assert.strictEqual(stringUtil.codePointAt(text, 3), 0x1d306);
-			assert.strictEqual(stringUtil.codePointAt(text, 4), 0xdf06);
-			assert.strictEqual(stringUtil.codePointAt(text, 5), 0x64);
+			testCodePointAt(text, 3, 0x1d306);
+			testCodePointAt(text, 4, 0xdf06);
+			testCodePointAt(text, 5, 0x64);
 		},
 
 		'string starting with an astral symbol'() {
 			const text = '\uD834\uDF06def';
-			assert.strictEqual(stringUtil.codePointAt(text, 0), 0x1d306);
-			assert.strictEqual(stringUtil.codePointAt(text, 1), 0xdf06);
+			testCodePointAt(text, 0, 0x1d306);
+			testCodePointAt(text, 1, 0xdf06);
 		},
 
 		'lone high/low surrogates'() {
-			assert.strictEqual(stringUtil.codePointAt('\uD834abc', 0), 0xd834);
-			assert.strictEqual(stringUtil.codePointAt('\uDF06abc', 0), 0xdf06);
+			testCodePointAt('\uD834abc', 0, 0xd834);
+			testCodePointAt('\uDF06abc', 0, 0xdf06);
 		}
 	},
 
@@ -59,75 +131,75 @@ registerSuite('shim - string functions', {
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.endsWith('undefined', <any>undefined));
-			assert.isFalse(stringUtil.endsWith('undefined', <any>null));
-			assert.isTrue(stringUtil.endsWith('null', <any>null));
-			assert.isFalse(stringUtil.endsWith('null', <any>undefined));
+			testEndsWith('undefined', <any>undefined, true);
+			testEndsWith('undefined', <any>null, false);
+			testEndsWith('null', <any>null, true);
+			testEndsWith('null', <any>undefined, false);
 		},
 
 		'position is Infinity, not included, or NaN'() {
-			assert.isTrue(stringUtil.endsWith('abc', '', Infinity));
-			assert.isFalse(stringUtil.endsWith('abc', '\0', Infinity));
-			assert.isTrue(stringUtil.endsWith('abc', 'c', Infinity));
-			assert.isFalse(stringUtil.endsWith('abc', 'b', Infinity));
-			assert.isTrue(stringUtil.endsWith('abc', 'bc', Infinity));
-			assert.isTrue(stringUtil.endsWith('abc', 'abc', Infinity));
-			assert.isFalse(stringUtil.endsWith('abc', 'abcd', Infinity));
+			testEndsWith('abc', '', Infinity, true);
+			testEndsWith('abc', '\0', Infinity, false);
+			testEndsWith('abc', 'c', Infinity, true);
+			testEndsWith('abc', 'b', Infinity, false);
+			testEndsWith('abc', 'bc', Infinity, true);
+			testEndsWith('abc', 'abc', Infinity, true);
+			testEndsWith('abc', 'abcd', Infinity, false);
 
-			assert.isTrue(stringUtil.endsWith('abc', '', undefined));
-			assert.isFalse(stringUtil.endsWith('abc', '\0', undefined));
-			assert.isTrue(stringUtil.endsWith('abc', 'c', undefined));
-			assert.isFalse(stringUtil.endsWith('abc', 'b', undefined));
-			assert.isTrue(stringUtil.endsWith('abc', 'bc', undefined));
-			assert.isTrue(stringUtil.endsWith('abc', 'abc', undefined));
-			assert.isFalse(stringUtil.endsWith('abc', 'abcd', undefined));
+			testEndsWith('abc', '', undefined, true);
+			testEndsWith('abc', '\0', undefined, false);
+			testEndsWith('abc', 'c', undefined, true);
+			testEndsWith('abc', 'b', undefined, false);
+			testEndsWith('abc', 'bc', undefined, true);
+			testEndsWith('abc', 'abc', undefined, true);
+			testEndsWith('abc', 'abcd', undefined, false);
 
-			assert.isTrue(stringUtil.endsWith('abc', '', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', '\0', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', 'c', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', 'b', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', 'bc', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', 'abc', null as any));
-			assert.isFalse(stringUtil.endsWith('abc', 'abcd', null as any));
+			testEndsWith('abc', '', null as any, true);
+			testEndsWith('abc', '\0', null as any, false);
+			testEndsWith('abc', 'c', null as any, false);
+			testEndsWith('abc', 'b', null as any, false);
+			testEndsWith('abc', 'bc', null as any, false);
+			testEndsWith('abc', 'abc', null as any, false);
+			testEndsWith('abc', 'abcd', null as any, false);
 
-			assert.isTrue(stringUtil.endsWith('abc', '', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', '\0', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', 'c', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', 'b', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', 'bc', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', 'abc', NaN));
-			assert.isFalse(stringUtil.endsWith('abc', 'abcd', NaN));
+			testEndsWith('abc', '', NaN, true);
+			testEndsWith('abc', '\0', NaN, false);
+			testEndsWith('abc', 'c', NaN, false);
+			testEndsWith('abc', 'b', NaN, false);
+			testEndsWith('abc', 'bc', NaN, false);
+			testEndsWith('abc', 'abc', NaN, false);
+			testEndsWith('abc', 'abcd', NaN, false);
 		},
 
 		'position is 0 or negative'() {
 			let counts = [0, -1];
 			for (let count of counts) {
-				assert.isTrue(stringUtil.endsWith('abc', '', count));
-				assert.isFalse(stringUtil.endsWith('abc', '\0', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'a', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'b', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'ab', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'abc', count));
-				assert.isFalse(stringUtil.endsWith('abc', 'abcd', count));
+				testEndsWith('abc', '', count, true);
+				testEndsWith('abc', '\0', count, false);
+				testEndsWith('abc', 'a', count, false);
+				testEndsWith('abc', 'b', count, false);
+				testEndsWith('abc', 'ab', count, false);
+				testEndsWith('abc', 'abc', count, false);
+				testEndsWith('abc', 'abcd', count, false);
 			}
 		},
 
 		'position is 1'() {
-			assert.isTrue(stringUtil.endsWith('abc', '', 1));
-			assert.isFalse(stringUtil.endsWith('abc', '\0', 1));
-			assert.isTrue(stringUtil.endsWith('abc', 'a', 1));
-			assert.isFalse(stringUtil.endsWith('abc', 'b', 1));
-			assert.isFalse(stringUtil.endsWith('abc', 'bc', 1));
-			assert.isFalse(stringUtil.endsWith('abc', 'abc', 1));
-			assert.isFalse(stringUtil.endsWith('abc', 'abcd', 1));
+			testEndsWith('abc', '', 1, true);
+			testEndsWith('abc', '\0', 1, false);
+			testEndsWith('abc', 'a', 1, true);
+			testEndsWith('abc', 'b', 1, false);
+			testEndsWith('abc', 'bc', 1, false);
+			testEndsWith('abc', 'abc', 1, false);
+			testEndsWith('abc', 'abcd', 1, false);
 		},
 
 		'unicode support'() {
-			assert.isTrue(stringUtil.endsWith('\xA2fa\xA3', 'fa\xA3'));
-			assert.isTrue(stringUtil.endsWith('\xA2fa', '\xA2', 1));
-			assert.isTrue(stringUtil.endsWith('\xA2fa\uDA04', '\xA2fa\uDA04'));
-			assert.isTrue(stringUtil.endsWith('\xA2fa\uDA04', 'fa', 3));
-			assert.isTrue(stringUtil.endsWith('\xA2fa\uDA04', '\uDA04'));
+			testEndsWith('\xA2fa\xA3', 'fa\xA3', true);
+			testEndsWith('\xA2fa', '\xA2', 1, true);
+			testEndsWith('\xA2fa\uDA04', '\xA2fa\uDA04', true);
+			testEndsWith('\xA2fa\uDA04', 'fa', 3, true);
+			testEndsWith('\xA2fa\uDA04', '\uDA04', true);
 		}
 	},
 
@@ -143,12 +215,12 @@ registerSuite('shim - string functions', {
 		},
 
 		'basic cases'() {
-			assert.strictEqual(stringUtil.fromCodePoint(<any>null), '\0');
-			assert.strictEqual(stringUtil.fromCodePoint(0), '\0');
-			assert.strictEqual(stringUtil.fromCodePoint(), '');
-			assert.strictEqual(stringUtil.fromCodePoint(0x1d306), '\uD834\uDF06');
-			assert.strictEqual(stringUtil.fromCodePoint(0x1d306, 0x61, 0x1d307), '\uD834\uDF06a\uD834\uDF07');
-			assert.strictEqual(stringUtil.fromCodePoint(0x61, 0x62, 0x1d307), 'ab\uD834\uDF07');
+			testFromCodePoint([<any>null], '\0');
+			testFromCodePoint([0], '\0');
+			testFromCodePoint([], '');
+			testFromCodePoint([0x1d306], '\uD834\uDF06');
+			testFromCodePoint([0x1d306, 0x61, 0x1d307], '\uD834\uDF06a\uD834\uDF07');
+			testFromCodePoint([0x61, 0x62, 0x1d307], 'ab\uD834\uDF07');
 		},
 
 		'test that valid cases do not throw'() {
@@ -164,6 +236,8 @@ registerSuite('shim - string functions', {
 			assert.doesNotThrow(function() {
 				stringUtil.fromCodePoint.apply(null, oneUnitArgs);
 				stringUtil.fromCodePoint.apply(null, twoUnitArgs);
+				String.fromCodePoint.apply(null, oneUnitArgs);
+				String.fromCodePoint.apply(null, twoUnitArgs);
 			});
 		}
 	},
@@ -179,51 +253,51 @@ registerSuite('shim - string functions', {
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.includes('undefined', <any>undefined));
-			assert.isFalse(stringUtil.includes('undefined', <any>null));
-			assert.isTrue(stringUtil.includes('null', <any>null));
-			assert.isFalse(stringUtil.includes('null', <any>undefined));
+			testInclude('undefined', <any>undefined, true);
+			testInclude('undefined', <any>null, false);
+			testInclude('null', <any>null, true);
+			testInclude('null', <any>undefined, false);
 		},
 
 		'position is 0 (whether explicitly, by default, or due to NaN or negative)'() {
 			let counts = [0, -1, NaN, <any>undefined, null];
 			for (let count of counts) {
-				assert.isTrue(stringUtil.includes('abc', '', count));
-				assert.isFalse(stringUtil.includes('abc', '\0', count));
-				assert.isTrue(stringUtil.includes('abc', 'a', count));
-				assert.isTrue(stringUtil.includes('abc', 'b', count));
-				assert.isTrue(stringUtil.includes('abc', 'ab', count));
-				assert.isTrue(stringUtil.includes('abc', 'abc', count));
-				assert.isFalse(stringUtil.includes('abc', 'abcd', count));
+				testInclude('abc', '', count, true);
+				testInclude('abc', '\0', count, false);
+				testInclude('abc', 'a', count, true);
+				testInclude('abc', 'b', count, true);
+				testInclude('abc', 'ab', count, true);
+				testInclude('abc', 'abc', count, true);
+				testInclude('abc', 'abcd', count, false);
 			}
 		},
 
 		'position is Infinity'() {
-			assert.isTrue(stringUtil.includes('abc', '', Infinity));
-			assert.isFalse(stringUtil.includes('abc', '\0', Infinity));
-			assert.isFalse(stringUtil.includes('abc', 'a', Infinity));
-			assert.isFalse(stringUtil.includes('abc', 'b', Infinity));
-			assert.isFalse(stringUtil.includes('abc', 'ab', Infinity));
-			assert.isFalse(stringUtil.includes('abc', 'abc', Infinity));
-			assert.isFalse(stringUtil.includes('abc', 'abcd', Infinity));
+			testInclude('abc', '', Infinity, true);
+			testInclude('abc', '\0', Infinity, false);
+			testInclude('abc', 'a', Infinity, false);
+			testInclude('abc', 'b', Infinity, false);
+			testInclude('abc', 'ab', Infinity, false);
+			testInclude('abc', 'abc', Infinity, false);
+			testInclude('abc', 'abcd', Infinity, false);
 		},
 
 		'position is 1'() {
-			assert.isTrue(stringUtil.includes('abc', '', 1));
-			assert.isFalse(stringUtil.includes('abc', '\0', 1));
-			assert.isFalse(stringUtil.includes('abc', 'a', 1));
-			assert.isTrue(stringUtil.includes('abc', 'b', 1));
-			assert.isTrue(stringUtil.includes('abc', 'bc', 1));
-			assert.isFalse(stringUtil.includes('abc', 'abc', 1));
-			assert.isFalse(stringUtil.includes('abc', 'abcd', 1));
+			testInclude('abc', '', 1, true);
+			testInclude('abc', '\0', 1, false);
+			testInclude('abc', 'a', 1, false);
+			testInclude('abc', 'b', 1, true);
+			testInclude('abc', 'bc', 1, true);
+			testInclude('abc', 'abc', 1, false);
+			testInclude('abc', 'abcd', 1, false);
 		},
 
 		'unicode support'() {
-			assert.isTrue(stringUtil.includes('\xA2fa', '\xA2'));
-			assert.isTrue(stringUtil.includes('\xA2fa', 'fa', 1));
-			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', '\xA2fa\uDA04'));
-			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', 'fa\uDA04', 1));
-			assert.isTrue(stringUtil.includes('\xA2fa\uDA04', '\uDA04', 3));
+			testInclude('\xA2fa', '\xA2', true);
+			testInclude('\xA2fa', 'fa', 1, true);
+			testInclude('\xA2fa\uDA04', '\xA2fa\uDA04', true);
+			testInclude('\xA2fa\uDA04', 'fa\uDA04', 1, true);
+			testInclude('\xA2fa\uDA04', '\uDA04', 3, true);
 		}
 	},
 
@@ -242,6 +316,12 @@ registerSuite('shim - string functions', {
 				'stringUtil.raw applied to template string should result in expected value'
 			);
 
+			assert.strictEqual(
+				String.raw`The answer is:\n${answer}`,
+				'The answer is:\\n42',
+				'stringUtil.raw applied to template string should result in expected value'
+			);
+
 			function getCallSite(callSite: TemplateStringsArray, ...substitutions: any[]): TemplateStringsArray {
 				const result = [...callSite];
 				(result as any).raw = callSite.raw;
@@ -255,9 +335,21 @@ registerSuite('shim - string functions', {
 				'stringUtil.raw applied with insufficient arguments should result in no substitution'
 			);
 
+			assert.strictEqual(
+				String.raw(callSite),
+				'The answer is:\\n',
+				'stringUtil.raw applied with insufficient arguments should result in no substitution'
+			);
+
 			(callSite as any).raw = ['The answer is:\\n'];
 			assert.strictEqual(
 				stringUtil.raw(callSite, 42),
+				'The answer is:\\n',
+				'stringUtil.raw applied with insufficient raw fragments should result in truncation before substitution'
+			);
+
+			assert.strictEqual(
+				String.raw(callSite, 42),
 				'The answer is:\\n',
 				'stringUtil.raw applied with insufficient raw fragments should result in truncation before substitution'
 			);
@@ -267,10 +359,10 @@ registerSuite('shim - string functions', {
 	'.repeat()': {
 		'throws on undefined or null string'() {
 			assert.throws(function() {
-				stringUtil.repeat(<any>undefined);
+				stringUtil.repeat(<any>undefined, <any>undefined);
 			}, TypeError);
 			assert.throws(function() {
-				stringUtil.repeat(<any>null);
+				stringUtil.repeat(<any>null, <any>null);
 			}, TypeError);
 		},
 
@@ -281,14 +373,19 @@ registerSuite('shim - string functions', {
 				assert.throws(function() {
 					stringUtil.repeat('abc', count);
 				}, RangeError);
+
+				assert.throws(function() {
+					'abc'.repeat(count);
+				}, RangeError);
 			}
 		},
 
 		'returns empty string when passed 0, NaN, or no count'() {
-			assert.strictEqual(stringUtil.repeat('abc'), '');
+			assert.strictEqual((stringUtil.repeat as any)('abc'), '');
 			let counts = [<any>undefined, null, 0, NaN];
 			for (let count of counts) {
 				assert.strictEqual(stringUtil.repeat('abc', count), '');
+				assert.strictEqual('abc'.repeat(count), '');
 			}
 		},
 
@@ -297,6 +394,11 @@ registerSuite('shim - string functions', {
 			assert.strictEqual(stringUtil.repeat('abc', 2), 'abcabc');
 			assert.strictEqual(stringUtil.repeat('abc', 3), 'abcabcabc');
 			assert.strictEqual(stringUtil.repeat('abc', 4), 'abcabcabcabc');
+
+			assert.strictEqual('abc'.repeat(1), 'abc');
+			assert.strictEqual('abc'.repeat(2), 'abcabc');
+			assert.strictEqual('abc'.repeat(3), 'abcabcabc');
+			assert.strictEqual('abc'.repeat(4), 'abcabcabcabc');
 		}
 	},
 
@@ -311,51 +413,51 @@ registerSuite('shim - string functions', {
 		},
 
 		'null or undefined search value'() {
-			assert.isTrue(stringUtil.startsWith('undefined', <any>undefined));
-			assert.isFalse(stringUtil.startsWith('undefined', <any>null));
-			assert.isTrue(stringUtil.startsWith('null', <any>null));
-			assert.isFalse(stringUtil.startsWith('null', <any>undefined));
+			testStartsWith('undefined', <any>undefined, true);
+			testStartsWith('undefined', <any>null, false);
+			testStartsWith('null', <any>null, true);
+			testStartsWith('null', <any>undefined, false);
 		},
 
 		'position is 0 (whether explicitly, by default, or due to NaN or negative)'() {
 			let counts = [0, -1, NaN, <any>undefined, null];
 			for (let count of counts) {
-				assert.isTrue(stringUtil.startsWith('abc', '', count));
-				assert.isFalse(stringUtil.startsWith('abc', '\0', count));
-				assert.isTrue(stringUtil.startsWith('abc', 'a', count));
-				assert.isFalse(stringUtil.startsWith('abc', 'b', count));
-				assert.isTrue(stringUtil.startsWith('abc', 'ab', count));
-				assert.isTrue(stringUtil.startsWith('abc', 'abc', count));
-				assert.isFalse(stringUtil.startsWith('abc', 'abcd', count));
+				testStartsWith('abc', '', count, true);
+				testStartsWith('abc', '\0', count, false);
+				testStartsWith('abc', 'a', count, true);
+				testStartsWith('abc', 'b', count, false);
+				testStartsWith('abc', 'ab', count, true);
+				testStartsWith('abc', 'abc', count, true);
+				testStartsWith('abc', 'abcd', count, false);
 			}
 		},
 
 		'position is Infinity'() {
-			assert.isTrue(stringUtil.startsWith('abc', '', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', '\0', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', 'a', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', 'b', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', 'ab', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', 'abc', Infinity));
-			assert.isFalse(stringUtil.startsWith('abc', 'abcd', Infinity));
+			testStartsWith('abc', '', Infinity, true);
+			testStartsWith('abc', '\0', Infinity, false);
+			testStartsWith('abc', 'a', Infinity, false);
+			testStartsWith('abc', 'b', Infinity, false);
+			testStartsWith('abc', 'ab', Infinity, false);
+			testStartsWith('abc', 'abc', Infinity, false);
+			testStartsWith('abc', 'abcd', Infinity, false);
 		},
 
 		'position is 1'() {
-			assert.isTrue(stringUtil.startsWith('abc', '', 1));
-			assert.isFalse(stringUtil.startsWith('abc', '\0', 1));
-			assert.isFalse(stringUtil.startsWith('abc', 'a', 1));
-			assert.isTrue(stringUtil.startsWith('abc', 'b', 1));
-			assert.isTrue(stringUtil.startsWith('abc', 'bc', 1));
-			assert.isFalse(stringUtil.startsWith('abc', 'abc', 1));
-			assert.isFalse(stringUtil.startsWith('abc', 'abcd', 1));
+			testStartsWith('abc', '', 1, true);
+			testStartsWith('abc', '\0', 1, false);
+			testStartsWith('abc', 'a', 1, false);
+			testStartsWith('abc', 'b', 1, true);
+			testStartsWith('abc', 'bc', 1, true);
+			testStartsWith('abc', 'abc', 1, false);
+			testStartsWith('abc', 'abcd', 1, false);
 		},
 
 		'unicode support'() {
-			assert.isTrue(stringUtil.startsWith('\xA2fa', '\xA2'));
-			assert.isTrue(stringUtil.startsWith('\xA2fa', 'fa', 1));
-			assert.isTrue(stringUtil.startsWith('\xA2fa\uDA04', '\xA2fa\uDA04'));
-			assert.isTrue(stringUtil.startsWith('\xA2fa\uDA04', 'fa\uDA04', 1));
-			assert.isTrue(stringUtil.startsWith('\xA2fa\uDA04', '\uDA04', 3));
+			testStartsWith('\xA2fa', '\xA2', true);
+			testStartsWith('\xA2fa', 'fa', 1, true);
+			testStartsWith('\xA2fa\uDA04', '\xA2fa\uDA04', true);
+			testStartsWith('\xA2fa\uDA04', 'fa\uDA04', 1, true);
+			testStartsWith('\xA2fa\uDA04', '\uDA04', 3, true);
 		}
 	},
 
@@ -371,20 +473,24 @@ registerSuite('shim - string functions', {
 		},
 
 		'null/undefined/invalid length'() {
-			assert.equal(stringUtil.padEnd('test', <any>null), 'test');
-			assert.equal(stringUtil.padEnd('test', <any>undefined), 'test');
-			assert.equal(stringUtil.padEnd('test', -1), 'test');
+			testPadEnd('test', <any>null, 'test');
+			testPadEnd('test', <any>undefined, 'test');
+			testPadEnd('test', -1, 'test');
 
 			assert.throws(() => {
 				stringUtil.padEnd('', Infinity);
 			});
+
+			assert.throws(() => {
+				''.padEnd(Infinity);
+			});
 		},
 
 		'padEnd()'() {
-			assert.equal(stringUtil.padEnd('', 10), '          ');
-			assert.equal(stringUtil.padEnd('test', 5), 'test ');
-			assert.equal(stringUtil.padEnd('test', 10, 'test'), 'testtestte');
-			assert.equal(stringUtil.padEnd('test', 3, 'padding'), 'test');
+			testPadEnd('', 10, '          ');
+			testPadEnd('test', 5, 'test ');
+			testPadEnd('test', 10, 'test', 'testtestte');
+			testPadEnd('test', 3, 'padding', 'test');
 		}
 	},
 
@@ -400,20 +506,24 @@ registerSuite('shim - string functions', {
 		},
 
 		'null/undefined/invalid length'() {
-			assert.equal(stringUtil.padStart('test', <any>null), 'test');
-			assert.equal(stringUtil.padStart('test', <any>undefined), 'test');
-			assert.equal(stringUtil.padStart('test', -1), 'test');
+			testPadStart('test', <any>null, 'test');
+			testPadStart('test', <any>undefined, 'test');
+			testPadStart('test', -1, 'test');
 
 			assert.throws(() => {
 				stringUtil.padStart('', Infinity);
 			});
+
+			assert.throws(() => {
+				''.padStart(Infinity);
+			});
 		},
 
 		'padStart()'() {
-			assert.equal(stringUtil.padStart('', 10), '          ');
-			assert.equal(stringUtil.padStart('test', 5), ' test');
-			assert.equal(stringUtil.padStart('test', 10, 'test'), 'testtetest');
-			assert.equal(stringUtil.padStart('test', 3, 'padding'), 'test');
+			testPadStart('', 10, '          ');
+			testPadStart('test', 5, ' test');
+			testPadStart('test', 10, 'test', 'testtetest');
+			testPadStart('test', 3, 'padding', 'test');
 		}
 	}
 });

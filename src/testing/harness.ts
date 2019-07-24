@@ -1,7 +1,9 @@
 import assertRender from './support/assertRender';
 import { decorateNodes, select } from './support/selector';
-import { WNode, DNode, WidgetBaseInterface, Constructor, VNode } from '../widget-core/interfaces';
-import { WidgetBase } from '../widget-core/WidgetBase';
+import { WNode, DNode, Constructor, VNode, Callback, RenderResult, MiddlewareResultFactory } from '../core/interfaces';
+import { WidgetBase } from '../core/WidgetBase';
+import { isWidgetFunction } from '../core/Registry';
+import { invalidator, diffProperty, destroy, create, propertiesDiff } from '../core/vdom';
 
 export interface CustomComparator {
 	selector: string;
@@ -43,28 +45,112 @@ export interface HarnessAPI {
 	getRender: GetRender;
 }
 
-export function harness(
-	renderFunc: () => WNode<WidgetBaseInterface>,
-	customComparator: CustomComparator[] = []
-): HarnessAPI {
+let middlewareId = 0;
+
+interface HarnessOptions {
+	customComparator?: CustomComparator[];
+	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
+}
+
+const factory = create();
+
+export function harness(renderFunc: () => WNode, options?: HarnessOptions): HarnessAPI;
+export function harness(renderFunc: () => WNode, customComparator?: CustomComparator[]): HarnessAPI;
+export function harness(renderFunc: () => WNode, options: HarnessOptions | CustomComparator[] = []): HarnessAPI {
 	let invalidated = true;
 	let wNode = renderFunc();
-	let widget: WidgetBase;
 	const renderStack: (DNode | DNode[])[] = [];
-	const { properties, children } = wNode;
-	const widgetConstructor = wNode.widgetConstructor as Constructor<WidgetBase>;
-	if (typeof widgetConstructor === 'function') {
-		widget = new class extends widgetConstructor {
-			invalidate() {
-				invalidated = true;
-				super.invalidate();
-			}
-		}();
-		widget.__setProperties__(properties);
-		widget.__setChildren__(children);
-		_tryRender();
+	let widget: WidgetBase | Callback<any, any, RenderResult>;
+	let middleware: any = {};
+	let properties: any = {};
+	let children: any = [];
+	let customDiffs: any[] = [];
+	let customDiffNames: string[] = [];
+	let customComparator: CustomComparator[] = [];
+	let mockMiddleware: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][] = [];
+	if (Array.isArray(options)) {
+		customComparator = options;
 	} else {
-		throw new Error('Harness does not support registry items');
+		if (options.middleware) {
+			mockMiddleware = options.middleware;
+		}
+		if (options.customComparator) {
+			customComparator = options.customComparator;
+		}
+	}
+
+	if (isWidgetFunction(wNode.widgetConstructor)) {
+		widget = wNode.widgetConstructor;
+
+		const resolveMiddleware = (middlewares: any, mocks: any[]) => {
+			const keys = Object.keys(middlewares);
+			const results: any = {};
+			const uniqueId = `${middlewareId++}`;
+			const mockMiddlewareMap = new Map(mocks);
+
+			for (let i = 0; i < keys.length; i++) {
+				let isMock = false;
+				let middleware = middlewares[keys[i]]();
+				if (mockMiddlewareMap.has(middlewares[keys[i]])) {
+					middleware = mockMiddlewareMap.get(middlewares[keys[i]]);
+					isMock = true;
+				}
+				const payload: any = {
+					id: uniqueId,
+					properties: () => {
+						return { ...properties };
+					},
+					children: () => {
+						return children;
+					}
+				};
+				if (middleware.middlewares) {
+					const resolvedMiddleware = resolveMiddleware(middleware.middlewares, mocks);
+					payload.middleware = resolvedMiddleware;
+					results[keys[i]] = middleware.callback(payload);
+				} else {
+					if (isMock) {
+						let result = middleware();
+						const resolvedMiddleware = resolveMiddleware(result.middlewares, mocks);
+						payload.middleware = resolvedMiddleware;
+						results[keys[i]] = result.callback(payload);
+					} else {
+						results[keys[i]] = middleware.callback(payload);
+					}
+				}
+			}
+			return results;
+		};
+		mockMiddleware.push([
+			invalidator,
+			factory(() => () => {
+				invalidated = true;
+			})
+		]);
+		mockMiddleware.push([destroy, factory(() => () => {})]);
+		mockMiddleware.push([
+			diffProperty,
+			factory(() => (propName: string, func: any) => {
+				if (customDiffNames.indexOf(propName) === -1) {
+					customDiffNames.push(propName);
+					customDiffs.push(func);
+				}
+			})
+		]);
+		middleware = resolveMiddleware((wNode.widgetConstructor as any).middlewares, mockMiddleware);
+	} else {
+		const widgetConstructor = wNode.widgetConstructor as Constructor<WidgetBase>;
+		if (typeof widgetConstructor === 'function') {
+			widget = new class extends widgetConstructor {
+				invalidate() {
+					invalidated = true;
+					super.invalidate();
+				}
+			}();
+			_tryRender();
+		} else {
+			throw new Error('Harness does not support registry items');
+		}
 	}
 
 	function _getRender(count?: number): DNode | DNode[] {
@@ -74,7 +160,7 @@ export function harness(
 	function _runCompares(nodes: DNode | DNode[], isExpected: boolean = false) {
 		customComparator.forEach(({ selector, property, comparator }) => {
 			const items = select(selector, nodes);
-			items.forEach((item: any, index: number) => {
+			items.forEach((item: any) => {
 				const comparatorName = `comparator(selector=${selector}, ${property})`;
 				if (item && item.properties && item.properties[property] !== undefined) {
 					const comparatorResult = comparator(item.properties[property])
@@ -87,11 +173,34 @@ export function harness(
 	}
 
 	function _tryRender() {
-		const { properties, children } = renderFunc();
-		widget.__setProperties__(properties);
-		widget.__setChildren__(children);
+		let render: RenderResult;
+		const wNode = renderFunc();
+		if (isWidgetFunction(widget)) {
+			customDiffs.forEach((diff) => diff(properties, wNode.properties));
+			propertiesDiff(
+				properties,
+				wNode.properties,
+				() => {
+					invalidated = true;
+				},
+				[...customDiffNames]
+			);
+			if (children.length || wNode.children.length) {
+				invalidated = true;
+			}
+			properties = { ...wNode.properties };
+			children = wNode.children;
+			if (invalidated) {
+				render = widget({ id: 'test', middleware, properties: () => properties, children: () => children });
+			}
+		} else {
+			widget.__setProperties__(wNode.properties);
+			widget.__setChildren__(wNode.children);
+			if (invalidated) {
+				render = widget.__render__();
+			}
+		}
 		if (invalidated) {
-			const render = widget.__render__();
 			const { hasDeferredProperties, nodes } = decorateNodes(render);
 			_runCompares(nodes);
 			renderStack.push(nodes);

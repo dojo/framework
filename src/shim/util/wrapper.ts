@@ -1,5 +1,5 @@
 import global from '../global';
-import has from '../../has/has';
+import has from '../../core/has';
 
 export default function wrapper(nameOnGlobal: string, constructor = false, bind = false): any {
 	if (has('test')) {

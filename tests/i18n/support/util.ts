@@ -1,4 +1,4 @@
-import has from '../../../src/has/has';
+import has from '../../../src/core/has';
 import '../../../src/shim/Promise';
 import loadCldrData, { CldrData, isLoaded } from '../../../src/i18n/cldr/load';
 

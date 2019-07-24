@@ -1,9 +1,10 @@
 import { Thenable } from './interfaces';
 import global from './global';
+`!has('microtasks')`;
 import { queueMicroTask } from './support/queue';
-import { Iterable } from './iterator';
+`!has('es6-symbol')`;
 import './Symbol';
-import has from '../has/has';
+import has from '../core/has';
 
 /**
  * Executor is the interface for functions used to initialize a Promise.

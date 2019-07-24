@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Dojo</title>
+	<link href="./../runner/css/currentStyle.css" rel="stylesheet"/>
+</head>
+<body>
+	<div id="main"></div>
+	<script src="../../../../src/shim/util/amd.js"></script>
+	<script src="../../../../../../node_modules/@dojo/loader/loader.js"></script>
+	<script>
+		require.config(shimAmdDependencies({
+			baseUrl: '../../../../../../'
+		}));
+
+		require(['dist/dev/src/shim/main'], function() {
+			require([ 'dist/dev/tests/core/benchmark/app/main' ], function () {});
+		});
+	</script>
+</body>
+</html>

@@ -9,7 +9,7 @@ Dojo differentiates between several types of styling, each representing a differ
 -   [Widget non-themeable styles](#structural-widget-styling) (_granularity:_ per-widget)
     -   The minimum styles necessary for a widget to function, that are not intended to be overridden by a theme. Widgets refer to these style classes directly from their CSS module imports when rendering.
 -   [Widget themeable styles](#making-themeable-widgets) (_granularity:_ per-widget)
-    -   Widget styles that can be overridden via theming. Widgets wrap these style classes in a class-level `@theme()` decorator, then refer to them indirectly via the [`this.theme()` method](#themedmixin-thistheme-method) when rendering. Users of the widget can override some or all of these classes, as required.
+    -   Widget styles that can be overridden via theming. Widgets use the [`theme.classes(css)`](#theme-middleware-classes) API from the `theme` middleware, passing in the CSS that requires theming and using the returned class names when rendering. Users of the widget can override some or all of these classes as needed.
 -   [Cross-cutting styles](#making-themeable-applications) (_granularity:_ application-wide)
     -   Styles that apply across several widgets, whether widgets of different types, or multiple instances of a single widget type. These styles usually provide a consistent visual presentation for all themeable widgets used within an application. Cross-cutting styles can be provided/referenced via several mechanisms:
         -   Providing [an application-wide theme](#making-themeable-applications)
@@ -47,34 +47,16 @@ This stylesheet can be used within a corresponding widget as follows:
 
 > src/widgets/MyWidget.ts
 
-```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
-
-import * as css from '../styles/MyWidget.m.css';
-
-export default class MyWidget extends WidgetBase {
-	protected render() {
-		return v('div', { classes: [css.myWidgetClass, css.myWidgetExtraClass] }, ['Hello from a Dojo widget!']);
-	}
-}
-```
-
-Similarly, if using TSX widget syntax:
-
-> src/widgets/MyTsxWidget.tsx
-
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
-export default class MyTsxWidget extends WidgetBase {
-	protected render() {
-		return <div classes={[css.myWidgetClass, css.myWidgetExtraClass]}>Hello from a Dojo TSX widget!</div>;
-	}
-}
+const factory = create();
+
+export default factory(function MyWidget() {
+	return <div classes={[css.myWidgetClass, css.myWidgetExtraClass]}>Hello from a Dojo widget!</div>;
+});
 ```
 
 When inspecting the CSS classes of these sample widgets in a built application, they will not contain `myWidgetClass` and `myWidgetExtraClass`, but rather obfuscated CSS class names similar to `MyWidget-m__myWidgetClass__33zN8` and `MyWidget-m__myWidgetExtraClass___g3St`.
@@ -127,7 +109,7 @@ Dojo's default build process propagates custom properties as-is into the applica
 
 ### CSS module composition
 
-Applying a theme to a Dojo widget results in the widget's default styling classes being entirely overridden by those provided in the theme (see [Note 3 of `ThemedMixin`'s `this.theme()` method](#themedmixin-thistheme-method) for details). This can be problematic when only a subset of properties in a given styling class need to be modified through a theme, while the remainder can stay as default.
+Applying a theme to a Dojo widget results in the widget's default styling classes being entirely overridden by those provided in the theme. This can be problematic when only a subset of properties in a given styling class need to be modified through a theme, while the remainder can stay as default.
 
 [CSS module files](https://github.com/css-modules/css-modules) in Dojo applications can leverage `composes:` functionality to apply sets of styles from one class selector to another. This can be useful when creating a new theme that tweaks an existing one, as well as for general abstraction of common sets of styling properties within a single theme (note that [CSS custom properties](#css-custom-properties) are a more standardized way of abstracting values for individual style properties).
 
@@ -178,138 +160,32 @@ As styles in a Dojo application are mostly scoped to individual widgets, there i
 
 Dojo applications need a way to present all the widgets they use in a consistent manner, so that users perceive and interact with application features holistically, rather than as a mashup of disjointed elements on a webpage. This is usually implemented via a corporate or product marketing theme that specifies colors, layout, font families, and more.
 
-## Making themeable applications
-
-In order to specify a theme for all themeable widgets in an application, `registerThemeInjector()` can be used in conjunction with the application's global registry. This injector utility function is available from the `@dojo/framework/widget-core/mixins/Themed` module.
-
-For example, specifying a primary application theme:
-
-> src/main.ts
-
-```ts
-import renderer from '@dojo/framework/widget-core/vdom';
-import { w } from '@dojo/framework/widget-core/d';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerThemeInjector } from '@dojo/framework/widget-core/mixins/Themed';
-
-import myTheme from './src/themes/myTheme/theme';
-import App from './App';
-
-const registry = new Registry();
-registerThemeInjector(myTheme, registry);
-
-const r = renderer(() => w(App, {}));
-r.mount({ registry });
-```
-
-See [Writing a theme](#writing-a-theme) for a description of how the `myTheme` import should be structured.
-
-Note that using themeable widgets without specifying an explicit theme (for example, passing an empty theme object to `registerThemeInjector` and not [explicitly overriding a widget instance's theme or styling classes](#themedmixin-widget-properties)) will result in each widget using its default style rules.
-
-If using an [independently-distributed theme](#distributing-themes) in its entirety, applications will also need to integrate the theme's overarching `index.css` file into their own styling. This can be done via an import in the project's `main.css` file:
-
-> src/main.css
-
-```css
-@import '@{myThemePackageName}/{myThemeName}/index.css';
-```
-
-By contrast, another way of using only portions of an externally-built theme is [via theme composition](#composing-off-dojo-themes).
-
-### Changing the currently active theme
-
-`registerThemeInjector()` will return a handle to the `themeInjector` that can be used to change the active theme. Applications can call `themeInjector.set()`, passing in a new theme object, which will invalidate all themed widgets in the application tree and re-render them using the new theme.
-
-To simplify the process of changing themes and to allow for easier dynamic switching in a running application, a `ThemeSwitcher` utility widget is also available from `@dojo/framework/widget-core/mixins/Themed`.
-
-#### `ThemeSwitcher` Properties
-
--   `renderer: (updateTheme(theme: Theme) => void): DNode | DNode[]`
-    -   The `renderer` that is called with an `updateTheme` function that can be used to switch themes based on user selection, for example. The `renderer` implementation should return `DNode | DNode[]`, which are the elements that will be rendered to allow theme selection within the application.
--   `registryLabel ?: string`
-    -   (Optional) The registry label used to register the theme injector. When using the `registerThemeInjector` utility function, this property does not need to be set.
-
-#### `ThemeSwitcher` Example Usage
-
-The following example shows a themeable widget that uses `ThemeSwitcher` to render two buttons that allow users to switch between a `light` and `dark` theme.
-
-> src/widgets/MyApp.ts
-
-```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/widget-core/mixins/Themed';
-
-import lightTheme from '../themes/light-theme/theme';
-import darkTheme from '../themes/dark-theme/theme';
-import * as css from './styles/MyApp.m.css';
-
-@theme(css)
-class MyApp extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return v('div', [
-			w(ThemeSwitcher, {
-				renderer: (updateTheme: UpdateTheme) => {
-					return v('div', [
-						v(
-							'button',
-							{
-								onclick: () => {
-									updateTheme(lightTheme);
-								}
-							},
-							['light']
-						),
-						v(
-							'button',
-							{
-								onclick: () => {
-									updateTheme(darkTheme);
-								}
-							},
-							['dark']
-						)
-					]);
-				}
-			}),
-			v('div', { classes: this.theme(css.container) })
-		]);
-	}
-}
-```
-
 ## Making themeable widgets
 
-There are three requirements for widgets to be considered themeable:
+There are two requirements for widgets to be considered themeable:
 
-1.  The widget's class should have the `@theme()` decorator applied, passing in the widget's imported CSS module as a decorator argument.
-    -   Note that widgets can import and reference multiple CSS modules, in which case additional `@theme()` decorators can be stacked, one for each corresponding CSS import intended to be themeable.
-2.  The widget's parent class should extend `ThemedMixin`.
-3.  One or more of the widget's styling classes should be wrapped in a call to `this.theme()` when rendering the widget.
+1.  The widget's factory should have the `theme` middleware injected, `const factory = create({ theme })`
+2.  One or more of the widget's styling classes should be passed using the result from the `theme.classes(css)` call when rendering the widget.
 
-By convention, there is a fourth requirement that is useful when developing widgets intended for distribution (this is a convention that widgets in Dojo's widget library follow):
+By convention, there is a third requirement that is useful when developing widgets intended for distribution (this is a convention that widgets in Dojo's widget library follow):
 
-4.  The widget's root VDOM node - that is, the outer-most node rendered by the widget - should include a styling class named `root`. Doing so provides a predictable way to target the top-level node of a third-party themeable widget when overriding its styles in a custom theme.
+3.  The widget's root VDOM node - that is, the outer-most node rendered by the widget - should include a styling class named `root`. Doing so provides a predictable way to target the top-level node of a third-party themeable widget when overriding its styles in a custom theme.
 
-`ThemedMixin` and the `@theme()` decorator can be imported from the `@dojo/framework/widget-core/mixins/Themed` module. Using `ThemedMixin` on a widget provides access to the `this.theme()` function.
+The `theme` middleware is imported from the `@dojo/framework/core/middleware/theme` module.
 
-### `ThemedMixin` `this.theme()` method
+### `theme.classes` method
+
+The `theme.classes` transforms widgets CSS class names to the application or widget's theme class names.
 
 ```ts
-type SupportedClassName = string | null | undefined | boolean;
+theme.classes<T extends ClassNames>(css: T): T;
 ```
 
--   `this.theme(classes: SupportedClassName): SupportedClassName`
--   `this.theme(classes: SupportedClassName[]): SupportedClassName[]`
+-   **Note 1:** Theme overrides are at the level of CSS classes only, not individual style properties within a class.
+-   **Note 2:** If the currently active theme does **not** provide an override for a given styling class, the widget will fall back to using its default style properties for that class.
+-   **Note 3:** If the currently active theme does provide an override for a given styling class, the widget will _only_ have the set of CSS properties specified in the theme applied to it. For example, if a widget's default styling class contains ten CSS properties but the current theme only specifies one, the widget will render with a single CSS property and lose the other nine that were not specified in the theme override.
 
-    -   Widgets can pass in one or multiple CSS class names and will receive back the corresponding amount of themed class names, suitable for passing on to the `classes` property when rendering the widget's WNodes or VNodes.
-
-        -   **Note 1:** Theme overrides are at the level of CSS classes only, not individual style properties within a class.
-
-        -   **Note 2:** If the currently active theme does **not** provide an override for a given styling class, the widget will fall back to using its default style properties for that class.
-
-        -   **Note 3:** If the currently active theme does provide an override for a given styling class, the widget will _only_ have the set of CSS properties specified in the theme applied to it. For example, if a widget's default styling class contains ten CSS properties but the current theme only specifies one, the widget will render with a single CSS property and lose the other nine that were not specified in the theme override.
-
-### `ThemedMixin` Widget Properties
+### `theme` Middleware Properties
 
 -   `theme` (optional)
     -   If specified, [the provided theme](#writing-a-theme) will act as an override for any theme that the widget may use, and will take precedence over [the application's default theme](#making-themeable-applications) as well as [any other theme changes made in the application](#changing-the-currently-active-theme).
@@ -343,64 +219,33 @@ overridden via a theme */
 
 This stylesheet can be used within a corresponding themeable widget as follows:
 
-> src/widgets/MyThemeableWidget.ts
+> src/widgets/MyThemeableWidget.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { v } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
 
 import * as css from '../styles/MyThemeableWidget.m.css';
 
-/* requirement 1: */ @theme(css)
-export default class MyThemeableWidget /* requirement 2: */ extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return v(
-			/* requirement 4: outer-most VDOM element */ 'div',
-			{
-				classes: [
-					/* requirement 3: */ ...this.theme([
-						/* requirement 4: */ css.root,
-						css.myWidgetExtraThemeableClass
-					]),
-					css.myWidgetStructuralClass
-				]
-			},
-			['Hello from a themed Dojo widget!']
-		);
-	}
-}
-```
+/* requirement 1: */
+const factory = create({ theme });
 
-Similarly, if using TSX widget syntax:
-
-> src/widgets/MyThemeableTsxWidget.tsx
-
-```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
-
-import * as css from '../styles/MyThemeableWidget.m.css';
-
-/* requirement 1: */ @theme(css)
-export default class MyThemeableTsxWidget /* requirement 2: */ extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return (
-			<div
-				classes={[
-					/* requirement 3: */ ...this.theme([
-						/* requirement 4: */ css.root,
-						css.myWidgetExtraThemeableClass
-					]),
-					css.myWidgetStructuralClass
-				]}
-			>
-				Hello from a themed Dojo TSX widget!
-			</div>
-		);
-	}
-}
+export default factory(function MyThemeableWidget({ middleware: { theme } }) {
+	/* requirement 2 */
+	const { root, myWidgetExtraThemeableClass } = theme.classes(css);
+	return (
+		<div
+			classes={[
+				/* requirement 3: */
+				root,
+				myWidgetExtraThemeableClass,
+				css.myWidgetExtraThemeableClass
+			]}
+		>
+			Hello from a themed Dojo widget!
+		</div>
+	);
+});
 ```
 
 #### Using several CSS modules
@@ -419,32 +264,27 @@ Extending the above example:
 }
 ```
 
-> src/widgets/MyThemeableTsxWidget.tsx
+> src/widgets/MyThemeableWidget.tsx
 
-```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+```ts
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
 
-import * as commonCss from '../styles/MyThemeCommonStyles.m.css';
 import * as css from '../styles/MyThemeableWidget.m.css';
+import * as commonCss from '../styles/MyThemeCommonStyles.m.css';
 
-@theme(commonCss)
-@theme(css)
-export default class MyThemedTsxWidget extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return (
-			<div classes={[this.theme(css.root), this.theme(commonCss.commonBase), css.myWidgetExtraClass]}>
-				Hello from a themed Dojo TSX widget!
-			</div>
-		);
-	}
-}
+const factory = create({ theme });
+
+export default factory(function MyThemeableWidget({ middleware: { theme } }) {
+	const { root } = theme.classes(css);
+	const { commonBase } = theme.classes(commonCss);
+	return <div classes={[root, commonBase, css.myWidgetExtraThemeableClass]}>Hello from a themed Dojo widget!</div>;
+});
 ```
 
 ### Overriding the theme of specific widget instances
 
-Users of a widget can override the theme of a specific instance by passing in a [valid theme](#writing-a-theme) to the instance's [`theme` property](#themedmixin-widget-properties). This is useful when needing to display a given widget in multiple ways across several occurrences within an application.
+Users of a widget can override the theme of a specific instance by passing in a [valid theme](#writing-a-theme) to the instance's [`theme` property](#theme-middleware-properties). This is useful when needing to display a given widget in multiple ways across several occurrences within an application.
 
 For example, building on the [themeable widget example](#themeable-widget-example):
 
@@ -469,36 +309,30 @@ export default {
 > src/widgets/MyApp.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
-import MyThemeableTsxWidget from './src/widgets/MyThemeableTsxWidget.tsx';
-
-import * as css from '../styles/MyApp.m.css';
-
+import MyThemeableWidget from './src/widgets/MyThemeableWidget.tsx';
 import * as myThemeOverride from '../themes/myThemeOverride/theme.ts';
 
-@theme(css)
-export default class MyApp extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return (
-			<div>
-				<MyThemeableTsxWidget />
-				<MyThemeableTsxWidget theme={myThemeOverride} />
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function MyApp() {
+	return (
+		<div>
+			<MyThemeableWidget />
+			<MyThemeableWidget theme={myThemeOverride} />
+		</div>
+	);
+});
 ```
 
-Here, two instances of `MyThemeableTsxWidget` are rendered - the first uses the application-wide theme, if specified, otherwise the widget's default styling is used instead. By contrast, the second instance will always render with the theme defined in `myThemeOverride`.
+Here, two instances of `MyThemeableWidget` are rendered - the first uses the application-wide theme, if specified, otherwise the widget's default styling is used instead. By contrast, the second instance will always render with the theme defined in `myThemeOverride`.
 
 ### Passing extra classes to widgets
 
 The theming mechanism provides a simple way to consistently apply custom styles across every widget in an application, but isn't flexible enough for scenarios where a user wants to apply additional styles to specific instances of a given widget.
 
-Extra styling classes can be passed in through a [themeable widget's `classes` property](#themedmixin-widget-properties). They are considered additive, and do not override the widget's existing styling classes - their purpose is instead to allow fine-grained tweaking of pre-existing styles. Each set of extra classes provided need to be grouped by two levels of keys:
+Extra styling classes can be passed in through a [themeable widget's `classes` property](#theme-middleware-properties). They are considered additive, and do not override the widget's existing styling classes - their purpose is instead to allow fine-grained tweaking of pre-existing styles. Each set of extra classes provided need to be grouped by two levels of keys:
 
 1.  The appropriate [widget theme key](#widget-theme-keys), specifying the widget that the classes should be applied to, including those for any child widgets that may be utilized.
 2.  Specific existing CSS classes that the widget utilizes, allowing widget consumers to target styling extensions at the level of individual DOM elements, out of several that a widget may output.
@@ -532,11 +366,9 @@ As an example of providing extra classes, the following tweaks an instance of a 
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 import ComboBox from '@dojo/widgets/combobox';
-
 import * as myComboBoxStyleTweaks from '../styles/MyComboBoxStyleTweaks.m.css';
 
 const myExtraClasses = {
@@ -549,25 +381,103 @@ const myExtraClasses = {
 	}
 };
 
-export default class MyWidget extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				Hello from a tweaked Dojo combobox!
-				<ComboBox classes={myExtraClasses} results={['foo', 'bar']} />
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function MyWidget() {
+	return (
+		<div>
+			Hello from a tweaked Dojo combobox!
+			<ComboBox classes={myExtraClasses} results={['foo', 'bar']} />
+		</div>
+	);
+});
 ```
 
 Note that it is a widget author's responsibility to explicitly pass the `classes` property to all child widgets that are leveraged, as the property will not be injected nor automatically passed to children by Dojo itself.
+
+## Making themeable applications
+
+In order to specify a theme for all themeable widgets in an application, the `theme.set` API from the `theme` middleware can be used in the application's top level widget. Setting a default or initial theme can be done by checking `theme.get` before calling `theme.set`.
+
+For example, specifying a primary application theme:
+
+> src/App.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import myTheme from '../themes/MyTheme/theme';
+
+const factory = create({ theme });
+
+export default factory(function App({ middleware: { theme }}) {
+	// if the theme isn't set, set the default theme
+	if (!theme.get()) {
+		theme.set(myTheme);
+	}
+	return (
+		// the application's widgets
+	);
+});
+```
+
+See [Writing a theme](#writing-a-theme) for a description of how the `myTheme` import should be structured.
+
+Note that using themeable widgets without having an explicit theme (for example, not setting a default theme using `theme.set` and not [explicitly overriding a widget instance's theme or styling classes](#theme-widget-properties)) will result in each widget using its default style rules.
+
+If using an [independently-distributed theme](#distributing-themes) in its entirety, applications will also need to integrate the theme's overarching `index.css` file into their own styling. This can be done via an import in the project's `main.css` file:
+
+> src/main.css
+
+```css
+@import '@{myThemePackageName}/{myThemeName}/index.css';
+```
+
+By contrast, another way of using only portions of an externally-built theme is [via theme composition](#composing-off-dojo-themes).
+
+### Changing the currently active theme
+
+The `theme` middleware `.set(theme)` function can be used to change the active theme throughout an application. Passing the desired theme to `.set`, which will invalidate all themed widgets in the application tree and re-render them using the new theme.
+
+> src/widgets/ThemeSwitcher.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import myTheme from '../themes/MyTheme/theme';
+import alternativeTheme from '../themes/MyAlternativeTheme/theme';
+
+const factory = create({ theme });
+
+export default factory(function ThemeSwitcher({ middleware: { theme } }) {
+	return (
+		<div>
+			<button
+				onclick={() => {
+					theme.set(myTheme);
+				}}
+			>
+				Use Default Theme
+			</button>
+			<button
+				onclick={() => {
+					theme.set(alternativeTheme);
+				}}
+			>
+				Use Alternative Theme
+			</button>
+		</div>
+	);
+});
+```
 
 # Working with themes
 
 ## Widget theme keys
 
-Dojo's theming framework uses the concept of a 'widget theme key' to connect style overrides to the corresponding widget that the styles are intended for. Style overrides are usually [specified in a theme](#writing-a-theme), but can also be passed [directly via `ThemedMixin`'s `classes` override property](#passing-extra-classes-to-widgets), if required.
+Dojo's theming framework uses the concept of a 'widget theme key' to connect style overrides to the corresponding widget that the styles are intended for. Style overrides are usually [specified in a theme](#writing-a-theme), but can also be passed [directly via `theme` middleware's `classes` override property](#passing-extra-classes-to-widgets), if required.
 
 The theme key for a given widget is determined as:
 
@@ -623,7 +533,7 @@ export default {
 
 Here, `MyWidget` is following naming conventions with its [primary style class being named `root`](#making-themeable-widgets), allowing `myTheme` to easily override it via the `root` class in its `src/themes/myTheme/styles/MyWidget.m.css` CSS module.
 
-The theme associates the new `root` styling class to `MyWidget` via its [theme key of `my-app/MyWidget`](#widget-theme-keys). When `myTheme` is applied, `MyWidget` will have its color set to blue and will no longer receive any other styles defined in the `root` class in its original CSS module (see [Note 3 of `ThemedMixin`'s `this.theme()` method](#themedmixin-thistheme-method) for details).
+The theme associates the new `root` styling class to `MyWidget` via its [theme key of `my-app/MyWidget`](#widget-theme-keys). When `myTheme` is applied, `MyWidget` will have its color set to blue and will no longer receive any other styles defined in the `root` class in its original CSS module.
 
 ## Scaffolding themes for third-party widgets
 

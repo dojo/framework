@@ -30,39 +30,36 @@ The application name becomes relevant when specifying [widget theme keys](./supp
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 import * as css from '../styles/MyWidget.m.css';
 
-export default class MyWidget extends WidgetBase {
-	protected render() {
-		return <div classes={[css.root]}>My Widget</div>;
-	}
-}
+const factory = create();
+
+export default factory(function MyWidget() {
+	return <div classes={[css.root]}>My Widget</div>;
+});
 ```
 
 ## Making a widget themeable
 
--   Extending `ThemedMixin`
--   Applying the `@theme()` decorator to a widget's imported CSS modules
--   Wrapping CSS class names in calls to `this.theme()` when rendering to allow a [widget's default styles to be overridden by a theme](./supplemental.md#making-themeable-widgets)
+-   Inject the `theme` middleware
+-   Using `theme.classes` to return the themed css class name, whidh allows a [widget's default styles to be overridden by a theme](./supplemental.md#making-themeable-widgets)
 
 > src/widgets/MyWidget.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { theme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
 
 import * as css from '../styles/MyWidget.m.css';
 
-@theme(css)
-export default class MyWidget extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return <div classes={[this.theme(css.root)]}>My Widget</div>;
-	}
-}
+const factory = create({ theme });
+
+export default factory(function MyWidget({ middleware: { theme } }) {
+	const { root } = theme.classes(css);
+	return <div classes={[root]}>My Widget</div>;
+});
 ```
 
 ## Creating a theme
@@ -116,68 +113,64 @@ export default {
 
 ## Specifying a default application theme
 
--   Using the theme injector function, [`registerThemeInjector()`](./supplemental.md#making-themeable-applications), to automatically provide a custom theme to all themeable widgets in an application
+The `theme` middleware can be used to set the application theme. To set a "default" or initial theme, the `theme.set` function can be used with the `theme.get` function to determine if the theme needs to be set. Setting the default theme should be done in the application's top level widget.
 
-> src/main.tsx
+> src/App.tsx
 
 ```tsx
-import renderer from '@dojo/framework/widget-core/vdom';
-import { tsx } from '@dojo/framework/widget-core/tsx';
-import Registry from '@dojo/framework/widget-core/Registry';
-import { registerThemeInjector } from '@dojo/framework/widget-core/mixins/Themed';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
 
-import myTheme from './themes/MyTheme/theme';
-import App from './widgets/App';
+import myTheme from '../themes/MyTheme/theme';
 
-const registry = new Registry();
-registerThemeInjector(myTheme, registry);
+const factory = create({ theme });
 
-const r = renderer(() => <App />);
-r.mount({ registry });
+export default factory(function App({ middleware: { theme }}) {
+	// if the theme isn't set, set the default theme
+	if (!theme.get()) {
+		theme.set(myTheme);
+	}
+	return (
+		// the application's widgets
+	);
+});
 ```
+
+**Note:** When using both function-based and class-based widgets, the theme needs to be registered with the application registry. This is true when using any class-based widget dependencies such as `@dojo/widgets`. Please see the [class-based theming section]() for more details.
 
 ## Changing the theme within an application
 
--   Using the [ThemeSwitcher utility widget](./supplemental.md#changing-the-currently-active-theme) to allow users to choose between available themes
--   Enacting a theme change via [`ThemeSwitcher`'s `updateTheme` method](./supplemental.md#themeswitcher-properties)
--   Used in combination with [`registerThemeInjector`](./supplemental.md#making-themeable-applications) to reactively propagate theme changes to all themeable widgets
+-   Using the [`theme` middleware](./supplemental.md#changing-the-currently-active-theme) to allow users to choose between available themes
 
-> src/widgets/App.tsx
+> src/widgets/ThemeSwitcher.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import ThemedMixin, { ThemeSwitcher, theme, UpdateTheme } from '@dojo/framework/widget-core/mixins/Themed';
-import { tsx } from '@dojo/framework/widget-core/tsx';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
 
 import myTheme from '../themes/MyTheme/theme';
 import alternativeTheme from '../themes/MyAlternativeTheme/theme';
 
-class App extends ThemedMixin(WidgetBase) {
-	protected render() {
-		return (
-			<ThemeSwitcher
-				renderer={(updateTheme: UpdateTheme) => {
-					return (
-						<div>
-							<button
-								onclick={() => {
-									updateTheme(myTheme);
-								}}
-							>
-								Use Default Theme
-							</button>
-							<button
-								onclick={() => {
-									updateTheme(alternativeTheme);
-								}}
-							>
-								Use Alternative Theme
-							</button>
-						</div>
-					);
+const factory = create({ theme });
+
+export default factory(function ThemeSwitcher({ middleware: { theme } }) {
+	return (
+		<div>
+			<button
+				onclick={() => {
+					theme.set(myTheme);
 				}}
-			/>
-		);
-	}
-}
+			>
+				Use Default Theme
+			</button>
+			<button
+				onclick={() => {
+					theme.set(alternativeTheme);
+				}}
+			>
+				Use Alternative Theme
+			</button>
+		</div>
+	);
+});
 ```

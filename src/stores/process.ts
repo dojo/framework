@@ -3,8 +3,7 @@ import { PatchOperation } from './state/Patch';
 import { replace, remove } from './state/operations';
 import { Path, State, Store } from './Store';
 import Map from '../shim/Map';
-import has from '../has/has';
-import Symbol, { isSymbol } from '../shim/Symbol';
+import has from '../core/has';
 
 /**
  * Default Payload interface
@@ -26,15 +25,36 @@ export interface CommandRequest<T = any, P extends object = DefaultPayload> exte
  * verify the type of multiple commands without explicitly specifying the generic for each command
  */
 export interface CommandFactory<T = any, P extends object = DefaultPayload> {
-	<R extends object = P>(command: Command<T, R>): Command<T, R>;
+	<R extends object = P>(command: AsyncCommandWithOps<T, R>): AsyncCommandWithOps<T, R>;
+	<R extends object = P>(command: SyncCommandWithOps<T, R>): SyncCommandWithOps<T, R>;
+	<R extends object = P>(command: AsyncCommand<T, R>): AsyncCommand<T, R>;
+	<R extends object = P>(command: SyncCommand<T, R>): SyncCommand<T, R>;
+}
+
+export interface AsyncCommandWithOps<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]>;
+}
+
+export interface SyncCommandWithOps<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): PatchOperation<T>[];
+}
+
+export interface AsyncCommand<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): Promise<void>;
+}
+
+export interface SyncCommand<T = any, P extends object = DefaultPayload> {
+	(request: CommandRequest<T, P>): void;
 }
 
 /**
  * Command that returns patch operations based on the command request
  */
-export interface Command<T = any, P extends object = DefaultPayload> {
-	(request: CommandRequest<T, P>): Promise<PatchOperation<T>[]> | PatchOperation<T>[] | void | Promise<void>;
-}
+export type Command<T = any, P extends object = DefaultPayload> =
+	| SyncCommand<T, P>
+	| AsyncCommand<T, P>
+	| SyncCommandWithOps<T, P>
+	| AsyncCommandWithOps<T, P>;
 
 /**
  * Transformer function
@@ -104,7 +124,7 @@ export interface ProcessCallbackAfter<T = any> {
 }
 
 export interface ProcessCallbackBefore<T = any, P extends object = DefaultPayload> {
-	(payload: P, store: Store<T>): void | Promise<void>;
+	(payload: P, store: Store<T>, id: string): void | Promise<void>;
 }
 
 /**
@@ -132,7 +152,14 @@ export interface CreateProcess<T = any, P extends object = DefaultPayload> {
  * Creates a command factory with the specified type
  */
 export function createCommandFactory<T, P extends object = DefaultPayload>(): CommandFactory<T, P> {
-	return <R extends object = P>(command: Command<T, R>) => command;
+	function commandFactory<R extends object = P>(command: AsyncCommand<T, R>): AsyncCommand<T, R>;
+	function commandFactory<R extends object = P>(command: SyncCommand<T, R>): SyncCommand<T, R>;
+	function commandFactory<R extends object = P>(command: AsyncCommandWithOps<T, R>): AsyncCommandWithOps<T, R>;
+	function commandFactory<R extends object = P>(command: SyncCommandWithOps<T, R>): SyncCommandWithOps<T, R>;
+	function commandFactory<R extends object = P>(command: Command<T, R>): Command<T, R> {
+		return command;
+	}
+	return commandFactory;
 }
 
 /**
@@ -143,11 +170,37 @@ export type Commands<T = any, P extends object = DefaultPayload> = (Command<T, P
 const processMap = new Map();
 const valueSymbol = Symbol('value');
 
+export function isStateProxy(value: any) {
+	if (typeof value !== 'object' || value === null) {
+		return false;
+	}
+
+	return Boolean(value[valueSymbol]);
+}
+
 export function getProcess(id: string) {
 	return processMap.get(id);
 }
 
 const proxyError = 'State updates are not available on legacy browsers';
+
+function removeProxies(value: any) {
+	if (typeof value === 'object' && value !== null) {
+		if (value[valueSymbol]) {
+			value = value[valueSymbol];
+		}
+
+		const newValue: typeof value = Array.isArray(value) ? [] : {};
+		const keys = Object.keys(value);
+		for (let i = 0; i < keys.length; i++) {
+			newValue[keys[i]] = removeProxies(value[keys[i]]);
+		}
+
+		value = newValue;
+	}
+
+	return value;
+}
 
 export function processExecutor<T = any, P extends object = DefaultPayload>(
 	id: string,
@@ -175,71 +228,69 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 		const payload = transformer ? transformer(executorPayload) : executorPayload;
 
 		if (before) {
-			let result = before(payload, store);
+			let result = before(payload, store, id);
 			if (result) {
 				await result;
 			}
 		}
 
-		const proxies = new Map<string, any>();
-		const proxied = new Map<string, any>();
+		function createProxy() {
+			const proxies = new Map<string, any>();
+			const proxied = new Map<string, any>();
 
-		let proxyOperations: PatchOperation[] = [];
-		const createHandler = (partialPath?: Path<T, any>) => ({
-			get(obj: any, prop: string): any {
-				const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-				const stringPath = fullPath.path;
+			const proxyOperations: PatchOperation[] = [];
+			const createHandler = (partialPath?: Path<T, any>) => ({
+				get(obj: any, prop: string): any {
+					const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
+					const stringPath = fullPath.path;
 
-				if (isSymbol(prop) && prop === valueSymbol) {
-					return proxied.get(stringPath);
-				}
+					if (typeof prop === 'symbol' && prop === valueSymbol) {
+						return proxied.get(stringPath);
+					}
 
-				let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
+					let value = partialPath || obj.hasOwnProperty(prop) ? obj[prop] : get(fullPath);
 
-				if (typeof value === 'object' && value !== null) {
-					let proxiedValue;
-					if (!proxies.has(stringPath)) {
-						if (Array.isArray(value)) {
-							value = value.slice();
+					if (typeof value === 'object' && value !== null) {
+						let proxiedValue;
+						if (!proxies.has(stringPath)) {
+							if (Array.isArray(value)) {
+								value = value.slice();
+							} else {
+								value = { ...value };
+							}
+							proxiedValue = new Proxy(value, createHandler(fullPath));
+							proxies.set(stringPath, proxiedValue);
+							proxied.set(stringPath, value);
 						} else {
-							value = { ...value };
+							proxiedValue = proxies.get(stringPath);
 						}
-						proxiedValue = new Proxy(value, createHandler(fullPath));
-						proxies.set(stringPath, proxiedValue);
-						proxied.set(stringPath, value);
-					} else {
-						proxiedValue = proxies.get(stringPath);
+
+						obj[prop] = value;
+						return proxiedValue;
 					}
 
 					obj[prop] = value;
-					return proxiedValue;
+					return value;
+				},
+
+				set(obj: any, prop: string, value: any) {
+					value = removeProxies(value);
+
+					proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
+					obj[prop] = value;
+
+					return true;
+				},
+
+				deleteProperty(obj: any, prop: string) {
+					proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
+					delete obj[prop];
+
+					return true;
 				}
+			});
 
-				obj[prop] = value;
-				return value;
-			},
-
-			set(obj: any, prop: string, value: any) {
-				if (typeof value === 'object' && value !== null && value[valueSymbol]) {
-					value = value[valueSymbol];
-				}
-
-				proxyOperations.push(replace(partialPath ? path(partialPath, prop) : path(prop as keyof T), value));
-				obj[prop] = value;
-
-				return true;
-			},
-
-			deleteProperty(obj: any, prop: string) {
-				proxyOperations.push(remove(partialPath ? path(partialPath, prop) : path(prop as keyof T)));
-				delete obj[prop];
-
-				return true;
-			}
-		});
-		let state: T;
-		if (typeof Proxy !== 'undefined') {
-			state = new Proxy({}, createHandler()) as T;
+			return { proxy: new Proxy({}, createHandler()) as T, operations: proxyOperations };
 		}
 
 		try {
@@ -248,6 +299,13 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 				const commandArray = Array.isArray(command) ? command : [command];
 
 				results = commandArray.map((commandFunction: Command<T, P>) => {
+					let state: T;
+					let proxyOperations: PatchOperation[] = [];
+					if (typeof Proxy !== 'undefined') {
+						const { operations, proxy } = createProxy();
+						state = proxy;
+						proxyOperations = operations;
+					}
 					let result = commandFunction({
 						at,
 						get,
@@ -265,14 +323,12 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					if (isThenable(result)) {
 						return result.then((result) => {
 							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
-							proxyOperations = [];
 
 							return result;
 						});
 					} else {
 						result =
 							result && Array.isArray(result) ? [...proxyOperations, ...result] : [...proxyOperations];
-						proxyOperations = [];
 
 						return result;
 					}
@@ -342,7 +398,7 @@ export function createProcess<T = any, P extends object = DefaultPayload>(
 
 	const callback = callbacks.length
 		? callbacks.reduce((callback, nextCallback) => {
-				return combineCallbacks(nextCallback)(callback);
+				return combineCallbacks(nextCallback, id)(callback);
 		  })
 		: undefined;
 
@@ -371,8 +427,9 @@ export function createProcessFactoryWith(callbacks: ProcessCallback[]) {
 /**
  * Creates a `ProcessCallbackDecorator` from a `ProcessCallback`.
  * @param processCallback the process callback to convert to a decorator.
+ * @param id process id to be passed to the before callback
  */
-function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDecorator {
+function combineCallbacks(processCallback: ProcessCallback, id: string): ProcessCallbackDecorator {
 	const { before, after } = processCallback();
 	return (previousCallback?: ProcessCallback) => {
 		const { before: previousBefore = undefined, after: previousAfter = undefined } = previousCallback
@@ -390,11 +447,11 @@ function combineCallbacks(processCallback: ProcessCallback): ProcessCallbackDeco
 			},
 			before(payload: DefaultPayload, store: Store<any>) {
 				if (previousBefore) {
-					previousBefore(payload, store);
+					previousBefore(payload, store, id);
 				}
 
 				if (before) {
-					before(payload, store);
+					before(payload, store, id);
 				}
 			}
 		});

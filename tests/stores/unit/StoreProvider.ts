@@ -1,16 +1,15 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { v, w } from '../../../src/widget-core/d';
-import { Registry } from '../../../src/widget-core/Registry';
+import { Registry } from '../../../src/core/Registry';
 
 import { StoreProvider } from '../../../src/stores/StoreProvider';
 import { createCommandFactory, createProcess, Process } from '../../../src/stores/process';
 import { replace } from '../../../src/stores/state/operations';
 import { Store } from '../../../src/stores/Store';
-import { VNode } from '../../../src/widget-core/interfaces';
-import { WidgetBase } from '../../../src/widget-core/WidgetBase';
-import renderer from '../../../src/widget-core/vdom';
+import { VNode } from '../../../src/core/interfaces';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import renderer, { v, w } from '../../../src/core/vdom';
 
 interface State {
 	foo: string;
