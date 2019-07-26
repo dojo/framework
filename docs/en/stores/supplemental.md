@@ -1,6 +1,6 @@
 # State
 
-In modern browsers a `state` object is passed as part of the CommandRequest. Any modification to this object is translated to the appropriate patch operations and applied against the store.
+In modern browsers a `state` object is passed as part of the `CommandRequest`. Any modification to this `state` object gets translated to the appropriate patch operations and applied against the store.
 
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
@@ -15,7 +15,7 @@ const addUser = createCommand<User>(({ payload, state }) => {
 });
 ```
 
-Note that attempting to access state is not supported in IE and will immediately throw an error.
+Note that attempting to access state is not supported in IE11 and will immediately throw an error.
 
 # StoreProvider
 
@@ -23,7 +23,7 @@ Note that attempting to access state is not supported in IE and will immediately
 
 The StoreProvider accepts three properties
 
--   `renderer`: A render function that has the store injected in order to access state and pass processes to child widgets.
+-   `renderer`: A render function that has the store injected to access state and pass processes to child widgets.
 -   `stateKey`: The key of the state in the registry.
 -   `paths` (optional): A function to connect the provider to sections of the state.
 
@@ -31,54 +31,18 @@ The StoreProvider accepts three properties
 
 The `StoreProvider` has two main ways to trigger invalidation and cause a rerender.
 
-1.  The recommended approach is to register `path`s by passing the `paths` property to the provider to ensure invalidation will only occur when state you are interested in changes.
+1.  The recommended approach is to register `path`s by passing the `paths` property to the provider to ensure invalidation only occurs when relevant state changes.
 1.  A catch-all when no `path`s are defined for the container, it will invalidate when _any_ data changes in the store.
-
-## Pre-typing
-
-A pre-typed container can be created by extending the standard `StoreProvider` and passing the `State` type as a generic.
-
-> TypedStoreProvider.ts
-
-```ts
-import { State } from './interface';
-
-export class TypedStoreProvider extends StoreProvider<State> {}
-```
-
-If you are using `tsx`, this works as-is.
-
-```tsx
-<TypedStoreProvider
-	stateKey="state"
-	renderer={(store) => {
-		const { get, path } = store;
-		return <div>{get(path('users', 'current', 'name'))}</div>;
-	}}
-/>
-```
-
-If you are **not** using `tsx`, in order for TypeScript to infer this correctly when using w(), the generic will need to be explicitly passed.
-
-```ts
-w<TypedStoreProvider>(TypedStoreProvider, {
-	stateKey: 'state',
-	renderer(store) {
-		const { get, path } = store;
-		return v('div', [get(path('users', 'current', 'name'))]);
-	}
-});
-```
 
 # Process Middleware
 
-Middleware is applied around processes using optional `before` and `after` methods. This allows for generic, sharable actions to occur around the behavior defined by processes.
+Middleware gets applied around processes using optional `before` and `after` methods. This allows for generic, sharable actions to occur around the behavior defined by processes.
 
-Multiple middlewares may be defined by providing a list. They are called synchronously in the order listed.
+Multiple middlewares may get defined by providing a list. Middlewares get called synchronously in the order listed.
 
 ## Before
 
-A `before` middleware block is passed a `payload` and a reference to the `store`.
+A `before` middleware block gets passed a `payload` and a reference to the `store`.
 
 > middleware/beforeLogger.ts
 
@@ -92,7 +56,7 @@ const beforeOnly: ProcessCallback = () => ({
 
 ## After
 
-An `after` middleware block is passed an `error` (if one occurred) and the `result` of a process.
+An `after` middleware block gets passed an `error` (if one occurred) and the `result` of a process.
 
 > middleware/afterLogger.ts
 
@@ -106,30 +70,30 @@ const afterOnly: ProcessCallback = () => ({
 
 The `result` implements the `ProcessResult` interface to provide information about the changes applied to the store and provide access to that store.
 
--   `executor` allows additional processes to run against the store
--   `store` a reference to the store
--   `operations` a list of applied operations
--   `undoOperations` a list of operations that can be used to reverse the applied operations
--   `apply()` the apply method from the store
--   `payload` the provided payload
--   `id` the id used to name the process
+-   `executor` - allows additional processes to run against the store
+-   `store` - a reference to the store
+-   `operations` - a list of applied operations
+-   `undoOperations` - a list of operations that can be used to reverse the applied operations
+-   `apply` - the apply method from the store
+-   `payload` - the provided payload
+-   `id` - the id used to name the process
 
 # Process Lifecycle
 
-A Process has an execution lifecycle that defines the flow of the behavior being defined.
+A `Process` has an execution lifecycle that defines the flow of the behavior being defined.
 
-1.  If a transformer is present it is executed first to transform the payload
-1.  `before` middleware are executed synchronously in-order
-1.  commands are executed in the order defined
-1.  operations are applied from the commands after each command (or block of commands in the case of multiple commands) is executed.
-1.  If an excption is thrown during commands then no more commands are executed and the current set of operations are not applied
-1.  `after` middleware are executed synchronously in-order
+1.  If a transformer is present it gets executed first to transform the payload
+1.  `before` middleware get executed synchronously in order
+1.  commands get executed in the order defined
+1.  operations get applied from the commands after each command (or block of commands in the case of multiple commands) gets executed
+1.  If an exception is thrown during commands, no more commands get executed and the current set of operations are not applied
+1.  `after` middleware get executed synchronously in order
 
 # Common Patterns
 
 ## Initial State
 
-Initial application state can be defined on a store creating by executing a process.
+When you first create your store, it will be empty. You can use a process to popuplate the store with your initial application state.
 
 > main.ts
 
@@ -150,9 +114,9 @@ initialStateProcess(store)({});
 
 ## Undo
 
-Dojo Stores tracks changes to the underlying store using patch operations. This makes it easy for Dojo to automatically create a set of operations to undo a set of operations and reinstate any data that has changed as part of a set of commands. The `undoOperations` are available in the `after` middleware as part of the `ProcessResult`.
+Dojo Stores track changes to the underlying store using patch operations. This makes it easy for Dojo to automatically create a set of operations to undo a set of operations and reinstate any data that has changed as part of a set of commands. The `undoOperations` are available in the `after` middleware as part of the `ProcessResult`.
 
-This is useful when a process involves several commands that alter the state of the store and one of them fails necessitating a rollback.
+Undo operations are useful when a process involves several commands that alter the state of the store and one of the commands fails, necessitating a rollback.
 
 > undo middleware
 
@@ -174,19 +138,17 @@ const process = createProcess('do-something', [
 
 If any of the commands fail during their execution the `undoOnFailure` middleware will have an opportunity to apply `undoOperations`.
 
-It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may be executed asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
+It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may getexecuted asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
 
 ## Optimistic Updates
 
 Optimistic updating can be used to build a responsive UI despite interactions that might take some time to respond, for example saving to a remote resource.
 
-In the case of adding a todo item for instance, with optimistic updating, we can immediately add the todo before we even make a request to the server and avoid having an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether it is successful or not.
+For example, in the case of adding a todo item, with optimistic updating we can immediately add the todo before we even make a request to the server, avoiding an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether the action was successful or not.
 
-In the success scenario, we might need to update the added Todo item with an id that was provided in the response from the server and change the color of the Todo item to green to indicate it was successfully saved.
+In the success scenario, we might need to update the added `Todo` item with an `id` provided in the response from the server and change the color of the `Todo` item to green to indicate it was successfully saved.
 
-In the error scenario, it might be that we want to show a notification to say the request failed and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened in the process.
-
-> Undo example
+In the error scenario, we might want to show a notification to say the request failed and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened during the process.
 
 ```ts
 const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
@@ -211,20 +173,18 @@ const addTodoProcess = createProcess('add-todo', [
 	[ addTodoCallback ]);
 ```
 
--   `addTodoCommand` adds the new todo into the application state
--   `calculateCountsCommand` recalculates the count of completed and active todo items
--   `postTodoCommand` posts the todo item to a remote service and using the process `after` middleware we can make changes if there is a failure
-    -   on _failure_ the changes are reverted and the failed state field is set to true
+-   `addTodoCommand` - adds the new todo into the application state
+-   `calculateCountsCommand` - recalculates the count of completed and active todo items
+-   `postTodoCommand` - posts the todo item to a remote service and, using the process `after` middleware, we can make changes if a failure occurs
+    -   on _failure_ the changes get reverted and the failed state field gets set to true
     -   on _success_ update the todo item id field with the value received from the remote service
--   `calculateCountsCommand` runs again after the success of `postTodoCommand`
+-   `calculateCountsCommand` - runs again after the success of `postTodoCommand`
 
-### Synchronized updates
+### Synchronized Updates
 
-In some cases it is better to wait for the server to update for the process to wait until a remote call has been completed. For instance when a process will remove an element from the screen or when the outlet changes to display a different view. Restoring a state that triggered these type of actions can be surprising.
+In some cases it is better to wait for a back-end call to complete before continuing on with process execution. For example, when a process will remove an element from the screen or when the outlet changes to display a different view, restoring a state that triggered these actions can be surprising.
 
-Since processes support asynchronous commands simply return a `Promise` to wait for a result.
-
-> delete process
+Because processes support asynchronous commands, simply return a `Promise` to wait for a result.
 
 ```ts
 function byId(id: string) {
@@ -250,13 +210,11 @@ A `Process` supports concurrent execution of multiple commands by specifying the
 createProcess('my-process', [commandLeft, [concurrentCommandOne, concurrentCommandTwo], commandRight]);
 ```
 
-In this example, `commandLeft` is executed, then both `concurrentCommandOne` and `concurrentCommandTwo` are executed concurrently. Once all of the concurrent commands are completed the results are applied in order. If an error occurs in either of the concurrent commands then none of the operations are applied. Finally `commandRight` is executed.
+In this example, `commandLeft` gets executed, then both `concurrentCommandOne` and `concurrentCommandTwo` get executed concurrently. Once all of the concurrent commands are completed the results get applied in order. If an error occurs in either of the concurrent commands then none of the operations get applied. Finally, `commandRight` gets executed.
 
-## Alternative State implementations
+## Alternative State Implementations
 
-When a store is instantiated an implementation of the `MutableState` interface is used by default. In most circumstances the default state interface is well optimized and sufficient to use for the general case. If a particular use case merits an alternative implementation.
-
-> Providing an alternative state
+When a store gets instantiated an implementation of the `MutableState` interface gets used by default. In most circumstances the default state interface is well optimized and sufficient to use for the general case. If a particular use case merits an alternative implementation, you can pass in the implementation during initialization.
 
 ```ts
 const store = new Store({ state: myStateImpl });
@@ -266,14 +224,14 @@ const store = new Store({ state: myStateImpl });
 
 Any `State` implemention must provide four methods to properly apply operations to the state.
 
--   `get<S>(path: Path<M, S>): S` takes a `Path` object and returns the value in the current state that that path points to
+-   `get<S>(path: Path<M, S>): S` takes a `Path` object and returns the value in the current state at the provided path
 -   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` returns a `Path` object that points to the provided `index` in the array at the provided path
--   `path: StatePaths<M>` is a typesafe way to generate a `Path` object for a given path in the state
+-   `path: StatePaths<M>` is a type-safe way to generate a `Path` object for a given path in the state
 -   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` applies the provided operations to the current state
 
 ### ImmutableState
 
-Dojo Stores provide an implementation of the MutableState interface that leverages [Immutable](). This implementation may provide better performance if there are frequent, deep updates to the store's state. Performance should be tested and verified before fully committing to this implementation.
+Dojo Stores provide an implementation of the MutableState interface that leverages [Immutable](https://github.com/dojo/framework/blob/master/src/stores/state/ImmutableState.ts). This implementation may provide better performance if there are frequent, deep updates to the store's state. Performance should be tested and verified before fully committing to this implementation.
 
 > Using Immutable
 
@@ -318,11 +276,11 @@ const store = new Store();
 load('my-process', store);
 ```
 
-Note that data is serialized for storage and the data is overwritten after each process call. This implementation is not appropriate for non-serializable data (e.g. `Date` and `ArrayBuffer`).
+Note that data is serialized for storage and the data gets overwritten after each process call. This implementation is not appropriate for non-serializable data (e.g. `Date` and `ArrayBuffer`).
 
 # Subscribing to Store changes
 
-The `Store` has an `onChange(path, callback)` method that takes a path or an array of paths and will call a callback function whenever that state changes.
+The `Store` has an `onChange(path, callback)` method that takes a path or an array of paths and invokes a callback function whenever that state changes.
 
 > main.ts
 
@@ -349,7 +307,7 @@ store.on('invalidate', () => {
 });
 ```
 
-# JSON Patch and Store operations
+# Advanced Store Operations
 
 In the basic usage guide we show how Dojo Stores use operations in detail to make changes to the underlying state of an application. There are a few more advanced points that are not covered in the basic usage guide.
 
@@ -385,9 +343,9 @@ apply([add(at(path('users', 'list'), 10), user)]);
 
 Even though state has not been initialized, Dojo is able to create the underlying hierarchy based on the provided path. This operation is safe because of the type safety that TypeScript and Dojo Stores provide. This allows for users to work naturally with the `State` interface used by the store instead of needing to be concerned with the data explicitly held by the store.
 
-When an explicit state is required that information can asserted by using a `test` operation or by getting the underlying data and validating it programmatically.
+When an explicit state is required, that information can get asserted by using a `test` operation or by getting the underlying data and validating it programmatically.
 
-This example will throw a test exception since `/users/list` has not been initialized.
+This example ensures that `user` always gets added to the end of the list as the last element.
 
 > Using `test` to ensure initialization
 
@@ -422,4 +380,4 @@ apply([
 ]);
 ```
 
-Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This applies to Operations also, it is not possible to create an operation that will update the state root. Best practices with @dojo/framework/stores mean touching the smallest part of the store as is necessary.
+Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This restriction also applies to Operations; it is not possible to create an operation that will update the state root. Best practices with `@dojo/framework/stores` encourage accessing the smallest necessary part of the store.

@@ -1,12 +1,12 @@
 # Basic Usage
 
-Dojo is a reactive architecture concerned with constantly modifying and rendering the current state of an application. In simple systems this can happen at a local level and widgets can maintain their own state. However, as a system becomes more complex the need to better compartmentalize and encapsulate data and create a clean separation of concerns quickly grows.
+Dojo provides a reactive architecture concerned with constantly modifying and rendering the current state of an application. In simple systems this can happen at a local level and widgets can maintain their own state. However, as a system becomes more complex the need to better compartmentalize and encapsulate data and create a clean separation of concerns quickly grows.
 
-Stores provide a clean interface for storing, modifying, and retrieving data from a global object using a unidirectional data flow. Common patterns such as asynchronous retrieval, middleware, and undo patterns are built in. This allows widgets to remain focused on their primary roles of providing a visual representation of themselves and listening for user interactions.
+Stores provide a clean interface for storing, modifying, and retrieving data from a global object through unidirectional data flow. Stores include support for common patterns such as asynchronous data retrieval, middleware, and undo. Stores and their patterns allow widgets to focus on their primary role of providing a visual representation of information and listening for user interactions.
 
 ## The Store
 
-The store holds the global, atomic state for the entire application. It is created when the application is created and defined in the `Registry` with an injector.
+The store holds the global, atomic state for the entire application. The store gets created when the application gets created and defined in the `Registry` with an injector.
 
 > main.ts
 
@@ -19,7 +19,7 @@ const store = new Store<State>();
 const registry = registerStoreInjector(store);
 ```
 
-`State` defines the shape of the global store using an interface. It is important that everything inside `State` is serializable, as this improves performance and makes it easier for Dojo to determine when changes to the data occur.
+``State`defines the structure of the global store using an interface. Everything inside`State` should be serializable, i.e. convertable to/from JSON, as this improves performance by making it easier for the Dojo virtual DOM system to determine when changes to the data occur.
 
 > interfaces.d.ts
 
@@ -40,19 +40,19 @@ export interface State {
 }
 ```
 
-The above is a simple example for illustrative purposes. Examples in this reference guide will refer back to this interface to reduce repetition.
+The above is a simple example that defines the structure for the store used in the rest of the examples in this guide.
 
 ## Updating stores
 
-To work with Dojo Stores there are three core concepts.
+There are three core concepts when working with Dojo stores.
 
--   **Operations** are instructions to manipulate the state held by the store
--   **Commands** are simple functions that perform business logic and return operations
--   **Processes** execute a group of commands and represent application behavior
+-   **Operations** - instructions to manipulate the state held by the store
+-   **Commands** - simple functions that perform business logic and return operations
+-   **Processes** - execute a group of commands and represent application behavior
 
 ### Commands & Operations
 
-Stores cannot be modified directly. Instead, operations that modify the store are returned from commands, which are simply functions that are called while executing a process. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
+To modify a store, when executing a process, an operation function gets invoked. The operation function gets returned from a command. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
 
 #### The command factory
 
@@ -71,13 +71,13 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 });
 ```
 
-`createCommand` will ensure that the wrapped command has the correct typing and the passed `CommandRequest` functions will be typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands this guide will use `createCommand` in its examples.
+`createCommand` ensures that the wrapped command has the correct typing and the passed `CommandRequest` functions get typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands, the examples in this guide use `createCommand`.
 
 #### `path`
 
-The path is a `string` that describes the location where an operation is applied. The `path` function is part of the `CommandRequest` and is accessible inside of a `Command`.
+The path is a `string` that describes the location where an operation gets applied. The `path` function is part of the `CommandRequest` and is accessible inside of a `Command`.
 
-Here is an example to show how `path` describes a location in the store. The `State` is the same as defined above in `interface.d.ts`. It is used by the `Store` to understand the shape of the state data.
+In this example we show how `path` describes a location in the store. The `State` is the same as defined above in `interface.d.ts`. The `State` interface gets used by the `Store` to understand the shape of the state data.
 
 > `path` of the current user name
 
@@ -88,11 +88,11 @@ const { path } = store;
 path('users', 'current', 'name');
 ```
 
-This path refers to the `string` value located at `/users/current/name`. `path` is used to transverse the hierarchy in a type-safe way. It ensures only the property names defined in the `State` interface are used.
+This path refers to the `string` value located at `/users/current/name`. `path` gets used to transverse the hierarchy in a type-safe way, ensuring that only the property names defined in the `State` interface get used.
 
 #### `at`
 
-The `at` function is used in conjunction with `path` to identify a location in an array. Here is an example of using the `at` function.
+The `at` function gets used in conjunction with `path` to identify a location in an array. This example leverages the `at` function.
 
 ```ts
 const store = new Store<State>();
@@ -107,8 +107,6 @@ This path refers to the `User` located at `/users/list` at offset `1`.
 
 Adds a value to an object or inserts it into an array.
 
-> `add` example
-
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
 import { State } from './interfaces';
@@ -122,13 +120,11 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 });
 ```
 
-This will add `user` to the beginning of the user list.
+This adds `user` to the beginning of the user list.
 
 #### `remove` operation
 
 Removes a value from an object or an array
-
-> `remove` example
 
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
@@ -149,13 +145,11 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 });
 ```
 
-This example will add an initial state for `users` and remove the first `user` in the list.
+This example adds an initial state for `users` and removes the first `user` in the list.
 
 #### `replace` operation
 
 Replaces a value. Equivalent to a `remove` followed by an `add`.
-
-> `replace` example
 
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
@@ -177,13 +171,11 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 });
 ```
 
-This example will replace the second user in the `list` with `newUser`.
+This example replaces the second user in the `list` with `newUser`.
 
 #### `get`
 
 The `get` function returns a value from the store at a specified path or `undefined` if a value does not exist at that location.
-
-> Using `get`
 
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
@@ -210,8 +202,6 @@ This example checks for the presence of an authentication token and works to upd
 
 The `payload` is an object literal passed into a command when it is called from a process. The `payload`'s type may be defined when constructing the command.
 
-> Defining a `payload`
-
 ```ts
 import { createCommandFactory } from '@dojo/framework/stores/process';
 import { State } from './interfaces';
@@ -224,11 +214,11 @@ const addUser = createCommand<User>(({ at, path, payload }) => {
 });
 ```
 
-This example adds a user provided in the `payload` to the beginning of `/users/list`.
+This example adds the user provided in the `payload` to the beginning of `/users/list`.
 
-#### Asynchronous commands
+#### Asynchronous Commands
 
-Commands can be synchronous or asynchronous. Asynchronous commands should return a `Promise` to indicate when they are finished. Operations are collected and applied atomically after each command completes successfully.
+Commands can be synchronous or asynchronous. Asynchronous commands should return a `Promise` to indicate when they finish. Operations are collected and applied atomically after each command completes successfully.
 
 ### Processes
 
@@ -237,8 +227,6 @@ A `Process` is a construct used to sequentially execute commands against a `stor
 #### Creating a Process
 
 First, create a couple commands responsible for obtaining a user token and use that token to load a `User`. Then create a process that uses those commands.
-
-> Create a process
 
 ```ts
 import { createCommandFactory, createProcess } from "@dojo/framework/stores/process";
@@ -270,9 +258,9 @@ export const login = createProcess('login', [ fetchUser, loadUserData ]);
 
 Middleware wraps a process in `before` and `after` callbacks that surround a process. A common use of middleware is for the handling of errors and reinstating consistent state.
 
-Lets add some middleware that runs after the commands and resets the state if an error occurs.
+Let's add some middleware that runs after the commands and resets the state if an error occurs.
 
-> commands/login.ts example
+> commands/login.ts
 
 ```ts
 import { createCommandFactory } from "@dojo/framework/stores/process";
@@ -317,8 +305,6 @@ const login = createProcess('login', [ fetchUser, loadUserData ], [ resetUserOnE
 
 The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explictly define the `payload` type.
 
-> Explicitly defining `payload` type
-
 ```ts
 const createCommand = createCommandFactory<State>();
 
@@ -337,41 +323,93 @@ process(store)({ one: 'one', two: 'two' });
 
 ## Widgets and Stores
 
-There are two state containers available for widgets: `Container` and `StoreProvider`. These containers connect the application store with a widget.
+There are two state containers available for widgets: `StoreContainer` and `StoreProvider`. These containers connect the application store with a widget. When usingn functional widgets, you can also create a typed store middleware.
 
-Note that the documentation in this section is intended to show how widgets and state are connected. For a more detailed look see the [Widgets]() reference guide.
+Note that the documentation in this section is intended to show how widgets and state are connected. For more information, visit see the [Widgets reference guide]().
+
+### Store Middleware
+
+When using Dojo's functional widgets, you can use the `createStoreMiddleware` helper to create a typed store middleware you can use to gain access to your store inside of a widget.
+
+> middleware/store.ts
+
+```tsx
+import createStoreMiddleware from '@dojo/framework/core/middleware/store';
+import { State } from '../interfaces';
+
+export default createStoreMiddleware<State>();
+```
+
+> widgets/User.tsx
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import store from '../middleware/store';
+import { State } from '../../interfaces';
+
+const factory = create({ store }).properties();
+export const User = factory(function User({ middleware: { store } }) {
+	const { get, path } = store;
+	const name = get(path('users', 'current', 'name'));
+
+	return <h1>{`Hello, ${name}`}</h1>;
+});
+```
+
+This middleware contains an `executor` method that can be used to run processes on the store.
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import store from '../middleware/store';
+import logout from '../processes/logout';
+import { State } from '../../interfaces';
+
+const factory = create({ store }).properties();
+export const User = factory(function User({ middleware: { store } }) {
+	const { get, path } = store;
+	const name = get(path('users', 'current', 'name'));
+
+	const onLogOut = () => {
+		store.executor(logout)({});
+	};
+
+	return (
+		<h1>
+			{`Hello, ${name}`}
+			<button onclick={onLogOut}>Log Out</button>
+		</h1>
+	);
+});
+```
 
 ### StoreProvider
 
-A `StoreProvider` is a widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because a it does not have properties defined.
+A `StoreProvider` is a Dojo widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because it does not defined its own properties.
 
 > widget/User.ts
 
 ```tsx
-import { tsx } from '@dojo/framework/widget-core/tsx';
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
+import { create } from '@dojo/framework/core/vdom';
+import { State } from '../../interfaces';
 
-import * as css from './styles/Hello.m.css';
-
-interface UserProperties {}
-
-export class User extends WidgetBase<UserProperties> {
-	protected render() {
-		return w<StoreProvider<State>>(StoreProvider, {
-			stateKey: 'state',
-			paths: (path) => [path('users', 'current')],
-			renderer: (store) => {
+const factory = create().properties();
+export const User = factory(function User() {
+	return (
+		<StoreProvider
+			stateKey="state"
+			paths={(path) => [path('users', 'current')]}
+			renderer={(store) => {
 				const { get, path } = store;
 				const name = get(path('users', 'current', 'name'));
 
-				return <h1 classes={[css.root]}>{`Hello, ${name}`}</h1>;
-			}
-		});
-	}
-}
+				return <h1>{`Hello, ${name}`}</h1>;
+			}}
+		/>
+	);
+});
 ```
 
-The `StoreProvider` occurs as part of `User`'s render and provides its own renderer just like any other widget.
+The `StoreProvider` occurs as part of `User`'s render and provides its own `renderer` like any other Dojo widget.
 
 ### Container
 
@@ -380,28 +418,22 @@ A `Container` is a widget that fully encapsulates another widget. It connects th
 > widget/User.tsx
 
 ```tsx
-import { tsx } from '@dojo/framework/widget-core/tsx';
-import { WidgetBase } from '@dojo/framework/widget-core/WidgetBase';
-
-import * as css from './styles/Hello.m.css';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 interface UserProperties {
 	name?: string;
 }
-
-export class User extends WidgetBase<UserProperties> {
-	protected render() {
-		const { name = 'Stranger' } = this.properties;
-		return <h1 classes={[css.root]}>{`Hello, ${name}`}</h1>;
-	}
-}
+const factory = create().properties<UserProperties>();
+export const User = factory(function User({ properties }) {
+	const { name = 'Stranger' } = properties();
+	return <h1>{`Hello, ${name}`}</h1>;
+});
 ```
 
 > widget/User.container.ts
 
 ```ts
-import { createStoreContainer } from '@dojo/framework/stores/StoreInjector';
-import { Container } from '@dojo/framework/widget-core/Container';
+import { createStoreContainer } from '@dojo/framework/stores/StoreContainer';
 import { State } from '../interfaces';
 import User from './User';
 
@@ -416,39 +448,37 @@ const UserContainer = StoreContainer(User, 'state', {
 });
 ```
 
-In this example `UserContainer` wraps `User` to display the current user's name. `createStoreContainer` is wrapper that is used to ensure the proper typing of `getProperties`. `getProperties` is responsible for getting to data from the store and creating properties for the widget.
+In this example `UserContainer` wraps `User` to display the current user's name. `createStoreContainer` is a wrapper that gets used to ensure the proper typing of `getProperties`. `getProperties` is responsible for accessing data from the store and creating properties for the widget.
 
-The most important thing to note about a `Container` is its properties are a 1:1 mapping to the widget it wraps. In other words, all properties that appear on the widget should be provided by the `Container`.
+A `StoreContainer`'s properties are a 1:1 mapping to the widget it wraps. The widget become the properties of the `StoreContainer`, but they are all optional.
 
 ### Excuting a Process
 
-A process simply defines an execution flow for a set of data. To execute a process it needs access to the store to create an executor. Both the `Container` and `StoreProvider` widgets will provide you with access to the store.
+A process simply defines an execution flow for a set of data. To execute a process, the process needs access to the store to create an executor. Both the `StoreContainer` and `StoreProvider` widgets provide access to the store.
 
-```ts
+```tsx
 import { logout } from './processes/logout';
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { w } from '@dojo/framework/widget-core/d';
 import StoreProvider from '@dojo/framework/stores/StoreProvider';
 import { State } from '../../interfaces';
 import User from './User';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
-export class UserProvider extends WidgetBase {
-	protected render() {
-		return w<StoreProvider<State>>(StoreProvider, {
-			stateKey: 'state',
-			paths: (path) => [path('users', 'current')],
-			renderer: (store) => {
+const factory = create().properties();
+export const UserProvider = factory(function UserProvider() {
+	return (
+		<StoreProvider
+			stateKey="state"
+			paths={(path) => [path('users', 'current')]}
+			renderer={(store) => {
 				const { get, path } = store;
 				const name = get(path('users', 'current', 'name'));
 				const onLogOut = () => {
 					logout(store)({});
 				};
 
-				return w(User, { name, onLogOut });
-			}
-		});
-	}
-}
+				return <User name={name} onLogOut={onLogOut} />;
+			}}
+		/>
+	);
+});
 ```
-
-####
