@@ -98,7 +98,7 @@ class MyWidget extends WidgetBase<{ foo: string }> {
 const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
 
-The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the [unit tests](./blob/master/tests/unit/harnessWithTsx.tsx).
+The harness also supports `tsx` usage as show below.
 
 ```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
@@ -345,7 +345,7 @@ describe('MyWidget', () => {
          // calls to processes not stubbed/mocked get ignored
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
          const h = harness(() => <MyWidget {...properties} />, {
-             middleware: [store, mockStore]
+             middleware: [[store, mockStore]]
          });
          h.expect(/* assertion template for `Loading`*/);
 
@@ -609,10 +609,6 @@ describe('Profile', () => {
 		h.expect(profileAssertion);
 	});
 });
-it('default renders correctly', () => {
-	const h = harness(() => w(Profile, {}));
-	h.expect(profileAssertion);
-});
 ```
 
 now lets see how we'd test the output when the `username` property is passed to the `Profile`:
@@ -634,7 +630,7 @@ describe('Profile', () => {
 });
 ```
 
-Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `the number 5`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
+Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~welcome`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `Welcome Kel Varnsen!`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
 
 Assertion Template has the following APIs:
 
@@ -692,7 +688,7 @@ import { stub } from 'sinon';
 describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
-		const h = harness(() => w(Home, { fetchItems }));
+		const h = harness(() => w(Action, { fetchItems }));
 		h.expect(() => v('div', { classes: [css.root] }, [w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])]));
 		h.trigger('@button', 'onClick');
 		assert.isTrue(fetchItems.calledOnce);
