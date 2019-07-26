@@ -226,7 +226,7 @@ A `Process` is a construct used to sequentially execute commands against a `stor
 
 #### Creating a Process
 
-First, create a couple commands responsible for obtaining a user token and use that token to load a `User`. Then create a process that uses those commands.
+First, create a couple commands responsible for obtaining a user token and use that token to load a `User`. Then create a process that uses those commands. Every process must be identified by a unique process ID. This ID is used internally in the store.
 
 ```ts
 import { createCommandFactory, createProcess } from "@dojo/framework/stores/process";
@@ -252,53 +252,6 @@ const loadUserData = createCommand(async ({ path }) => {
 });
 
 export const login = createProcess('login', [ fetchUser, loadUserData ]);
-```
-
-#### Middleware
-
-Middleware wraps a process in `before` and `after` callbacks that surround a process. A common use of middleware is for the handling of errors and reinstating consistent state.
-
-Let's add some middleware that runs after the commands and resets the state if an error occurs.
-
-> commands/login.ts
-
-```ts
-import { createCommandFactory } from "@dojo/framework/stores/process";
-import { State } from './interfaces';
-import { add, replace } from "@dojo/framework/stores/state/operations";
-
-const createCommand = createCommandFactory<State>();
-
-const fetchUser = createCommand(async ({ at, get, payload: { username, password } }) => {
-	const token = await fetchToken(username, password);
-
-	return [
-		add(path('auth', 'token'), token);
-	];
-}
-
-const loadUserData = createCommand(async ({ path }) => {
-	const token = get(path('auth', 'token'));
-	const user = await fetchCurrentUser(token);
-	return [
-		replace(path('users', 'current'), user)
-	];
-});
-
-const resetUserOnError = () => {
-	return {
-		after: (error, result) => {
-			if (error) {
-				result.store.apply([
-					remove(path('auth', 'token')),
-					remove(path('users', 'current'))
-				])
-			}
-		}
-	};
-};
-
-const login = createProcess('login', [ fetchUser, loadUserData ], [ resetUserOnError ]);
 ```
 
 #### `payload` type
