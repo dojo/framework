@@ -51,6 +51,24 @@ const findOne = (nodes: DNode | DNode[], selector: string): NodeWithProperties =
 	return node;
 };
 
+const replaceChildren = (
+	selector: string,
+	render: DNode | DNode[],
+	modifyChildrenFn: (index: number, children: DNode[]) => DNode[]
+): DNode | DNode[] => {
+	const node = findOne(render, selector);
+	const parent: (VNode | WNode) & { children: DNode[] } | undefined = (node as any).parent;
+	const siblings = parent ? parent.children : Array.isArray(render) ? render : [render];
+	const newChildren = modifyChildrenFn(siblings.indexOf(node), [...siblings]);
+
+	if (!parent) {
+		return newChildren;
+	}
+
+	parent.children = newChildren;
+	return render;
+};
+
 export class Ignore extends WidgetBase {}
 
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
@@ -138,24 +156,15 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		}
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = findOne(render, selector);
-			const parent = (node as any).parent;
-			const index = parent.children.indexOf(node);
-			let newChildren = [...parent.children];
-			if (typeof children === 'function') {
-				children = children();
-			}
-			switch (type) {
-				case 'before':
-					newChildren.splice(index, 0, ...children);
-					parent.children = newChildren;
-					break;
-				case 'after':
-					newChildren.splice(index + 1, 0, ...children);
-					parent.children = newChildren;
-					break;
-			}
-			return render;
+			const insertedChildren = typeof children === 'function' ? (children = children()) : children;
+			return replaceChildren(selector, render, (index, children) => {
+				if (type === 'after') {
+					children.splice(index + 1, 0, ...insertedChildren);
+				} else {
+					children.splice(index, 0, ...insertedChildren);
+				}
+				return children;
+			});
 		});
 	};
 	assertionTemplateResult.getProperty = (selector: string, property: string) => {
@@ -176,23 +185,19 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	assertionTemplateResult.replace = (selector: string, newNode: DNode) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = findOne(render, selector);
-			const parent = (node as any).parent;
-			const children = [...parent.children];
-			children.splice(children.indexOf(node), 1, newNode);
-			parent.children = children;
-			return render;
+			return replaceChildren(selector, render, (index, children) => {
+				children.splice(index, 1, newNode);
+				return children;
+			});
 		});
 	};
 	assertionTemplateResult.remove = (selector: string) => {
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const node = findOne(render, selector);
-			const parent = (node as any).parent;
-			const children = [...parent.children];
-			children.splice(children.indexOf(node), 1);
-			parent.children = [...children];
-			return render;
+			return replaceChildren(selector, render, (index, children) => {
+				children.splice(index, 1);
+				return children;
+			});
 		});
 	};
 	return assertionTemplateResult as AssertionTemplateResult;
