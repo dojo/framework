@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/supplemental.md
-commit e0166b5ba5d0d2c94f914e60ede85522361a2665
+commit d317d258bcb86acaa23a10f158d0fb5cd4f658e2
 -->
 
 ## 测试服务
@@ -98,7 +98,7 @@ class MyWidget extends WidgetBase<{ foo: string }> {
 const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
 
-如下所示，harness 函数也支持 `tsx`。README 文档中其余示例均使用编程式的 `w()` API，在 [单元测试](./blob/master/tests/unit/harnessWithTsx.tsx) 中可查看更多 `tsx` 示例。
+如下所示，harness 函数也支持 `tsx`。
 
 ```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
@@ -345,7 +345,7 @@ describe('MyWidget', () => {
          // calls to processes not stubbed/mocked get ignored
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
          const h = harness(() => <MyWidget {...properties} />, {
-             middleware: [store, mockStore]
+             middleware: [[store, mockStore]]
          });
          h.expect(/* assertion template for `Loading`*/);
 
@@ -609,10 +609,6 @@ describe('Profile', () => {
 		h.expect(profileAssertion);
 	});
 });
-it('default renders correctly', () => {
-	const h = harness(() => w(Profile, {}));
-	h.expect(profileAssertion);
-});
 ```
 
 现在我们看看，为 `Profile` 部件传入 `username` 属性后，如何测试输出结果：
@@ -634,7 +630,7 @@ describe('Profile', () => {
 });
 ```
 
-这里，我们使用 baseAssertion 的 `setChildren()` api，然后我们使用特殊的 `~` 选择器来定位 key 值为 `~message` 的节点。`~key` 属性（使用 tsx 的模板中是 `assertion-key`）是断言模板的一个特殊属性，在断言时会被删除，因此在匹配渲染结构时不会显示出来。此功能允许你修饰断言模板，以便能简单的选择节点，而不需要扩展实际的部件渲染函数。一旦我们获取到 `message` 节点，我们就可以将其子节点设置为期望的 `the number 5`，然后在 `h.expect` 中使用生成的模板。需要注意的是，断言模板在设置值时总是返回一个新的断言模板，这可以确保你不会意外修改现有模板（可能导致其他测试失败），并允许你基于新模板，增量逐层构建出新的模板。
+这里，我们使用 baseAssertion 的 `setChildren()` api，然后我们使用特殊的 `~` 选择器来定位 key 值为 `~welcome` 的节点。`~key` 属性（使用 tsx 的模板中是 `assertion-key`）是断言模板的一个特殊属性，在断言时会被删除，因此在匹配渲染结构时不会显示出来。此功能允许你修饰断言模板，以便能简单的选择节点，而不需要扩展实际的部件渲染函数。一旦我们获取到 `welcome` 节点，我们就可以将其子节点设置为期望的 `Welcome Kel Varnsen!`，然后在 `h.expect` 中使用生成的模板。需要注意的是，断言模板在设置值时总是返回一个新的断言模板，这可以确保你不会意外修改现有模板（可能导致其他测试失败），并允许你基于新模板，增量逐层构建出新的模板。
 
 断言模板具有以下 API：
 
@@ -692,7 +688,7 @@ import { stub } from 'sinon';
 describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
-		const h = harness(() => w(Home, { fetchItems }));
+		const h = harness(() => w(Action, { fetchItems }));
 		h.expect(() => v('div', { classes: [css.root] }, [w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])]));
 		h.trigger('@button', 'onClick');
 		assert.isTrue(fetchItems.calledOnce);
