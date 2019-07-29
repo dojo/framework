@@ -5,7 +5,7 @@ Dojo provides a concept of render middleware to help bridge the gap between reac
 Certain web app requirements are best implemented when widgets have access to information about the DOM. Common examples are:
 
 -   Responsive UIs that are not tied to specific device types but instead adapt to varying element sizes given available page real estate.
--   Lazy-loading data only when needed once certain elements become visible in the users' viewport - such as infinite scroll lists.
+-   Lazy-loading data only when needed once certain elements become visible in a user's viewport - such as infinite scroll lists.
 -   Directing element focus and responding to user focus changes
 
 Middleware does not need to be tied to the DOM however; the concept can also be used for more generic concerns around a widget's rendering lifecycle. Common examples of such requirements are:
@@ -14,13 +14,13 @@ Middleware does not need to be tied to the DOM however; the concept can also be 
 -   Pausing and resuming widget rendering depending on certain conditionals; avoiding unnecessary rendering when required information is not available
 -   Marking a functional widget as invalid so that Dojo can re-render it
 
-A single middleware component typically exposes certain functionality associated with one or more of a widget's rendered DOM elements; often, the widget's root node. The middleware system provides widgets more advanced control over their representation and interaction within a browser, and also allows them to make use of several upcoming web standards in a consistent manner.
+A single middleware component typically exposes certain functionality associated with one or more of a widget's rendered DOM elements; often, the widget's root node. The middleware system provides widgets more advanced control over their representation and interaction within a browser, and also allows widgets to make use of several emerging web standards in a consistent manner.
 
-Sensible defaults will be returned if a widget accesses certain middleware properties before the widget's underlying DOM elements exist. There is also middleware that can pause a widget's rendering until certain conditions are met. Using these, widgets can avoid unnecessary rendering until required information is available, and Dojo will then automatically re-render the affected widgets with accurate middleware properties once data becomes available.
+Sensible defaults get returned if a widget accesses certain middleware properties before the widget's underlying DOM elements exist. There is also middleware that can pause a widget's rendering until certain conditions are met. Using these middleware, widgets can avoid unnecessary rendering until required information is available, and Dojo will then automatically re-render the affected widgets with accurate middleware properties once data becomes available.
 
 ## Creating middleware
 
-Middleware is defined using the `create()` factory method from the `@dojo/framework/core/vdom` module. This process is similar to creating functional widgets, however instead of returning VDOM nodes, middleware factories return an object with an appropriate API that allows access to the middleware's feature set. Simple middleware that only need a single function call to implement their requirements can also return a function directly, without needing to wrap it in an object.
+Middleware is defined using the `create()` factory method from the `@dojo/framework/core/vdom` module. This process is similar to creating functional widgets, however, instead of returning VDOM nodes, middleware factories return an object with an appropriate API that allows access to the middleware's feature set. Simple middleware that only need a single function call to implement their requirements can also return a function directly, without needing to wrap the middleware in an object.
 
 The following illustrates a middleware component with a trivial `get()`/`set()` API:
 
@@ -43,9 +43,9 @@ export default myMiddleware;
 
 ## Using middleware
 
-Middleware is primarily used by functional widgets but can also be composed within other middleware to implement more complex requirements. In both cases, any required middleware is passed as properties to the `create()` method, after which they are available via the `middleware` argument in the widget or middleware factory implementation function.
+Middleware is primarily used by functional widgets but can also get composed within other middleware to implement more complex requirements. In both cases, any required middleware gets passed as properties to the `create()` method, after which they are available via the `middleware` argument in the widget or middleware factory implementation function.
 
-For example, the above `myMiddleware` can be used within a widget as follows:
+For example, the above `myMiddleware` can be used within a widget:
 
 > src/widgets/MiddlewareConsumerWidget.tsx
 
@@ -68,7 +68,7 @@ The following example shows middleware composing other middleware to implement m
 
 -   Fetching a value from a local cache
 -   Obtaining the value from an external location on a cache miss
--   Pausing further rendering of consuming widgets while waiting for the external value to come back
+-   Pausing further rendering of consuming widgets while waiting for the external value to return
 -   Resuming rendering and invalidating consuming widgets so they can be re-rendered once the external value is made available through the local cache
 
 > src/middleware/ValueCachingMiddleware.ts
@@ -106,7 +106,7 @@ export default ValueCachingMiddleware;
 
 ## Passing properties to middleware
 
-As middleware is defined via the `create()` utility function, a properties interface can also be given in the same way as specifying property interfaces for functional widgets. The main difference however is that middleware properties are added to the properties interface of any consuming widgets. This means property values are given when instantiating the widgets, not when widgets make use of the middleware. Properties are considered read-only throughout the whole composition hierarchy, so middleware cannot alter property values.
+As middleware gets defined via the `create()` utility function, a properties interface can also be given in the same way as specifying property interfaces for functional widgets. The main difference is that middleware properties are added to the properties interface of any consuming widgets. This means property values are given when instantiating the widgets, not when widgets make use of the middleware. Properties are considered read-only throughout the entire composition hierarchy, so middleware cannot alter property values.
 
 The following is an example of middleware with a properties interface:
 
@@ -128,7 +128,7 @@ export const middlewareWithProperties = factory(({ properties }) => {
 export default middlewareWithProperties;
 ```
 
-This middleware and its property can be used in a widget such as:
+This middleware and its property can get used in a widget:
 
 > src/widgets/MiddlewarePropertiesWidget.tsx
 
