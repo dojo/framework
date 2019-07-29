@@ -1,8 +1,8 @@
 # Introduction
 
-Dojo's middleware system provides a way to deal with asynchronous or imperative APIs in a reactive way, as well as influence behavior and the property API of any composing function-based widgets or other middleware.
+Dojo's middleware system provides a way to manage asynchronous or imperative APIs in a reactive way, as well as influence behavior and the property API of any composing function-based widgets or other middleware.
 
-Several core and optional middleware are provided by the framework, however application developers can easily write their own.
+Several core and optional middleware are provided by the framework, however, application developers can easily write their own.
 
 | Feature                                    | Description                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
