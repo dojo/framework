@@ -7,6 +7,7 @@ import './util/wrapper';
 import './AbortController';
 import './array';
 import './global';
+import './globalThis';
 import './iterator';
 import './main';
 import './Map';
