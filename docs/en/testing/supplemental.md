@@ -1,61 +1,8 @@
-# Testing Dojo Applications
+# Dojo test harness
 
-## Testing services
+`harness()` is the primary API when working with `@dojo/framework/testing`, essentially setting up each test and providing a context to perform virtual DOM assertions and interactions. The harness is designed to mirror the core behavior for widgets when updating `properties` or `children` and widget invalidation, with no special or custom logic required.
 
-Intern comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. You may use one
-of these services by signing up for an account and providing your credentials to cli-test-intern. By default, all of
-the testing services will run tests against IE11, Firefox, and Chrome.
-
-### BrowserStack
-
-[BrowserStack] requires an access key and username to use its services. These may be provided on the command line or as
-environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
-
-```bash
-dojo test -a -c browserstack -k <accesskey> --userName <username>
-```
-
-or with environment variables
-
-```bash
-BROWSERSTACK_USERNAME=<username> BROWSERSTACK_ACCESS_KEY=<key> dojo test -a -c browserstack
-```
-
-### SauceLabs
-
-[SauceLabs] requires an access key and username to use its services. These may be provided on the command line or as
-environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
-
-```bash
-dojo test -a -c saucelabs -k <accesskey> --userName <username>
-```
-
-or with environment variables
-
-```bash
-SAUCE_USERNAME=<username> SAUCE_ACCESS_KEY=<key> dojo test -a -c saucelabs
-```
-
-### TestingBot
-
-[TestingBot] requires an key and a secret to use its services. These may be provided on the command line or as
-environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
-
-```bash
-dojo test -a -c testingbot -k <key> -s <secret>
-```
-
-or with environment variables
-
-```bash
-TESTINGBOT_SECRET=<secret> TESTINGBOT_KEY=<key> dojo test -a -c saucelabs
-```
-
-## harness
-
-`harness()` is the primary API when working with `@dojo/framework/testing`, essentially setting up each test and providing a context to perform virtual DOM assertions and interactions. Designed to mirror the core behavior for widgets when updating `properties` or `children` and widget invalidation, with no special or custom logic required.
-
-### API
+## Harness API
 
 ```ts
 interface HarnessOptions {
@@ -123,7 +70,7 @@ describe('MyWidget', () => {
 });
 ```
 
-### Mocking Middleware
+## Mocking middleware
 
 When initializing the harness, mock middleware can be specified as part of the `HarnessOptions`. The mock middleware is defined as a tuple of the original middleware and the mock middleware implementation. Mock middleware is created in the same way as any other middleware.
 
@@ -148,11 +95,11 @@ The harness automatically mocks a number of core middlewares that will be inject
 -   setProperty
 -   destroy
 
-#### Dojo Mock Middleware
+### Dojo mock middleware
 
-There are a number of mock middlewares available to support testing widgets that use Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
+There are a number of mock middleware available to support testing widgets that use the corresponding Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
 
-##### Mock `node` Middleware
+#### Mock `node` middleware
 
 Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
 
@@ -170,7 +117,7 @@ const domNode = {};
 mockNode('key', domNode);
 ```
 
-##### Mock `intersection` Middleware
+#### Mock `intersection` middleware
 
 Using `createIntersectionMock` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the created mock intersection middleware with a `key` and expected intersection details.
 
@@ -219,7 +166,7 @@ describe('MyWidget', () => {
 });
 ```
 
-##### Mock `resize` Middleware
+#### Mock `resize` middleware
 
 Using `createResizeMock` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the created mock resize middleware with a `key` and expected content rects.
 
@@ -274,7 +221,7 @@ describe('MyWidget', () => {
 });
 ```
 
-##### Mock `Store` Middleware
+#### Mock `Store` middleware
 
 Using `createMockStoreMiddleware` from `@dojo/framework/testing/mocks/middleware/store` creates a typed mock store middleware, which optionally supports mocking processes. To mock a store process pass a tuple of the original store process and the stub process. The middleware will swap out the call to the original process for the passed stub. If no stubs are passed, the middleware will simply no-op all process calls.
 
@@ -372,7 +319,7 @@ describe('MyWidget', () => {
 });
 ```
 
-### Custom Comparators
+## Custom comparators
 
 There are circumstances where the exact value of a property is unknown during testing, so will require the use of a custom compare descriptor.
 
@@ -390,7 +337,7 @@ const h = harness(() => w(MyWidget, {}), [compareId]);
 
 For all assertions, using the returned `harness` API will now only test identified `id` properties using the `comparator` instead of the standard equality.
 
-## selectors
+## Selectors
 
 The `harness` APIs commonly support a concept of CSS style selectors to target nodes within the virtual DOM for assertions and operations. Review the [full list of supported selectors](https://github.com/fb55/css-select#supported-selectors) for more information.
 
@@ -402,8 +349,6 @@ In addition to the standard API:
 ## `harness.expect`
 
 The most common requirement for testing is to assert the structural output from a widget's `render` function. `expect` accepts a render function that returns the expected render output from the widget under test.
-
-API
 
 ```ts
 expect(expectedRenderFunction: () => DNode | DNode[], actualRenderFunction?: () => DNode | DNode[]);
@@ -457,7 +402,7 @@ v('div', {
 ])
 ```
 
-#### `harness.trigger`
+## `harness.trigger`
 
 `harness.trigger()` calls a function with the `name` on the node targeted by the `selector`.
 
@@ -490,7 +435,7 @@ const result = h.trigger('@bar', 'customFunction', 100);
 
 A `functionalSelector` can be used return a function that is nested in a widget's properties. The function will be triggered, in the same way that using a plain string `functionSelector`.
 
-Example Usage:
+### Trigger example
 
 Given the following VDOM structure:
 
@@ -510,7 +455,7 @@ v(Toolbar, {
 });
 ```
 
-And you want to trigger the save toolbar button's `onClick` function.
+The save toolbar button's `onClick` function can be triggered by:
 
 ```typescript
 h.trigger('@buttons', (renderResult: DNode<Toolbar>) => {
@@ -520,7 +465,7 @@ h.trigger('@buttons', (renderResult: DNode<Toolbar>) => {
 
 **Note:** If the specified selector cannot be found, `trigger` will throw an error.
 
-#### `harness.getRender`
+## `harness.getRender`
 
 `harness.getRender()` returns the render with the index provided, when no index is provided it returns the last render.
 
@@ -542,19 +487,17 @@ const render = h.getRender();
 h.getRender(1);
 ```
 
-## Assertion Templates
+# Assertion templates
 
-Assertion Templates allow you to build expected render functions to pass to `h.expect()`. The idea behind Assertion Templates is to always assert against the entire render output, and modify portions of the assertion itself as needed.
+Assertion templates provide a reusable base to assert against a widget's entire render output, but allow portions to be modified as needed between several test executions. This means common elements that do not change across multiple tests can be abstracted and defined once and reused in multiple locations.
 
-To use Assertion Templates first import the module:
+To use assertion templates first import the module:
 
 ```ts
 import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 ```
 
-In your tests you can then write a base assertion which would be the default render state of your widget:
-
-Given the following widget:
+A base assertion should be created which defines the widget's default render state. Given the following widget:
 
 > src/widgets/Profile.ts
 
@@ -615,7 +558,7 @@ it('default renders correctly', () => {
 });
 ```
 
-now lets see how we'd test the output when the `username` property is passed to the `Profile`:
+To test the scenario of a `username` property being passed to the `Profile`, the assertion template can be parameterized such as:
 
 > tests/unit/widgets/Profile.ts
 
@@ -634,11 +577,11 @@ describe('Profile', () => {
 });
 ```
 
-Here we're using the `setChildren()` api on the baseAssertion, and we're using the special `~` selector to find a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on Assertion Templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows you to decorate the AssertionTemplates to easily select nodes, without having to augment the actual widgets render function. Once we have the `message` node we then set the children to the expected `the number 5`, and use the resulting template in `h.expect`. It's important to note that Assertion Templates always return a new Assertion Template when setting a value, this ensures that you do not accidentally mutate an existing template (causing other tests to potentially fail), and allows you to build layered Templates that incrementally build on each other.
+Here the `setChildren()` api is used on the baseAssertion, and the special `~` selector allows finding a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on assertion templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows the assertion templates to easily select nodes without having to augment the actual widget render function. Once the `welcome` node is found, its children are overridden to a new value of `['Welcome Kel Varnsen!']`, and the resulting template is then used in `h.expect`. It's important to note that assertion templates always return a new assertion template when setting a value. This ensures that an existing template is not accidentally mutated, which would cause other tests to potentially fail, and allows construction of layered templates that incrementally build on each other.
 
-Assertion Template has the following APIs:
+Assertion template has the following API:
 
-```
+```ts
 insertBefore(selector: string, children: () => DNode[]): AssertionTemplateResult;
 insertAfter(selector: string, children: () => DNode[]): AssertionTemplateResult;
 insertSiblings(selector: string, children: () => DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
@@ -655,9 +598,9 @@ replace(selector: string, node: DNode): AssertionTemplateResult;
 remove(selector: string): AssertionTemplateResult;
 ```
 
-## Mocking
+# Mocking
 
-You may have noticed that when testing widgets, we are testing that the user interface is rendered correctly given various updates to its properties. There is no real business logic to them, but you may want to test that something like a button click does call a property method. This test is not concerned as to what the method does, just that the interface calls it as expected. You can use a library like [Sinon] to help you in these cases.
+A common type of test is validating a widget's user interface renders as expected without necessarily being concerned with the widget's underlying business logic. These tests may want to assert scenarios such as button clicks calling widget property methods, without concern as to what the property method implementations are, only that the interface is called as expected. A mocking library such as [Sinon] can be used to help in these cases.
 
 > src/widgets/Action.ts
 
@@ -678,7 +621,7 @@ export default class Action extends WidgetBase<{ fetchItems: () => void }> {
 }
 ```
 
-You would want to test that the button will call the `this.properties.fetchItems` method when it is clicked.
+To test that the `this.properties.fetchItems` method is called when the button is clicked:
 
 > tests/unit/widgets/Action.ts
 
@@ -700,15 +643,15 @@ describe('Action', () => {
 });
 ```
 
-In this case, you can provide a mock of the `fetchItems` method to the Action widget that it will use to try and fetch items. Then you can target the `@button` key to trigger the `onClick` of that button and validate that the `fetchItems` method was called once.
+In this case, a mock of the `fetchItems` method is provided to the Action widget that requires items to be fetched. The `@button` key is then targeted to trigger the button's `onClick`, after which an assertion is validated that the `fetchItems` mock was called only once.
 
-For more details on mocking, please read the [Sinon] documentation.
+See the [Sinon] documentation for more details on mocking.
 
-## Functional Tests
+# Functional tests
 
-Unlike unit tests that load and execute your code, functional tests load a page in the browser and test the interaction of your application.
+Unlike unit tests that load and execute code, functional tests load a page in the browser and test how users interact with the running application.
 
-If you want to validate the content of your page for a certain route, you can update the links to make this easier to test.
+When validating application output for a certain route, an `id` should be added to the corresponding route link to allow for easier targeting.
 
 > src/widgets/Menu.ts
 
@@ -758,7 +701,7 @@ export default class Menu extends WidgetBase {
 }
 ```
 
-During application use, you would expect to click on the `profile` link and be directed to a page welcoming the user. You can write a functional test to verify this behavior.
+During application use, a user would expect to click on the `profile` link and be directed to a page welcoming them. A functional test can be created to verify this behavior.
 
 > tests/functional/main.ts
 
@@ -791,21 +734,69 @@ describe('routing', () => {
 });
 ```
 
-When running a functional test, Dojo will provide a `remote` object to interact with the page. Because loading and interacting with the page is an asynchronous action, be sure to return the `remote` object in your test.
+When running a functional test, Dojo provides a `remote` object that is used to interact with the page. Because loading and interacting with the page is an asynchronous action, the `remote` interaction object should be returned from the test.
 
-Functional tests can be executed in the command line.
-
-> Command Line
+Functional tests can be executed in the command line via:
 
 ```bash
 npm run test:functional
 ```
 
-This will load the html page into a remote instance of Chrome on your machine to test interactivity.
+This will load the html page into a remote instance of Chrome on the build machine to test interactivity.
 
-Functional tests are very useful to to make sure that your application code works as intended when it is actually used inside a browser.
+Functional tests are very useful to to make sure that application code works as intended when it is actually used inside a browser.
 
-You can read more details in the [Intern Function tests](https://theintern.io/docs.html#Intern/4/docs/docs%2Fwriting_tests.md/functional-tests) guide.
+See the [Intern functional tests guide](https://theintern.io/docs.html#Intern/4/docs/docs%2Fwriting_tests.md/functional-tests) for more details.
+
+# Using remote testing services
+
+Intern comes with support for running tests remotely on [BrowserStack], [SauceLabs], and [TestingBot]. These services can be used by signing up for an account and providing access credentials to cli-test-intern. By default, all of
+the testing services will run tests against IE11, Firefox, and Chrome.
+
+## BrowserStack
+
+[BrowserStack] requires an access key and username to use its services. These may be provided on the command line or as
+environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
+
+```bash
+dojo test -a -c browserstack -k <accesskey> --userName <username>
+```
+
+or with environment variables
+
+```bash
+BROWSERSTACK_USERNAME=<username> BROWSERSTACK_ACCESS_KEY=<key> dojo test -a -c browserstack
+```
+
+## SauceLabs
+
+[SauceLabs] requires an access key and username to use its services. These may be provided on the command line or as
+environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
+
+```bash
+dojo test -a -c saucelabs -k <accesskey> --userName <username>
+```
+
+or with environment variables
+
+```bash
+SAUCE_USERNAME=<username> SAUCE_ACCESS_KEY=<key> dojo test -a -c saucelabs
+```
+
+## TestingBot
+
+[TestingBot] requires an key and a secret to use its services. These may be provided on the command line or as
+environment variables as described in [Intern's documentation](https://theintern.io/docs.html#Intern/4/docs/docs%2Frunning.md/cloud-service).
+
+```bash
+dojo test -a -c testingbot -k <key> -s <secret>
+```
+
+or with environment variables
+
+```bash
+TESTINGBOT_SECRET=<secret> TESTINGBOT_KEY=<key> dojo test -a -c saucelabs
+```
 
 [browserstack]: https://www.browserstack.com/
 [dojo cli]: https://github.com/dojo/cli

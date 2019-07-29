@@ -2,13 +2,87 @@
 
 Dojo provides powerful CLI tools and support that make it easy to build modern applications.
 
-Bundles can be automatically created, PWAs will cache your application files, initial HTML and CSS can be rendered during build time, and code can be conditionally elided via Dojo's CLI tools and `.dojorc` configuration file. Or take complete control by ejecting and working directly with the underlying build tooling.
+Bundles can be automatically created, PWAs can cache application files locally, initial HTML and CSS can be rendered during build time, and code can be conditionally elided via Dojo's CLI tools and `.dojorc` configuration file. Or take complete control by ejecting and working directly with the underlying build tooling.
 
-| Feature                    | Description                                                                                                                                                                                                                                                                                                     |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dojo CLI                   | A modular command-line tool useful for kick-starting a new application, creating widgets, and running tests.                                                                                                                                                                                                    |
-| Development server         | A local development web service that watches the file system and automatically rebuilds when changes are detected. Also includes support for https and proxying requests.                                                                                                                                       |
-| Bundles                    | Create a better user experience by reducing how much users need to download and improving TTL. Bundles can be automatically created by route or explicitly defined in configuration.                                                                                                                            |
-| Conditional code inclusion | Features defined via dojo/has can be statically turned off/on through the `.dojorc` configuration file. Code branches that are inaccessible due to these settings are automatically elided. This makes it easy to support features of specific targets like ie11 or mobile without compromising on bundle size. |
-| PWA Support                | Progressive web apps create a faster more reliable user experience by caching content and even working offline. Dojo makes it easy to create a service worker through configuration or define it in code and build it as part of your application.                                                              |
-| Build-time rendering       | Renders routes during build time to generate initial HTML and CSS. By rendering at build time Dojo can skip the cost of producing an initial render and create a more responsive application with little additional complexity.                                                                                 |
+| Feature                        | Description                                                                                                                                                                                                                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dojo CLI**                   | A modular command-line tool useful for kick-starting a new application, creating widgets, and running tests.                                                                                                                                                                                                    |
+| **Development server**         | A local development web service that watches the file system and automatically rebuilds when changes are detected. Also includes support for https and proxying requests.                                                                                                                                       |
+| **Bundles**                    | Create a better user experience by reducing how much users need to download and improving TTL. Bundles can be automatically created by route or explicitly defined in configuration.                                                                                                                            |
+| **Conditional code inclusion** | Features defined via dojo/has can be statically turned off/on through the `.dojorc` configuration file. Code branches that are inaccessible due to these settings are automatically elided. This makes it easy to support features of specific targets like ie11 or mobile without compromising on bundle size. |
+| **PWA Support**                | Progressive web apps create a faster more reliable user experience by caching content and even working offline. Dojo makes it easy to create a service worker through configuration or define it in code and build it as part of an application.                                                                |
+| **Build-time rendering**       | Renders routes during build time to generate initial HTML and CSS. By rendering at build time Dojo can skip the cost of producing an initial render and create a more responsive application with little additional complexity.                                                                                 |
+
+# Basic usage
+
+Dojo provides a set of CLI commands that assist in creating and building an application. This guide assumes that `@dojo/cli` has been installed globally and [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) and [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern) are available in the project. If the application was initialized using [@dojo/cli-create-app](https://github.com/dojo/cli-create-app) then these dependencies should already be present.
+
+## Building
+
+There are several types of build targets or `mode`s that Dojo's CLI tool supports. All of these modes can be seen in the various `package.json` scripts generated by `dojo create app`.
+
+Run the following to create an optimized build ready for production.
+
+```bash
+> dojo build --mode dist
+```
+
+This build will use the `dist` mode to create an application bundle and output the results in the `output/dist` directory.
+
+## Serving and watching
+
+A web server can be started with the `--serve` flag while running in `dev` or `dist` modes. By default the application is served on port 9999. This can be cahnged with the `--port` flag. Dojo's build tool can also watch the application for changes and automatically rebuild with the `--watch` flag.
+
+The generated `package.json` includes the `dev` script which uses these flags to serve a built version of the application and automatically rebuild it when files change on disk.
+
+```bash
+> dojo build --mode dev --watch file --serve
+```
+
+The application will also have source maps available. This allows the debugger to map the built JavaScript code back to the original TypeScript code that lives in the `src/` directory.
+
+## Testing
+
+Dojo uses [Intern](https://theintern.io/) for running unit and functional tests.
+
+The fastest way to run unit tests in `tests/unit` is by using the NPM scripts that are created with a new Dojo app.
+
+> Command Line
+
+```bash
+# execute unit tests
+npm run test:unit
+# execute functional tests locally using headless Chrome and Selenium
+npm run test:functional
+```
+
+More detailed information is available in the [testing basic usage guide](https://github.com/dojo/framework/blob/master/docs/en/testing/basic-usage.md).
+
+## Browser support
+
+Dojo is an evergreen framework. By default the build will support the last two versions of the latest browsers when it was released. Any polyfills needed by Dojo to normalize functionality across browsers is conditionally provided by the `@dojo/framework/shim`. To support IE11 run the build with the `--legacy` flag.
+
+# Dojo configuration
+
+Additional configuration options can be added in `.dojorc`. The options generally expand on the settings available through the command line and allow for more advanced features such as internationalization, code splitting, PWA manifests, and eliding code.
+
+`.dojorc` contains a JSON object with configuration information for any of the commands that are run via the dojo command line tool. Each command is allocated a section within the configuration object where its settings can be stored.
+
+```json
+{
+	"build-app": {
+		"pwa": {
+			"manifest": {
+				"name": "My Application",
+				"description": "My amazing application"
+			}
+		}
+	},
+	"test-intern": {},
+	"create-widget": {
+		"tests": "tests/unit"
+	}
+}
+```
+
+In this example there is a section for each of the three CLI command modules: [@dojo/cli-build-app](https://github.com/dojo/cli-build-app/), [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern), and [@dojo/cli-create-widget](https://github.com/dojo/cli-create-widget). Configuration is _always_ hierarchical and in the order of command => feature => configuration.

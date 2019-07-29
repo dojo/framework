@@ -1,4 +1,4 @@
-# Styling & Theming in Dojo
+# Styling and theming in Dojo
 
 Dojo widgets function best as simple components that each handle a single responsibility. They should be as encapsulated and modular as possible to promote reusability while avoiding conflicts with other widgets the application may also be using.
 
@@ -185,14 +185,14 @@ theme.classes<T extends ClassNames>(css: T): T;
 -   **Note 2:** If the currently active theme does **not** provide an override for a given styling class, the widget will fall back to using its default style properties for that class.
 -   **Note 3:** If the currently active theme does provide an override for a given styling class, the widget will _only_ have the set of CSS properties specified in the theme applied to it. For example, if a widget's default styling class contains ten CSS properties but the current theme only specifies one, the widget will render with a single CSS property and lose the other nine that were not specified in the theme override.
 
-### `theme` Middleware Properties
+### `theme` middleware properties
 
 -   `theme` (optional)
     -   If specified, [the provided theme](#writing-a-theme) will act as an override for any theme that the widget may use, and will take precedence over [the application's default theme](#making-themeable-applications) as well as [any other theme changes made in the application](#changing-the-currently-active-theme).
 -   `classes` (optional)
     -   described in the [Passing extra classes to widgets](#passing-extra-classes-to-widgets) section.
 
-### Themeable Widget Example
+### Themeable widget example
 
 Given the following CSS module file for a themeable widget:
 
