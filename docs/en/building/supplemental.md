@@ -1,18 +1,18 @@
-# Creating Bundles
+# Creating bundles
 
 A bundle is a portion of code that represents a slice of functionality. Bundles can be loaded asynchronously on demand and in parallel. An application that is appropriately bundled can be significantly more responsive and require fewer kilobytes and less load time than an application that does not use any kind of code splitting. This is especially important when working with large applications where much of the presentation logic isn't needed on the initial load.
 
-Dojo tries to make intelligent choices by using routes and outlets to automatically split code into smaller bundles. In general these bundles should all have code that is related and relevant. This comes for free as part of the build system and doesn't require any additional thought to use. However, for those with specific bundling needs Dojo also allows for bundles to be explicitly defined in the `.dojorc` configration file.
+Dojo tries to make intelligent choices by using routes and outlets to automatically split code into smaller bundles. In general these bundles should all have code that is related and relevant. This comes for free as part of the build system and doesn't require any additional thought to use. However, for those with specific bundling needs Dojo also allows for bundles to be explicitly defined in the `.dojorc` configuration file.
 
 By default a Dojo application only creates a single application bundle. However, there are a number of configuration options provided by [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) that will help break down an application into smaller portions that can be progressively loaded.
 
 ## Automatic bundling using routes
 
-By default Dojo will create bundles based on the routes used by your application. In order to do this several rules must be followed.
+By default Dojo will create bundles based on an application's routes. In order to do this several rules must be followed.
 
 1.  `src/routes.ts` must have a default export containing the routing configuration
-1.  Widgets must be the default export of their module
-1.  `Outlet`s `render` function must use inline functions
+2.  Widgets must be the default export of their module
+3.  `Outlet`s `render` function must use inline functions
 
 > src/routes.ts
 
@@ -60,11 +60,11 @@ To see automatic bundling in action create a new application using [@dojo/cli-cr
 
 ## Manually specifying bundles
 
-Bundles may be manually specified in the `.dojorc` configuration file. This can be useful for breaking down an application into smaller bundles when automatic route bundling isn't sufficient.
+Bundles can be manually specified in the `.dojorc` configuration file, providing a mechanism for declarative code splitting within an application. This can be useful for breaking down an application into smaller bundles when automatic route bundling isn't sufficient.
 
 The `bundles` feature is part of the build app command. The configuration is comprised of a map of bundle names followed by a list of files or globs to match.
 
-For example, this configuration will bundle `About` and `Profile` together in a bundle named `additional.[hash].js`. Widget modules defined used with `w()` will be automatically converted to a lazily imported, local registry item in the parent widget. This provides a mechanism for declarative code splitting in your application.
+For example, this configuration will bundle `About` and `Profile` together in a bundle named `additional.[hash].js`. Widget modules defined used with `w()` will be automatically converted to a lazily imported, local registry item in the parent widget.
 
 > .dojorc
 
@@ -99,9 +99,9 @@ In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. F
 
 <!-- TODO I am not confident in what I am saying here. Under what conditions will duplication of common/shared resources occur? How do we avoid this? Can we define a bundle for common widgets? Should I talk about the [bundle analyzer](https://github.com/dojo/cli-build-app/blob/master/README.md#bundle-analyzer) -->
 
-Sometimes decisions made by the build tool or manually defined in `.dojorc` can create duplication of common resources shared by multiple bundles. Some of this is unavoidable. A good general rule of thumb for avoid duplication is to try to ensure that common code is at the outermost edges of your dependency tree. In other words, minimize dependencies as much as possible among shared code. If a significant amount of code may be shared among bundles (e.g. common widgets) consider bundling these assets together.
+Sometimes decisions made by the build tool or manually defined in `.dojorc` can create duplication of common resources shared by multiple bundles. Some of this is unavoidable. A good general rule of thumb for avoid duplication is to try to ensure that common code is at the outermost edges of an application's dependency tree. In other words, minimize dependencies as much as possible among shared code. If a significant amount of code may be shared among bundles (e.g. common widgets) consider bundling these assets together.
 
-# Assets
+# Static assets
 
 Many assets like CSS and images will be imported by modules and inlined automatically by the build process. However, sometimes it is necessary to serve static assets like the favicon or video files.
 
@@ -109,9 +109,9 @@ Static assets can be added to an `assets/` directory at the project root. At bui
 
 The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
 
-# Progressive Web Apps
+# Progressive web applications (PWAs)
 
-Progressive web applications are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
+Progressive web apps are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
 
 The core of a progressive web app is made up of two technologies: Service workers and a manifest. Dojo's build command supports both of these through `.dojorc` with the `pwa` object.
 
@@ -181,7 +181,7 @@ For instance, we could write a configuration to create a simple service worker t
 }
 ```
 
-### ServiceWorker Configuration
+### ServiceWorker configuration
 
 Under the hood, the `ServicerWorkerPlugin` from `@dojo/webpack-contrib` is used to generate the service worker, and all of its options are valid `pwa.serviceWorker` properties.
 
@@ -210,7 +210,7 @@ The `precache` option can take the following options to control precaching behav
 | strict       | `boolean`              | Yes      | If `true`, then the build will fail if an `include` pattern matches a non-existent directory. Defaults to `true`.                                              |
 | symlinks     | `boolean`              | Yes      | Whether to follow symlinks when generating the precache. Defaults to `true`.                                                                                   |
 
-#### Runtime Caching
+#### Runtime caching
 
 In addition to precaching, strategies can be provided for specific routes to determine whether and how they can be cached. This `routes` option is an array of objects with the following properties:
 
@@ -231,7 +231,7 @@ Four routing strategies are currently supported:
 -   `networkOnly` forces the resource to always be retrieved over the network, and is useful for requests that have no offline equivalent.
 -   `staleWhileRevalidate` requests resources from both the cache and the network simulaneously. The cache is updated with each successful network response. This strategy is best for resources that do not need to be continuously up-to-date, like user avatars. However, when fetching third-party resources that do not send CORS headers, it is not possible to read the contents of the response or verify the status code. As such, it is possible that a bad response could be cached. In such cases, the `networkFirst` strategy may be a better fit.
 
-# Build-time Rendering
+# Build-time rendering (BTR)
 
 BTR renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately, resulting in many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
 
@@ -250,22 +250,22 @@ First make sure `index.html` includes a DOM node with an `id` attribute. This no
         <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-        <div id="root"></div>
+        <div id="app"></div>
 </body>
 </html>
 ```
 
-Make sure your application uses the DOM node to mount the renderer.
+The application should then be mounted to the specified DOM node:
 
 > main.ts
 
 ```ts
 const r = renderer(() => w(App, {}));
-const domNode = document.getElementById('root') as HTMLElement;
+const domNode = document.getElementById('app') as HTMLElement;
 r.mount({ registry, domNode });
 ```
 
-Update the `.dojorc` configuration file with the `id` of the root DOM node and routes to render at build time.
+The project's `.dojorc` configuration file should then be updated with the `id` of the root DOM node and routes to render at build time.
 
 > .dojorc
 
@@ -288,13 +288,13 @@ Update the `.dojorc` configuration file with the `id` of the root DOM node and r
 
 This configuration describes two routes. A `home` route and a more complex `comments` route. The `comments` route is a more complex route with parameter data. A `match` is used to make sure that the build-time HTML created for this route is applied to any route that matches the regular expression.
 
-BTR generates a screenshot for each of the paths rendered during the build in the output/info/screenshots directory of your project.
+BTR generates a screenshot for each of the paths rendered during build in the `./output/info/screenshots` project directory.
 
-### History Manager
+### History manager
 
-Build time rendering supports applications that use either the `@dojo/framework/routing/history/HashHistory` or `@dojo/framework/routing/history/StateHistory` history managers. If your application uses the HashHistory, ensure that all paths are prefixed with a # character.
+Build time rendering supports applications that use either the `@dojo/framework/routing/history/HashHistory` or `@dojo/framework/routing/history/StateHistory` history managers. When using `HashHistory`, ensure that all paths are prefixed with a `#` character.
 
-## build-time-render feature
+## `build-time-render` feature flag
 
 Build time rendering exposes a `build-time-render` feature flag that can be used to skip functionality that cannot be executed at build time. This can be used to avoid making `fetch` calls to external systems and instead provide static data that can be used to create an initial render.
 
@@ -309,9 +309,9 @@ if (has('build-time-render')) {
 }
 ```
 
-## Blocks meta
+## Dojo Blocks
 
-Dojo Blocks allow executing code in Node.js as part of the build time rendering process. The results from the execution are written to a cache that can then be transparently used in the same way at runtime in the browser. This opens up new opportunities for performing operations that might be not possible or unperformant in a browser.
+Dojo provides a blocks system which can execute code in Node.js as part of the build time rendering process. The results from the execution are written to a cache that can then be transparently used in the same way at runtime in the browser. This opens up new opportunities to use operations that might be not possible or perform poorly in a browser.
 
 For example, a Dojo Block module could read a group of markdown files, transform them into VNodes, and make them available to render in the application, all at build time. The result of this Dojo Block module is then cached into the application bundle for use at runtime in the browser.
 
@@ -319,7 +319,7 @@ A Dojo Block module gets used like any other meta in any Dojo widget. As a resul
 
 For example, a block module could read a text file and return the content to the application.
 
-> src/read-file.block.ts
+> src/blocks/read-file.ts
 
 ```ts
 import * as fs from 'fs';
@@ -331,14 +331,14 @@ export default (path: string) => {
 };
 ```
 
-> src/MyBlockWidget.ts
+> src/widgets/MyBlockWidget.tsx
 
-```ts
-import Block from '@dojo/framework/widget-core/meta/Block';
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+```tsx
+import Block from '@dojo/framework/core/meta/Block';
+import WidgetBase from '@dojo/framework/core/WidgetBase';
+import { v } from '@dojo/framework/core/vdom';
 
-import readFile from './read-file.block';
+import readFile from '../blocks/read-file';
 
 export default class MyBlockWidget extends WidgetBase {
 	protected render() {
@@ -348,7 +348,7 @@ export default class MyBlockWidget extends WidgetBase {
 }
 ```
 
-This widget runs the `read-file.block.ts` module at build time, loading the file path passed which gets used as the children in the widget.
+This widget runs the `src/blocks/read-file.ts` module at build time to read the contents of the given file. The contents are then used as a text node child within the widget's VDOM output.
 
 # Conditional code
 
@@ -409,7 +409,7 @@ export const mode = 'dist';
 
 Any features which are not statically asserted, are not re-written. This allows the code to determine at run-time if the feature is present.
 
-## Provided Features
+## Provided features
 
 These features are provided by the build system to help identify a specific environment or mode of operation.
 
@@ -474,15 +474,15 @@ Because these files are external to the main build, no versioning or hashing wil
 
 <!-- TODO do we want to add any information from here: https://github.com/dojo/cli-build-app/blob/master/README.md#eject -->
 
-Ejecting is a non-reversible, one-way process that exports the underlying configuration files used by Webpack, Intern, and other projects used by `dojo` commands. Rarely, **if ever**, should you need to separate a project from its build tools. If the provided build tools fail to provide a needed feature or functionality the recommended approach is to fork the specific build command and add the additional functionality to the tool. The Dojo CLI was specifically designed to be modular in nature with this use case in mind.
+The Dojo build pipeline provides an end-to-end tool chain for projects, however, in rare circumstances a custom toolchain may be required. Dojo allows this to happen by ejecting a project from the build pipeline.
 
-To eject a project, use the `dojo eject` command. You will be prompted to ensure that you understand that this is a non-reversible action. The export process puts all of the exported configuration information from all of the installed dojo commands into a new `config` directory. The process will also install some additional dependencies that the project now requires.
+Ejecting is a non-reversible, one-way process that exports the underlying configuration files used by Webpack, Intern, and other projects used by `dojo` commands. If the provided build tools fail to provide a needed feature or functionality the recommended approach is to fork the specific build command and add the additional functionality to the tool. The Dojo CLI was specifically designed to be modular in nature with this use case in mind.
+
+To eject a project, use the `dojo eject` command - it will prompt to ensure acknowledgement that the process in non-reversible. The export process puts all of the exported configuration information from all of the installed dojo commands into a new `config` directory. The process will also install some additional dependencies that the project now requires.
 
 The project is now configured to be managed as a webpack project. Changes can be made to the build configuration by altering `config/build-app/base.config.js`.
 
-A build can then be triggered by running webpack's build command and providing the configuration. Further, the modes are specified using webpack's env flag (e.g., --env.mode=dev), defaulting to dist. You can run a build using webpack with:
-
-> Command line
+A build can then be triggered by running webpack's build command and providing the configuration. Further, the modes are specified using webpack's env flag (e.g., --env.mode=dev), defaulting to dist.
 
 ```bash
 ./node_modules/.bin/webpack --config=config/build-app/ejected.config.js --env.mode=[mode]
