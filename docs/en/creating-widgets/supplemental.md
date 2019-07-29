@@ -62,42 +62,6 @@ The process of translating virtual DOM nodes to output on a web page is handled 
 
 Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both function- and class-based widget variants. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
 
-## Scaffolding widgets
-
-Dojo provides the [`dojo create widget`](https://github.com/dojo/cli-create-widget) CLI command to quickly scaffold new widgets. This command helps create:
-
--   The main TypeScript module for a widget
--   A unit test for the widget
--   A CSS module to style the widget
--   An optional custom element descriptor, if the widget is intended to be used as a Web Component
-
-The command can be installed globally via:
-
-```shell
-npm install -g @dojo/cli-create-widget
-```
-
-and used as:
-
-```shell
-dojo create widget --name <widget name> [--styles <CSS module path>] [--tests <test path>] [--component]
-```
-
-By default, running the command for a given `dojo create widget --name MyScaffoldedWidget` will create the following structure:
-
-    myscaffoldedwidget/
-    ├── MyScaffoldedWidget.ts
-    ├── styles/
-    │   ├── myscaffoldedwidget.m.css
-    │   └── myscaffoldedwidget.m.css.d.ts
-    └── tests/
-        └── unit
-            └── MyScaffoldedWidget.ts
-
-The location where styles and tests are created can be customized using the `--styles` and `--tests` arguments respectively.
-
-A [Custom Element](https://www.w3.org/TR/2016/WD-custom-elements-20161013/) descriptor will be generated if the `--component` argument is passed.
-
 # Rendering in Dojo
 
 Dojo is a reactive framework, handling responsibilities of data change propagation and associated rendering updates behind the scenes. Dojo leverages a virtual DOM (VDOM) concept to represent elements intended for output, with nodes in the VDOM being simple JavaScript objects that are designed to be more efficient for developers to work with than actual DOM elements.
@@ -126,7 +90,7 @@ For Dojo projects that were not scaffolded in this way, TSX can be enabled with 
 		"jsx": "react",
 		"jsxFactory": "tsx"
 	},
-	"include": ["./src/**/*.ts", "./src/**/*.tsx"]
+	"include": ["./src/**/*.ts", "./src/**/*.tsx", "./tests/**/*.ts", "./tests/**/*.tsx"]
 }
 ```
 
@@ -253,9 +217,9 @@ const factory = create();
 
 import MyWidget from './MyWidget';
 
-export default factory(function MyComposingWidget() =>
-	v('div', ['This widget outputs several virtual nodes in a hierarchy', w(MyWidget, {})])
-);
+export default factory(function MyComposingWidget() {
+	return v('div', ['This widget outputs several virtual nodes in a hierarchy', w(MyWidget, {})]);
+});
 ```
 
 **Class-based variant:**
@@ -296,11 +260,11 @@ r.mount();
 
 The `Renderer.mount()` method accepts an optional `MountOptions` argument that configures how the mount operation gets performed.
 
-| Property   | Type          | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ---------- | ------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sync`     | `boolean`     | Yes      | Default: `false`. If `true`, relevant render lifecycle callbacks (specifically, `after` and `deferred` render callbacks) are run synchronously. If `false`, the callbacks are instead scheduled to run asynchronously before the next repaint via [`window.requestAnimationFrame()`](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame). Synchronous render callbacks can be beneficial in scenarios where specific nodes need to exist in the DOM. |
-| `domNode`  | `HTMLElement` | Yes      | A reference to a specific DOM element that the VDOM should be rendered within. Defaults to `document.body` if not specified.                                                                                                                                                                                                                                                                                                                                                    |
-| `registry` | `Registry`    | Yes      | An optional `Registry` instance to use across the mounted VDOM.                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Property   | Type          | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | ------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sync`     | `boolean`     | Yes      | Default: `false`. If `true`, relevant render lifecycle callbacks (specifically, `after` and `deferred` render callbacks) are run synchronously. If `false`, the callbacks are instead scheduled to run asynchronously before the next repaint via [`window.requestAnimationFrame()`](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame). Synchronous render callbacks can be beneficial in rare scenarios where specific nodes need to exist in the DOM, but this pattern is not recommended for most applications. |
+| `domNode`  | `HTMLElement` | Yes      | A reference to a specific DOM element that the VDOM should be rendered within. Defaults to `document.body` if not specified.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `registry` | `Registry`    | Yes      | An optional `Registry` instance to use across the mounted VDOM.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 For example, to mount a Dojo application within a specific DOM element other than `document.body`:
 
@@ -456,91 +420,11 @@ Function-based widgets can use the [`focus` middleware](../middleware/supplement
 
 `FocusMixin` or the `focus` middleware also add a `focus` function property to a widget's API. The framework uses the boolean result from this property to determine if the widget (or one of its children) should receive focus when rendering. Typically, widgets pass the `shouldFocus` method to a specific child widget or an output node via their `focus` property, allowing parent widgets to delegate focus to their children.
 
-The following shows an example of delegating and controlling focus across a widget hierarchy and output VNodes:
+See the [`focus` middleware delegation example](../middleware/supplemental.md#focus-delegation-example) in the Dojo middleware reference guide for an example for function-based widgets.
+
+The following shows an example of delegating and controlling focus across a class-based widget hierarchy and output VNodes:
 
 > src/widgets/FocusableWidget.tsx
-
-**Function-based variant:**
-
-```tsx
-import { create, tsx } from '@dojo/framework/core/vdom';
-import focus from '@dojo/framework/core/middleware/focus';
-import icache from '@dojo/framework/core/middleware/icache';
-
-const childFactory = create({ focus }).properties<{ onfocus: () => void }>();
-
-/*
-    The input's `onfocus()` event handler is assigned to a method passed in
-    from a parent widget, allowing user-driven focus changes to propagate back
-    into the application.
-*/
-const FocusInputChild = childFactory(function FocusInputChild({ middleware: { focus }, properties }) {
-	const { onfocus } = properties();
-	return <input onfocus={onfocus} focus={focus.shouldFocus} />;
-});
-
-const factory = create({ focus, icache });
-
-export default factory(function FocusableWidget({ middleware: { focus, icache } }) {
-	const keyWithFocus = icache.get('key-with-focus') || 0;
-
-	const childCount = 5;
-	function focusPreviousChild() {
-		let newKeyToFocus = (icache.get('key-with-focus') || 0) - 1;
-		if (newKeyToFocus < 0) {
-			newKeyToFocus = childCount - 1;
-		}
-		icache.set('key-with-focus', newKeyToFocus);
-		focus.focus();
-	}
-	function focusNextChild() {
-		let newKeyToFocus = (icache.get('key-with-focus') || 0) + 1;
-		if (newKeyToFocus >= childCount) {
-			newKeyToFocus = 0;
-		}
-		icache.set('key-with-focus', newKeyToFocus);
-		focus.focus();
-	}
-	function focusChild(key: number) {
-		icache.set('key-with-focus', key);
-		focus.focus();
-	}
-
-	return (
-		<div>
-			<button onclick={focusPreviousChild}>Previous</button>
-			<button onclick={focusNextChild}>Next</button>
-			<FocusInputChild
-				key="0"
-				onfocus={() => focusChild(0)}
-				focus={keyWithFocus == 0 ? focus.shouldFocus : undefined}
-			/>
-			<FocusInputChild
-				key="1"
-				onfocus={() => focusChild(1)}
-				focus={keyWithFocus == 1 ? focus.shouldFocus : undefined}
-			/>
-			<FocusInputChild
-				key="2"
-				onfocus={() => focusChild(2)}
-				focus={keyWithFocus == 2 ? focus.shouldFocus : undefined}
-			/>
-			<FocusInputChild
-				key="3"
-				onfocus={() => focusChild(3)}
-				focus={keyWithFocus == 3 ? focus.shouldFocus : undefined}
-			/>
-			<FocusInputChild
-				key="4"
-				onfocus={() => focusChild(4)}
-				focus={keyWithFocus == 4 ? focus.shouldFocus : undefined}
-			/>
-		</div>
-	);
-});
-```
-
-**Class-based variant:**
 
 ```tsx
 import WidgetBase from '@dojo/framework/core/WidgetBase';

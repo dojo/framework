@@ -94,7 +94,7 @@ export default factory(function NameHandler({ middleware: { icache } }) {
 
 ## Rendering to the DOM
 
--   Connecting a widget hierarchy to its concrete representation within a webpage
+-   Using the framework's `renderer` to mount a widget hierarchy into the DOM
 -   Optionally allowing [more control](./supplemental.md#mountoptions-properties) over where Dojo applications appear in a page, for progressive adoption of smaller subcomponents or even to support multiple applications/frameworks within a single page
 
 > src/main.tsx
