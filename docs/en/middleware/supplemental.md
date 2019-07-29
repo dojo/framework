@@ -396,6 +396,90 @@ import focus from '@dojo/framework/core/middleware/focus';
 -   `focus.isFocused(key: string | number): boolean`
     -   Returns `true` if the widget's VDOM node identified by the specified `key` currently has focus. Returns `false` if the relevant VDOM node does not have focus, or does not exist for the current widget.
 
+### Focus delegation example
+
+The following shows an example of delegating and controlling focus across a widget hierarchy and output VNodes:
+
+> src/widgets/FocusableWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import focus from '@dojo/framework/core/middleware/focus';
+import icache from '@dojo/framework/core/middleware/icache';
+
+/*
+	The input's `onfocus()` event handler is assigned to a method passed in
+	from a parent widget, via the child's create().properties<MyPropertiesInterface>
+	API, allowing user-driven focus changes to propagate back into the application.
+*/
+const childFactory = create({ focus }).properties<{ onfocus: () => void }>();
+
+const FocusInputChild = childFactory(function FocusInputChild({ middleware: { focus }, properties }) {
+	const { onfocus } = properties();
+	return <input onfocus={onfocus} focus={focus.shouldFocus} />;
+});
+
+const factory = create({ focus, icache });
+
+export default factory(function FocusableWidget({ middleware: { focus, icache } }) {
+	const keyWithFocus = icache.get('key-with-focus') || 0;
+
+	const childCount = 5;
+	function focusPreviousChild() {
+		let newKeyToFocus = (icache.get('key-with-focus') || 0) - 1;
+		if (newKeyToFocus < 0) {
+			newKeyToFocus = childCount - 1;
+		}
+		icache.set('key-with-focus', newKeyToFocus);
+		focus.focus();
+	}
+	function focusNextChild() {
+		let newKeyToFocus = (icache.get('key-with-focus') || 0) + 1;
+		if (newKeyToFocus >= childCount) {
+			newKeyToFocus = 0;
+		}
+		icache.set('key-with-focus', newKeyToFocus);
+		focus.focus();
+	}
+	function focusChild(key: number) {
+		icache.set('key-with-focus', key);
+		focus.focus();
+	}
+
+	return (
+		<div>
+			<button onclick={focusPreviousChild}>Previous</button>
+			<button onclick={focusNextChild}>Next</button>
+			<FocusInputChild
+				key="0"
+				onfocus={() => focusChild(0)}
+				focus={keyWithFocus == 0 ? focus.shouldFocus : undefined}
+			/>
+			<FocusInputChild
+				key="1"
+				onfocus={() => focusChild(1)}
+				focus={keyWithFocus == 1 ? focus.shouldFocus : undefined}
+			/>
+			<FocusInputChild
+				key="2"
+				onfocus={() => focusChild(2)}
+				focus={keyWithFocus == 2 ? focus.shouldFocus : undefined}
+			/>
+			<FocusInputChild
+				key="3"
+				onfocus={() => focusChild(3)}
+				focus={keyWithFocus == 3 ? focus.shouldFocus : undefined}
+			/>
+			<FocusInputChild
+				key="4"
+				onfocus={() => focusChild(4)}
+				focus={keyWithFocus == 4 ? focus.shouldFocus : undefined}
+			/>
+		</div>
+	);
+});
+```
+
 ### `injector`
 
 Allows retrieving injectors from the Dojo registry and assigning invalidation callback functions to then.

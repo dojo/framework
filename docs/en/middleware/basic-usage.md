@@ -1,4 +1,4 @@
-# Basic Usage
+# Basic usage
 
 ## Creating middleware
 
