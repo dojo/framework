@@ -136,6 +136,64 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('widgets', () => {
+		it('should not attempt to render widgets that have been orphaned', () => {
+			let invalidateChild: any;
+			let invalidateParent: any;
+
+			class Foo extends WidgetBase {
+				private _show = false;
+
+				constructor() {
+					super();
+					invalidateChild = () => {
+						this._show = true;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this._show ? v('div') : null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {})]);
+				}
+			}
+
+			class Qux extends WidgetBase {
+				private _show = true;
+
+				constructor() {
+					super();
+					invalidateParent = () => {
+						this._show = false;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return v('div', [this._show ? w(Bar, {}) : null]);
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return w(Qux, {});
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const root: any = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(root.outerHTML, '<div><div><div></div></div></div>');
+			invalidateChild();
+			invalidateParent();
+			resolvers.resolve();
+			assert.strictEqual(root.outerHTML, '<div><div></div></div>');
+		});
+
 		it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 			class WidgetOne extends WidgetBase {
 				render() {
@@ -3353,7 +3411,6 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(consoleWarnStub.notCalled);
 				swap();
 				resolvers.resolve();
-				console.log(consoleWarnStub.firstCall.args);
 				assert.isTrue(consoleWarnStub.calledOnce);
 			});
 
@@ -3764,6 +3821,160 @@ jsdomDescribe('vdom', () => {
 			bodyNodeTwo = document.getElementById('my-body-node-2')!;
 			assert.isNull(bodyNodeTwo);
 			assert.isNull(root.querySelector('#my-body-node-2'));
+		});
+
+		it('should detach nested body nodes from dom', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [v('span', { classes: ['body-span'] }, ['and im in the body!'])])]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private renderWidget = false;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.renderWidget = !this.renderWidget;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.renderWidget && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach widgets nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [w(B, {})])]);
+				}
+			}
+
+			class B extends WidgetBase<any> {
+				render() {
+					return v('span', { classes: ['body-span'] }, ['and im in the body!!']);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach virtual nodes nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						v('body', [v('virtual', [v('span', { classes: ['body-span'] }, ['and im in the body!!'])])])
+					]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
 		});
 	});
 

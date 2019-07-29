@@ -31,7 +31,7 @@ export class CustomElementWidget extends WidgetBase<CustomElementWidgetPropertie
 
 describe('@customElement', () => {
 	it('Should add the descriptor to the widget prototype', () => {
-		assert.deepEqual((CustomElementWidget.prototype as any).__customElementDescriptor, {
+		assert.deepEqual((CustomElementWidget as any).__customElementDescriptor, {
 			tagName: 'test-element',
 			attributes: ['key', 'label', 'labelSuffix'],
 			properties: ['label'],
