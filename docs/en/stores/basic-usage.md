@@ -6,7 +6,7 @@ Stores provide a clean interface for storing, modifying, and retrieving data fro
 
 ## The Store
 
-The store holds the global, atomic state for the entire application. The store gets created when the application gets created and defined in the `Registry` with an injector.
+The store holds the global, atomic state for the entire application. The store should be created when the application gets created and defined in the `Registry` with an injector.
 
 > main.ts
 
@@ -52,7 +52,7 @@ There are three core concepts when working with Dojo stores.
 
 ### Commands & Operations
 
-To modify a store, when executing a process, an operation function gets invoked. The operation function gets returned from a command. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
+To modify a store, when executing a process, a command function gets invoked. The command function returns a list of operations to apply to the store.. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
 
 #### The command factory
 
@@ -403,7 +403,7 @@ const UserContainer = StoreContainer(User, 'state', {
 
 In this example `UserContainer` wraps `User` to display the current user's name. `createStoreContainer` is a wrapper that gets used to ensure the proper typing of `getProperties`. `getProperties` is responsible for accessing data from the store and creating properties for the widget.
 
-A `StoreContainer`'s properties are a 1:1 mapping to the widget it wraps. The widget become the properties of the `StoreContainer`, but they are all optional.
+A `StoreContainer`'s properties are a 1:1 mapping to the widget it wraps. The widget's properties become the properties of the `StoreContainer`, but they are all optional.
 
 ### Excuting a Process
 
