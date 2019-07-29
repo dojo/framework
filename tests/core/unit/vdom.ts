@@ -5,7 +5,6 @@ import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
-
 import {
 	create,
 	renderer,
@@ -137,6 +136,64 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('widgets', () => {
+		it('should not attempt to render widgets that have been orphaned', () => {
+			let invalidateChild: any;
+			let invalidateParent: any;
+
+			class Foo extends WidgetBase {
+				private _show = false;
+
+				constructor() {
+					super();
+					invalidateChild = () => {
+						this._show = true;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return this._show ? v('div') : null;
+				}
+			}
+
+			class Bar extends WidgetBase {
+				render() {
+					return v('div', [w(Foo, {})]);
+				}
+			}
+
+			class Qux extends WidgetBase {
+				private _show = true;
+
+				constructor() {
+					super();
+					invalidateParent = () => {
+						this._show = false;
+						this.invalidate();
+					};
+				}
+
+				render() {
+					return v('div', [this._show ? w(Bar, {}) : null]);
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return w(Qux, {});
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const root: any = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(root.outerHTML, '<div><div><div></div></div></div>');
+			invalidateChild();
+			invalidateParent();
+			resolvers.resolve();
+			assert.strictEqual(root.outerHTML, '<div><div></div></div>');
+		});
+
 		it('Should render nodes in the correct order with mix of vnode and wnodes', () => {
 			class WidgetOne extends WidgetBase {
 				render() {
@@ -3066,7 +3123,7 @@ jsdomDescribe('vdom', () => {
 				let text = 'first';
 				let updateText: any;
 
-				const Foo = createWidget(({ children }) => children);
+				const Foo = createWidget(({ children }) => children());
 				const App = createWidget(({ middleware }) => {
 					updateText = () => {
 						text = 'second';
@@ -3118,7 +3175,7 @@ jsdomDescribe('vdom', () => {
 				let label = 'default';
 				const createWidget = create({ invalidator });
 				const Foo = createWidget.properties<{ label: string; other: boolean }>()(
-					({ properties }) => properties.label
+					({ properties }) => properties().label
 				);
 				const App = createWidget.properties()(({ middleware }) => {
 					const setLabel = () => {
@@ -3143,8 +3200,12 @@ jsdomDescribe('vdom', () => {
 			it('supports widget registry items', () => {
 				const registry = new Registry();
 				const createWidget = create();
-				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
-				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => v('h1', [properties.text]));
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) =>
+					v('h1', [properties().text])
+				);
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) =>
+					v('h1', [properties().text])
+				);
 
 				registry.define('foo', Foo);
 				registry.define('bar', Bar);
@@ -3283,8 +3344,8 @@ jsdomDescribe('vdom', () => {
 				let visible = true;
 				let swap: any;
 
-				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
-				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => properties.text);
+				const Foo = createWidget.properties<{ text: string }>()(({ properties }) => properties().text);
+				const Bar = createWidget.properties<{ text: string }>()(({ properties }) => properties().text);
 				const App = createWidget(({ middleware }) => {
 					swap = () => {
 						visible = !visible;
@@ -3350,7 +3411,6 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(consoleWarnStub.notCalled);
 				swap();
 				resolvers.resolve();
-				console.log(consoleWarnStub.firstCall.args);
 				assert.isTrue(consoleWarnStub.calledOnce);
 			});
 
@@ -3581,7 +3641,7 @@ jsdomDescribe('vdom', () => {
 						const createWidget = create({ diffProperty, invalidator }).properties<any>();
 						const Foo = createWidget(({ middleware, properties }) => {
 							middleware.diffProperty('text', (current: any, properties: any) => {});
-							return v('div', [properties.text]);
+							return v('div', [properties().text]);
 						});
 						let text = 'first';
 						const App = createWidget(({ middleware }) => {
@@ -3712,6 +3772,209 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.innerHTML, expected);
 			assert.lengthOf(appendedHtml, 1);
 			assert.strictEqual(appendedHtml[0], expected);
+		});
+	});
+
+	describe('body node', () => {
+		let root = document.createElement('div');
+		beforeEach(() => {
+			root = document.createElement('div');
+			document.body.appendChild(root);
+		});
+
+		afterEach(() => {
+			document.body.removeChild(root);
+		});
+
+		it('can attach a node to the body', () => {
+			let show = true;
+			const factory = create({ invalidator });
+			const App = factory(function App({ middleware: { invalidator } }) {
+				return v('div', [
+					v('button', {
+						onclick: () => {
+							show = !show;
+							invalidator();
+						}
+					}),
+					v('body', [show ? v('div', { id: 'my-body-node-1' }, ['My Body Div 1']) : null]),
+					v('body', [show ? v('div', { id: 'my-body-node-2' }, ['My Body Div 2']) : null])
+				]);
+			});
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			let bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isOk(bodyNodeOne);
+			assert.strictEqual(bodyNodeOne.outerHTML, '<div id="my-body-node-1">My Body Div 1</div>');
+			assert.strictEqual(bodyNodeOne.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			let bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isOk(bodyNodeTwo);
+			assert.strictEqual(bodyNodeTwo.outerHTML, '<div id="my-body-node-2">My Body Div 2</div>');
+			assert.strictEqual(bodyNodeTwo.parentNode, document.body);
+			assert.isNull(root.querySelector('#my-body-node-2'));
+			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
+			resolvers.resolve();
+			bodyNodeOne = document.getElementById('my-body-node-1')!;
+			assert.isNull(bodyNodeOne);
+			assert.isNull(root.querySelector('#my-body-node-1'));
+			bodyNodeTwo = document.getElementById('my-body-node-2')!;
+			assert.isNull(bodyNodeTwo);
+			assert.isNull(root.querySelector('#my-body-node-2'));
+		});
+
+		it('should detach nested body nodes from dom', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [v('span', { classes: ['body-span'] }, ['and im in the body!'])])]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private renderWidget = false;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.renderWidget = !this.renderWidget;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.renderWidget && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach widgets nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('body', [w(B, {})])]);
+				}
+			}
+
+			class B extends WidgetBase<any> {
+				render() {
+					return v('span', { classes: ['body-span'] }, ['and im in the body!!']);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach virtual nodes nested in a body tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						v('body', [v('virtual', [v('span', { classes: ['body-span'] }, ['and im in the body!!'])])])
+					]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.body-span');
+			assert.lengthOf(results, 0);
 		});
 	});
 

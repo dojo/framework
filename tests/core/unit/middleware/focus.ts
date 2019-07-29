@@ -17,13 +17,19 @@ const nodeStub = {
 const invalidatorStub = sb.stub();
 
 function cacheFactory() {
-	return cacheMiddleware().callback({ id: 'test-cache', properties: {}, middleware: { destroy: sb.stub() } });
+	return cacheMiddleware().callback({
+		id: 'test-cache',
+		properties: () => ({}),
+		children: () => [],
+		middleware: { destroy: sb.stub() }
+	});
 }
 
 function icacheFactory() {
 	return icacheMiddleware().callback({
 		id: 'test-cache',
-		properties: {},
+		properties: () => ({}),
+		children: () => [],
 		middleware: { cache: cacheFactory(), invalidator: sb.stub() }
 	});
 }
@@ -45,7 +51,8 @@ describe('focus middleware', () => {
 				node: nodeStub,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isFalse(focus.shouldFocus());
 		focus.focus();
@@ -64,7 +71,8 @@ describe('focus middleware', () => {
 				node: nodeStub,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		diffPropertyStub.getCall(0).callArgWith(1, {}, { focus: () => true });
 		assert.isTrue(focus.shouldFocus());
@@ -82,7 +90,8 @@ describe('focus middleware', () => {
 				node: nodeStub,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		diffPropertyStub.getCall(0).callArgWith(1, {}, { focus: () => false });
 		assert.isFalse(focus.shouldFocus());
@@ -100,7 +109,8 @@ describe('focus middleware', () => {
 				node: nodeStub,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isFalse(focus.isFocused('root'));
 	});
@@ -117,7 +127,8 @@ describe('focus middleware', () => {
 				node: nodeStub,
 				invalidator: invalidatorStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		const div = global.document.createElement('div');
 		const buttonOne = global.document.createElement('button');

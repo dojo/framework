@@ -28,7 +28,12 @@ describe('theme middleware', () => {
 	});
 
 	it('Should register injector and allow theme to be set', () => {
-		const cache = cacheMiddleware().callback({ middleware: { destroy: sb.stub() }, properties: {}, id: 'blah' });
+		const cache = cacheMiddleware().callback({
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => [],
+			id: 'blah'
+		});
 		const { callback } = themeMiddleware();
 		defineInjector.callsFake((...args: any[]) => {
 			injector.get.withArgs(args[0]).returns(new Injector('blah'));
@@ -42,7 +47,8 @@ describe('theme middleware', () => {
 				injector,
 				getRegistry
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 
 		assert.isTrue(diffProperty.calledTwice);
@@ -75,7 +81,12 @@ describe('theme middleware', () => {
 	});
 
 	it('Should give precedence to theme from properties over an injected theme', () => {
-		const cache = cacheMiddleware().callback({ middleware: { destroy: sb.stub() }, properties: {}, id: 'blah' });
+		const cache = cacheMiddleware().callback({
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => [],
+			id: 'blah'
+		});
 		const { callback } = themeMiddleware();
 		defineInjector.callsFake((...args: any[]) => {
 			injector.get.withArgs(args[0]).returns(new Injector('blah'));
@@ -94,9 +105,10 @@ describe('theme middleware', () => {
 				injector,
 				getRegistry
 			},
-			properties: {
+			properties: () => ({
 				theme: propertyTheme
-			}
+			}),
+			children: () => []
 		});
 
 		assert.isTrue(diffProperty.calledTwice);
@@ -127,7 +139,12 @@ describe('theme middleware', () => {
 	});
 
 	it('Should support classes property for adding additional classes', () => {
-		const cache = cacheMiddleware().callback({ middleware: { destroy: sb.stub() }, properties: {}, id: 'blah' });
+		const cache = cacheMiddleware().callback({
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => [],
+			id: 'blah'
+		});
 		const { callback } = themeMiddleware();
 		defineInjector.callsFake((...args: any[]) => {
 			injector.get.withArgs(args[0]).returns(new Injector('blah'));
@@ -141,7 +158,7 @@ describe('theme middleware', () => {
 				injector,
 				getRegistry
 			},
-			properties: {
+			properties: () => ({
 				classes: {
 					other: {
 						bar: ['extra-extra-extra']
@@ -151,7 +168,8 @@ describe('theme middleware', () => {
 						other: ['extra-extra-extra']
 					}
 				}
-			}
+			}),
+			children: () => []
 		});
 
 		assert.isTrue(diffProperty.calledTwice);

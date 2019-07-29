@@ -20,8 +20,7 @@ Then configure the application to be "routing" aware by registering the router w
 > src/main.tsx
 
 ```tsx
-import renderer from '@dojo/framework/core/vdom';
-import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { tsx } from '@dojo/framework/core/vdom';
 import Registry from '@dojo/framework/core/Registry';
 import { registerRouterInjector } from '@dojo/framework/routing/RouterInjector';
 
@@ -43,19 +42,18 @@ In the routing configuration the `home` route is associated with an outlet ident
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet id="home" renderer={() => <div>Home</div>} />
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet id="home" renderer={() => <div>Home</div>} />
+		</div>
+	);
+});
 ```
 
 ## Path & Query Parameters
@@ -78,19 +76,18 @@ The parameters values are injected into to matching `Outlets`'s `renderer` prope
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet id="home" renderer={(matchDetails) => <div>{`Home ${matchDetails.params.page}`}</div>} />
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet id="home" renderer={(matchDetails) => <div>{`Home ${matchDetails.params.page}`}</div>} />
+		</div>
+	);
+});
 ```
 
 Query parameters are also defined using curly braces split from the route path by a `?`. To define more than one query param, use the `&` delimiter.
@@ -109,25 +106,24 @@ export default [
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet
-					id="home"
-					renderer={(matchDetails) => {
-						const { queryParams } = matchDetails;
-						return <div>{`Home ${queryParams.queryOne}-${queryParams.queryTwo}`}</div>;
-					}}
-				/>
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet
+				id="home"
+				renderer={(matchDetails) => {
+					const { queryParams } = matchDetails;
+					return <div>{`Home ${queryParams.queryOne}-${queryParams.queryTwo}`}</div>;
+				}}
+			/>
+		</div>
+	);
+});
 ```
 
 The query params are injected into matching `Outlet` `renderer` properties accessed from `queryParams` property.
@@ -180,21 +176,20 @@ In addition to the `Link` specific properties, all the standard `VNodeProperties
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import { Link } from '@dojo/framework/routing/Link';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Link to="home" params={{ foo: 'bar' }}>
-					Link Text
-				</Link>
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Link to="home" params={{ foo: 'bar' }}>
+				Link Text
+			</Link>
+		</div>
+	);
+});
 ```
 
 The `ActiveLink` widget is a wrapper around the `Link` widget that conditionally sets classes on the `a` node if the link is currently active:
@@ -204,21 +199,20 @@ ActiveLink Properties:
 -   `activeClasses: string[]`: An array of classes to apply when the `Link`'s outlet is matched.
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import { ActiveLink } from '@dojo/framework/routing/ActiveLink';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<ActiveLink to="home" params={{ foo: 'bar' }} activeClasses={['link-active']}>
-					Link Text
-				</ActiveLink>
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<ActiveLink to="home" params={{ foo: 'bar' }} activeClasses={['link-active']}>
+				Link Text
+			</ActiveLink>
+		</div>
+	);
+});
 ```
 
 ## Code Splitting By Route
@@ -266,8 +260,7 @@ With the routing configuration above the following example will generate 4 separ
 > src/App.tsx
 
 ```tsx
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { tsx } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Outlet from '@dojo/framework/routing/Outlet';
 
 import Home from './Home';
@@ -275,16 +268,16 @@ import About from './About';
 import Profile from './Profile';
 import Settings from './Settings';
 
-export default class App extends WidgetBase {
-	protected render() {
-		return (
-			<div>
-				<Outlet id="home" renderer={() => <Home />} />
-				<Outlet id="about" renderer={() => <About />} />
-				<Outlet id="profile" renderer={() => <Profile />} />
-				<Outlet id="settings" renderer={() => <Settings />} />
-			</div>
-		);
-	}
-}
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet id="home" renderer={() => <Home />} />
+			<Outlet id="about" renderer={() => <About />} />
+			<Outlet id="profile" renderer={() => <Profile />} />
+			<Outlet id="settings" renderer={() => <Settings />} />
+		</div>
+	);
+});
 ```

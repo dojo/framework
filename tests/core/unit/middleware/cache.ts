@@ -18,7 +18,8 @@ describe('cache middleware', () => {
 			middleware: {
 				destroy: destroyStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isUndefined(cache.get('test'));
 		cache.set('test', 'value');
@@ -32,7 +33,8 @@ describe('cache middleware', () => {
 			middleware: {
 				destroy: destroyStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		cache.set('test', 'value');
 		assert.isTrue(destroyStub.calledOnce);
@@ -47,7 +49,8 @@ describe('cache middleware', () => {
 			middleware: {
 				destroy: destroyStub
 			},
-			properties: {}
+			properties: () => ({}),
+			children: () => []
 		});
 		assert.isUndefined(cache.get('test'));
 		cache.set('test', 'value');

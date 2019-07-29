@@ -16,7 +16,7 @@ export interface LinkProperties extends VNodeProperties {
 const factory = create({ injector }).properties<LinkProperties>();
 
 export const Link = factory(function Link({ middleware: { injector }, properties, children }) {
-	let { routerKey = 'router', to, isOutlet = true, target, params = {}, onClick, ...props } = properties;
+	let { routerKey = 'router', to, isOutlet = true, target, params = {}, onClick, ...props } = properties();
 	const router = injector.get<Router>(routerKey);
 	let href: string | undefined = to;
 
@@ -37,7 +37,7 @@ export const Link = factory(function Link({ middleware: { injector }, properties
 	} else {
 		linkProps = { ...props, href };
 	}
-	return v('a', linkProps, children);
+	return v('a', linkProps, children());
 });
 
 export default Link;

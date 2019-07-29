@@ -55,14 +55,14 @@ export const theme = factory(
 		});
 		return {
 			classes<T extends ClassNames>(css: T): T {
-				let theme = cache.get<T>(css);
+				let theme = cache.get(css);
 				if (theme) {
 					return theme;
 				}
 				const { [THEME_KEY]: key, ...classes } = css;
 				themeKeys.add(key);
 				theme = classes as T;
-				let currentTheme = properties.theme;
+				let { theme: currentTheme, classes: currentClasses } = properties();
 				if (!currentTheme) {
 					const injectedTheme = injector.get<Injector<Theme>>(INJECTED_THEME_KEY);
 					currentTheme = injectedTheme ? injectedTheme.get() : undefined;
@@ -70,12 +70,12 @@ export const theme = factory(
 				if (currentTheme && currentTheme[key]) {
 					theme = { ...theme, ...currentTheme[key] };
 				}
-				if (properties.classes && properties.classes[key]) {
-					const classKeys = Object.keys(properties.classes[key]);
+				if (currentClasses && currentClasses[key]) {
+					const classKeys = Object.keys(currentClasses[key]);
 					for (let i = 0; i < classKeys.length; i++) {
 						const classKey = classKeys[i];
 						if (theme[classKey]) {
-							theme[classKey] = `${theme[classKey]} ${properties.classes[key][classKey].join(' ')}`;
+							theme[classKey] = `${theme[classKey]} ${currentClasses[key][classKey].join(' ')}`;
 						}
 					}
 				}

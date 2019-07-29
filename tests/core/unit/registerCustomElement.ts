@@ -129,7 +129,7 @@ describe('registerCustomElement', () => {
 	before((suite) => {
 		try {
 			const Test = createTestWidget({});
-			const CustomElement = create((Test.prototype as any).__customElementDescriptor, Test);
+			const CustomElement = create((Test as any).__customElementDescriptor, Test);
 			customElements.define('supports-custom-elements', CustomElement);
 			document.createElement('supports-custom-elements');
 		} catch (e) {
@@ -166,7 +166,7 @@ describe('registerCustomElement', () => {
 
 	it('custom element with property', () => {
 		const Bar = createTestWidget({ properties: ['myProp'] });
-		const CustomElement = create((Bar.prototype as any).__customElementDescriptor, Bar);
+		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
 		customElements.define('bar-element-1', CustomElement);
 		element = document.createElement('bar-element-1');
 		(element as any).myProp = 'hello';
@@ -177,7 +177,7 @@ describe('registerCustomElement', () => {
 
 	it('custom element with attribute', () => {
 		const Bar = createTestWidget({ attributes: ['myAttr'] });
-		const CustomElement = create((Bar.prototype as any).__customElementDescriptor, Bar);
+		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
 		customElements.define('bar-element-2', CustomElement);
 		element = document.createElement('bar-element-2');
 		element.setAttribute('myAttr', 'world');
@@ -189,7 +189,7 @@ describe('registerCustomElement', () => {
 	it('custom element with event', () => {
 		let called = false;
 		const Bar = createTestWidget({ events: ['onBar'] });
-		const CustomElement = create((Bar.prototype as any).__customElementDescriptor, Bar);
+		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
 		customElements.define('bar-element-3', CustomElement);
 		element = document.createElement('bar-element-3');
 		element.addEventListener('bar', () => {
@@ -203,10 +203,10 @@ describe('registerCustomElement', () => {
 
 	it('custom element with child dojo element', () => {
 		const BarA = createTestWidget({});
-		const CustomElementA = create((BarA.prototype as any).__customElementDescriptor, BarA);
+		const CustomElementA = create((BarA as any).__customElementDescriptor, BarA);
 		customElements.define('bar-a', CustomElementA);
 		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
-		const CustomElementB = create((BarB.prototype as any).__customElementDescriptor, BarB);
+		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
 		customElements.define('bar-b', CustomElementB);
 		element = document.createElement('bar-a');
 		const barB = document.createElement('bar-b');
@@ -247,7 +247,7 @@ describe('registerCustomElement', () => {
 
 	it('custom element with child dom node', () => {
 		const BazA = createTestWidget({ childType: CustomElementChildType.NODE });
-		const CustomElementA = create((BazA.prototype as any).__customElementDescriptor, BazA);
+		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
 		customElements.define('baz-a', CustomElementA);
 		element = document.createElement('baz-a');
 		const div = document.createElement('div');
@@ -262,7 +262,7 @@ describe('registerCustomElement', () => {
 
 	it('custom element with child text node', () => {
 		const QuxA = createTestWidget({ childType: CustomElementChildType.TEXT });
-		const CustomElementA = create((QuxA.prototype as any).__customElementDescriptor, QuxA);
+		const CustomElementA = create((QuxA as any).__customElementDescriptor, QuxA);
 		customElements.define('qux-a', CustomElementA);
 		element = document.createElement('qux-a');
 		const textNode = document.createTextNode('text node');
@@ -275,7 +275,7 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with global theme', () => {
-		const CustomElement = create((ThemedWidget.prototype as any).__customElementDescriptor, ThemedWidget);
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
 		customElements.define('themed-element', CustomElement);
 		element = document.createElement('themed-element');
 		document.body.appendChild(element);
@@ -325,7 +325,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((Bar.prototype as any).__customElementDescriptor, Bar);
+		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
 		customElements.define('registry-element', CustomElement);
 		element = document.createElement('registry-element');
 		element.id = 'registry-element';
@@ -339,7 +339,7 @@ describe('registerCustomElement', () => {
 
 	it('custom element with function property', () => {
 		const Widget = createTestWidget({ properties: ['onExternalFunction'] });
-		const CustomElement = create((Widget.prototype as any).__customElementDescriptor, Widget);
+		const CustomElement = create((Widget as any).__customElementDescriptor, Widget);
 		customElements.define('function-property-element', CustomElement);
 		element = document.createElement('function-property-element');
 		document.body.appendChild(element);

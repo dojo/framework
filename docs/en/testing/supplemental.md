@@ -298,7 +298,8 @@ import store from './store';
 
 const factory = create({ store }).properties<{ id: string }>();
 
-export default factory(function MyWidget({ properties: { id }, middleware: store }) {
+export default factory(function MyWidget({ properties, middleware: store }) {
+	const { id } = properties();
     const { path, get, executor } = store;
     const details = get(path('details');
     let isLoading = get(path('isLoading'));
