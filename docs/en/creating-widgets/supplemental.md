@@ -1,4 +1,4 @@
-# Introduction to Widgets
+# Introduction to widgets
 
 Widgets are the fundamental building blocks from which all Dojo applications get constructed. Widgets are the primary units of encapsulation and represent everything from individual elements on a user interface to higher-level containers such as forms, sections, pages, or even complete applications.
 
@@ -108,7 +108,7 @@ Dojo supports subtree rendering, meaning that when a change in state occurs, the
 
 > **Note:** Returning virtual nodes from widget render functions is the only concern applications have around rendering. Attempting to use any other practice [is considered an anti-pattern in Dojo application development](#widget-development-best-practices), and should be avoided.
 
-## TSX Support
+## TSX support
 
 Dojo supports use of the `jsx` syntax extension known as [`tsx` in TypeScript](https://www.TypeScriptlang.org/docs/handbook/jsx.html). This syntax allows for a more convenient representation of a widget's VDOM output that is closer to the resulting HTML within a built application.
 
@@ -399,7 +399,7 @@ Event listener functions can be assigned to virtual nodes in the same way as spe
 
 Function properties such as event handlers are automatically bound to the `this` context of the widget that instantiated the virtual node. However, if an already-bound function is given as a property value, `this` will not be bound again.
 
-## Handling Focus
+## Handling focus
 
 When outputting `VNode`s, widgets can use `VNodeProperties`'s `focus` property to control whether the resulting DOM element should receive focus when rendering. This is a special property that accepts either a `boolean` or a function that returns a `boolean`.
 
@@ -957,7 +957,7 @@ When working with Dojo widgets, a few important principles should be kept in min
 -   The _`__render__`_, _`__setProperties__`_, and _`__setChildren__`_ functions are internal framework implementation details and should never be called nor overridden in application code.
 -   Applications should not instantiate widgets directly - Dojo fully manages the lifecycle of widget instances, including instantiation, caching and destruction.
 
-## The Virtual DOM
+## The virtual DOM
 
 -   Virtual node [`key`s](#vdom-node-keys) should be consistent across multiple render calls.
     -   If a different `key` is specified on every render invocation, Dojo cannot efficiently associate nodes across previous and current renders. Dojo treats new `key`s that it has not seen in the previous render as new elements, which results in the previous nodes being removed from the DOM and an entirely new set being added - even when there are no other property changes that would actually warrant a DOM update.
