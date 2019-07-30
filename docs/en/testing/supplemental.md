@@ -15,17 +15,17 @@ harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
 -   `renderFunction`: A function that returns a WNode for the widget under test
--   [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
+-   [`customComparators`](/learn/testing/dojo-test-harness#custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
 -   `options`: Expanded options for the harness which includes `customComparators` and an array of middleware/mocks tuples.
 
 The harness returns a `Harness` object that provides a small API for interacting with the widget under test:
 
 `Harness`
 
--   [`expect`](#harnessexpect): Performs an assertion against the full render output from the widget under test.
--   [`expectPartial`](#harnessexpectpartial): Performs an assertion against a section of the render output from the widget under test.
--   [`trigger`](#harnesstrigger): Used to trigger a function from a node on the widget under test's API
--   [`getRender`](#harnessgetRender): Returns a render from the harness based on the index provided
+-   [`expect`](/learn/testing/dojo-test-harness#harnessexpect): Performs an assertion against the full render output from the widget under test.
+-   [`expectPartial`](/learn/testing/dojo-test-harness#harnessexpectpartial): Performs an assertion against a section of the render output from the widget under test.
+-   [`trigger`](/learn/testing/dojo-test-harness#harnesstrigger): Used to trigger a function from a node on the widget under test's API
+-   [`getRender`](/learn/testing/dojo-test-harness#harnessgetRender): Returns a render from the harness based on the index provided
 
 Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core`:
 
@@ -44,8 +44,6 @@ class MyWidget extends WidgetBase<{ foo: string }> {
 
 const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
-
-The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the [unit tests](./blob/master/tests/unit/harnessWithTsx.tsx).
 
 ```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
@@ -323,7 +321,7 @@ describe('MyWidget', () => {
 
 There are circumstances where the exact value of a property is unknown during testing, so will require the use of a custom compare descriptor.
 
-The descriptors have a [`selector`](#selectors) to locate the virtual nodes to check, a property name for the custom compare and a comparator function that receives the actual value and returns a boolean result for the assertion.
+The descriptors have a [`selector`](/learn/testing/dojo-test-harness#selectors) to locate the virtual nodes to check, a property name for the custom compare and a comparator function that receives the actual value and returns a boolean result for the assertion.
 
 ```ts
 const compareId = {

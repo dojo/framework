@@ -184,7 +184,7 @@ import cache from '@dojo/framework/core/middleware/cache';
 
 ## `icache`
 
-Composes [`cache`](/learn/middleware/list-of-available-middleware#cache) and [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
+Composes [`cache`](/learn/middleware/available-middleware#cache) and [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
 
 **API:**
 
@@ -318,7 +318,7 @@ import resize from '@dojo/framework/core/middleware/resize';
 
 Allows widgets to determine a specific width breakpoint that is matched given the current width of one of their virtual nodes. This middleware is useful when creating widgets that can adapt to a variety of display widths, such as widgets that work at both mobile and desktop resolutions.
 
-Composes the [`resize`](/learn/middleware/list-of-available-middleware#resize) middleware to obtain the element width and to automatically invalidate the widget when its width is adjusted.
+Composes the [`resize`](/learn/middleware/available-middleware#resize) middleware to obtain the element width and to automatically invalidate the widget when its width is adjusted.
 
 **Note:** If no custom width breakpoints are given, Dojo will default to the following set:
 
@@ -489,7 +489,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 ```
 
 -   `injector.subscribe(label: RegistryLabel, callback: Function = invalidator)`
-    -   Subscribes the given `callback` invalidation function against the specified registry `label` injector (if one exists). If a `callback` is not specified, the [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware is used by default so that the current widget will be marked as invalid and re-rendered when the injector makes its data available.
+    -   Subscribes the given `callback` invalidation function against the specified registry `label` injector (if one exists). If a `callback` is not specified, the [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware is used by default so that the current widget will be marked as invalid and re-rendered when the injector makes its data available.
 -   `injector.get<T>(label: RegistryLabel): T | null`
     -   Retrieves the current injector associated with the given registry `label`, or `null` if no such injector exists.
 
@@ -510,7 +510,7 @@ import block from '@dojo/framework/core/middleware/block';
 
 # Core render middleware
 
-The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](/learn/middleware/list-of-available-middleware#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
+The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](/learn/middleware/available-middleware#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
 
 ## `invalidator`
 
@@ -542,7 +542,7 @@ import node from '@dojo/framework/core/vdom';
 
 Allows widgets fine-grained control over difference detection by registering their own diff function for a specified property. The function will be called by the framework when attempting to re-render a widget, in order to determine if any changes have been made that require a full re-render to take place. If no differences are detected across a widget's properties set, the update is skipped and any existing DOM nodes remain as-is.
 
-Writing custom diff functions is typically coupled with use of the [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware to flag the current widget as invalid when a difference in property values requires the widget's DOM nodes to be updated.
+Writing custom diff functions is typically coupled with use of the [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware to flag the current widget as invalid when a difference in property values requires the widget's DOM nodes to be updated.
 
 **Note:** Only a single diff function can be registered for a given property during the lifetime of a composing widget or middleware, after which subsequent calls will be ignored. By default the rendering engine uses an algorithm that shallowly diffs objects and arrays, ignores functions, and equality checks all other property types. Setting a custom diff function overrides Dojo's default difference detection strategy for the property.
 

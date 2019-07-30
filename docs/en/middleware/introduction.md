@@ -38,7 +38,7 @@ export default myMiddleware;
 ## Composing middleware
 
 -   Combining middleware and returning an object to expose a more complex API
--   Using the core [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware to flag the composing widget as requiring re-rendering
+-   Using the core [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware to flag the composing widget as requiring re-rendering
 
 > src/middleware/myComposingMiddleware.ts
 
