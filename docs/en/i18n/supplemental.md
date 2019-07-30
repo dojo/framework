@@ -93,9 +93,9 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 });
 ```
 
-As this example widget loads its messages through the `i18n` middleware's [`.localize`](#i18n-middleware-localize-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/en/MyI18nWidget.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
+As this example widget loads its messages through the `i18n` middleware's [`.localize`](/learn/i18n/internationalizing-a-dojo-application#i18n-localize-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/en/MyI18nWidget.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
 
-Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](#internationalizing-a-dojo-application).
+Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](/learn/i18n/internationalizing-a-dojo-application).
 
 ## Lazy vs. static loading
 
@@ -134,7 +134,7 @@ An internationalized application should specify all its supported locales within
 -   `locale`: string
     -   The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
 -   `supportedLocales`: string[]
-    -   A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](#providing-locale-data-to-i18n-aware-widgets).
+    -   A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](/learn/i18n/internationalizing-a-dojo-application#providing-locale-data-to-i18n-aware-widgets).
 
 For example, with the following configuration, an application specifies that its default locale is English (`en`), and that it supports Spanish (`es`) and French (`fr`) as additional locale choices:
 
@@ -156,7 +156,7 @@ Individual widgets can be internationalized by using the `i18n` middleware from 
 ### `i18n` widget properties
 
 -   `locale`?: string
-    -   The locale for the widget.<br>If not specified, then the [root application locale](#providing-locale-data-to-i18n-aware-widgets) or [its override](#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
+    -   The locale for the widget.<br>If not specified, then the [root application locale](/learn/i18n/internationalizing-a-dojo-application#providing-locale-data-to-i18n-aware-widgets) or [its override](/learn/i18n/internationalizing-a-dojo-application#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
 -   `rtl`?: boolean
     -   An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
 -   `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
@@ -424,7 +424,7 @@ The locale that an [i18n-aware widget](#creating-i18n-aware-widgets) will use is
 
 Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. Relevant portions of CLDR data must be explicitly loaded when applications require features such as [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or others provided by `@dojo/framework/i18n` such as date or number formatters.
 
-**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](#internationalizing-a-dojo-application).
+**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](/learn/i18n/internationalizing-a-dojo-application).
 
 ### Dojo build system
 

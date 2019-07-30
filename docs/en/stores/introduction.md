@@ -294,7 +294,7 @@ process(store)({ one: 'one', two: 'two' });
 
 There are two state containers available for widgets: `StoreContainer` and `StoreProvider`. These containers connect the application store with a widget. When using functional widgets, a typed store middleware can also be created.
 
-Note that the documentation in this section is intended to show how widgets and state (provided by a store) are connected. For more information on widget state management in general, see the [Creating Widgets reference guide](../creating-widgets/supplemental.md#managing-state).
+Note that the documentation in this section is intended to show how widgets and state (provided by a store) are connected. For more information on widget state management in general, see the [Creating Widgets reference guide](/learn/creating-widgets/managing-state).
 
 ### Store middleware
 

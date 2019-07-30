@@ -54,23 +54,23 @@ export default class MyWidget extends WidgetBase {
 }
 ```
 
-Because this widget returns an empty array from its render function, it has no structural representation within an application's output. Widgets typically [return one or more virtual DOM nodes](#virtual-nodes-example) in order to provide meaningful structure within the application's HTML output.
+Because this widget returns an empty array from its render function, it has no structural representation within an application's output. Widgets typically [return one or more virtual DOM nodes](/learn/creating-widgets/rendering-widgets#virtual-nodes-example) in order to provide meaningful structure within the application's HTML output.
 
-The process of translating virtual DOM nodes to output on a web page is handled by [Dojo's rendering system](#rendering-in-dojo).
+The process of translating virtual DOM nodes to output on a web page is handled by [Dojo's rendering system](/learn/creating-widgets/rendering-widgets).
 
 ## Widget styling
 
-Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both function- and class-based widget variants. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
+Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both function- and class-based widget variants. This topic is described in detail within the [Styling and Theming reference guide](/learn/styling/introduction).
 
 # Rendering widgets
 
 Dojo is a reactive framework, handling responsibilities of data change propagation and associated rendering updates behind the scenes. Dojo leverages a virtual DOM (VDOM) concept to represent elements intended for output, with nodes in the VDOM being simple JavaScript objects that are designed to be more efficient for developers to work with than actual DOM elements.
 
-Applications only need to concern themselves with declaring their intended output structure as a hierarchy of virtual DOM nodes, typically done as the return values from their [widgets' render functions](#basic-widget-structure). The framework's [`Renderer`](#rendering-to-the-dom) component then synchronizes the intended output with concrete elements in the DOM. Virtual DOM nodes also serve to configure and provide state to widgets and elements by passing in properties.
+Applications only need to concern themselves with declaring their intended output structure as a hierarchy of virtual DOM nodes, typically done as the return values from their [widgets' render functions](/learn/creating-widgets/widget-fundamentals#basic-widget-structure). The framework's [`Renderer`](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom) component then synchronizes the intended output with concrete elements in the DOM. Virtual DOM nodes also serve to configure and provide state to widgets and elements by passing in properties.
 
 Dojo supports subtree rendering, meaning that when a change in state occurs, the framework is able to determine specific subsets of VDOM nodes affected by the change. Only the required corresponding subtrees within the DOM tree are then updated to reflect the change, increasing rendering performance and improving user interactivity and experience.
 
-> **Note:** Returning virtual nodes from widget render functions is the only concern applications have around rendering. Attempting to use any other practice [is considered an anti-pattern in Dojo application development](#widget-development-best-practices), and should be avoided.
+> **Note:** Returning virtual nodes from widget render functions is the only concern applications have around rendering. Attempting to use any other practice [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development), and should be avoided.
 
 ## TSX support
 
@@ -155,11 +155,11 @@ Dojo recognizes two types of nodes within its VDOM:
 -   `VNode`s, or _Virtual Nodes_, which are virtual representations of concrete DOM elements, and serve as the lowest-level rendering output for all Dojo applications.
 -   `WNode`s, or _Widget Nodes_, which tie Dojo widgets into the VDOM hierarchy.
 
-Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense. Using [TSX syntax](#tsx-support) is also preferred as it allows applications to render both virtual node types with uniform syntax.
+Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's virtual DOM, but applications don't typically deal with `DNode`s in their abstract sense. Using [TSX syntax](/learn/creating-widgets/rendering-widgets#tsx-support) is also preferred as it allows applications to render both virtual node types with uniform syntax.
 
 ### Instantiating VDOM nodes
 
-If [TSX output](#tsx-support) is not desired, widgets can import one or both of the `v()` and `w()` primitives provided by the `@dojo/framework/core/vdom` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a [widget's render function](#basic-widget-structure). Their signatures, in abstract terms, are:
+If TSX output is not desired, widgets can import one or both of the `v()` and `w()` primitives provided by the `@dojo/framework/core/vdom` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a [widget's render function](/learn/creating-widgets/widget-fundamentals#basic-widget-structure). Their signatures, in abstract terms, are:
 
 -   `v(tagName | VNode, properties?, children?)`:
 -   `w(Widget | constructor, properties, children?)`
@@ -168,7 +168,7 @@ If [TSX output](#tsx-support) is not desired, widgets can import one or both of 
 | ---------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tagName | VNode`      | No                | Typically, components will pass in `tagName` as a string, which identifies the corresponding DOM element tag that will be rendered for the `VNode`. If another `VNode` is passed instead, the newly created `VNode` will act as a copy of the original. If a `properties` argument is given, the copy will receive a set of merged properties with any duplicates in `properties` overriding those from the original `VNode`. If a `children` argument is passed, it will completely override the original `VNode`'s children in the new copy. |
 | `Widget | constructor` | No                | Typically, components will pass in `Widget` as a generic type reference to an imported widget. Several types of `constructor`s can also be passed, allowing Dojo to instantiate widgets in a variety of different ways. These allow for advanced features such as deferred or lazy loading.                                                                                                                                                                                                                                                    |
-| `properties`           | `v`: Yes, `w`: No | The [set of properties used to configure the newly created VDOM node](#virtual-node-properties). These also allow the framework to determine whether the node has been updated and should therefore be re-rendered.                                                                                                                                                                                                                                                                                                                            |
+| `properties`           | `v`: Yes, `w`: No | The [set of properties used to configure the newly created VDOM node](/learn/creating-widgets/configuring-widgets-through-properties). These also allow the framework to determine whether the node has been updated and should therefore be re-rendered.                                                                                                                                                                                                                                                                                      |
 | `children`             | Yes               | An array of nodes to render as children of the newly created node. This can also include any text node children as literal strings, if required. Widgets typically encapsulate their own children, so this argument is more likely to be used with `v()` than `w()`.                                                                                                                                                                                                                                                                           |
 
 ### Virtual nodes example
@@ -294,7 +294,7 @@ r.mount({ domNode: dojoAppRootElement });
 
 ## Adding external DOM nodes into the VDOM
 
-Dojo can wrap external DOM elements, effectively bringing them into the application's VDOM and using them as part of the render output. This is accomplished with the `dom()` utility method from the `@dojo/framework/core/vdom` module. It works similarly to [`v()`](#instantiating-vdom-nodes), but takes an existing DOM node rather than an element tag string as its primary argument. It returns a `VNode` which references the DOM node passed into it, rather than a newly created element when using `v()`.
+Dojo can wrap external DOM elements, effectively bringing them into the application's VDOM and using them as part of the render output. This is accomplished with the `dom()` utility method from the `@dojo/framework/core/vdom` module. It works similarly to [`v()`](/learn/creating-widgets/rendering-widgets#instantiating-vdom-nodes), but takes an existing DOM node rather than an element tag string as its primary argument. It returns a `VNode` which references the DOM node passed into it, rather than a newly created element when using `v()`.
 
 The Dojo application effectively takes ownership of the wrapped DOM node once the `VNode` returned by `dom()` has been added to the application's VDOM. Note that this process only works for nodes external to the Dojo application - either siblings of the element containing the mounted application, or newly-created nodes that are disconnected from the main webpage's DOM. Wrapping a node that is an ancestor or descendant of the application mount target element will not work.
 
@@ -302,14 +302,14 @@ The Dojo application effectively takes ownership of the wrapped DOM node once th
 
 -   `dom({ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach })`
 
-| Argument   | Optional | Description                                                                                                                                                                               |
-| ---------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node`     | No       | The external DOM node that should be added to Dojo's VDOM                                                                                                                                 |
-| `attrs`    | Yes      | The HTML attributes that should be applied to the external DOM node                                                                                                                       |
-| `props`    | Yes      | The properties that should be attached to the DOM node                                                                                                                                    |
-| `on`       | Yes      | The set of events to apply to the external DOM node                                                                                                                                       |
-| `diffType` | Yes      | Default: `none`. The [change detection strategy](#external-dom-node-change-detection) to use when determining if the external DOM node requires updating from within the Dojo application |
-| `onAttach` | Yes      | An optional callback that is executed after the node has been appended to the DOM                                                                                                         |
+| Argument   | Optional | Description                                                                                                                                                                                                                        |
+| ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `node`     | No       | The external DOM node that should be added to Dojo's VDOM                                                                                                                                                                          |
+| `attrs`    | Yes      | The HTML attributes that should be applied to the external DOM node                                                                                                                                                                |
+| `props`    | Yes      | The properties that should be attached to the DOM node                                                                                                                                                                             |
+| `on`       | Yes      | The set of events to apply to the external DOM node                                                                                                                                                                                |
+| `diffType` | Yes      | Default: `none`. The [change detection strategy](/learn/creating-widgets/rendering-widgets#external-dom-node-change-detection) to use when determining if the external DOM node requires updating from within the Dojo application |
+| `onAttach` | Yes      | An optional callback that is executed after the node has been appended to the DOM                                                                                                                                                  |
 
 ### External DOM node change detection
 
@@ -341,25 +341,25 @@ Specifying a `key` is required when widgets begin to output several elements of 
 
 Dojo uses a virtual node's key to uniquely identify a specific instance when re-rendering affected portions of the VDOM. Without a key to differentiate multiple nodes of the same type at the same level in the VDOM, Dojo cannot accurately determine which subset of nodes may be affected by an invalidating change.
 
-> **Note:** Virtual node `keys` should be consistent across multiple render function invocations. Generating different keys for what should be the same output node within every render call [is considered an anti-pattern in Dojo application development](#the-virtual-dom), and should be avoided.
+> **Note:** Virtual node `keys` should be consistent across multiple render function invocations. Generating different keys for what should be the same output node within every render call [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development#the-virtual-dom), and should be avoided.
 
 ## Configuring `VNode`s
 
 `VNodeProperties` contains many fields that act as the primary API to interact with concrete elements in the DOM. Many of these properties mirror those available on [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), including specifying various `oneventname` event handlers.
 
-Application of these properties is considered unidirectional, in that Dojo applies the given set to concrete DOM elements but does not synchronize any further changes made to the corresponding DOM attributes back into the given `VNodeProperties`. Any such changes should instead be propagated back into the Dojo application via event handlers. When an event handler is invoked, the application can process any change in state required for the event, update its view of the corresponding `VNodeProperties` when outputting its VDOM structure for rendering, and then let Dojo's [`Renderer` synchronize any relevant updates with the DOM](#rendering-to-the-dom).
+Application of these properties is considered unidirectional, in that Dojo applies the given set to concrete DOM elements but does not synchronize any further changes made to the corresponding DOM attributes back into the given `VNodeProperties`. Any such changes should instead be propagated back into the Dojo application via event handlers. When an event handler is invoked, the application can process any change in state required for the event, update its view of the corresponding `VNodeProperties` when outputting its VDOM structure for rendering, and then let Dojo's [`Renderer` synchronize any relevant updates with the DOM](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom).
 
 ## Changing properties and diff detection
 
 Dojo uses virtual node properties to determine if a given node has been updated and therefore requires re-rendering. Specifically, it uses a difference detection strategy to compare sets of properties from the previous and current render frames. If a difference is detected in the latest set of properties that a node receives, that node is invalidated and gets re-rendered in the next paint cycle.
 
-> **Be aware:** Property change detection is managed internally by the framework, and is dependent on the declarative structure of widgets' VDOM output from their render functions. Attempting to keep references to properties and modifying them outside of the usual widget render cycle [is considered an anti-pattern in Dojo application development](#widget-development-best-practices), and should be avoided.
+> **Be aware:** Property change detection is managed internally by the framework, and is dependent on the declarative structure of widgets' VDOM output from their render functions. Attempting to keep references to properties and modifying them outside of the usual widget render cycle [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development), and should be avoided.
 
 # Enabling interactivity
 
 ## Event listeners
 
-Event listener functions can be assigned to virtual nodes in the same way as specifying [any other property](#node-properties) when instantiating the node. When outputting `VNode`s, naming of event listeners in `VNodeProperties` mirrors [the equivalent events on `HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). Authors of custom widgets can name their events however they choose, but typically also follow a similar `onEventName` naming convention.
+Event listener functions can be assigned to virtual nodes in the same way as specifying [any other property](/learn/creating-widgets/configuring-widgets-through-properties) when instantiating the node. When outputting `VNode`s, naming of event listeners in `VNodeProperties` mirrors [the equivalent events on `HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). Authors of custom widgets can name their events however they choose, but typically also follow a similar `onEventName` naming convention.
 
 Function properties such as event handlers are automatically bound to the `this` context of the widget that instantiated the virtual node. However, if an already-bound function is given as a property value, `this` will not be bound again.
 
@@ -367,7 +367,7 @@ Function properties such as event handlers are automatically bound to the `this`
 
 When outputting `VNode`s, widgets can use `VNodeProperties`'s `focus` property to control whether the resulting DOM element should receive focus when rendering. This is a special property that accepts either a `boolean` or a function that returns a `boolean`.
 
-When passing `true` directly, the element will only receive focus when the previous value was something other than `true` (similar to [regular property change detection](#changing-properties-and-diff-detection)). When passing a function, the element will receive focus when `true` is returned, regardless of what the previous return value was.
+When passing `true` directly, the element will only receive focus when the previous value was something other than `true` (similar to [regular property change detection](/learn/creating-widgets/configuring-widgets-through-properties#changing-properties-and-diff-detection)). When passing a function, the element will receive focus when `true` is returned, regardless of what the previous return value was.
 
 For example:
 
@@ -414,13 +414,13 @@ export default class FocusExample extends WidgetBase {
 
 ### Delegating focus
 
-Function-based widgets can use the [`focus` middleware](../middleware/supplemental.md#focus) to provide focus to their children or to accept focus from a parent widget. Class-based widgets can use the `FocusMixin` (from `@dojo/framework/core/mixins/Focus`) to delegate focus in a similar way.
+Function-based widgets can use the [`focus` middleware](/learn/middleware/available-middleware#focus) to provide focus to their children or to accept focus from a parent widget. Class-based widgets can use the `FocusMixin` (from `@dojo/framework/core/mixins/Focus`) to delegate focus in a similar way.
 
 `FocusMixin` adds a `this.shouldFocus()` method to a widget's class, whereas function-based widgets use the `focus.shouldFocus()` middleware method for the same purpose. This method checks if the widget is in a state to perform a focus action and will only return `true` for a single invocation, until the widget's `this.focus()` method has been called again (function-based widgets use the `focus.focus()` middleware equivalent).
 
 `FocusMixin` or the `focus` middleware also add a `focus` function property to a widget's API. The framework uses the boolean result from this property to determine if the widget (or one of its children) should receive focus when rendering. Typically, widgets pass the `shouldFocus` method to a specific child widget or an output node via their `focus` property, allowing parent widgets to delegate focus to their children.
 
-See the [`focus` middleware delegation example](../middleware/supplemental.md#focus-delegation-example) in the Dojo middleware reference guide for an example for function-based widgets.
+See the [`focus` middleware delegation example](/learn/middleware/available-middleware#focus-delegation-example) in the Dojo middleware reference guide for an example for function-based widgets.
 
 The following shows an example of delegating and controlling focus across a class-based widget hierarchy and output VNodes:
 
@@ -523,15 +523,15 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 # Managing state
 
-For simple applications where data is not required to flow between many components, state management can be very straightforward. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](#basic-internal-widget-state) within a Dojo application.
+For simple applications where data is not required to flow between many components, state management can be very straightforward. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state) within a Dojo application.
 
-As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together](#intermediate-widget-properties) when declaring VDOM output in a widget's render function.
+As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together]./learn/creating-widgets/managing-state#intermediate-passing-widget-properties) when declaring VDOM output in a widget's render function.
 
-For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](../dojo-stores/supplemental.md) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
+For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](/learn/stores/introduction) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
 
 ## Basic: self-encapsulated widget state
 
-Widgets can maintain their own internal state in a variety of ways. Function-based widgets can use the [`cache`](../middleware/supplemental.md#cache) or [`icache`](../middleware/supplemental.md#icache) middleware to store widget-local state, and class-based widgets can use internal class fields.
+Widgets can maintain their own internal state in a variety of ways. Function-based widgets can use the [`cache`](/learn/middleware/available-middleware#cache) or [`icache`](/learn/middleware/available-middleware#icache) middleware to store widget-local state, and class-based widgets can use internal class fields.
 
 Internal state data may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
 
@@ -595,13 +595,13 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 }
 ```
 
-Note that this example is not complete - clicking on the 'Change State' button in the running application will not have any effect on the widget's render output. This is because the state is fully encapsulated within `MyEncapsulatedStateWidget`, and Dojo [is not aware of any changes made to it](#widget-properties). Only the widget's initial render will be processed by the framework.
+Note that this example is not complete - clicking on the 'Change State' button in the running application will not have any effect on the widget's render output. This is because the state is fully encapsulated within `MyEncapsulatedStateWidget`, and Dojo [is not aware of any changes made to it](/learn/creating-widgets/widget-development-best-pratices#widget-properties). Only the widget's initial render will be processed by the framework.
 
 In order to notify Dojo that a re-render is needed, widgets that encapsulate render state need to invalidate themselves.
 
 ### Invalidating a widget
 
-Function-based widgets can use the [`icache` middleware](../middleware/supplemental.md#icache) to deal with local state management that automatically invalidates the widget when state is updated. `icache` composes [`cache`](../middleware/supplemental.md#cache) and [`invalidator` ](../middleware/supplemental.md#invalidator) middleware, with `cache` handling widget state management and `invalidator` handling widget invalidation on state change. Function-based widgets can also use `invalidator` directly, if desired.
+Function-based widgets can use the [`icache` middleware](/learn/middleware/available-middleware#icache) to deal with local state management that automatically invalidates the widget when state is updated. `icache` composes [`cache`](/learn/middleware/available-middleware#cache) and [`invalidator` ](/learn/middleware/available-middleware#invalidator) middleware, with `cache` handling widget state management and `invalidator` handling widget invalidation on state change. Function-based widgets can also use `invalidator` directly, if desired.
 
 For class-based widgets, there are two ways to invalidate:
 
@@ -677,7 +677,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 
 ## Intermediate: passing widget properties
 
-Passing state into a widget via virtual node [`properties`](#node-properties) is the most effective way of wiring up reactive data flows within a Dojo application.
+Passing state into a widget via virtual node [`properties`](/learn/creating-widgets/configuring-widgets-through-properties) is the most effective way of wiring up reactive data flows within a Dojo application.
 
 Widgets specify their own properties [interface](https://www.typescriptlang.org/docs/handbook/interfaces.html) which can include any fields the widget wants to publicly advertise to consumers, including configuration options, fields representing injectable state, as well as any event handler functions.
 
@@ -821,7 +821,7 @@ export default class NameHandler extends WidgetBase {
 
 When implementing complex responsibilities, following a pattern of state encapsulation within widgets can result in bloated, unmanageable components. Another problem can arise in large applications with hundreds of widgets structured across tens of layers of structural hierarchy. State is usually required in the leaf widgets, but not in intermediate containers within the VDOM hierarchy. Passing state through all layers of such a complex widget hierarchy adds brittle, unnecessary code.
 
-Dojo provides the [Stores component](../stores/introduction.md) to solve these issues by abstracting state management into its own dedicated context, then injecting relevant portions of the application's state into specific widgets that require it.
+Dojo provides the [Stores component](/learn/stores/introduction) to solve these issues by abstracting state management into its own dedicated context, then injecting relevant portions of the application's state into specific widgets that require it.
 
 # Best practice development
 
@@ -843,7 +843,7 @@ When working with Dojo widgets, a few important principles should be kept in min
 
 ## The virtual DOM
 
--   Virtual node [`key`s](#vdom-node-keys) should be consistent across multiple render calls.
+-   Virtual node [`key`s](/learn/creating-widgets/configuring-widgets-through-properties#vdom-node-keys) should be consistent across multiple render calls.
     -   If a different `key` is specified on every render invocation, Dojo cannot efficiently associate nodes across previous and current renders. Dojo treats new `key`s that it has not seen in the previous render as new elements, which results in the previous nodes being removed from the DOM and an entirely new set being added - even when there are no other property changes that would actually warrant a DOM update.
     -   A common anti-pattern is assigning a randomly-generated ID (such as a GUID or UUID) as a node's `key` within a widget's render function. Node `key`s should not be generated within a render function unless the generation strategy is idempotent.
 -   Applications should not store references to virtual nodes for later manipulation outside of returning them from a widget's render function, nor as an attempt to optimize memory allocation by using a single instance across multiple render calls.

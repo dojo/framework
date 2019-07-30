@@ -93,7 +93,7 @@ If we wanted to create nls internationalization modules by locale we could use g
 }
 ```
 
-In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. For more information see [Working with message bundles](/reference-guides/i18n/working-with-message-bundles) from the Internationalization reference guide.
+In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. For more information see [Working with message bundles](/learn/i18n/working-with-message-bundles) from the Internationalization reference guide.
 
 ## Bundling considerations
 
@@ -380,7 +380,7 @@ export const mode = has('production') ? 'dist' : 'dev';
 }
 ```
 
-The above `production` feature will be set `true` for **production builds** (`dist` mode). The Dojo build system uses the [static-build-loader](https://github.com/dojo/webpack-contrib/#static-build-loader) to identify code as unreachable and remove those dead code branches from the build.
+The above `production` feature will be set `true` for **production builds** (`dist` mode). The build system uses `@dojo/framework/has` to identify code as unreachable and remove those dead code branches from the build.
 
 For example, the above code would be rewritten as:
 

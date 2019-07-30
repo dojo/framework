@@ -26,11 +26,11 @@ These examples assume an application with the following name:
 }
 ```
 
-The application name becomes relevant when specifying [widget theme keys](./supplemental.md#widget-theme-keys).
+The application name becomes relevant when specifying [widget theme keys](/learn/styling/working-with-themes#widget-theme-keys).
 
 ## Styling a widget
 
--   Defining a [CSS module](./supplemental.md#structural-widget-styling) for a widget
+-   Defining a [CSS module](/learn/styling/styling-and-theming-in-dojo#structural-widget-styling) for a widget
 -   Using the corresponding typed style classes within the widget's TypeScript code
 
 > src/styles/MyWidget.m.css
@@ -58,7 +58,7 @@ export default factory(function MyWidget() {
 ## Making a widget themeable
 
 -   Inject the `theme` middleware
--   Using `theme.classes` to return the themed css class name, whidh allows a [widget's default styles to be overridden by a theme](./supplemental.md#making-themeable-widgets)
+-   Using `theme.classes` to return the themed css class name, whidh allows a [widget's default styles to be overridden by a theme](/learn/styling/theming-a-dojo-application#making-themeable-widgets)
 
 > src/widgets/MyWidget.tsx
 
@@ -79,7 +79,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 ## Creating a theme
 
 -   Overriding a widget's default CSS class with custom theme style properties
--   Linking one or more overrides via the appropriate [widget theme keys](./supplemental.md#widget-theme-keys) into a [theme structure](./supplemental.md#working-with-themes)
+-   Linking one or more overrides via the appropriate [widget theme keys](/learn/styling/working-with-themes#widget-theme-keys) into a [theme structure](/learn/styling/working-with-themes)
 
 > src/themes/MyTheme/MyWidget.m.css
 
@@ -102,7 +102,7 @@ export default {
 
 ## Abstracting common theme properties
 
--   Importing a central `variables.css` regular CSS file that defines [CSS custom properties](./supplemental.md#css-custom-properties)
+-   Importing a central `variables.css` regular CSS file that defines [CSS custom properties](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)
 -   Referring to the custom properties via `var()`
 
 > src/themes/variables.css
@@ -154,7 +154,7 @@ export default factory(function App({ middleware: { theme }}) {
 
 ## Changing the theme within an application
 
--   Using the [`theme` middleware](./supplemental.md#changing-the-currently-active-theme) to allow users to choose between available themes
+-   Using the [`theme` middleware](/learn/styling/theming-a-dojo-application#changing-the-currently-active-theme) to allow users to choose between available themes
 
 > src/widgets/ThemeSwitcher.tsx
 
