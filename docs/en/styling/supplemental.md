@@ -6,18 +6,18 @@ Widgets can be styled via regular CSS, but to support encapsulation and reuse go
 
 Dojo differentiates between several types of styling, each representing a different aspect and granularity of styling concerns within an enterprise web application:
 
--   [Widget non-themeable styles](#structural-widget-styling) (_granularity:_ per-widget)
+-   [Widget non-themeable styles](/learn/styling/styling-and-theming-in-Dojo#structural-widget-styling) (_granularity:_ per-widget)
     -   The minimum styles necessary for a widget to function, that are not intended to be overridden by a theme. Widgets refer to these style classes directly from their CSS module imports when rendering.
--   [Widget themeable styles](#making-themeable-widgets) (_granularity:_ per-widget)
-    -   Widget styles that can be overridden via theming. Widgets use the [`theme.classes(css)`](#theme-middleware-classes) API from the `theme` middleware, passing in the CSS that requires theming and using the returned class names when rendering. Users of the widget can override some or all of these classes as needed.
--   [Cross-cutting styles](#making-themeable-applications) (_granularity:_ application-wide)
+-   [Widget themeable styles](/learn/styling/theming-a-dojo-application#making-themeable-widgets) (_granularity:_ per-widget)
+    -   Widget styles that can be overridden via theming. Widgets use the [`theme.classes(css)`](/learn/styling/theming-a-dojo-application#theme-middleware-properties) API from the `theme` middleware, passing in the CSS that requires theming and using the returned class names when rendering. Users of the widget can override some or all of these classes as needed.
+-   [Cross-cutting styles](/learn/styling/theming-a-dojo-application#making-themeable-applications) (_granularity:_ application-wide)
     -   Styles that apply across several widgets, whether widgets of different types, or multiple instances of a single widget type. These styles usually provide a consistent visual presentation for all themeable widgets used within an application. Cross-cutting styles can be provided/referenced via several mechanisms:
-        -   Providing [an application-wide theme](#making-themeable-applications)
-        -   [Specifying per-widget themes](#overriding-the-theme-of-specific-widget-instances)
-        -   [Passing extra classes to a widget](#passing-extra-classes-to-widgets)
-        -   Using [a centralized `variables.css` file](#css-custom-properties) that other stylesheets can import and reference
-        -   [Composing classes](#css-module-composition) within a CSS module.
-        -   [Using several CSS modules](#using-several-css-modules) within a widget.
+        -   Providing [an application-wide theme](/learn/styling/theming-a-dojo-application#making-themeable-applications)
+        -   [Specifying per-widget themes](/learn/styling/theming-a-dojo-application#overriding-the-theme-of-specific-widget-instances)
+        -   [Passing extra classes to a widget](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets)
+        -   Using [a centralized `variables.css` file](/learn/styling/theming-a-dojo-application#css-custom-properties) that other stylesheets can import and reference
+        -   [Composing classes](/learn/styling/theming-a-dojo-application#css-module-composition) within a CSS module.
+        -   [Using several CSS modules](/learn/styling/theming-a-dojo-application#using-several-css-modules) within a widget.
 
 As the above list illustrates, Dojo provides several complementary mechanisms for application developers to provide and override CSS styling classes, whether across an entire application or specific to individual style rules within a single styling class.
 

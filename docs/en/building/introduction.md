@@ -56,8 +56,6 @@ npm run test:unit
 npm run test:functional
 ```
 
-More detailed information is available in the [testing basic usage guide](https://github.com/dojo/framework/blob/master/docs/en/testing/basic-usage.md).
-
 ## Browser support
 
 Dojo is an evergreen framework. By default the build will support the last two versions of the latest browsers when it was released. Any polyfills needed by Dojo to normalize functionality across browsers is conditionally provided by the `@dojo/framework/shim`. To support IE11 run the build with the `--legacy` flag.

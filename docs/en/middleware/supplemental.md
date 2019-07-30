@@ -184,7 +184,7 @@ import cache from '@dojo/framework/core/middleware/cache';
 
 ## `icache`
 
-Composes [`cache`](#cache) and [`invalidator`](#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
+Composes [`cache`](/learn/middleware/list-of-available-middleware#cache) and [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
 
 **API:**
 
@@ -205,7 +205,7 @@ import icache from '@dojo/framework/core/middleware/icache';
 
 Allows widgets to theme their CSS classes when rendering, and also provides applications the ability to set themes and determine what the currently set theme is, if any.
 
-Described in detail in the [Dojo Styling and Theming reference guide](../styling-and-theming/supplemental.md#making-themeable-widgets).
+Described in detail in the [Dojo Styling and Theming reference guide](/learn/theming/theming-a-dojo-application#making-themeable-widgets).
 
 **API:**
 
@@ -224,7 +224,7 @@ import theme from '@dojo/framework/core/middleware/theme';
 
 Allows widgets to localize their message text when rendering, and also provides applications the ability to set a locale and determine what the currently set locale is, if any.
 
-Described in detail in the [Dojo Internationalization reference guide](../i18n/supplemental.md#internationalizing-a-dojo-application).
+Described in detail in the [Dojo Internationalization reference guide](/learn/i18n/internationalizing-a-dojo-application).
 
 **API:**
 
@@ -318,7 +318,7 @@ import resize from '@dojo/framework/core/middleware/resize';
 
 Allows widgets to determine a specific width breakpoint that is matched given the current width of one of their virtual nodes. This middleware is useful when creating widgets that can adapt to a variety of display widths, such as widgets that work at both mobile and desktop resolutions.
 
-Composes the [`resize`](#resize) middleware to obtain the element width and to automatically invalidate the widget when its width is adjusted.
+Composes the [`resize`](/learn/middleware/list-of-available-middleware#resize) middleware to obtain the element width and to automatically invalidate the widget when its width is adjusted.
 
 **Note:** If no custom width breakpoints are given, Dojo will default to the following set:
 
@@ -377,7 +377,7 @@ import store from '@dojo/framework/core/middleware/store';
 
 ## `focus`
 
-Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](../creating-widgets/supplemental.md#handling-focus).
+Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](/learn/creating-widgets/interactivity#handling-focus).
 
 **API:**
 
@@ -386,7 +386,7 @@ import focus from '@dojo/framework/core/middleware/focus';
 ```
 
 -   `focus.shouldFocus(): boolean`
-    -   Returns `true` if focus should be specified within the current render cycle. Will only return `true` once, after which `false` is returned from future calls until `focus.focus()` is called again. This function is typically passed as the [`focus` property](../creating-widgets/supplemental.md#handling-focus) to a specific VDOM node, allowing the widget to direct where focus should be applied.
+    -   Returns `true` if focus should be specified within the current render cycle. Will only return `true` once, after which `false` is returned from future calls until `focus.focus()` is called again. This function is typically passed as the focus` property to a specific VDOM node, allowing the widget to direct where focus should be applied.
 -   `focus.focus()`
     -   Can be called to indicate that the widget or one of its children requires focus in the next render cycle. This function is typically passed as the `onfocus` event handler to outputted VDOM nodes, allowing widgets to respond to user-driven focus change events.
 -   `focus.isFocused(key: string | number): boolean`
@@ -489,7 +489,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 ```
 
 -   `injector.subscribe(label: RegistryLabel, callback: Function = invalidator)`
-    -   Subscribes the given `callback` invalidation function against the specified registry `label` injector (if one exists). If a `callback` is not specified, the [`invalidator`](#invalidator) middleware is used by default so that the current widget will be marked as invalid and re-rendered when the injector makes its data available.
+    -   Subscribes the given `callback` invalidation function against the specified registry `label` injector (if one exists). If a `callback` is not specified, the [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware is used by default so that the current widget will be marked as invalid and re-rendered when the injector makes its data available.
 -   `injector.get<T>(label: RegistryLabel): T | null`
     -   Retrieves the current injector associated with the given registry `label`, or `null` if no such injector exists.
 
@@ -497,7 +497,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 
 Allows widgets to execute modules known as **blocks** within Node.js at build time. Typically used as part of build-time rendering.
 
-Described in detail in the [Building reference guide](../building/supplemental.md#build-time-rendering).
+Described in detail in the [Building reference guide](/learn/building/buildtime-rendering).
 
 **API:**
 
@@ -510,7 +510,7 @@ import block from '@dojo/framework/core/middleware/block';
 
 # Core render middleware
 
-The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
+The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](/learn/middleware/list-of-available-middleware#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
 
 ## `invalidator`
 
@@ -542,7 +542,7 @@ import node from '@dojo/framework/core/vdom';
 
 Allows widgets fine-grained control over difference detection by registering their own diff function for a specified property. The function will be called by the framework when attempting to re-render a widget, in order to determine if any changes have been made that require a full re-render to take place. If no differences are detected across a widget's properties set, the update is skipped and any existing DOM nodes remain as-is.
 
-Writing custom diff functions is typically coupled with use of the [`invalidator`](#invalidator) middleware to flag the current widget as invalid when a difference in property values requires the widget's DOM nodes to be updated.
+Writing custom diff functions is typically coupled with use of the [`invalidator`](/learn/middleware/list-of-available-middleware#invalidator) middleware to flag the current widget as invalid when a difference in property values requires the widget's DOM nodes to be updated.
 
 **Note:** Only a single diff function can be registered for a given property during the lifetime of a composing widget or middleware, after which subsequent calls will be ignored. By default the rendering engine uses an algorithm that shallowly diffs objects and arrays, ignores functions, and equality checks all other property types. Setting a custom diff function overrides Dojo's default difference detection strategy for the property.
 

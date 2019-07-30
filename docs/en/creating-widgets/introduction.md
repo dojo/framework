@@ -16,8 +16,8 @@ Widgets describe their intended structural representation through virtual nodes 
 
 ## Defining a widget
 
--   Using the [`create()` primitive](./supplemental.md#basic-widget-structure) to define a widget as a render function factory
--   Returning [virtual DOM nodes](./supplemental.md#working-with-the-vdom) that define the widget's structural representation, declared as [TSX syntax](./supplemental.md#tsx-support)
+-   Using the [`create()` primitive](/learn/creating-widgets/introduction-to-widgets#basic-widget-structure) to define a widget as a render function factory
+-   Returning [virtual DOM nodes](/learn/creating-widgets/rendering-in-dojo/#working-with-the-vdom) that define the widget's structural representation, declared as [TSX syntax](/learn/creating-widgets/rendering-in-dojo/#working-with-the-vdom)
 
 > src/widgets/MyWidget.tsx
 
@@ -33,9 +33,9 @@ export default factory(function MyWidget() {
 
 ## Specifying widget properties
 
--   Making widgets more reusable by abstracting out [state](./supplemental.md#managing-state), configuration and [event handling](./supplemental.md#interactivity) via a [typed properties interface](./supplemental.md#intermediate-passing-widget-properties)
--   Providing [middleware](../middleware/introduction.md) to widgets via their `create` factory
--   Specifying [node `key`s](./supplemental.md#vdom-node-keys) to differentiate between sibling elements of the same type - here, two `div` elements. This allows the framework to more efficiently target only the relevant elements when updating the DOM as a result of an application state change
+-   Making widgets more reusable by abstracting out [state](/learn/creating-widgets/managing-state), configuration and [event handling](/learn/creating-widgets/interactivity) via a [typed properties interface](./supplemental.md#intermediate-passing-widget-properties)
+-   Providing [middleware](/learn/middleware/introduction) to widgets via their `create` factory
+-   Specifying [node `key`s](/learn/creating-widgets/node-properties#vdom-node-keys) to differentiate between sibling elements of the same type - here, two `div` elements. This allows the framework to more efficiently target only the relevant elements when updating the DOM as a result of an application state change
 
 > src/widgets/Greeter.tsx
 
@@ -80,8 +80,8 @@ export default factory(function Greeter({ middleware: { icache }, properties }) 
 ## Composing widgets
 
 -   Defining a hierarchy of widgets that combine to implement more complex application requirements
--   Providing state and event handler [properties](./supplemental.md#node-properties) to child widgets
--   Making use of [`icache` middleware](../middleware/supplemental.md#icache) to manage state and invalidate/re-render affected widgets when the state is changed
+-   Providing state and event handler [properties](/learn/creating-widgets/node-properties) to child widgets
+-   Making use of [`icache` middleware](/learn/middleware/list-of-available-middleware#icache) to manage state and invalidate/re-render affected widgets when the state is changed
 
 > src/widgets/NameHandler.tsx
 
@@ -109,7 +109,7 @@ export default factory(function NameHandler({ middleware: { icache } }) {
 ## Rendering to the DOM
 
 -   Using the framework's `renderer` to mount a widget hierarchy into the DOM
--   Optionally allowing [more control](./supplemental.md#mountoptions-properties) over where Dojo applications appear in a page, for progressive adoption of smaller subcomponents or even to support multiple applications/frameworks within a single page
+-   Optionally allowing [more control](/learn/creating-widgets/rendering-in-dojo#mountoptions-properties) over where Dojo applications appear in a page, for progressive adoption of smaller subcomponents or even to support multiple applications/frameworks within a single page
 
 > src/main.tsx
 
