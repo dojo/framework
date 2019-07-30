@@ -205,7 +205,7 @@ import icache from '@dojo/framework/core/middleware/icache';
 
 Allows widgets to theme their CSS classes when rendering, and also provides applications the ability to set themes and determine what the currently set theme is, if any.
 
-Described in detail in the [Dojo Styling and Theming reference guide](/learn/theming/theming-a-dojo-application#making-themeable-widgets).
+Described in detail in the [Dojo Styling and Theming reference guide](/learn/styling/theming-a-dojo-application#making-themeable-widgets).
 
 **API:**
 
