@@ -377,7 +377,7 @@ import store from '@dojo/framework/core/middleware/store';
 
 ## `focus`
 
-Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](/learn/creating-widgets/interactivity#handling-focus).
+Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](/learn/creating-widgets/enabling-interactivity#handling-focus).
 
 **API:**
 
@@ -386,7 +386,7 @@ import focus from '@dojo/framework/core/middleware/focus';
 ```
 
 -   `focus.shouldFocus(): boolean`
-    -   Returns `true` if focus should be specified within the current render cycle. Will only return `true` once, after which `false` is returned from future calls until `focus.focus()` is called again. This function is typically passed as the focus` property to a specific VDOM node, allowing the widget to direct where focus should be applied.
+    -   Returns `true` if focus should be specified within the current render cycle. Will only return `true` once, after which `false` is returned from future calls until `focus.focus()` is called again. This function is typically passed as the `focus` property to a specific VDOM node, allowing the widget to direct where focus should be applied.
 -   `focus.focus()`
     -   Can be called to indicate that the widget or one of its children requires focus in the next render cycle. This function is typically passed as the `onfocus` event handler to outputted VDOM nodes, allowing widgets to respond to user-driven focus change events.
 -   `focus.isFocused(key: string | number): boolean`
