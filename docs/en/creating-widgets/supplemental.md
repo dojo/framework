@@ -1,4 +1,4 @@
-# Creating widgets
+# Widget fundamentals
 
 Widgets are the fundamental building blocks from which all Dojo applications get constructed. Widgets are the primary units of encapsulation and represent everything from individual elements on a user interface to higher-level containers such as forms, sections, pages, or even complete applications.
 
