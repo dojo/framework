@@ -56,7 +56,7 @@ npm run test:unit
 npm run test:functional
 ```
 
-More detailed information is available in the [testing basic usage guide](https://github.com/dojo/framework/blob/master/docs/en/testing/basic-usage.md).
+More detailed information is available in the [Dojo testing reference guide](../testing/introduction.md).
 
 ## Browser support
 

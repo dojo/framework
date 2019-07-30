@@ -15,7 +15,7 @@ harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
 -   `renderFunction`: A function that returns a WNode for the widget under test
--   [`customComparators`](custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
+-   [`customComparators`](#custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
 -   `options`: Expanded options for the harness which includes `customComparators` and an array of middleware/mocks tuples.
 
 The harness returns a `Harness` object that provides a small API for interacting with the widget under test:
@@ -45,7 +45,7 @@ class MyWidget extends WidgetBase<{ foo: string }> {
 const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
 ```
 
-The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the [unit tests](./blob/master/tests/unit/harnessWithTsx.tsx).
+The harness also supports `tsx` usage as show below. For the rest of the README the examples will be using the programmatic `w()` API, there are more examples of `tsx` in the Dojo framework unit tests.
 
 ```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);

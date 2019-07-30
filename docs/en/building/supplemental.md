@@ -93,7 +93,7 @@ If we wanted to create nls internationalization modules by locale we could use g
 }
 ```
 
-In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. For more information see [Working with message bundles](/reference-guides/i18n/working-with-message-bundles) from the Internationalization reference guide.
+In this case Dojo will create bundles named `fr.[hash].js` and `de.[hash].js`. For more information see [Working with message bundles](../i18n/supplemental.md#working-with-message-bundles) from the Internationalization reference guide.
 
 ## Bundling considerations
 
