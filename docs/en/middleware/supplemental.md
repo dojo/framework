@@ -1,4 +1,4 @@
-# Dojo middleware concepts
+# Middleware fundamentals
 
 Dojo provides a concept of render middleware to help bridge the gap between reactive, functional widgets and their underlying imperative DOM structure.
 
