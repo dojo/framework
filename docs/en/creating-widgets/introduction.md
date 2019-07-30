@@ -17,7 +17,7 @@ Widgets describe their intended structural representation through virtual nodes 
 ## Defining a widget
 
 -   Using the [`create()` primitive](/learn/creating-widgets/widget-fundamentals#basic-widget-structure) to define a widget as a render function factory
--   Returning [virtual DOM nodes](/learn/creating-widgets/rendering-widgets/#working-with-the-vdom) that define the widget's structural representation, declared as [TSX syntax](/learn/creating-widgets/rendering-widgets/#working-with-the-vdom)
+-   Returning [virtual DOM nodes](/learn/creating-widgets/rendering-widgets/#working-with-the-vdom) that define the widget's structural representation, declared as [TSX syntax](/learn/creating-widgets/rendering-widgets#tsx-support)
 
 > src/widgets/MyWidget.tsx
 
