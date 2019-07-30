@@ -1,4 +1,6 @@
-# State
+# Store concepts in detail
+
+## `State` object
 
 In modern browsers a `state` object is passed as part of the `CommandRequest`. Any modification to this `state` object gets translated to the appropriate patch operations and applied against the store.
 
@@ -17,9 +19,7 @@ const addUser = createCommand<User>(({ payload, state }) => {
 
 Note that attempting to access state is not supported in IE11 and will immediately throw an error.
 
-# StoreProvider
-
-## StoreProvider API
+## `StoreProvider`
 
 The StoreProvider accepts three properties
 
@@ -27,20 +27,33 @@ The StoreProvider accepts three properties
 -   `stateKey`: The key of the state in the registry.
 -   `paths` (optional): A function to connect the provider to sections of the state.
 
-## Invalidation
+### Invalidation
 
 The `StoreProvider` has two main ways to trigger invalidation and cause a rerender.
 
 1.  The recommended approach is to register `path`s by passing the `paths` property to the provider to ensure invalidation only occurs when relevant state changes.
-1.  A catch-all when no `path`s are defined for the container, it will invalidate when _any_ data changes in the store.
+2.  A catch-all when no `path`s are defined for the container, it will invalidate when _any_ data changes in the store.
 
-# Process Middleware
+## `Process`
+
+### Lifecycle
+
+A `Process` has an execution lifecycle that defines the flow of the behavior being defined.
+
+1.  If a transformer is present it gets executed first to transform the payload
+1.  `before` middleware get executed synchronously in order
+1.  commands get executed in the order defined
+1.  operations get applied from the commands after each command (or block of commands in the case of multiple commands) gets executed
+1.  If an exception is thrown during commands, no more commands get executed and the current set of operations are not applied
+1.  `after` middleware get executed synchronously in order
+
+### Process middleware
 
 Middleware gets applied around processes using optional `before` and `after` methods. This allows for generic, sharable actions to occur around the behavior defined by processes.
 
 Multiple middlewares may get defined by providing a list. Middlewares get called synchronously in the order listed.
 
-## Before
+#### Before
 
 A `before` middleware block gets passed a `payload` and a reference to the `store`.
 
@@ -54,7 +67,7 @@ const beforeOnly: ProcessCallback = () => ({
 });
 ```
 
-## After
+#### After
 
 An `after` middleware block gets passed an `error` (if one occurred) and the `result` of a process.
 
@@ -78,22 +91,40 @@ The `result` implements the `ProcessResult` interface to provide information abo
 -   `payload` - the provided payload
 -   `id` - the id used to name the process
 
-# Process Lifecycle
+## Subscribing to store changes
 
-A `Process` has an execution lifecycle that defines the flow of the behavior being defined.
+The `Store` has an `onChange(path, callback)` method that takes a path or an array of paths and invokes a callback function whenever that state changes.
 
-1.  If a transformer is present it gets executed first to transform the payload
-1.  `before` middleware get executed synchronously in order
-1.  commands get executed in the order defined
-1.  operations get applied from the commands after each command (or block of commands in the case of multiple commands) gets executed
-1.  If an exception is thrown during commands, no more commands get executed and the current set of operations are not applied
-1.  `after` middleware get executed synchronously in order
+> main.ts
 
-# Common Patterns
+```ts
+const store = new Store<State>();
+const { path } = store;
 
-## Initial State
+store.onChange(path('auth', 'token'), () => {
+	console.log('new login');
+});
 
-When you first create your store, it will be empty. You can use a process to popuplate the store with your initial application state.
+store.onChange([path('users', 'current'), path('users', 'list')], () => {
+	// Make sure the current user is in the user list
+});
+```
+
+The `Store` also has an `invalidate` event that fires any time the store changes.
+
+> main.ts
+
+```ts
+store.on('invalidate', () => {
+	// do something when the store's state has been updated.
+});
+```
+
+# Common state management patterns
+
+## Initial state
+
+When a store is first created, it will be empty. A process can then be used to populate the store with initial application state.
 
 > main.ts
 
@@ -140,15 +171,15 @@ If any of the commands fail during their execution the `undoOnFailure` middlewar
 
 It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may getexecuted asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
 
-## Optimistic Updates
+## Optimistic updates
 
 Optimistic updating can be used to build a responsive UI despite interactions that might take some time to respond, for example saving to a remote resource.
 
-For example, in the case of adding a todo item, with optimistic updating we can immediately add the todo before we even make a request to the server, avoiding an unnatural waiting period or loading indicator. When the server responds we can then reconcile the outcome based on whether the action was successful or not.
+For example, in the case of adding a todo item, with optimistic updating a todo item can be immediately added to a store before a request is made to persist the object on the server, avoiding an unnatural waiting period or loading indicator. When the server responds, the todo item in the store can then get reconciled based on whether the outcome of the server operation was successful or not.
 
-In the success scenario, we might need to update the added `Todo` item with an `id` provided in the response from the server and change the color of the `Todo` item to green to indicate it was successfully saved.
+In the success scenario, the added `Todo` item can be updated with an `id` provided in the server response, and the color of the `Todo` item can be changed to green to indicate it was successfully saved.
 
-In the error scenario, we might want to show a notification to say the request failed and turn the Todo item red, with a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened during the process.
+In the error scenario, a notification could be shown to say the request failed and the Todo item color can be changed to red, together with showing a "retry" button. It's even possible to revert/undo the adding of the Todo item or anything else that happened during the process.
 
 ```ts
 const handleAddTodoErrorProcess = createProcess('error', [ () => [ add(path('failed'), true) ]; ]);
@@ -175,12 +206,12 @@ const addTodoProcess = createProcess('add-todo', [
 
 -   `addTodoCommand` - adds the new todo into the application state
 -   `calculateCountsCommand` - recalculates the count of completed and active todo items
--   `postTodoCommand` - posts the todo item to a remote service and, using the process `after` middleware, we can make changes if a failure occurs
+-   `postTodoCommand` - posts the todo item to a remote service and, using the process `after` middleware, further changes can be made if a failure occurs
     -   on _failure_ the changes get reverted and the failed state field gets set to true
     -   on _success_ update the todo item id field with the value received from the remote service
 -   `calculateCountsCommand` - runs again after the success of `postTodoCommand`
 
-### Synchronized Updates
+### Synchronized updates
 
 In some cases it is better to wait for a back-end call to complete before continuing on with process execution. For example, when a process will remove an element from the screen or when the outlet changes to display a different view, restoring a state that triggered these actions can be surprising.
 
@@ -212,9 +243,9 @@ createProcess('my-process', [commandLeft, [concurrentCommandOne, concurrentComma
 
 In this example, `commandLeft` gets executed, then both `concurrentCommandOne` and `concurrentCommandTwo` get executed concurrently. Once all of the concurrent commands are completed the results get applied in order. If an error occurs in either of the concurrent commands then none of the operations get applied. Finally, `commandRight` gets executed.
 
-## Alternative State Implementations
+## Alternative state implementations
 
-When a store gets instantiated an implementation of the `MutableState` interface gets used by default. In most circumstances the default state interface is well optimized and sufficient to use for the general case. If a particular use case merits an alternative implementation, you can pass in the implementation during initialization.
+When a store gets instantiated an implementation of the `MutableState` interface gets used by default. In most circumstances the default state interface is well optimized and sufficient to use for the general case. If a particular use case merits an alternative implementation, the implementation can be passed in during initialization.
 
 ```ts
 const store = new Store({ state: myStateImpl });
@@ -229,7 +260,7 @@ Any `State` implemention must provide four methods to properly apply operations 
 -   `path: StatePaths<M>` is a type-safe way to generate a `Path` object for a given path in the state
 -   `apply(operations: PatchOperation<T>[]): PatchOperation<T>[]` applies the provided operations to the current state
 
-### ImmutableState
+### `ImmutableState`
 
 Dojo Stores provide an implementation of the MutableState interface that leverages [Immutable](https://github.com/dojo/framework/blob/master/src/stores/state/ImmutableState.ts). This implementation may provide better performance if there are frequent, deep updates to the store's state. Performance should be tested and verified before fully committing to this implementation.
 
@@ -246,13 +277,13 @@ const customStore = new ImmutableState<State>();
 const store = new Store<State>({ store: customStore });
 ```
 
-## Local Storage
+## Local storage
 
 Dojo Stores provides a collection of tools to leverage local storage.
 
 The local storage middleware watches specified paths for changes and stores them locally on disk using the `id` provided to the `collector` and structure as defined by the path.
 
-> Local storage middleware
+Using local storage middleware:
 
 ```ts
 export const myProcess = createProcess(
@@ -266,7 +297,7 @@ export const myProcess = createProcess(
 
 The `load` function hydrates a store from `LocalStorage`
 
-> Hydrating state
+To hydrate state:
 
 ```ts
 import { load } from '@dojo/framework/stores/middleware/localStorage';
@@ -278,42 +309,11 @@ load('my-process', store);
 
 Note that data is serialized for storage and the data gets overwritten after each process call. This implementation is not appropriate for non-serializable data (e.g. `Date` and `ArrayBuffer`).
 
-# Subscribing to Store changes
+# Advanced store operations
 
-The `Store` has an `onChange(path, callback)` method that takes a path or an array of paths and invokes a callback function whenever that state changes.
+Dojo Stores use operations to make changes to the underlying state of an application. The operations are designed in a way to help simplify common interactions with the store, so, for example, operations will automatically create the underlying structure necessary to support an `add` or `replace` operation.
 
-> main.ts
-
-```ts
-const store = new Store<State>();
-const { path } = store;
-
-store.onChange(path('auth', 'token'), () => {
-	console.log('new login');
-});
-
-store.onChange([path('users', 'current'), path('users', 'list')], () => {
-	// Make sure the current user is in the user list
-});
-```
-
-The `Store` also has an `invalidate` event that fires any time the store changes.
-
-> main.ts
-
-```ts
-store.on('invalidate', () => {
-	// do something when the store's state has been updated.
-});
-```
-
-# Advanced Store Operations
-
-In the basic usage guide we show how Dojo Stores use operations in detail to make changes to the underlying state of an application. There are a few more advanced points that are not covered in the basic usage guide.
-
-First and foremost Dojo Stores was designed with simplicity in mind. For instance, operations will automatically create the underlying structure necessary to support an `add` or `replace` operation.
-
-> Deep `add` in an uninitialized store
+To perform a deep `add` in an uninitialized store:
 
 ```ts
 import Store from '@dojo/framework/stores/Store';
@@ -326,7 +326,7 @@ const user = { id: '0', name: 'Paul' };
 apply([add(at(path('users', 'list'), 10), user)]);
 ```
 
-> Result
+Which gives a result of:
 
 ```json
 {
@@ -345,9 +345,7 @@ Even though state has not been initialized, Dojo is able to create the underlyin
 
 When an explicit state is required, that information can get asserted by using a `test` operation or by getting the underlying data and validating it programmatically.
 
-This example ensures that `user` always gets added to the end of the list as the last element.
-
-> Using `test` to ensure initialization
+This example ensures that `user` always gets added to the end of the list as the last element by using a `test` operation to ensure initialization:
 
 ```ts
 import Store from "@dojo/framework/stores/Store";
@@ -361,9 +359,7 @@ apply([
 ]);
 ```
 
-This example ensures that `user` is always added to the end of the list as the last element.
-
-> Programmatic introspection
+This example ensures that `user` is always added to the end of the list as the last element by programmatic introspection:
 
 ```ts
 import Store from '@dojo/framework/stores/Store';
@@ -380,4 +376,4 @@ apply([
 ]);
 ```
 
-Access to state root is not permitted and will throw an error, for example, `get(path('/'))`. This restriction also applies to Operations; it is not possible to create an operation that will update the state root. Best practices with `@dojo/framework/stores` encourage accessing the smallest necessary part of the store.
+Access to state root is not permitted and will throw an error, for example when trying to perform `get(path('/'))`. This restriction also applies to operations; it is not possible to create an operation that will update the state root. Best practices with `@dojo/framework/stores` encourage accessing the smallest necessary part of the store.
