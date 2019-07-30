@@ -159,7 +159,7 @@ Both `VNode`s and `WNode`s are considered subtypes of `DNode`s within Dojo's vir
 
 ### Instantiating VDOM nodes
 
-If TSX output is not desired, widgets can import one or both of the `v()` and `w()` primitives provided by the `@dojo/framework/core/vdom` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a [widget's render function]./learn/creating-widgets/widget-fundamentals#basic-widget-structure). Their signatures, in abstract terms, are:
+If TSX output is not desired, widgets can import one or both of the `v()` and `w()` primitives provided by the `@dojo/framework/core/vdom` module. These create `VNode`s and `WNode`s, respectively, and can be used as part of the return value from a [widget's render function](/learn/creating-widgets/widget-fundamentals#basic-widget-structure). Their signatures, in abstract terms, are:
 
 -   `v(tagName | VNode, properties?, children?)`:
 -   `w(Widget | constructor, properties, children?)`
@@ -523,9 +523,9 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 # Managing state
 
-For simple applications where data is not required to flow between many components, state management can be very straightforward. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](/learn/creating-widgets/managing-state#basic-internal-widget-state) within a Dojo application.
+For simple applications where data is not required to flow between many components, state management can be very straightforward. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state) within a Dojo application.
 
-As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together]./learn/creating-widgets/managing-state#intermediate-widget-properties) when declaring VDOM output in a widget's render function.
+As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together]./learn/creating-widgets/managing-state#intermediate-passing-widget-properties) when declaring VDOM output in a widget's render function.
 
 For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](/learn/stores/introduction) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
 
