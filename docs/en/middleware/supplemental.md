@@ -161,15 +161,11 @@ const r = renderer(() => <MiddlewarePropertiesWidget conditional={true} />);
 r.mount();
 ```
 
-# List of available middleware
-
-Dojo provides a variety of middleware within the framework that implement many useful enterprise-grade web application requirements.
-
-## Optional middleware
+# Available middleware
 
 Dojo provides a variety of optional middleware that widgets can include when needing to implement specific requirements.
 
-### `cache`
+## `cache`
 
 Provides a simple widget-scoped cache that can persist small amounts of data between widget renders.
 
@@ -186,7 +182,7 @@ import cache from '@dojo/framework/core/middleware/cache';
 -   `cache.clear()`
     -   Clears all values currently stored in the widget's local cache.
 
-### `icache`
+## `icache`
 
 Composes [`cache`](#cache) and [`invalidator`](#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
 
@@ -205,7 +201,7 @@ import icache from '@dojo/framework/core/middleware/icache';
 -   `clear()`
     -   Clears all values currently stored in the widget's local cache.
 
-### `theme`
+## `theme`
 
 Allows widgets to theme their CSS classes when rendering, and also provides applications the ability to set themes and determine what the currently set theme is, if any.
 
@@ -224,7 +220,7 @@ import theme from '@dojo/framework/core/middleware/theme';
 -   `theme.get(): Theme | undefined`
     -   Returns the currently set theme, or `undefined` if no theme has been set. Typically used within an application's root widget.
 
-### `i18n`
+## `i18n`
 
 Allows widgets to localize their message text when rendering, and also provides applications the ability to set a locale and determine what the currently set locale is, if any.
 
@@ -243,7 +239,7 @@ import i18n from '@dojo/framework/core/middleware/i18n';
 -   `i18n.get()`
     -   Returns the currently-set locale, or `undefined` if no theme has been set. Typically used within an application's root widget.
 
-### `dimensions`
+## `dimensions`
 
 Provides various size and position information about a widget's underlying nodes.
 
@@ -279,7 +275,7 @@ The returned `DimensionResults` contains the following properties, mapped from t
 | `offset.width`    | `node.offsetWidth`                    |
 | `offset.height`   | `node.offsetHeight`                   |
 
-### `intersection`
+## `intersection`
 
 Provides information on whether a node is visible in a particular viewport using the [Intersection Observer API](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API).
 
@@ -303,7 +299,7 @@ The `options` argument allows for more control on how intersection gets calculat
 | `intersectionRatio` | `number`  | The ratio of the element's bounding box that is intersecting the root element's viewport, from `0.0` to `1.0`. By default the root element is considered the browser's viewport unless an element is specified via the `options.root` argument. |
 | `isIntersecting`    | `boolean` | A value of `true` indicates that the target element intersects with the root element's viewport (representing a transition into a state of intersection). A value of `false` indicates a transition from intersecting to not-intersecting.      |
 
-### `resize`
+## `resize`
 
 Allows a widget to respond to resize events of its DOM nodes using a [`ResizeObserver`](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver), and provides updated information on the node's new size when a resize occurs. Using this middleware is an effective way of creating applications that are responsive across a variety of viewport sizes.
 
@@ -318,7 +314,7 @@ import resize from '@dojo/framework/core/middleware/resize';
 -   `resize.get(key: string | number): DOMRectReadOnly | null`
     -   Returns size information for the widget's specified DOM element, identified by the node's `key` property. If the node does not exist for the current widget (either has not yet been rendered or an invalid key was specified), `null` is returned. The returned object is a standard [`DOMRectReadOnly`](https://developer.mozilla.org/en-US/docs/Web/API/DOMRectReadOnly) structure.
 
-### `breakpoint`
+## `breakpoint`
 
 Allows widgets to determine a specific width breakpoint that is matched given the current width of one of their virtual nodes. This middleware is useful when creating widgets that can adapt to a variety of display widths, such as widgets that work at both mobile and desktop resolutions.
 
@@ -358,7 +354,7 @@ const myCustomBreakpoint = createBreakpointMiddleware({ Narrow: 0, Wide: 500 });
 export default myCustomBreakpoint;
 ```
 
-### `store`
+## `store`
 
 Provides widgets access to their externalized state when using the Dojo stores component.
 
@@ -379,7 +375,7 @@ import store from '@dojo/framework/core/middleware/store';
 -   `store.executor<T extends Process<any, any>>(process: T): ReturnType<T>`
     -   Executes the given `process` within the composing widget's store and returns the result.
 
-### `focus`
+## `focus`
 
 Allows widgets to inspect and control focus amongst their resulting DOM output when combined with the [VDOM focus primitives](../creating-widgets/supplemental.md#handling-focus).
 
@@ -480,7 +476,7 @@ export default factory(function FocusableWidget({ middleware: { focus, icache } 
 });
 ```
 
-### `injector`
+## `injector`
 
 Allows retrieving injectors from the Dojo registry and assigning invalidation callback functions to then.
 
@@ -497,7 +493,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 -   `injector.get<T>(label: RegistryLabel): T | null`
     -   Retrieves the current injector associated with the given registry `label`, or `null` if no such injector exists.
 
-### `block`
+## `block`
 
 Allows widgets to execute modules known as **blocks** within Node.js at build time. Typically used as part of build-time rendering.
 
@@ -512,11 +508,11 @@ import block from '@dojo/framework/core/middleware/block';
 -   `block<T extends (...args: any[]) => any>(module: T)`
     -   Executes the specified block module and returns its result.
 
-## Core render middleware
+# Core render middleware
 
 The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
 
-### `invalidator`
+## `invalidator`
 
 The most important middleware which provides a hook into a widget's invalidation lifecycle. Calling `invalidator()` will queue the widget for rendering during the next scheduled render.
 
@@ -529,7 +525,7 @@ import invalidator from '@dojo/framework/core/vdom';
 -   `invalidator()`
     -   Marks the consuming widget as invalid and requiring a re-render.
 
-### `node`
+## `node`
 
 Provides widgets access to their underlying DOM nodes, identified by node `key`s. When a valid DOM node is requested but unavailable, Dojo will re-render the widget as soon as the DOM node becomes available.
 
@@ -542,7 +538,7 @@ import node from '@dojo/framework/core/vdom';
 -   `node.get(key: string | number): HTMLElement | null`
     -   Returns the widget's specified DOM element, identified by the node's `key` property. Returns `null` if the specified DOM element does not exist for the current widget.
 
-### `diffProperty`
+## `diffProperty`
 
 Allows widgets fine-grained control over difference detection by registering their own diff function for a specified property. The function will be called by the framework when attempting to re-render a widget, in order to determine if any changes have been made that require a full re-render to take place. If no differences are detected across a widget's properties set, the update is skipped and any existing DOM nodes remain as-is.
 
@@ -559,7 +555,7 @@ import diffProperty from '@dojo/framework/core/vdom';
 -   `diffProperty(propertyName: string, diff: (current: any, next: any) => void)`
     -   Registers the specified `diff` function that is called to determine if any differences exist between the `current` and `next` values of the widget's `propertyName` property.
 
-### `destroy`
+## `destroy`
 
 Assigns a function that is called on widget destruction, allowing any required resource teardown to take place.
 
@@ -574,7 +570,7 @@ import destroy from '@dojo/framework/core/vdom';
 -   `destroy(destroyFunction: () => void)`
     -   Sets the `destroyFunction` that will be called when the current widget is destroyed. Setting a function will override any destroy function previously set for the widget.
 
-### `getRegistry`
+## `getRegistry`
 
 Provides access to the widget's own `Registry` instance, as well as the root application `Registry` if required, via a handler interface.
 
@@ -589,7 +585,7 @@ import getRegistry from '@dojo/framework/core/vdom';
 -   `getRegistry(): RegistryHandler | null`
     -   Returns the `RegistryHandler` for the current widget, or `null` if the widget has not yet been fully initialized.
 
-### `defer`
+## `defer`
 
 Allows widgets to pause and resume their rendering logic; useful when short-circuiting rendering until certain conditions are met.
 

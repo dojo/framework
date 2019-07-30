@@ -109,9 +109,9 @@ Static assets can be added to an `assets/` directory at the project root. At bui
 
 The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
 
-# Progressive web applications (PWAs)
+# Progressive web applications
 
-Progressive web apps are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
+Progressive web apps (PWAs) are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
 
 The core of a progressive web app is made up of two technologies: Service workers and a manifest. Dojo's build command supports both of these through `.dojorc` with the `pwa` object.
 
@@ -231,9 +231,9 @@ Four routing strategies are currently supported:
 -   `networkOnly` forces the resource to always be retrieved over the network, and is useful for requests that have no offline equivalent.
 -   `staleWhileRevalidate` requests resources from both the cache and the network simulaneously. The cache is updated with each successful network response. This strategy is best for resources that do not need to be continuously up-to-date, like user avatars. However, when fetching third-party resources that do not send CORS headers, it is not possible to read the contents of the response or verify the status code. As such, it is possible that a bad response could be cached. In such cases, the `networkFirst` strategy may be a better fit.
 
-# Build-time rendering (BTR)
+# Build-time rendering
 
-BTR renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately, resulting in many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
+Build-time rendering (BTR) renders a route to HTML during the build process and in-lines critical CSS and assets needed to display the initial view. This allows Dojo to pre-render the initial HTML used by a route and inject it directly into the page immediately, resulting in many of the same benefits of server side rendering (SSR) such as performance gains and search engine optimization without the complexities of SSR.
 
 ## Using BTR
 

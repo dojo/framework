@@ -1,4 +1,4 @@
-# Introduction to widgets
+# Creating widgets
 
 Widgets are the fundamental building blocks from which all Dojo applications get constructed. Widgets are the primary units of encapsulation and represent everything from individual elements on a user interface to higher-level containers such as forms, sections, pages, or even complete applications.
 
@@ -62,7 +62,7 @@ The process of translating virtual DOM nodes to output on a web page is handled 
 
 Styling of a widget's DOM output is handled via CSS, with relevant style classes stored in a CSS module file parallel to the widget's TypeScript module. Styling is identical for both function- and class-based widget variants. This topic is described in detail within the [Styling and Theming reference guide](../styling-and-theming/supplemental.md).
 
-# Rendering in Dojo
+# Rendering widgets
 
 Dojo is a reactive framework, handling responsibilities of data change propagation and associated rendering updates behind the scenes. Dojo leverages a virtual DOM (VDOM) concept to represent elements intended for output, with nodes in the VDOM being simple JavaScript objects that are designed to be more efficient for developers to work with than actual DOM elements.
 
@@ -327,7 +327,7 @@ Available `dom()` change detection strategies:
 | `dom`      | This mode uses the `attributes` and `properties` from the DOM node as the base to calculate if there is a difference from the `props` and `attrs` passed to `dom()` that then need to get applied.                                |
 | `vdom`     | This mode will use the previous `VNode` for the diff, which is effectively Dojo's default VDOM diff strategy. Any changes made directly to the wrapped node will get ignored in terms of change detection and rendering updates.  |
 
-# Node properties
+# Configuring widgets through properties
 
 The concept of properties passed to nodes in the VDOM is a central pillar of Dojo. Node properties serve as the main conduit for propagating state through an application, passing it down from parent to child widgets, as well as back up through the hierarchy via event handlers. They also serve as the main API for consumers to interact with a widget, where parent widgets pass properties to configure both their own DOM representation (when returning `VNode`s) as well as any child widgets they may manage (when returning `WNode`s).
 
@@ -355,7 +355,7 @@ Dojo uses virtual node properties to determine if a given node has been updated 
 
 > **Be aware:** Property change detection is managed internally by the framework, and is dependent on the declarative structure of widgets' VDOM output from their render functions. Attempting to keep references to properties and modifying them outside of the usual widget render cycle [is considered an anti-pattern in Dojo application development](#widget-development-best-practices), and should be avoided.
 
-# Interactivity
+# Enabling interactivity
 
 ## Event listeners
 
@@ -823,7 +823,7 @@ When implementing complex responsibilities, following a pattern of state encapsu
 
 Dojo provides the [Stores component](../stores/introduction.md) to solve these issues by abstracting state management into its own dedicated context, then injecting relevant portions of the application's state into specific widgets that require it.
 
-# Widget development best practices
+# Best practice development
 
 When working with Dojo widgets, a few important principles should be kept in mind to avoid introducing anti-patterns into application code. Attempting to use the framework in an unsupported way can cause unexpected behavior and introduce difficult to find bugs into an application.
 
