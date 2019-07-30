@@ -359,7 +359,7 @@ Dojo uses virtual node properties to determine if a given node has been updated 
 
 ## Event listeners
 
-Event listener functions can be assigned to virtual nodes in the same way as specifying [any other property](/learn/creating-widgets/node-properties) when instantiating the node. When outputting `VNode`s, naming of event listeners in `VNodeProperties` mirrors [the equivalent events on `HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). Authors of custom widgets can name their events however they choose, but typically also follow a similar `onEventName` naming convention.
+Event listener functions can be assigned to virtual nodes in the same way as specifying [any other property](/learn/creating-widgets/configuring-widgets-through-properties) when instantiating the node. When outputting `VNode`s, naming of event listeners in `VNodeProperties` mirrors [the equivalent events on `HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement). Authors of custom widgets can name their events however they choose, but typically also follow a similar `onEventName` naming convention.
 
 Function properties such as event handlers are automatically bound to the `this` context of the widget that instantiated the virtual node. However, if an already-bound function is given as a property value, `this` will not be bound again.
 
@@ -367,7 +367,7 @@ Function properties such as event handlers are automatically bound to the `this`
 
 When outputting `VNode`s, widgets can use `VNodeProperties`'s `focus` property to control whether the resulting DOM element should receive focus when rendering. This is a special property that accepts either a `boolean` or a function that returns a `boolean`.
 
-When passing `true` directly, the element will only receive focus when the previous value was something other than `true` (similar to [regular property change detection](/learn/creating-widgets/node-properties#changing-properties-and-diff-detection)). When passing a function, the element will receive focus when `true` is returned, regardless of what the previous return value was.
+When passing `true` directly, the element will only receive focus when the previous value was something other than `true` (similar to [regular property change detection](/learn/creating-widgets/configuring-widgets-through-properties#changing-properties-and-diff-detection)). When passing a function, the element will receive focus when `true` is returned, regardless of what the previous return value was.
 
 For example:
 
@@ -527,7 +527,7 @@ For simple applications where data is not required to flow between many componen
 
 As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together]./learn/creating-widgets/managing-state#intermediate-widget-properties) when declaring VDOM output in a widget's render function.
 
-For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](../dojo-stores/supplemental.md) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
+For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](/learn/stores/introduction) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
 
 ## Basic: self-encapsulated widget state
 
@@ -677,7 +677,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 
 ## Intermediate: passing widget properties
 
-Passing state into a widget via virtual node [`properties`](/learn/creating-widgets/node-properties) is the most effective way of wiring up reactive data flows within a Dojo application.
+Passing state into a widget via virtual node [`properties`](/learn/creating-widgets/configuring-widgets-through-properties) is the most effective way of wiring up reactive data flows within a Dojo application.
 
 Widgets specify their own properties [interface](https://www.typescriptlang.org/docs/handbook/interfaces.html) which can include any fields the widget wants to publicly advertise to consumers, including configuration options, fields representing injectable state, as well as any event handler functions.
 
@@ -843,7 +843,7 @@ When working with Dojo widgets, a few important principles should be kept in min
 
 ## The virtual DOM
 
--   Virtual node [`key`s](/learn/creating-widgets/node-properties#vdom-node-keys) should be consistent across multiple render calls.
+-   Virtual node [`key`s](/learn/creating-widgets/configuring-widgets-through-properties#vdom-node-keys) should be consistent across multiple render calls.
     -   If a different `key` is specified on every render invocation, Dojo cannot efficiently associate nodes across previous and current renders. Dojo treats new `key`s that it has not seen in the previous render as new elements, which results in the previous nodes being removed from the DOM and an entirely new set being added - even when there are no other property changes that would actually warrant a DOM update.
     -   A common anti-pattern is assigning a randomly-generated ID (such as a GUID or UUID) as a node's `key` within a widget's render function. Node `key`s should not be generated within a render function unless the generation strategy is idempotent.
 -   Applications should not store references to virtual nodes for later manipulation outside of returning them from a widget's render function, nor as an attempt to optimize memory allocation by using a single instance across multiple render calls.
