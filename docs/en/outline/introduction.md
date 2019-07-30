@@ -19,13 +19,13 @@ Dojo offers a variety of framework components, tooling and a build pipeline that
 
 ## Create global applications
 
--   Develop [themeable widgets and applications](../styling-and-theming/introduction.md) to help isolate presentational and functional concerns, and allow for an easy way to achieve consistent presentation across a full application.
+-   Develop [themeable widgets and applications](../styling/introduction.md) to help isolate presentational and functional concerns, and allow for an easy way to achieve consistent presentation across a full application.
 -   Make use of a suite of [user interface (UI) widgets](https://github.com/dojo/widgets/blob/master/README.md) that support internationalization (i18n), accessibility (a11y) and theming out-of-the-box.
 -   Use an [internationalization (i18n) framework](../i18n/introduction.md) to support multiple locales, including optional advanced message formatting through [Unicode CLDR](../i18n/supplemental.md#advanced-formatting-cldr).
 
 ## Create adaptable applications
 
--   Develop [progressive web applications (PWA)](../building/supplemental.md#progressive-web-apps) that support features similar to native device apps such as offline usage, background data syncing and push notifications
+-   Develop [progressive web applications (PWA)](../building/supplemental.md#progressive-web-applications) that support features similar to native device apps such as offline usage, background data syncing and push notifications
 -   Use [build-time rendering (BTR)](../building/supplemental.md#build-time-rendering) to provide certain pre-rendering benefits of Server-Side Rendered (SSR) apps without the need for hosting on a dynamic web application server. Create truly static websites that work without JavaScript, or use BTR with progressive hydration for an even better application first-load experience.
     Make use of cutting-edge web technologies such as [Web Animations](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API), [Intersection Observers](../en/middleware/supplemental.md#intersection) and [Resize Observers](../middleware/supplemental.md#resize). The Dojo framework provides a consistent application experience for modern features across a variety of user runtime environments.
 -   If required, projects with bespoke needs can [opt-out of Dojo’s build pipeline](../building/supplemental.md#ejecting) in favor of their own solution, and instead only use pieces of the framework that are needed.
@@ -33,4 +33,4 @@ Dojo offers a variety of framework components, tooling and a build pipeline that
 ## Speed up development
 
 -   Bootstrap new projects and perform ongoing builds and validation using a simple [command-line interface (CLI)](https://github.com/dojo/cli/blob/master/README.md), getting developers immediately productive within a type-safe, opinionated build pipeline that favors industry best practices.
--   Quickly scaffold custom widgets that support the same range of features as the core widget suite, including [custom themes](../styling-and-theming/supplemental.md#scaffolding-themes-for-third-party-widgets).
+-   Quickly scaffold custom widgets that support the same range of features as the core widget suite, including [custom themes](../styling/supplemental.md#scaffolding-themes-for-third-party-widgets).
