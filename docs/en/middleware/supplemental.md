@@ -510,7 +510,7 @@ import block from '@dojo/framework/core/middleware/block';
 
 # Core render middleware
 
-The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](/learn/middleware/available-middleware#optional-middleware) offered by the framework), but can occasionally be useful in general widget development.
+The `@dojo/framework/core/vdom` module includes foundational middleware that is useful across the majority of Dojo applications. These are mainly useful when building other custom middleware (they underpin the [additional middleware](/learn/middleware/available-middleware) offered by the framework), but can occasionally be useful in general widget development.
 
 ## `invalidator`
 
