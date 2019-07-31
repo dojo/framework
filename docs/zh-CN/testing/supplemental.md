@@ -67,10 +67,10 @@ describe('MyWidget', () => {
 			return w(MyWidget, { foo }, [ 'child' ]));
 		};
 
-		h.expect(/** assertion that includes bar **/);
-		// update the property that is passed to the widget
+		h.expect(/** 断言包含 bar **/);
+		// 更新传入部件的属性值
 		foo = 'foo';
-		h.expect(/** assertion that includes foo **/)
+		h.expect(/** 断言包含 foo **/)
   });
 });
 ```
@@ -89,7 +89,7 @@ import MyWidget from './MyWidget';
 describe('MyWidget', () => {
 	it('renders', () => {
 		const h = harness(() => <MyWidget />, { middleware: [[myMiddleware, myMockMiddleware]] });
-		h.expect(/** assertion that executes the mock middleware instead of the normal middleware **/);
+		h.expect(/** 断言执行的是 mock 的中间件而不是实际的中间件 **/);
 	});
 });
 ```
@@ -111,14 +111,13 @@ Harness 会自动 mock 很多核心中间件，并注入到任何需要他们的
 ```ts
 import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
 
-// create the mock node middleware
+// 创建一个 mock node 的中间件
 const mockNode = createNodeMock();
 
-// create a mock DOM node
+// mock 一个 DOM 节点
 const domNode = {};
 
-// call the mock middleware with a key and the DOM
-// to return.
+// 调用 mock 中间件，并传入 key 和将返回的 DOM
 mockNode('key', domNode);
 ```
 
@@ -152,20 +151,20 @@ import MyWidget from './MyWidget';
 
 describe('MyWidget', () => {
 	it('test', () => {
-		// create the intersection mock
+		// 创建一个 mock intersection 的中间件
 		const intersectionMock = createIntersectionMock();
-		// pass the intersection mock to the harness so it knows to
-		// replace the original middleware
+		// 将 intersection mock 中间件传给 harness，
+		// 这样 harness 就知道替换掉原来的中间件
 		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
 
-		// call harness.expect as usual, asserting the default response
+		// 像平常一样调用 harness.expect 来断言默认的响应
 		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
 
-		// use the intersection mock to set the expected return
-		// of the intersection middleware by key
+		// 使用 mock 的 intersection 中间件，通过指定 key 值，
+		// 设置期望 intersection 中间件返回的结果
 		intersectionMock('root', { isIntersecting: true });
 
-		// assert again with the updated expectation
+		// 用更新后的期望值再断言一次
 		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
 	});
 });
@@ -207,20 +206,20 @@ import MyWidget from './MyWidget';
 
 describe('MyWidget', () => {
 	it('test', () => {
-		// create the resize mock
+		// 创建一个 mock resize 的中间件
 		const resizeMock = createResizeMock();
-		// pass the resize mock to the harness so it knows to replace the original
-		// middleware
+		// 将 resize mock 中间件传给 harness，
+		// 这样 harness 就知道替换掉原来的中间件
 		const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
 
-		// call harness.expect as usual
+		// 像平常一样调用 harness.expect
 		h.expect(() => <div key="root">null</div>);
 
-		// use the resize mock to set the expected return of the resize middleware
-		// by key
+		// 使用 mock 的 resize 中间件，通过指定 key 值，
+		// 设置期望 resize 中间件返回的结果
 		resizeMock('root', { width: 100 });
 
-		// assert again with the updated expectation
+		// 用更新后的期望值再断言一次
 		h.expect(() => <div key="root">{`{"width":100}`}</div>);
 	});
 });
@@ -244,8 +243,8 @@ mockStore((path) => [replace(path('details', { id: 'id' })]);
 import { create, tsx } from '@dojo/framework/core/vdom'
 import { myProcess } from './processes';
 import MyState from './interfaces';
-// application store middleware typed with the state interface
-// Example: `const store = createStoreMiddleware<MyState>();`
+// 应用程序的 store 中间件通过 state 接口来指定类型
+// 示例：`const store = createStoreMiddleware<MyState>();`
 import store from './store';
 
 const factory = create({ store }).properties<{ id: string }>();
@@ -283,7 +282,7 @@ import MyWidget from './MyWidget';
 import MyState from './interfaces';
 import store from './store';
 
-// import a stub/mock lib, doesn't have to be sinon
+// 导入 stub/mock 库，可以不是 sinon
 import { stub } from 'sinon';
 
 describe('MyWidget', () => {
@@ -292,34 +291,34 @@ describe('MyWidget', () => {
                id: 'id'
           };
          const myProcessStub = stub();
-         // type safe mock store middleware
-         // pass through an array of tuples `[originalProcess, stub]` for mocked processes
-         // calls to processes not stubbed/mocked get ignored
+		 // 类型安全的 mock store 中间件
+		 // 为 mock 的 process 传入一组 `[originalProcess, stub]` 元组
+		 // 将忽略未传入 stub/mock 的 process
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
          const h = harness(() => <MyWidget {...properties} />, {
              middleware: [[store, mockStore]]
          });
-         h.expect(/* assertion template for `Loading`*/);
+         h.expect(/* 断言 `Loading` 的断言模板 */);
 
-         // assert again the stubbed process
+		 // 重新断言 stubbed process
          expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
 
          mockStore((path) => [replace(path('isLoading', true)]);
-         h.expect(/* assertion template for `Loading`*/);
+         h.expect(/* 断言 `Loading` 的断言模板 */);
          expect(myProcessStub.calledOnce()).toBeTruthy();
 
-         // use the mock store to apply operations to the store
+		 // 使用 mock 的 store 来在 store 上应用操作
          mockStore((path) => [replace(path('details', { id: 'id' })]);
          mockStore((path) => [replace(path('isLoading', true)]);
 
-         h.expect(/* assertion template for `ShowDetails`*/);
+         h.expect(/* 断言 `ShowDetails` 的断言模板 */);
 
          properties.id = 'other';
-         h.expect(/* assertion template for `Loading`*/);
+         h.expect(/* 断言 `Loading` 的断言模板 */);
          expect(myProcessStub.calledTwice()).toBeTruthy();
          expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
          mockStore((path) => [replace(path('details', { id: 'other' })]);
-         h.expect(/* assertion template for `ShowDetails`*/);
+         h.expect(/* 断言 `ShowDetails` 的断言模板 */);
      });
 });
 ```
@@ -332,9 +331,9 @@ describe('MyWidget', () => {
 
 ```ts
 const compareId = {
-	selector: '*', // all nodes
+	selector: '*', // 所有节点
 	property: 'id',
-	comparator: (value: any) => typeof value === 'string' // checks the property value is a string
+	comparator: (value: any) => typeof value === 'string' // 检查属性值是 string 类型
 };
 
 const h = harness(() => w(MyWidget, {}), [compareId]);
@@ -428,13 +427,13 @@ trigger(selector: string, functionSelector: string | FunctionalSelector, ...args
 用法示例：
 
 ```ts
-// calls the `onclick` function on the first node with a key of `foo`
+// 在第一个 key 值为 `foo` 的节点上调用 `onclick` 函数
 h.trigger('@foo', 'onclick');
 ```
 
 ```ts
-// calls the `customFunction` function on the first node with a key of `bar` with an argument of `100`
-// and receives the result of the triggered function
+// 在第一个 key 值为 `bar` 的节点上调用 `customFunction` 函数，并为其传入值为 `100` 的参数
+// 然后接收被触发函数返回的结果
 const result = h.trigger('@bar', 'customFunction', 100);
 ```
 
@@ -483,18 +482,16 @@ getRender(index?: number);
 用法示例:
 
 ```ts
-// Returns the result of the last render
+// 返回最后一个渲染器的结果
 const render = h.getRender();
 ```
 
 ```ts
-// Returns the result of the render for the index provided
+// 返回传入的索引对应渲染器的结果
 h.getRender(1);
 ```
 
 # 断言模板
-
-Assertion templates provide a reusable base to assert against a widget's entire render output, but allow portions to be modified as needed between several test executions. This means common elements that do not change across multiple tests can be abstracted and defined once and reused in multiple locations.
 
 断言模板（assertion template）提供一个可复用的基本模板来断言部件的整个输出内容，但在执行每个测试前可按需修改部分内容。这意味着在多次测试中都不会改变的公共元素可被抽象并定义一次，然后多处使用。
 
@@ -570,7 +567,7 @@ describe('Profile', () => {
 	...
 
   it('renders given username correctly', () => {
-    // update the expected result with a given username
+	// 使用给定的用户名更新期望的结果
     const namedAssertion = profileAssertion.setChildren('~welcome', [
       'Welcome Kel Varnsen!'
     ]);
@@ -672,7 +669,7 @@ export default class Menu extends WidgetBase {
 			w(
 				Link,
 				{
-					id: 'home', // add id attribute
+					id: 'home', // 添加 id 属性
 					to: 'home',
 					classes: [css.link],
 					activeClasses: [css.selected]
@@ -682,7 +679,7 @@ export default class Menu extends WidgetBase {
 			w(
 				Link,
 				{
-					id: 'about', // add id attribute
+					id: 'about', // 添加 id 属性
 					to: 'about',
 					classes: [css.link],
 					activeClasses: [css.selected]
@@ -692,7 +689,7 @@ export default class Menu extends WidgetBase {
 			w(
 				Link,
 				{
-					id: 'profile', // add id attribute
+					id: 'profile', // 添加 id 属性
 					to: 'profile',
 					classes: [css.link],
 					activeClasses: [css.selected]
@@ -716,20 +713,20 @@ describe('routing', () => {
 	it('profile page correctly loads', ({ remote }) => {
 		return (
 			remote
-				// loads the HTML file in local node server
+				// 在本地的 node 服务器中加载 HTML 文件
 				.get('../../output/dev/index.html')
-				// find the id of the anchor tag
+				// 根据 id 找到超链接标签
 				.findById('profile')
-				// click on the link
+				// 单击链接
 				.click()
-				// end this action
+				// 结束此操作
 				.end()
-				// find the h1 tag
+				// 找到 h1 标签
 				.findByTagName('h1')
-				// get the text in the h1 tag
+				// 获取 h1 标签中的文本
 				.getVisibleText()
 				.then((text) => {
-					// verify the content of the h1 tag on the profile page
+					// 核实 profile 页面中 h1 标签中的内容
 					assert.equal(text, 'Welcome Dojo User!');
 				})
 		);

@@ -89,7 +89,7 @@ describe('routing', () => {
 			remote
 				// 在本地的 node 服务器中加载 HTML 文件
 				.get('../../output/dev/index.html')
-				// 根据 id 找到超链接标签的
+				// 根据 id 找到超链接标签
 				.findById('profile')
 				// 单击链接
 				.click()
