@@ -630,10 +630,10 @@ const myProcess = createProcess('my-process', [commandOne, commandTwo], [authent
 
 Specifying a middleware on an individual process explicitly works for targeted behavior but can become cumbersome when the middleware needs to be applied to multiple processes throughout the application.
 
-The `createProcessWith` higher order function can be used to specify middlewares that need to be applied across multiple `processes`. The function accepts an array of middleware and returns a new `createProcess` factory function that will automatically apply the middleware to any process that it creates.
+The `createProcessFactoryWith` higher order function can be used to specify middlewares that need to be applied across multiple `processes`. The function accepts an array of middleware and returns a new `createProcess` factory function that will automatically apply the middleware to any process that it creates.
 
 ```ts
-const customCreateProcess = createProcessWith([logger]);
+const customCreateProcess = createProcessFactoryWith([logger]);
 
 // `myProcess` will automatically be decorated with `logger` middleware.
 const myProcess = customCreateProcess('my-process', [commandOne, commandTwo]);

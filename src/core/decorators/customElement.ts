@@ -1,4 +1,4 @@
-import { Constructor, WidgetProperties } from '../interfaces';
+import { WidgetProperties } from '../interfaces';
 import { CustomElementChildType } from '../registerCustomElement';
 import Registry from '../Registry';
 
@@ -46,9 +46,9 @@ export function customElement<P extends object = { [index: string]: any }>(confi
 		userDefinedConfig.tagName = tagName;
 	}
 
-	return function<T extends Constructor<any>>(target: T) {
-		target.prototype.__customElementDescriptor = {
-			...target.prototype.__customElementDescriptor,
+	return function(target: any) {
+		target.__customElementDescriptor = {
+			...target.__customElementDescriptor,
 			...userDefinedConfig
 		};
 	};

@@ -1,4 +1,4 @@
-# Route Configuration
+# Route configuration
 
 The routing configuration is a hierarchical structure used to describe the entire Dojo application, associating `outlet` ids to a routing path. The routing path can be nested using children which enables building a routing structure that can accurately reflect the requirements of the application.
 
@@ -62,7 +62,7 @@ The Dojo Router exposes an API that can be used to generate and navigate to link
 -   `get currentParams(): { [string: index]: string }`: Returns parameters in the current route
 -   `getOutlet(outletIdentifier: string): OutletContext | undefined`: Returns the `OutletContext` for an outlet id if it is currently matched. If the outlet id is not matched, then return `undefined`.
 
-## Generating a Link for an Outlet
+## Generating a link for an outlet
 
 > src/routes.ts
 
@@ -129,7 +129,7 @@ console.log(router.link('about-services'));
 console.log(router.link('unknown'));
 ```
 
-## Changing a Route
+## Changing a route
 
 ```ts
 import Router from '@dojo/framework/routing/Router';
@@ -142,7 +142,7 @@ const router = new Router(routes);
 router.setPath('#home');
 ```
 
-## Getting the Current Params
+## Getting the current parameters
 
 ```ts
 import Router from '@dojo/framework/routing/Router';
@@ -155,7 +155,7 @@ const router = new Router(routes);
 const params = router.currentParams;
 ```
 
-## Get a Matched Outlet
+## Get a matched outlet
 
 Use the `getOutlet` to return the `OutletContext` for a matched outlet, or `undefined` if the outlet is not matched.
 
@@ -179,7 +179,7 @@ const router = new Router(routes);
 const outletContext = router.getOutlet('home');
 ```
 
-# Using the Outlet MatchDetails
+# Using the outlet `MatchDetails`
 
 For every `outlet` that is matched on a route change, `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 
@@ -311,7 +311,7 @@ export default factory(function App() {
 });
 ```
 
-# History Managers
+# History managers
 
 Dojo Routing comes with three history managers for managing an application's navigation state, `HashHistory`, `StateHistory` and `MemoryHistory`. By default the `HashHistory` is used, however, this can be overridden by passing a different `HistoryManager` when creating the `Router` or using `registerRouterInjector`.
 
@@ -350,7 +350,7 @@ registerRouterInjector(routes, registry);
 registerRouterInjector(routes, registry, { HistoryManager: StateHistory });
 ```
 
-## HashHistory
+## `HashHistory`
 
 `HashHistory` uses the fragment identifier to process route changes, for example `https://foo.com/#home` would process the `home` as the route path. As `HashHistory` is the default manager, you do not need to import the module.
 
@@ -360,7 +360,7 @@ import { Router } from '@dojo/framework/routing/Router';
 const router = new Router(config);
 ```
 
-## StateHistory
+## `StateHistory`
 
 `StateHistory` uses the browser's [history API](https://developer.mozilla.org/en-US/docs/Web/API/History), to manage application route changes.
 
@@ -378,7 +378,7 @@ import { StateHistory } from '@dojo/framework/routing/history/StateHistory';
 const router = new Router(config, { HistoryManager: StateHistory });
 ```
 
-## MemoryHistory
+## `MemoryHistory`
 
 The `MemoryHistory` does not rely on any browser API but keeps its own internal path state. It should not be used in production applications but is useful for testing application routing.
 
@@ -409,7 +409,7 @@ r.mount({ registry });
 
 These history managers work like adapters, meaning that custom history managers can be implemented by fulfilling the history manager interface.
 
-# Error Outlet
+# Error outlet
 
 A special `outlet` called `errorOutlet` is registered for that will match when the route doesn't match (`exact` or `partial`) any outlet in the routing configuration. You can use this `outlet` to render a widget to inform the user that the route does not exist.
 

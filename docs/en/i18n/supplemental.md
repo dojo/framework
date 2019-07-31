@@ -82,7 +82,7 @@ This can be imported and referenced within a widget such as:
 import { create, tsx } from '@dojo/framework/core/vdom';
 import i18n from '@dojo/framework/core/middleware/i18n';
 
-import myWidgetMessageBundle from '../nls/en/MyI18nWidget.ts';
+import myWidgetMessageBundle from '../nls/en/MyI18nWidget';
 
 const factory = create({ i18n });
 
@@ -93,9 +93,9 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 });
 ```
 
-As this example widget loads its messages through the `i18n` middleware's [`.localize`](#i18n-middleware-localize-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/en/MyI18nWidget.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
+As this example widget loads its messages through the `i18n` middleware's [`.localize`](/learn/i18n/internationalizing-a-dojo-application#i18n-localize-method) method, it will continue to work as new language translations are added and referenced within the bundle's `nls/en/MyI18nWidget.ts` default language module. Users will see localized messages from `MyI18nWidget` instances if a message set for their currently configured language is available.
 
-Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](#internationalizing-a-dojo-application).
+Applications that want to override user default languages and allow changing locales within the application itself require additional setup, covered in [Internationalizing a Dojo application](/learn/i18n/internationalizing-a-dojo-application).
 
 ## Lazy vs. static loading
 
@@ -134,7 +134,7 @@ An internationalized application should specify all its supported locales within
 -   `locale`: string
     -   The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
 -   `supportedLocales`: string[]
-    -   A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](#providing-locale-data-to-i18n-aware-widgets).
+    -   A list of additional locales that the application supports. These locales need to be activated to override the default `locale`, either implicitly through an application user's language setting when running client-side, the process' or host's language setting when running server-side, or [explicitly within the application itself](/learn/i18n/internationalizing-a-dojo-application#providing-locale-data-to-i18n-aware-widgets).
 
 For example, with the following configuration, an application specifies that its default locale is English (`en`), and that it supports Spanish (`es`) and French (`fr`) as additional locale choices:
 
@@ -149,14 +149,14 @@ For example, with the following configuration, an application specifies that its
 }
 ```
 
-## Creating i18n-aware Widgets
+## Creating i18n-aware widgets
 
 Individual widgets can be internationalized by using the `i18n` middleware from `@dojo/framework/core/middleware/i18n`. Using the middleware adds some optional i18n-related properties to the widget property interface. The API for the `i18n` middleware includes a method, `localize(bundle)` to get the localized nls values given a message bundle and two methods that can be used to get and set the application's locale details.
 
-### `i18n` Widget Properties
+### `i18n` widget properties
 
 -   `locale`?: string
-    -   The locale for the widget.<br>If not specified, then the [root application locale](#providing-locale-data-to-i18n-aware-widgets) or [its override](#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
+    -   The locale for the widget.<br>If not specified, then the [root application locale](/learn/i18n/internationalizing-a-dojo-application#providing-locale-data-to-i18n-aware-widgets) or [its override](/learn/i18n/internationalizing-a-dojo-application#changing-locales) is assumed.<br>If specified, the widget's DOM node will have a `lang` property set to the locale.
 -   `rtl`?: boolean
     -   An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
 -   `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
@@ -199,7 +199,7 @@ import i18n from '@dojo/framework/core/middleware/i18n';
 import Label from '@dojo/widgets/label';
 import Button from '@dojo/widgets/button';
 
-import greetingsBundle from '../nls/en/MyI18nWidget.ts';
+import greetingsBundle from '../nls/en/MyI18nWidget';
 
 const factory = create({ i18n });
 
@@ -252,7 +252,7 @@ The object returned by `localizeBundle` contains the following properties and me
 
 An example of using all features returned by `localizeBundle`:
 
-> nls/MyI18nWidget.en.ts
+> nls/en/MyI18nWidget.ts
 
 ```ts
 export default {
@@ -273,7 +273,7 @@ import I18nMixin from '@dojo/framework/core/mixins/I18n';
 import Label from '@dojo/widgets/label';
 import Button from '@dojo/widgets/button';
 
-import greetingsBundle from '../nls/MyI18nWidget.en';
+import greetingsBundle from '../nls/en/MyI18nWidget';
 
 export default class MyI18nWidget extends I18nMixin(WidgetBase) {
 	render() {
@@ -330,7 +330,7 @@ r.mount({ registry });
 
 The `i18n` middleware can be used to change the application's locale. Calling `i18n.set({ locale: string, rtl: boolean });` will propagate the new locale to all widgets that are using the `i18n` middleware, as well as any using `I18nMixin` (assuming [registerI18nInjector](#providing-locale-data-to-i18n-aware-widgets) has previously been setup in the application).
 
-### Example Usage
+### Example usage
 
 The following example shows an i18n-aware widget that uses `LocaleSwitcher` to render two buttons that allow switching the application locale between English and French.
 
@@ -424,7 +424,7 @@ The locale that an [i18n-aware widget](#creating-i18n-aware-widgets) will use is
 
 Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. Relevant portions of CLDR data must be explicitly loaded when applications require features such as [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or others provided by `@dojo/framework/i18n` such as date or number formatters.
 
-**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](#internationalizing-a-dojo-application).
+**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](/learn/i18n/internationalizing-a-dojo-application).
 
 ### Dojo build system
 
@@ -509,7 +509,7 @@ For [unit formatting](#date-and-number-formatting):
 -   `supplemental/ordinals`
 -   `supplemental/plurals`
 
-## Message Formatting
+## Message formatting
 
 ### Basic token replacement
 
@@ -596,7 +596,7 @@ i18n(bundle, 'en').then(() => {
 });
 ```
 
-### ICU Message Formatting
+### ICU message formatting
 
 **Note**: This feature requires appropriate [CLDR data](#loading-cldr-data) to have been loaded into the application.
 
@@ -856,7 +856,7 @@ i18n(bundle, 'ar').then(() => {
 });
 ```
 
-## Determining the Current Locale
+## Determining the current locale
 
 The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via [`switchLocale` (see below)](#changing-the-root-locale-and-observing-locale-changes)
 or the `systemLocale`.
@@ -869,7 +869,7 @@ The `systemLocale` is also read-only, and its value is determined by the current
 |     Node.js | The Node.js process's `LANG` environment variable. |
 |    Fallback | `en`                                               |
 
-## Changing the Root Locale and Observing Locale Changes
+## Changing the root locale and observing locale changes
 
 The `switchLocale` method changes the root locale and notifies all consumers registered with `observeLocale`, which accepts a function that receives the new locale string as its sole argument. For example, suppose the system locale is `en-GB`:
 
