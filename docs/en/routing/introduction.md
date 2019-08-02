@@ -64,6 +64,9 @@ export default factory(function App() {
 });
 ```
 
+-   The URL of the route is determined by the `path` element of the route configuration. In this case, `home` was specified so the route can be accessed via the URL path `/#home`.
+    -   By default the router uses the [HashHistory](/learn/routing/history-managers#hashhistory) history manager which requires the use of the `#` before the route path. Other [history managers](/learn/routing/history-managers) are available to support other history management mechanisms.
+
 ## Path and query parameters
 
 Path parameters are placeholders in the routing configuration that will match any value for the segment. The parameters are defined using curly braces, for example: `{param}`.
@@ -98,14 +101,14 @@ export default factory(function App() {
 });
 ```
 
-Query parameters are also defined using curly braces split from the route path by a `?`. To define more than one query param, use the `&` delimiter.
+Query parameters can also be added to route URLs. As with normal query parameters, the first must be prefixed with a `?` with additional query parameters delimited by the `&` character. Note that the route configuration does not change when using query parameters.
 
 > src/routes.ts
 
 ```ts
 export default [
 	{
-		path: 'home/{page}?{queryOne}&{queryTwo}',
+		path: 'home/{page}',
 		outlet: 'home'
 	}
 ];
@@ -134,7 +137,7 @@ export default factory(function App() {
 });
 ```
 
-The query params are injected into matching `Outlet` `renderer` properties accessed from `queryParams` property.
+If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query params are injected into matching `Outlet` `renderer` properties accessed from `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
 
 ## Default route and parameters
 
