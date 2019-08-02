@@ -137,7 +137,7 @@ export default factory(function App() {
 });
 ```
 
-If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query params are injected into the matching `Outlet`'s `renderer` method as a `MatchDetails` type and accessed via its `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
+If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query parameters are injected into the matching `Outlet`'s `renderer` method as an object of type `MatchDetails` and accessed via that object's `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
 
 ## Default route and parameters
 
