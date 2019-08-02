@@ -163,7 +163,7 @@ describe('Profile', () => {
 });
 ```
 
-Using the `setChildren` method of an assertion template with the assigned `~key` value will return a assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
+Using the `setChildren` method of an assertion template with the assigned `~key` value will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/

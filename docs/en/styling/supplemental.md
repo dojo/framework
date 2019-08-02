@@ -153,7 +153,7 @@ As styles in a Dojo application are mostly scoped to individual widgets, there i
     -   Widgets should be simple enough to only require single, direct class selectors. If required, widgets can use [multiple, independent classes](/learn/styling/theming-a-dojo-application#themeable-widget-example) to apply additional style sets. A single widget can also use multiple classes defined across [several CSS modules](/learn/styling/theming-a-dojo-application#using-several-css-modules).
     -   Complex widgets should be refactored to a simple parent element that composes simple child widgets, where specific, encapsulated styling can be applied to each composed widget.
 -   Avoid BEM naming conventions
-    -   Favour descriptive class names relevant to the widget's purpose.
+    -   Favor descriptive class names relevant to the widget's purpose.
 -   Avoid use of `!important`
 
 # Theming a Dojo application
