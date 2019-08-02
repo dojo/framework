@@ -244,14 +244,14 @@ First make sure `index.html` includes a DOM node with an `id` attribute. This no
 ```html
 <!DOCTYPE html>
 <html lang="en-us">
-<head>
-        <title>sample-app</title>
-        <meta name="theme-color" content="#222127">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-        <div id="app"></div>
-</body>
+	<head>
+		<title>sample-app</title>
+		<meta name="theme-color" content="#222127" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+	</head>
+	<body>
+		<div id="app"></div>
+	</body>
 </html>
 ```
 
@@ -428,8 +428,8 @@ Configuration for external dependencies can be provided under the `externals` pr
 
 -   `outputPath`: An optional property specifying an output path to which files should be copied.
 -   `dependencies`: A required array that defines which modules should be loaded via the external loader, and what files should be included in the build. Each entry can be one of two types:
-    _ A string that indicates that this path, and any children of this path, should be loaded via the external loader.
-    _ An object that provides additional configuration for dependencies that need to be copied into the built application. This object has the following properties:
+    -   A string that indicates that this path, and any children of this path, should be loaded via the external loader.
+    -   An object that provides additional configuration for dependencies that need to be copied into the built application. This object has the following properties:
 
 | Property | Type                                                    | Optional | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | -------- | ------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

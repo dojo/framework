@@ -169,7 +169,7 @@ const process = createProcess('do-something', [
 
 If any of the commands fail during their execution the `undoOnFailure` middleware will have an opportunity to apply `undoOperations`.
 
-It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may getexecuted asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
+It is important to note that `undoOperations` only apply to the commands fully executed during the process. It will not contain any operations to rollback state that changed as a result of other processes that may get executed asynchronously or state changes performed in middleware or directly on the store itself. These use cases are outside the scope of the undo system.
 
 ## Optimistic updates
 
@@ -348,15 +348,13 @@ When an explicit state is required, that information can get asserted by using a
 This example ensures that `user` always gets added to the end of the list as the last element by using a `test` operation to ensure initialization:
 
 ```ts
-import Store from "@dojo/framework/stores/Store";
-import { test } from "@dojo/framework/stores/state/operations";
+import Store from '@dojo/framework/stores/Store';
+import { test } from '@dojo/framework/stores/state/operations';
 
 const store = new Store<State>();
 const { at, path, apply } = store;
 
-apply([
-	test(at(path('users', 'list', 'length), 0))
-]);
+apply([test(at(path('users', 'list', 'length'), 0))]);
 ```
 
 This example ensures that `user` is always added to the end of the list as the last element by programmatic introspection:

@@ -42,7 +42,7 @@ export default [
 
 This example would register the following routes and outlets:
 
-| Url Path          | Outlet           |
+| URL Path          | Outlet           |
 | ----------------- | ---------------- |
 | `/home`           | `home`           |
 | `/about`          | `about-overview` |
@@ -203,13 +203,13 @@ export default [
 ```ts
 export default [
 	{
-		path: 'home?{query}',
+		path: 'home/{param}',
 		outlet: 'home'
 	}
 ];
 ```
 
--   `isExact(): boolean`: A function indicates if the outlet is an exact match for the path. This can be used to conditionally render different widgets or nodes.
+-   `isExact(): boolean`: A function that indicates if the outlet is an exact match for the path. This can be used to conditionally render different widgets or nodes.
 
 > src/routes.ts
 

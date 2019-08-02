@@ -16,7 +16,7 @@ Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allow
 -   Run a project's test suite
 
 ```shell
-dojo test
+npm run test
 ```
 
 Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
@@ -163,7 +163,7 @@ describe('Profile', () => {
 });
 ```
 
-Using the `setChildren` method of an assertion template with the assigned `~key` value will return a assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
+Using the `setChildren` method of an assertion template with the assigned `~key` value will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/

@@ -28,7 +28,7 @@ const factory = create().properties<{ middlewareProp?: boolean }>();
 
 export const myMiddleware = factory(({ properties }) => {
 	return () => {
-		return properties.middlewareProp ? 'Conditional is true' : 'Conditional is false';
+		return properties().middlewareProp ? 'Conditional is true' : 'Conditional is false';
 	};
 });
 
