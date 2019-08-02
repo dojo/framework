@@ -29,23 +29,20 @@ The harness returns a `Harness` object that provides a small API for interacting
 
 Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core`:
 
+> tests/unit/widgets/MyWidget.tsx
+
 ```ts
 const { describe, it } = intern.getInterface('bdd');
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import harness from '@dojo/framework/testing/harness';
-import { w, v } from '@dojo/framework/widget-core/d';
 
-class MyWidget extends WidgetBase<{ foo: string }> {
-	protected render() {
-		const { foo } = this.properties;
-		return v('div', { foo }, this.children);
-	}
-}
+const factory = create().properties<{ foo: string }>();
 
-const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
-```
+const MyWidget = factory(function MyWidget({ properties, children }) {
+	const { foo } = properties();
+	return <div foo={foo}>{children}</div>;
+});
 
-```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
 ```
 
@@ -53,18 +50,16 @@ The `renderFunction` is lazily executed so it can include additional logic to ma
 
 ```ts
 describe('MyWidget', () => {
-  it('renders with foo correctly', () => {
+	it('renders with foo correctly', () => {
 		let foo = 'bar';
 
-		const h = harness(() => {
-			return w(MyWidget, { foo }, [ 'child' ]));
-		};
+		const h = harness(() => <MyWidget foo={foo}>child</MyWidget>);
 
 		h.expect(/** assertion that includes bar **/);
 		// update the property that is passed to the widget
 		foo = 'foo';
-		h.expect(/** assertion that includes foo **/)
-  });
+		h.expect(/** assertion that includes foo **/);
+	});
 });
 ```
 
@@ -357,14 +352,18 @@ expect(expectedRenderFunction: () => DNode | DNode[], actualRenderFunction?: () 
 
 ```ts
 h.expect(() =>
-	v('div', { key: 'foo' }, [w(Widget, { key: 'child-widget' }), 'text node', v('span', { classes: ['class'] })])
+	<div key="foo">
+		<Widget key="child-widget" />
+		text node
+		<span classes={[class]} />
+	</div>
 );
 ```
 
 Optionally `expect` can accept a second parameter of a function that returns a render result to assert against.
 
 ```ts
-h.expect(() => v('div', { key: 'foo' }), () => v('div', { key: 'foo' }));
+h.expect(() => <div key="foo" />, () => <div key="foo" />);
 ```
 
 If the actual render output and expected render output are different, an exception is thrown with a structured visualization indicating all differences with `(A)` (the actual value) and `(E)` (the expected value).
@@ -497,11 +496,10 @@ import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 
 A base assertion should be created which defines the widget's default render state. Given the following widget:
 
-> src/widgets/Profile.ts
+> src/widgets/Profile.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 import * as css from './styles/Profile.m.css';
 
@@ -509,73 +507,75 @@ export interface ProfileProperties {
 	username?: string;
 }
 
-export default class Profile extends WidgetBase<ProfileProperties> {
-	protected render() {
-		const { username } = this.properties;
-		return v('h1', { classes: [css.root] }, [`Welcome ${username || 'Stranger'}!`]);
-	}
-}
+const factory = create().properties<ProfileProperties>();
+
+const Profile = factory(function Profile({ properties }) {
+	const { username } = properties();
+	return <h1 classes={[css.root]}>{`Welcome ${username || 'Stranger'}!`}</h1>;
+});
+
+export default Profile;
 ```
 
 The base assertion might look like:
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import harness from '@dojo/framework/testing/harness';
 import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import { w, v } from '@dojo/framework/widget-core/d';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import Profile from '../../../src/widgets/Profile';
-import * as css from '../../../src/widgets/styles/Profile.m.css';
+import * as css from '../../../src/widgets/Profile.m.css';
 
-const profileAssertion = assertionTemplate(() =>
-	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
-);
+const profileAssertion = assertionTemplate(() => (
+	<h1 classes={[css.root]} assertion-key="welcome">
+		Welcome Stranger!
+	</h1>
+));
 ```
 
 and in a test would look like:
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
-const profileAssertion = assertionTemplate(() =>
-	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
-);
+const profileAssertion = assertionTemplate(() => (
+	<h1 classes={[css.root]} assertion-key="welcome">
+		Welcome Stranger!
+	</h1>
+));
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => w(Profile, {}));
+		const h = harness(() => <Profile />);
 		h.expect(profileAssertion);
 	});
-});
-it('default renders correctly', () => {
-	const h = harness(() => w(Profile, {}));
-	h.expect(profileAssertion);
 });
 ```
 
 To test the scenario of a `username` property being passed to the `Profile`, the assertion template can be parameterized such as:
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
 describe('Profile', () => {
 	...
 
   it('renders given username correctly', () => {
-    // update the expected result with a given username
-    const namedAssertion = profileAssertion.setChildren('~welcome', [
-      'Welcome Kel Varnsen!'
-    ]);
-    const h = harness(() => w(Profile, { username: 'Kel Varnsen' }));
-    h.expect(namedAssertion);
-  });
+		// update the expected result with a given username
+		const namedAssertion = profileAssertion.setChildren('~welcome', () => [
+			'Welcome Kel Varnsen!'
+		]);
+		const h = harness(() => <Profile username="Kel Varnsen" />);
+		h.expect(namedAssertion);
+	});
 });
 ```
 
-Here the `setChildren()` api is used on the baseAssertion, and the special `~` selector allows finding a node with a key of `~message`. The `~key` property (or when using tsx in a template, `assertion-key`) is a special property on assertion templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows the assertion templates to easily select nodes without having to augment the actual widget render function. Once the `welcome` node is found, its children are overridden to a new value of `['Welcome Kel Varnsen!']`, and the resulting template is then used in `h.expect`. It's important to note that assertion templates always return a new assertion template when setting a value. This ensures that an existing template is not accidentally mutated, which would cause other tests to potentially fail, and allows construction of layered templates that incrementally build on each other.
+Here the `setChildren()` api is used on the baseAssertion, and the special `~` selector allows finding a node with a key of `~message`. The `assertion-key` property (or when using class-based widgets, `~key`) is a special property on assertion templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows the assertion templates to easily select nodes without having to augment the actual widget render function. Once the `welcome` node is found, its children are overridden to a new value of `['Welcome Kel Varnsen!']`, and the resulting template is then used in `h.expect`. It's important to note that assertion templates always return a new assertion template when setting a value. This ensures that an existing template is not accidentally mutated, which would cause other tests to potentially fail, and allows construction of layered templates that incrementally build on each other.
 
 Assertion template has the following API:
 
@@ -600,41 +600,58 @@ remove(selector: string): AssertionTemplateResult;
 
 A common type of test is validating a widget's user interface renders as expected without necessarily being concerned with the widget's underlying business logic. These tests may want to assert scenarios such as button clicks calling widget property methods, without concern as to what the property method implementations are, only that the interface is called as expected. A mocking library such as [Sinon] can be used to help in these cases.
 
-> src/widgets/Action.ts
+> src/widgets/Action.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v, w } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Button from '@dojo/widgets/button';
 
-import * as css from './styles/Action.m.css';
+import * as css from './Action.m.css';
 
-export default class Action extends WidgetBase<{ fetchItems: () => void }> {
-	protected render() {
-		return v('div', { classes: [css.root] }, [w(Button, { onClick: this.handleClick, key: 'button' }, ['Fetch'])]);
-	}
-	private handleClick() {
-		this.properties.fetchItems();
-	}
-}
+const factory = create().properties<{ fetchItems: () => void }>();
+
+const Action = factory(function Action({ properties }) {
+	return (
+		<div classes={[css.root]}>
+			<Button key="button" onClick={() => properties().fetchItems()}>
+				Fetch
+			</Button>
+		</div>
+	);
+});
+
+export default Action;
 ```
 
-To test that the `this.properties.fetchItems` method is called when the button is clicked:
+To test that the `properties().fetchItems` method is called when the button is clicked:
 
-> tests/unit/widgets/Action.ts
+> tests/unit/widgets/Action.tsx
 
 ```ts
 const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 import harness from '@dojo/framework/testing/harness';
-import { w, v } from '@dojo/framework/widget-core/d';
+
+import Action from '../../../src/widgets/Action';
+import * as css from '../../../src/widgets/Action.m.css';
+
+import Button from '@dojo/widgets/button';
 
 import { stub } from 'sinon';
+import { assert } from 'chai';
 
 describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
-		const h = harness(() => w(Home, { fetchItems }));
-		h.expect(() => v('div', { classes: [css.root] }, [w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])]));
+		const h = harness(() => <Action fetchItems={fetchItems} />);
+		h.expect(() => (
+			<div classes={[css.root]}>
+				<Button key="button" onClick={() => {}}>
+					Fetch
+				</Button>
+			</div>
+		));
 		h.trigger('@button', 'onClick');
 		assert.isTrue(fetchItems.calledOnce);
 	});
@@ -651,52 +668,34 @@ Unlike unit tests that load and execute code, functional tests load a page in th
 
 When validating application output for a certain route, an `id` should be added to the corresponding route link to allow for easier targeting.
 
-> src/widgets/Menu.ts
+> src/widgets/Menu.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { w } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Link from '@dojo/framework/routing/ActiveLink';
 import Toolbar from '@dojo/widgets/toolbar';
 
-import * as css from './styles/Menu.m.css';
+import * as css from './Menu.m.css';
 
-export default class Menu extends WidgetBase {
-	protected render() {
-		return w(Toolbar, { heading: 'My Dojo App!', collapseWidth: 600 }, [
-			w(
-				Link,
-				{
-					id: 'home', // add id attribute
-					to: 'home',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['Home']
-			),
-			w(
-				Link,
-				{
-					id: 'about', // add id attribute
-					to: 'about',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['About']
-			),
-			w(
-				Link,
-				{
-					id: 'profile', // add id attribute
-					to: 'profile',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['Profile']
-			)
-		]);
-	}
-}
+const factory = create();
+
+const Menu = factory(function Menu() {
+	return (
+		<Toolbar heading="My Dojo App!" collapseWidth={600}>
+			<Link id="home" to="home" classes={[css.link]} activeClasses={[css.selected]}>
+				Home
+			</Link>
+			<Link id="about" to="about" classes={[css.link]} activeClasses={[css.selected]}>
+				About
+			</Link>
+			<Link id="profile" to="profile" classes={[css.link]} activeClasses={[css.selected]}>
+				Profile
+			</Link>
+		</Toolbar>
+	);
+});
+
+export default Menu;
 ```
 
 During application use, a user would expect to click on the `profile` link and be directed to a page welcoming them. A functional test can be created to verify this behavior.
@@ -737,7 +736,7 @@ When running a functional test, Dojo provides a `remote` object that is used to 
 Functional tests can be executed in the command line via:
 
 ```bash
-npm run test:functional
+dojo test --functional
 ```
 
 This will load the html page into a remote instance of Chrome on the build machine to test interactivity.
