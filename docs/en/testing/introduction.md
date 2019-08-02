@@ -16,7 +16,7 @@ Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allow
 -   Run a project's test suite
 
 ```shell
-npm run test
+dojo test
 ```
 
 Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
