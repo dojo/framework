@@ -167,7 +167,7 @@ describe('assertionTemplate', () => {
 		h.expect(insertionAssertion);
 	});
 
-	it('can replacee a node', () => {
+	it('can remove a node', () => {
 		const h = harness(() => w(MyWidget, { removeHeader: true }));
 		const childAssertion = baseAssertion.remove('~header');
 		h.expect(childAssertion);
