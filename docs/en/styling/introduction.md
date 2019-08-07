@@ -58,7 +58,7 @@ export default factory(function MyWidget() {
 ## Making a widget themeable
 
 -   Inject the `theme` middleware
--   Using `theme.classes` to return the themed css class name, whidh allows a [widget's default styles to be overridden by a theme](/learn/styling/theming-a-dojo-application#making-themeable-widgets)
+-   Using `theme.classes` to return the themed css class name, which allows a [widget's default styles to be overridden by a theme](/learn/styling/theming-a-dojo-application#making-themeable-widgets)
 
 > src/widgets/MyWidget.tsx
 

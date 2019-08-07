@@ -66,6 +66,25 @@ class ListWidget extends WidgetBase {
 
 const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v('ul', [])]));
 
+class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
+	render() {
+		const { after, last = true } = this.properties;
+		const result = [v('div', ['first'])];
+		if (after) {
+			result.push(v('div', ['after']));
+		}
+		if (last) {
+			result.push(v('div', ['last']));
+		}
+		return result;
+	}
+}
+
+const baseMultiRootAssertion = assertionTemplate(() => [
+	v('div', { '~key': 'first' }, ['first']),
+	v('div', { '~key': 'last' }, ['last'])
+]);
+
 const tsxAssertion = assertionTemplate(() => (
 	<div classes={['root']}>
 		<h2>hello</h2>
@@ -139,6 +158,24 @@ describe('assertionTemplate', () => {
 	it('can remove a node', () => {
 		const h = harness(() => w(MyWidget, { removeHeader: true }));
 		const childAssertion = baseAssertion.remove('~header');
+		h.expect(childAssertion);
+	});
+
+	it('can remove a node in the root', () => {
+		const h = harness(() => w(MultiRootWidget, { last: false }));
+		const insertionAssertion = baseMultiRootAssertion.remove('~last');
+		h.expect(insertionAssertion);
+	});
+
+	it('can remove a node', () => {
+		const h = harness(() => w(MyWidget, { removeHeader: true }));
+		const childAssertion = baseAssertion.remove('~header');
+		h.expect(childAssertion);
+	});
+
+	it('can replace a node in the root', () => {
+		const h = harness(() => w(MyWidget, { removeHeader: true, before: true }));
+		const childAssertion = baseAssertion.replace('~header', v('span', ['before']));
 		h.expect(childAssertion);
 	});
 
@@ -225,6 +262,12 @@ describe('assertionTemplate', () => {
 		const h = harness(() => w(MyWidget, { after: true }));
 		const childAssertion = baseAssertion.insertAfter('ul', () => [v('span', ['after'])]);
 		h.expect(childAssertion);
+	});
+
+	it('can insert after a node in the root', () => {
+		const h = harness(() => w(MultiRootWidget, { after: true }));
+		const insertionAssertion = baseMultiRootAssertion.insertAfter('~first', () => [v('div', {}, ['after'])]);
+		h.expect(insertionAssertion);
 	});
 
 	it('can set children before with insert', () => {

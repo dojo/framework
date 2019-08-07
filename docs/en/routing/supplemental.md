@@ -42,7 +42,7 @@ export default [
 
 This example would register the following routes and outlets:
 
-| Url Path          | Outlet           |
+| URL Path          | Outlet           |
 | ----------------- | ---------------- |
 | `/home`           | `home`           |
 | `/about`          | `about-overview` |
@@ -183,6 +183,10 @@ const outletContext = router.getOutlet('home');
 
 For every `outlet` that is matched on a route change, `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 
+Note: All examples assume that the default [HashHistory](#hashhistory) history manager is being used.
+
+## `queryParams`
+
 -   `queryParams: { [index: string]: string }`: The query params from the matched route.
 
 > src/routes.ts
@@ -190,11 +194,22 @@ For every `outlet` that is matched on a route change, `MatchDetails` are injecte
 ```ts
 export default [
 	{
-		path: 'home?{query}',
+		path: 'home',
 		outlet: 'home'
 	}
 ];
 ```
+
+-   given the URL path `/#home?foo=bar&baz=42`, the `queryParams` object will look like:
+
+```js
+{
+	foo: 'bar',
+	baz: '42'
+}
+```
+
+## `params`
 
 -   `params: { [index: string]: string }`: The path params from the matched route.
 
@@ -203,13 +218,23 @@ export default [
 ```ts
 export default [
 	{
-		path: 'home?{query}',
+		path: 'home/{page}',
 		outlet: 'home'
 	}
 ];
 ```
 
--   `isExact(): boolean`: A function indicates if the outlet is an exact match for the path. This can be used to conditionally render different widgets or nodes.
+-   given the URL path `/#home/about`, the `params` object will have look like:
+
+```js
+{
+	page: 'about';
+}
+```
+
+## `isExact()`
+
+-   `isExact(): boolean`: A function that indicates if the outlet is an exact match for the path. This can be used to conditionally render different widgets or nodes.
 
 > src/routes.ts
 
@@ -219,12 +244,49 @@ export default [
 		path: 'home',
 		outlet: 'home',
 		children: [
-			path: 'about',
-			outlet: 'about'
+			{
+				path: 'about',
+				outlet: 'about'
+			}
 		]
 	}
 ];
 ```
+
+-   given the above route definition, if the URL path is set to `/#home/about`, then `isExact()` will evaluate to `false` for the `Outlet` with the id "home" and `true` for the an `Outlet` that is a child of the home `Outlet` with the id "about" as shown in the following file:
+
+> src/App.tsx
+
+```ts
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Outlet from '@dojo/framework/routing/Outlet';
+
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet
+				id="home"
+				renderer={(homeMatchDetails) => {
+					console.log('home', homeMatchDetails.isExact()); // home false
+					return (
+						<Outlet
+							id="about"
+							renderer={(aboutMatchDetails) => {
+								console.log('about', aboutMatchDetails.isExact()); // about true
+								return [];
+							}}
+						/>
+					);
+				}}
+			/>
+		</div>
+	);
+});
+```
+
+## `isError()`
 
 -   `isError(): boolean`: A function indicates if the outlet is an error match for the path. This indicates after this outlet was matched, no other matches were found.
 
@@ -243,7 +305,34 @@ export default [
 ];
 ```
 
+-   given this route definition, if the URL path is set to `/#home/foo` then there is no exact route match, so the `isError()` method on the home `Outlet`'s `martchDetails` object will yield `true`. Navigating to `/#home` or `/#home/about` however will cause the same method to return `false` since both routes are defined.
+
+## `type`
+
 -   `type: 'index' | 'partial' | 'error'`: The type of match for the route, either `index`, `partial` or `error`. Using `type` should not be necessary, instead favouring a combination of `isExact` and `isError`.
+
+```ts
+export default [
+	{
+		path: 'home',
+		outlet: 'home',
+		children: [
+			path: 'about',
+			outlet: 'about'
+		]
+	}
+];
+```
+
+-   given the above route definition, the following values of `type` would be provided to each outlet:
+
+| URL path       | Home outlet | About outlet |
+| -------------- | :---------: | :----------: |
+| `/#home`       |   'index'   |     N/A      |
+| `/#home/about` |  'partial'  |   'index'    |
+| `/#home/foo`   |   'error'   |     N/A      |
+
+## `router`
 
 -   `router: RouterInterface`: The router instance which can used to create links and initiate route changes. For more information see the router API.
 

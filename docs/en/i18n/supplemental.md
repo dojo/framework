@@ -332,7 +332,7 @@ The `i18n` middleware can be used to change the application's locale. Calling `i
 
 ### Example usage
 
-The following example shows an i18n-aware widget that uses `LocaleSwitcher` to render two buttons that allow switching the application locale between English and French.
+The following example shows an i18n-aware widget that renders two buttons that allow switching the application locale between English and French.
 
 ```ts
 import { create, tsx } from '@dojo/framework/core/vdom';

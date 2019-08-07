@@ -353,7 +353,7 @@ export const User = factory(function User({ middleware: { store } }) {
 
 ### StoreProvider
 
-A `StoreProvider` is a Dojo widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because it does not defined its own properties.
+A `StoreProvider` is a Dojo widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because it does not define its own properties.
 
 > widget/User.ts
 

@@ -120,7 +120,7 @@ const factory = create().properties<{ conditional?: boolean }>();
 export const middlewareWithProperties = factory(({ properties }) => {
 	return {
 		getConditionalState() {
-			return properties.conditional ? 'Conditional is true' : 'Conditional is false';
+			return properties().conditional ? 'Conditional is true' : 'Conditional is false';
 		}
 	};
 });
@@ -140,7 +140,7 @@ const render = create({ middlewareWithProperties });
 export const MiddlewarePropertiesWidget = render(({ properties, middleware: { middlewareWithProperties } }) => {
 	return (
 		<virtual>
-			<div>{`Middleware property value: ${properties.conditional}`}</div>
+			<div>{`Middleware property value: ${properties().conditional}`}</div>
 			<div>{`Middleware property usage: ${middlewareWithProperties.getConditionalState()}`}</div>
 		</virtual>
 	);
@@ -347,7 +347,7 @@ When using the same set of breakpoints in many locations, it is easier to define
 > src/middleware/myCustomBreakpoint.ts
 
 ```ts
-import createBreakpointMiddleware from '@dojo/framework/core/middleware/breakpoint';
+import { createBreakpointMiddleware } from '@dojo/framework/core/middleware/breakpoint';
 
 const myCustomBreakpoint = createBreakpointMiddleware({ Narrow: 0, Wide: 500 });
 
