@@ -28,7 +28,8 @@
     "test:browserstack": "run-s build \"intern config=@browserstack\"",
     "uploadCoverage": "codecov --file=coverage/coverage.json",
     "watch:ts": "dojo-tsc-watcher -p tsconfig.json -p tsconfig.esm.json -- dojo-package",
-    "watch": "run-p watch:ts \"build:static:** -- --watch\""
+    "watch": "run-p watch:ts \"build:static:** -- --watch\"",
+    "move": "mv intern node_modules/.bin/intern"
   },
   "repository": {
     "type": "git",

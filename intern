@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+(function(factory) {
+	if (typeof module === 'object' && typeof module.exports === 'object') {
+		var v = factory(require, exports);
+		if (v !== undefined) module.exports = v;
+	} else if (typeof define === 'function' && define.amd) {
+		define([
+			'require',
+			'exports',
+			'child_process',
+			'@theintern/common',
+			'../lib/node/util',
+			'../lib/common/util',
+			'../index',
+			'../lib/common/console'
+		], factory);
+	}
+})(function(require, exports) {
+	'use strict';
+	Object.defineProperty(exports, '__esModule', { value: true });
+	var child_process_1 = require('child_process');
+	var common_1 = require('@theintern/common');
+	var util_1 = require('../lib/node/util');
+	var util_2 = require('../lib/common/util');
+	var index_1 = require('../index');
+	var console = require('../lib/common/console');
+	util_1
+		.getConfig()
+		.then(function(_a) {
+			var config = _a.config,
+				file = _a.file;
+			if (config.help) {
+				printHelp(config, file);
+			} else if (config.showConfigs) {
+				console.log(util_2.getConfigDescription(config));
+			} else {
+				if (!file) {
+					console.warn('No config file was loaded');
+				}
+				index_1.default.configure({ reporters: 'runner' });
+				index_1.default.configure(config);
+				return index_1.default.run();
+			}
+		})
+		.catch(function(error) {
+			console.log(error);
+			if (!error.reported) {
+				try {
+					console.error(index_1.default.formatError(error));
+				} catch (e) {
+					console.error(error);
+				}
+			}
+			common_1.global.process.exitCode = 1;
+		});
+	function printHelp(config, file) {
+		var $ = function(cmd) {
+			return child_process_1.execSync(cmd, { encoding: 'utf8' }).trim();
+		};
+		var pkg = require('../package.json');
+		var npmVersion = $('npm -v');
+		var nodeVersion = $('node -v');
+		console.log('intern version ' + pkg.version);
+		console.log('npm version ' + npmVersion);
+		console.log('node version ' + nodeVersion);
+		console.log();
+		console.log('Usage: intern [config=<file>] [showConfig|showConfigs] [options]');
+		console.log();
+		console.log('  config      - path to a config file');
+		console.log('  showConfig  - show the resolved config');
+		console.log('  showConfigs - show information about configFile');
+		console.log();
+		console.log("Options (set with 'option=value' or 'option'):\n");
+		var internConfig = index_1.default._config;
+		var opts = Object.keys(internConfig)
+			.map(function(key) {
+				return { name: key, value: JSON.stringify(internConfig[key]) };
+			})
+			.sort(function(a, b) {
+				if (a.name < b.name) {
+					return -1;
+				}
+				if (a.name > b.name) {
+					return 1;
+				}
+				return 0;
+			});
+		var width = opts.reduce(function(max, opt) {
+			return Math.max(opt.name.length, max);
+		}, 0);
+		for (var _i = 0, opts_1 = opts; _i < opts_1.length; _i++) {
+			var _a = opts_1[_i],
+				name_1 = _a.name,
+				value = _a.value;
+			var pad = Array(width - name_1.length + 1).join(' ');
+			console.log('  ' + name_1 + pad + ' - ' + value);
+		}
+		if (file) {
+			console.log();
+			var description = util_2.getConfigDescription(config, '  ');
+			if (description) {
+				console.log("Using config file '" + file + "':\n");
+				console.log(description);
+			} else {
+				console.log("Using config file '" + file + "'");
+			}
+		}
+	}
+});
+//# sourceMappingURL=intern.js.map
+
