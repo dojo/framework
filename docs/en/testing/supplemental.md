@@ -564,7 +564,7 @@ To test the scenario of a `username` property being passed to the `Profile`, the
 describe('Profile', () => {
 	...
 
-  it('renders given username correctly', () => {
+	it('renders given username correctly', () => {
 		// update the expected result with a given username
 		const namedAssertion = profileAssertion.setChildren('~welcome', () => [
 			'Welcome Kel Varnsen!'

@@ -41,7 +41,7 @@ dojo test --functional --config local
 
 ## Writing unit tests
 
--   Using Dojo's [`harness` API](https://github.com/dojo/framework/tree/master/src/testing#api) for unit testing widgets.
+-   Using Dojo's [`harness` API](/learn/testing/dojo-test-harness#harness-api) for unit testing widgets.
 
 > src/widgets/Home.tsx
 
@@ -174,7 +174,7 @@ describe('Profile', () => {
 });
 ```
 
-A value can be provided to any virtual DOM node under test using `assertion-key` properties defined in the assertion template. Note: when using class-based widgets, the `~key` property serves the same purpose.
+A value can be provided to any virtual DOM node under test using `assertion-key` properties defined in the assertion template. Note: when `v()` and `w()` from `@dojo/framework/core/vdom` are used, the `~key` property serves the same purpose.
 
 > tests/unit/widgets/Profile.tsx
 
