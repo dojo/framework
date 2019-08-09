@@ -160,11 +160,11 @@ Individual widgets can be internationalized by using the `i18n` middleware from 
 -   `rtl`?: boolean
     -   An optional flag indicating the widget's text direction. If `true`, then the underlying DOM node's `dir` property is set to `"rtl"`. If it is `false`, then the `dir` property is set to `"ltr"`. Otherwise, the property is not set.
 -   `i18nBundle`?: `Bundle<Messages>` | `Map<Bundle<Messages>, Bundle<Messages>>`
-    -   An optional override for the [default language bundle](#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
+    -   An optional override for the [default language bundle](/learn/i18n/working-with-message-bundles#default-language-module) passed to the `localizeBundle` method. If the override contains a `messages` object, then it will completely replace the underlying default language bundle that the widget may be using. If the override only contains a `locales` object, a new bundle will be created with the additional locale loaders specified in the override.
 
 ### `i18n` `localize()` method
 
-Widgets can pass in their [default language bundle](#default-language-module) into the `localize` method to have the bundle localized appropriately given the widget's `locale` property.
+Widgets can pass in their [default language bundle](/learn/i18n/working-with-message-bundles#default-language-module) into the `localize` method to have the bundle localized appropriately given the widget's `locale` property.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localize` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
@@ -237,7 +237,7 @@ Individual class-based widgets can be internationalized by adding the `I18nMixin
 
 #### `localizeBundle()` method
 
-Widgets can pass in their [default language bundle](#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
+Widgets can pass in their [default language bundle](/learn/i18n/working-with-message-bundles#default-language-module) into the `localizeBundle` method to have the bundle localized appropriately given the widget's `locale` property.
 
 If the bundle supports the widget's current locale, but those locale-specific messages have not yet been loaded, then a bundle of blank message values is returned. Alternatively, the `localizeBundle` method accepts a second boolean argument, which, when `true`, causes the default messages to be returned instead of the blank bundle. The widget will be invalidated once the locale-specific messages have been loaded, triggering a re-render with the localized message content.
 
@@ -787,7 +787,7 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 
 ## Accessing locale message bundles
 
-Once a [default language bundle](#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
+Once a [default language bundle](/learn/i18n/working-with-message-bundles#default-language-module) has been imported, any locale-specific messages are accessed by passing the message bundle to the `i18n` function.
 
 For example:
 

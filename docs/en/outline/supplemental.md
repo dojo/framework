@@ -16,9 +16,9 @@ Errors are best caught as early as possible in the software delivery lifecycle. 
 
 A good way of catching errors early is favoring strong typing in the application development phase. Logical errors caused by mismatched data types can be avoided if type information is made explicit in application code. Compilers and static type checkers can validate against the type information and fail a build when such a type mismatch occurs. Software can only progress past an individual developer’s workspace to the rest of the delivery pipeline once all such errors are resolved.
 
-Dojo builds upon [TypeScript] to provide explicit typing and static compile-time type checking. Applications built using Dojo can benefit from using TypeScript over vanilla JavaScript.
+Dojo builds upon [TypeScript](https://www.typescriptlang.org/) to provide explicit typing and static compile-time type checking. Applications built using Dojo can benefit from using TypeScript over vanilla JavaScript.
 
-When using the [Dojo CLI] to scaffold applications, a TypeScript compilation phase is included by default in the application build process. Developers can simply start writing type-safe application code from the offset.
+When using the [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) to scaffold applications, a TypeScript compilation phase is included by default in the application build process. Developers can simply start writing type-safe application code from the offset.
 
 ## Modularization - single responsibility principle
 
@@ -48,13 +48,13 @@ Widgets represent everything from individual UI elements - such as a label or a 
 
 Similarly as not all elements within a DOM are visible to users, Dojo widgets are not exclusively focused on providing a user interface, but can also serve any behind-the-scenes requirements to implement the full range of application functionality.
 
-See the [Creating Dojo Widgets reference guide] for information on how to create widgets within your application.
+See the [Creating Dojo Widgets reference guide](/learn/creating-widgets/widget-fundamentals) for information on how to create widgets within your application.
 
 ## TypeScript modules
 
-Dojo widgets can be represented either as render function factories or TypeScript classes, and are typically contained within a single TypeScript module. The module encapsulates most of what constitutes the widget, including its behavior and semantic representation within a [virtualized DOM].
+Dojo widgets can be represented either as render function factories or TypeScript classes, and are typically contained within a single TypeScript module. The module encapsulates most of what constitutes the widget, including its behavior and semantic representation within a [virtualized DOM](/learn/creating-widgets/rendering-widgets#working-with-the-vdom).
 
-Widgets provide an API to external consumers via a [properties] interface. This interface serves as both a list of state fields that can be injected into the widget from others that compose it, as well as any functions that can be called if the widget needs to notify other parts of the application when an event occurs, such as a change in state.
+Widgets provide an API to external consumers via a [properties](/learn/creating-widgets/configuring-widgets-through-properties) interface. This interface serves as both a list of state fields that can be injected into the widget from others that compose it, as well as any functions that can be called if the widget needs to notify other parts of the application when an event occurs, such as a change in state.
 
 ## CSS modules
 
@@ -64,9 +64,9 @@ Widgets can import their CSS modules as per any other TypeScript import, allowin
 
 While a widget can entirely encapsulate its own styling via its corresponding CSS module, usually some flexibility is required. A widget may be used in different configurations across an application, each with their own unique presentational needs. Dojo supports the ability to override specific styles to meet these needs.
 
-To support consistent presentation across an application, widget styling can be further controlled via [theming](#theming).
+To support consistent presentation across an application, widget styling can be further controlled via [theming](/learn/overview/user-experience#theming).
 
-See the [Dojo Styling and Theming reference guide] reference for more details on how to style individual widgets.
+See the [Dojo Styling and Theming reference guide](/learn/styling/introduction) reference for more details on how to style individual widgets.
 
 # State management
 
@@ -103,13 +103,13 @@ A change request then needs to be propagated back down to the underlying data st
 
 ## State management in Dojo
 
-For the most [basic state management] requirements, a widget can manage its own state via locally-scoped variables. While this approach favours isolation and encapsulation, it is only appropriate for very simple use cases such as widgets that appear in a single location within an application, or are disconnected from all other state an application deals with.
+For the most [basic state management](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state) requirements, a widget can manage its own state via locally-scoped variables. While this approach favours isolation and encapsulation, it is only appropriate for very simple use cases such as widgets that appear in a single location within an application, or are disconnected from all other state an application deals with.
 
-As the need to share state between widgets increases, Dojo favors Reactive Inversion of Control. State can get lifted up into parent container widgets and injected into contained child widgets via the child’s [properties interface]. This lifting of state can traverse the entire widget hierarchy if needed, where state is centralized within the root application widget and portions of it are then injected into relevant child branches.
+As the need to share state between widgets increases, Dojo favors Reactive Inversion of Control. State can get lifted up into parent container widgets and injected into contained child widgets via the child’s [properties interface](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties). This lifting of state can traverse the entire widget hierarchy if needed, where state is centralized within the root application widget and portions of it are then injected into relevant child branches.
 
 For more complex requirements, or for large widget hierarchies where passing state between unrelated intermediate layers is not desireable, an externalized data store may prove the best approach. A central data store can help applications that deal with substantial amounts of state, allow complex state edit operations, or require the same subsets of state in many locations.
 
-Dojo provides a [Stores] component which supports a variety of advanced state management requirements, such as:
+Dojo provides a [Stores](/learn/stores/introduction) component which supports a variety of advanced state management requirements, such as:
 
 -   Inherent support for asynchronous commands, such as making calls to remote services for data management.
 -   Deterministic sequencing of state manipulation operations.
@@ -128,13 +128,13 @@ One way applications provide optimal user experiences is via a consistent presen
 
 Dojo’s styling pipeline makes use of CSS modules to encapsulate style rules to specific widgets and avoid cross-contamination across large codebases. Styles are not entirely isolated however - centralized CSS variables can define common theme attributes and be shared between all application widgets. Custom theming can also be provided for Dojo’s widget suite.
 
-See the [Dojo Styling and Theming reference guide] for information on how to create application themes.
+See the [Dojo Styling and Theming reference guide](/learn/styling/introduction) for information on how to create application themes.
 
 ## User interface widget suite
 
-Dojo provides several off-the-shelf user interface components through its [widget suite]. Developers can make immediate use widgets that address many common user interface patterns such as comboboxes, buttons, lists, tabs, text input and calendar entry widgets amongst others.
+Dojo provides several off-the-shelf user interface components through its [widget suite](https://github.com/dojo/widgets/blob/master/README.md). Developers can make immediate use widgets that address many common user interface patterns such as comboboxes, buttons, lists, tabs, text input and calendar entry widgets amongst others.
 
-Dojo's widgets natively support [internationalization, accessibility](#accessibility-a11y-and-internationalization-i18n) and [theming](#theming), giving developers flexibility in delivering user experiences that are unique to their application without needing to create bespoke user interface components.
+Dojo's widgets natively support [internationalization, accessibility](/learn/overview/accessibility-and-internationalization) and [theming](/learn/overview/user-experience#theming), giving developers flexibility in delivering user experiences that are unique to their application without needing to create bespoke user interface components.
 
 ## Navigational routing
 
@@ -156,9 +156,9 @@ While outlets are ‘rendered’ when users navigate to them, they seldom deal d
 
 Applications can provide navigation options to users via Link widgets which are associated to Outlets, in a similar manner to using anchors in traditional HTML pages.
 
-When using routing, Dojo’s build system can [automatically generate separate bundles](#automated-layering) for each top level route within the application. Each bundle can then be independently delivered to users as they are needed.
+When using routing, Dojo’s build system can [automatically generate separate bundles](/learn/overview/efficiency-and-performance#automated-layering) for each top level route within the application. Each bundle can then be independently delivered to users as they are needed.
 
-See the [Dojo Routing reference guide] for details on how to implement routing within your application.
+See the [Dojo Routing reference guide](/learn/routing/introduction) for details on how to implement routing within your application.
 
 # Efficiency and performance
 
@@ -168,9 +168,9 @@ Dynamic website content - including JavaScript - has been a part of the web for 
 
 As more complex web applications have appeared in recent years, browsers have answered with DOM performance optimizations that favor more dynamic content. However, in order to render their user interfaces, web applications still need to interact with an imperative API that has remained mostly unchanged for decades. Modern web applications designed around reactive data propagation need a more efficient way of translating their user interfaces into a webpage’s DOM.
 
-Dojo abstracts the DOM away from applications and promotes the use of reactive state flows to minimize application boilerplate while also allowing for increased rendering performance. Widgets output virtual nodes from their render functions which represent the widgets' structural representation within a [virtualized DOM]. The framework then handles the process of [rendering] changes to the VDOM across renders in the most efficient way possible, only affecting concrete DOM elements that actually require changing.
+Dojo abstracts the DOM away from applications and promotes the use of reactive state flows to minimize application boilerplate while also allowing for increased rendering performance. Widgets output virtual nodes from their render functions which represent the widgets' structural representation within a [virtualized DOM](/learn/creating-widgets/rendering-widgets#working-with-the-vdom). The framework then handles the process of [rendering](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom) changes to the VDOM across renders in the most efficient way possible, only affecting concrete DOM elements that actually require changing.
 
-Dojo provides another DOM abstraction layer through its [middleware] system for applications that need concrete information from the DOM to implement their requirements. Dojo middleware solves a variety of these concerns in a consistent manner while still supporting reactive data flows across an application.
+Dojo provides another DOM abstraction layer through its [middleware](/learn/middleware/introduction) system for applications that need concrete information from the DOM to implement their requirements. Dojo middleware solves a variety of these concerns in a consistent manner while still supporting reactive data flows across an application.
 
 ## Application delivery - layering and bundling
 
@@ -192,71 +192,44 @@ When using Dojo’s [routing system](#navigational-routing), applications can be
 
 Complex applications may require more fine-grained control over their layer/bundle definitions. For example, if an application has a set of shared dependencies that are used across multiple routes - rather than inlining/duplicating the dependencies within each route’s bundle, it may be desirable to extract the shared dependencies to their own bundle which can be lazily-loaded on first reference.
 
-Dojo’s build pipeline allows for designating resource [bundles] within an application’s `.dojorc` build configuration file, and can automatically convert module dependencies that cross bundle boundaries into lazily-loaded references.
+Dojo’s build pipeline allows for designating resource [bundles](/learn/building/creating-bundles) within an application’s `.dojorc` build configuration file, and can automatically convert module dependencies that cross bundle boundaries into lazily-loaded references.
 
 # Accessibility and internationalization
 
 The web is inherently global in nature, and applications written for it need to support all its users. Text needs to be presented in a user's chosen language and script, and values such as dates, times, numbers and currency need to be formatted accordingly given the user's locale setting.
 
-Dojo allows for easy use of message bundles to separate text messages from application logic, and can optionally make use of relevant portions of [Unicode CLDR] data to support more advanced value formatting where required.
+Dojo allows for easy use of message bundles to separate text messages from application logic, and can optionally make use of relevant portions of [Unicode CLDR](http://cldr.unicode.org/) data to support more advanced value formatting where required.
 
 Developing for the web requires applications that are inclusive of users regardless of their accessibility needs. W3C's [accessibility initiative](https://www.w3.org/WAI/) has helped standardize many such requirements, including extra consideration for [Accessible Rich Internet Applications](https://www.w3.org/WAI/standards-guidelines/aria/).
 
-Developing applications using Dojo's [widget suite] provides [WAI-ARIA] attributes out-of-the-box. While Dojo helps in this regard, it can only do so much - application authors have extra responsibility to validate the level of accessibility that their application provides. It is recommended that an explicit accessibility testing step be included in the application's delivery lifecycle.
+Developing applications using Dojo's [widget suite](https://github.com/dojo/widgets/blob/master/README.md) provides [WAI-ARIA](https://www.w3.org/TR/wai-aria/) attributes out-of-the-box. While Dojo helps in this regard, it can only do so much - application authors have extra responsibility to validate the level of accessibility that their application provides. It is recommended that an explicit accessibility testing step be included in the application's delivery lifecycle.
 
-See the [Dojo Internationalization reference guide] for more information on how to develop Dojo applications for a global audience.
+See the [Dojo Internationalization reference guide](/learn/i18n/introduction) for more information on how to develop Dojo applications for a global audience.
 
 # Adaptable presentation
 
 With the importance of the internet in modern society, web applications have required to adapt to a proliferation of ways that users access the web. Smaller form-factor mobile experiences have eclipsed desktop usage but larger presentation formats remain valid to deliver complex application requirements. Dojo provides a variety of solutions to help developers create applications that adapt to their users' access needs.
 
-When pre-rendered content is needed (such as when developing static sites), Dojo applications can make use of build-time rendering ([BTR]) where some or all of the application structure is computed at build time rather than at runtime within a user's browser. Dojo provides a flexible block-based [BTR] solution that can run Node.js scripts when building an application, allowing for features such as reading files to obtain content. Dojo's BTR solution also allows for progressive hydration to support dynamic behavior on top of pre-rendered content. Developers can make use of BTR in this way to optimize the initial set of content and application assets that are delivered to users when they initially access an application.
+When pre-rendered content is needed (such as when developing static sites), Dojo applications can make use of build-time rendering ([BTR](/learn/building/buildtime-rendering)) where some or all of the application structure is computed at build time rather than at runtime within a user's browser. Dojo provides a flexible block-based [BTR](/learn/building/buildtime-rendering) solution that can run Node.js scripts when building an application, allowing for features such as reading files to obtain content. Dojo's BTR solution also allows for progressive hydration to support dynamic behavior on top of pre-rendered content. Developers can make use of BTR in this way to optimize the initial set of content and application assets that are delivered to users when they initially access an application.
 
-Progressive web applications ([PWAs]) can help deliver experiences that are closer to native device apps, while still benefiting from features such as portability and ease of delivery that the web enables. Dojo helps with the creation of [PWAs] through simple build configuration that enables developers to add features such as offline usage, background data syncing and push notifications to their applications.
+Progressive web applications ([PWAs](/learn/building/progressive-web-applications)) can help deliver experiences that are closer to native device apps, while still benefiting from features such as portability and ease of delivery that the web enables. Dojo helps with the creation of [PWAs](/learn/building/progressive-web-applications) through simple build configuration that enables developers to add features such as offline usage, background data syncing and push notifications to their applications.
 
-Dojo allows developers to make use of several upcoming web APIs in a consistent manner across all delivery targets through its [middleware] system. The [intersection observer] API can be used to more efficiently control rendering of only the portions of an application that are visible to a user, such as supporting endless scroll lists. The [resize observer] API can enable applications to dynamically respond to changes in viewport size, allowing for interfaces to adapt gradually between the full range of resolutions across desktop and mobile viewports.
+Dojo allows developers to make use of several upcoming web APIs in a consistent manner across all delivery targets through its [middleware](/learn/middleware/introduction) system. The [intersection observer](/learn/middleware/available-middleware#intersection) API can be used to more efficiently control rendering of only the portions of an application that are visible to a user, such as supporting endless scroll lists. The [resize observer](/learn/middleware/available-middleware#resize) API can enable applications to dynamically respond to changes in viewport size, allowing for interfaces to adapt gradually between the full range of resolutions across desktop and mobile viewports.
 
 # Application development lifecycle
 
-Dojo provides an end-to-end pipeline for developing web applications. Application authors can quickly create new Dojo applications via the [`dojo create app`] CLI command. Applications can then be built in both development and production modes using the [`dojo build app`] command. The build tool allows for rapid development and validation iteration through serving a local HTTP server and watching for further changes to project files. Using this mechanism, developers can make changes and see immediate results in a fully running application.
+Dojo provides an end-to-end pipeline for developing web applications. Application authors can quickly create new Dojo applications via the [`dojo create app`](https://github.com/dojo/cli-create-app/blob/master/README.md) CLI command. Applications can then be built in both development and production modes using the [`dojo build app`](https://github.com/dojo/cli-build-app/blob/master/README.md) command. The build tool allows for rapid development and validation iteration through serving a local HTTP server and watching for further changes to project files. Using this mechanism, developers can make changes and see immediate results in a fully running application.
 
-These commands form part of a modular [Dojo CLI] toolchain that support a variety of uses across the development lifecycle. Applications can configure their build pipeline through a `.dojorc` configuration file in the project root.
+These commands form part of a modular [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) toolchain that support a variety of uses across the development lifecycle. Applications can configure their build pipeline through a `.dojorc` configuration file in the project root.
 
-See the [Dojo Build reference guide] for more information on how to build a variety of applications using Dojo.
+See the [Dojo Build reference guide](/learn/building/introduction) for more information on how to build a variety of applications using Dojo.
 
 ## Testing strategies
 
 Not all errors can be caught through compilers or static type checkers. Features can get written that are syntactically and logically valid, but either don’t anticipate problems at runtime, or do not perform functionality in the intended way. To mitigate this risk, additional testing needs to be performed.
 
-When using the [Dojo CLI] to scaffold applications, a test runner for the [Intern] test library is included by default. This allows developers to begin writing test code immediately alongside application functionality.
+When using the [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) to scaffold applications, a test runner for the [Intern](https://theintern.io/) test library is included by default. This allows developers to begin writing test code immediately alongside application functionality.
 
 Intern provides solutions for many testing concerns but may not be sufficient for all testing needs of a project. Dojo also provides a simple testing harness that allows application test code to validate use of the framework and widgets at the VDOM abstraction level. This harness can be used from any test runner such as Intern, Jest, or any others that an application’s testing strategy necessitates.
 
-See the [Dojo Testing reference guide] reference for more details on how to effectively test Dojo applications.
-
-[typescript]: https://www.typescriptlang.org/
-[dojo cli]: https://github.com/dojo/cli/blob/master/README.md
-[creating dojo widgets reference guide]: ../creating-widgets/supplemental.md#widget-fundamentals
-[virtualized dom]: ../creating-widgets/supplemental.md#working-with-the-vdom
-[rendering]: ../creating-widgets/supplemental.md#rendering-to-the-dom
-[properties]: ../creating-widgets/#configuring-widgets-through-properties
-[dojo styling and theming reference guide]: ../styling/introduction.md
-[basic state management]: ../creating-widgets/supplemental.md#basic-self-encapsulated-widget-state
-[properties interface]: ../creating-widgets/supplemental.md#intermediate-passing-widget-properties
-[stores]: ../stores/introduction.md
-[middleware]: ../middleware/introduction.md
-[intern]: https://theintern.io/
-[dojo routing reference guide]: ../routing/introduction.md
-[wai-aria]: https://www.w3.org/TR/wai-aria/
-[dojo internationalization reference guide]: ../i18n/introduction.md
-[dojo testing reference guide]: ../testing/introduction.md
-[dojo build reference guide]: ../building/introduction.md
-[bundles]: ../building/supplemental.md#creating-bundles
-[`dojo create app`]: https://github.com/dojo/cli-create-app/blob/master/README.md
-[`dojo build app`]: https://github.com/dojo/cli-build-app/blob/master/README.md
-[unicode cldr]: http://cldr.unicode.org/
-[widget suite]: https://github.com/dojo/widgets/blob/master/README.md
-[pwas]: ../building/supplemental.md#progressive-web-applications
-[btr]: ../building/supplemental.md#build-time-rendering
-[intersection observer]: ../middleware/supplemental.md#intersection
-[resize observer]: ../middleware/supplemental.md#resize
+See the [Dojo Testing reference guide](/learn/testing/introduction) reference for more details on how to effectively test Dojo applications.

@@ -525,7 +525,7 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 For simple applications where data is not required to flow between many components, state management can be very straightforward. Data can be encapsulated within individual widgets that need it as the most [basic form of state management](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state) within a Dojo application.
 
-As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together](./learn/creating-widgets/managing-state#intermediate-passing-widget-properties) when declaring VDOM output in a widget's render function.
+As applications grow in complexity and start requiring data to be shared and transferred between multiple widgets, a more robust form of state management is required. Here, Dojo begins to prove its value as a reactive framework, allowing applications to define how data should flow between components, then letting the framework manage change detection and re-rendering. This is done by [wiring widgets and properties together](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties) when declaring VDOM output in a widget's render function.
 
 For large applications, state management can be one of the most challenging aspects to deal with, requiring developers to balance between data consistency, availability and fault tolerance. While a lot of this complexity remains outside the scope of the web application layer, Dojo provides further solutions that help ensure data consistency. The [Dojo Stores](/learn/stores/introduction) component provides a centralized state store with a consistent API for accessing and managing data from multiple locations within the application.
 
@@ -595,7 +595,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 }
 ```
 
-Note that this example is not complete - clicking on the 'Change State' button in the running application will not have any effect on the widget's render output. This is because the state is fully encapsulated within `MyEncapsulatedStateWidget`, and Dojo [is not aware of any changes made to it](/learn/creating-widgets/widget-development-best-pratices#widget-properties). Only the widget's initial render will be processed by the framework.
+Note that this example is not complete - clicking on the 'Change State' button in the running application will not have any effect on the widget's render output. This is because the state is fully encapsulated within `MyEncapsulatedStateWidget`, and Dojo [is not aware of any changes made to it](/learn/creating-widgets/best-practice-development#widget-properties). Only the widget's initial render will be processed by the framework.
 
 In order to notify Dojo that a re-render is needed, widgets that encapsulate render state need to invalidate themselves.
 

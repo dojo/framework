@@ -358,7 +358,7 @@ export default myCustomBreakpoint;
 
 Provides widgets access to their externalized state when using the Dojo stores component.
 
-Described in detail in the [Dojo Stores reference guide](../stores/basic-usage.md).
+Described in detail in the [Dojo Stores reference guide](/learn/stores/introduction).
 
 **API:**
 
@@ -480,7 +480,7 @@ export default factory(function FocusableWidget({ middleware: { focus, icache } 
 
 Allows retrieving injectors from the Dojo registry and assigning invalidation callback functions to then.
 
-**Note:** Injectors and the registry are advanced concepts not typically required when writing Dojo applications. They are mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](../stores/basic-usage.md).
+**Note:** Injectors and the registry are advanced concepts not typically required when writing Dojo applications. They are mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](/learn/stores/introduction).
 
 **API:**
 
@@ -574,7 +574,7 @@ import destroy from '@dojo/framework/core/vdom';
 
 Provides access to the widget's own `Registry` instance, as well as the root application `Registry` if required, via a handler interface.
 
-**Note:** The registry is an advanced concept not typically required when writing Dojo applications. It is mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](../stores/basic-usage.md).
+**Note:** The registry is an advanced concept not typically required when writing Dojo applications. It is mainly used internally by the framework to implement more advanced user-facing functionality such as [Dojo stores](/learn/stores/introduction).
 
 **API:**
 
