@@ -14,7 +14,7 @@ registerSuite('asyncAwait', () => {
 	return {
 		async 'Async/Await with Bluebird'(test) {
 			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
-				test.skip()
+				test.skip();
 			}
 			const result: number = await this.remote.get(`${__dirname}/bluebird.html`).then(poller);
 
@@ -23,7 +23,7 @@ registerSuite('asyncAwait', () => {
 
 		async 'Async/Await with Dojo'(test) {
 			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
-				test.skip()
+				test.skip();
 			}
 			const result: number = await this.remote.get(`${__dirname}/asyncAwait.html`).then(poller);
 
@@ -32,7 +32,7 @@ registerSuite('asyncAwait', () => {
 
 		async 'Async/Await with Bluebird and Dojo'(test) {
 			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
-				test.skip()
+				test.skip();
 			}
 			const result: number = await this.remote.get(`${__dirname}/bluebirdAndDojo.html`).then(poller);
 

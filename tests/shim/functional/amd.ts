@@ -5,7 +5,7 @@ import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 registerSuite('AMD Util', {
 	async 'Utility injects dependencies if they are not present'(test) {
 		if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
-			test.skip()
+			test.skip();
 		}
 		return this.remote
 			.get(
@@ -38,7 +38,7 @@ registerSuite('AMD Util', {
 	},
 	async 'Utility does not inject dependency if it already exists'(test) {
 		if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
-			test.skip()
+			test.skip();
 		}
 		return this.remote
 			.get(
