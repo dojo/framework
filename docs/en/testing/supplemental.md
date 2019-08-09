@@ -285,7 +285,7 @@ describe('MyWidget', () => {
          // calls to processes not stubbed/mocked get ignored
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
          const h = harness(() => <MyWidget {...properties} />, {
-             middleware: [store, mockStore]
+             middleware: [[store, mockStore]]
          });
          h.expect(/* assertion template for `Loading`*/);
 
@@ -575,7 +575,7 @@ describe('Profile', () => {
 });
 ```
 
-Here the `setChildren()` api is used on the baseAssertion, and the special `~` selector allows finding a node with a key of `~message`. The `assertion-key` property (or when using class-based widgets, `~key`) is a special property on assertion templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows the assertion templates to easily select nodes without having to augment the actual widget render function. Once the `welcome` node is found, its children are overridden to a new value of `['Welcome Kel Varnsen!']`, and the resulting template is then used in `h.expect`. It's important to note that assertion templates always return a new assertion template when setting a value. This ensures that an existing template is not accidentally mutated, which would cause other tests to potentially fail, and allows construction of layered templates that incrementally build on each other.
+Here the `setChildren()` api is used on the baseAssertion, and the special `~` selector allows finding a node with a key of `~welcome`. The `assertion-key` property (or when using `w()` or `v()`functions, `~key`) is a special property on assertion templates that will be erased at assertion time so it doesn't show up when matching the renders. This allows the assertion templates to easily select nodes without having to augment the actual widget render function. Once the `welcome` node is found, its children are overridden to a new value of `['Welcome Kel Varnsen!']`, and the resulting template is then used in `h.expect`. It's important to note that assertion templates always return a new assertion template when setting a value. This ensures that an existing template is not accidentally mutated, which would cause other tests to potentially fail, and allows construction of layered templates that incrementally build on each other.
 
 Assertion template has the following API:
 
