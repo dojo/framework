@@ -167,6 +167,12 @@ describe('assertionTemplate', () => {
 		h.expect(insertionAssertion);
 	});
 
+	it('can replace a node', () => {
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.replace('~header', v('h2', ['replace']));
+		h.expect(childAssertion);
+	});
+
 	it('can replace a node in the root', () => {
 		const h = harness(() => w(MyWidget, { removeHeader: true, before: true }));
 		const childAssertion = baseAssertion.replace('~header', v('span', ['before']));
