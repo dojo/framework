@@ -12,19 +12,28 @@ registerSuite('asyncAwait', () => {
 	);
 
 	return {
-		async 'Async/Await with Bluebird'() {
+		async 'Async/Await with Bluebird'(test) {
+			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+				test.skip()
+			}
 			const result: number = await this.remote.get(`${__dirname}/bluebird.html`).then(poller);
 
 			assert.equal(result, 42);
 		},
 
-		async 'Async/Await with Dojo'() {
+		async 'Async/Await with Dojo'(test) {
+			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+				test.skip()
+			}
 			const result: number = await this.remote.get(`${__dirname}/asyncAwait.html`).then(poller);
 
 			assert.equal(result, 42);
 		},
 
-		async 'Async/Await with Bluebird and Dojo'() {
+		async 'Async/Await with Bluebird and Dojo'(test) {
+			if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+				test.skip()
+			}
 			const result: number = await this.remote.get(`${__dirname}/bluebirdAndDojo.html`).then(poller);
 
 			assert.equal(result, 42);
