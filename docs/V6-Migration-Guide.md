@@ -122,22 +122,25 @@ Finally, we have started writing our new widgets in TSX. We may convert existing
 ### TextInput
 
 #### Removed Properties
-- `invalid`
-- `labelAfter`
+
+-   `invalid`
+-   `labelAfter`
 
 #### New Properties
-- `customValidator?: (value: string) => { valid?: boolean; message?: string; } | void;`
-- `onValidate?: (valid: boolean | undefined, message: string) => void;`
-- `valid?: boolean | { valid: boolean; message: string; }`
-- `leading?: () => DNode;`
-- `trailing?: () => DNode;`
-- `helperText?: string;`
+
+-   `customValidator?: (value: string) => { valid?: boolean; message?: string; } | void;`
+-   `onValidate?: (valid: boolean | undefined, message: string) => void;`
+-   `valid?: boolean | { valid: boolean; message: string; }`
+-   `leading?: () => DNode;`
+-   `trailing?: () => DNode;`
+-   `helperText?: string;`
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/682
-- https://github.com/dojo/widgets/pull/680
-- https://github.com/dojo/widgets/pull/679
-- https://github.com/dojo/widgets/pull/664
+
+-   https://github.com/dojo/widgets/pull/682
+-   https://github.com/dojo/widgets/pull/680
+-   https://github.com/dojo/widgets/pull/679
+-   https://github.com/dojo/widgets/pull/664
 
 ### Enhanced Text Input
 
@@ -150,79 +153,96 @@ To create a text-input with a leading dollar sign for example:
 ```
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/680
+
+-   https://github.com/dojo/widgets/pull/680
 
 ### Dialog
 
 #### New Properties
-- `open` class alongside 'root' when dialog is open
-- `underlayEnterAnimation`/ `underlayExitAnimation` properties
-- Ability to set any of the enter / exit animations to `null` to stop any animation from running
+
+-   `open` class alongside 'root' when dialog is open
+-   `underlayEnterAnimation`/ `underlayExitAnimation` properties
+-   Ability to set any of the enter / exit animations to `null` to stop any animation from running
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/695
+
+-   https://github.com/dojo/widgets/pull/695
 
 ### Textarea
 
 #### Removed Properties
-- `labelAfter`
+
+-   `labelAfter`
 
 #### New Properties
-- `helperText?: string;`
+
+-   `helperText?: string;`
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/682
+
+-   https://github.com/dojo/widgets/pull/682
 
 ### SplitPane
 
 #### Removed Properties
-- default `collapseWidth` of `600`. If no `collapseWidth` is passed it will no longer collapse
+
+-   default `collapseWidth` of `600`. If no `collapseWidth` is passed it will no longer collapse
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/666
+
+-   https://github.com/dojo/widgets/pull/666
 
 ### Select
 
 #### Removed Properties
-- `labelAfter`
+
+-   `labelAfter`
 
 #### New Properties
-- `helperText?: string`
+
+-   `helperText?: string`
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/696
+
+-   https://github.com/dojo/widgets/pull/696
 
 ### Combobox
 
 #### New Properties
-- `helperText?: string`
+
+-   `helperText?: string`
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/723
+
+-   https://github.com/dojo/widgets/pull/723
 
 ### Toolbar
 
 #### New Properties
-- `.actions` wrapper for toolbar actions which will automatically switch from row to column view when menu is collapsed into slide pane.
-- `align` option to set the alignment of the embedded SlidePan that is displayed on narrow screens
+
+-   `.actions` wrapper for toolbar actions which will automatically switch from row to column view when menu is collapsed into slide pane.
+-   `align` option to set the alignment of the embedded SlidePan that is displayed on narrow screens
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/699
-- https://github.com/dojo/widgets/pull/681
+
+-   https://github.com/dojo/widgets/pull/699
+-   https://github.com/dojo/widgets/pull/681
 
 ### Snackbar
 
-This is a new widget to be used as a message bar to display notifications  and messages to your users. It is designed to work similar to the material-design snackbar.
+This is a new widget to be used as a message bar to display notifications and messages to your users. It is designed to work similar to the material-design snackbar.
 
 #### Properties
-- `type?: 'success' | 'error'` - whether the Snackbar should display with its success or error state
-- `open?: boolean` - Whether the Snackbar is open
-- `messageRenderer: () => RenderResult` - A callback that returns what to render in the snackbar's message section
-- `actionsRenderer?: () => DNode | DNode[]` - Buttons to render in the actions portion of the Snackbar
+
+-   `type?: 'success' | 'error'` - whether the Snackbar should display with its success or error state
+-   `open?: boolean` - Whether the Snackbar is open
+-   `messageRenderer: () => RenderResult` - A callback that returns what to render in the snackbar's message section
+-   `actionsRenderer?: () => DNode | DNode[]` - Buttons to render in the actions portion of the Snackbar
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/721
-- https://github.com/dojo/widgets/pull/745
+
+-   https://github.com/dojo/widgets/pull/721
+-   https://github.com/dojo/widgets/pull/745
 
 ### Card
 
@@ -230,7 +250,9 @@ This new widget is a styled wrapper for app content similar to the material-desi
 Card widget users should import it's css module to use it's classes to lay out it's content. For more information and examples of this, please see the card widget readme: https://github.com/dojo/widgets/blob/master/src/card/README.md.
 
 #### Properties
-- `actionsRenderer?: () => RenderResult` - An Actions portion for the card, used primarily to render buttons
+
+-   `actionsRenderer?: () => RenderResult` - An Actions portion for the card, used primarily to render buttons
 
 #### Associated Pull Requests
-- https://github.com/dojo/widgets/pull/722
+
+-   https://github.com/dojo/widgets/pull/722
