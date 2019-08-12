@@ -25,7 +25,7 @@ Dojo offers a variety of framework components, tooling and a build pipeline that
 
 ## Create adaptable applications
 
--   Develop [progressive web applications (PWA)](/learn/building/progressive-web-applications) that support features similar to native device apps such as offline usage, background data syncing and push notifications
+-   Develop [progressive web applications (PWA)](/learn/building/progressive-web-applications) that support features similar to native device apps such as offline usage, background data syncing and push notifications.
 -   Use [build-time rendering (BTR)](/learn/building/buildtime-rendering) to provide certain pre-rendering benefits of Server-Side Rendered (SSR) apps without the need for hosting on a dynamic web application server. Create truly static websites that work without JavaScript, or use BTR with progressive hydration for an even better application first-load experience.
     Make use of cutting-edge web technologies such as [Web Animations](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API), [Intersection Observers](/learn/middleware/available-middleware#intersection) and [Resize Observers](/learn/middleware/available-middleware#resize). The Dojo framework provides a consistent application experience for modern features across a variety of user runtime environments.
 -   If required, projects with bespoke needs can [opt-out of Dojo’s build pipeline](/learn/building/ejecting) in favor of their own solution, and instead only use pieces of the framework that are needed.

@@ -18,7 +18,7 @@ A good way of catching errors early is favoring strong typing in the application
 
 Dojo builds upon [TypeScript](https://www.typescriptlang.org/) to provide explicit typing and static compile-time type checking. Applications built using Dojo can benefit from using TypeScript over vanilla JavaScript.
 
-When using the [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) to scaffold applications, a TypeScript compilation phase is included by default in the application build process. Developers can simply start writing type-safe application code from the offset.
+When using the [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) to scaffold applications, a TypeScript compilation phase is included by default in the application build process. Developers can simply start writing type-safe application code from the outset.
 
 ## Modularization - single responsibility principle
 
@@ -54,13 +54,13 @@ See the [Creating Dojo Widgets reference guide](/learn/creating-widgets/widget-f
 
 Dojo widgets can be represented either as render function factories or TypeScript classes, and are typically contained within a single TypeScript module. The module encapsulates most of what constitutes the widget, including its behavior and semantic representation within a [virtualized DOM](/learn/creating-widgets/rendering-widgets#working-with-the-vdom).
 
-Widgets provide an API to external consumers via a [properties](/learn/creating-widgets/configuring-widgets-through-properties) interface. This interface serves as both a list of state fields that can be injected into the widget from others that compose it, as well as any functions that can be called if the widget needs to notify other parts of the application when an event occurs, such as a change in state.
+Widgets provide an API to external consumers via a [properties](/learn/creating-widgets/configuring-widgets-through-properties) interface. This interface serves as both a list of state fields that can be injected into the widget when it is rendered, as well as any functions that can be called if the widget needs to notify other parts of the application when an event occurs, such as a change in state.
 
 ## CSS modules
 
-Presentational styling of widgets is handled via CSS, similar to styling of regular HTML elements. CSS modules are used to encapsulate the presentational concerns of a single widget and avoid clashing between other widgets that may use similar CSS class names.
+Presentational styling of widgets is handled via CSS, similar to styling of regular HTML elements. CSS modules are used to encapsulate the presentational concerns of a single widget and avoid clashing with other widgets that may use similar CSS class names.
 
-Widgets can import their CSS modules as per any other TypeScript import, allowing them to refer to their CSS class names via object properties which can be autocompleted within a developer’s IDE. These property names can be used to specify styling classes when declaring the widget’s semantic element structure. CSS class name mismatches between a widget and its styling can therefore be identified at build time.
+Widgets can import their CSS modules like any other TypeScript import, allowing them to refer to their CSS class names via object properties which can be autocompleted within a developer’s IDE. These property names can be used to specify styling classes when declaring the widget’s semantic element structure. CSS class name mismatches between a widget and its styling can therefore be identified at build time.
 
 While a widget can entirely encapsulate its own styling via its corresponding CSS module, usually some flexibility is required. A widget may be used in different configurations across an application, each with their own unique presentational needs. Dojo supports the ability to override specific styles to meet these needs.
 
@@ -107,7 +107,7 @@ For the most [basic state management](/learn/creating-widgets/managing-state#bas
 
 As the need to share state between widgets increases, Dojo favors Reactive Inversion of Control. State can get lifted up into parent container widgets and injected into contained child widgets via the child’s [properties interface](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties). This lifting of state can traverse the entire widget hierarchy if needed, where state is centralized within the root application widget and portions of it are then injected into relevant child branches.
 
-For more complex requirements, or for large widget hierarchies where passing state between unrelated intermediate layers is not desireable, an externalized data store may prove the best approach. A central data store can help applications that deal with substantial amounts of state, allow complex state edit operations, or require the same subsets of state in many locations.
+For more complex requirements, or for large widget hierarchies where passing state between unrelated intermediate layers is undesirable, an externalized data store may prove the best approach. A central data store can help applications that deal with substantial amounts of state, allow complex state edit operations, or require the same subsets of state in many locations.
 
 Dojo provides a [Stores](/learn/stores/introduction) component which supports a variety of advanced state management requirements, such as:
 
@@ -132,7 +132,7 @@ See the [Dojo Styling and Theming reference guide](/learn/styling/introduction) 
 
 ## User interface widget suite
 
-Dojo provides several off-the-shelf user interface components through its [widget suite](https://github.com/dojo/widgets/blob/master/README.md). Developers can make immediate use widgets that address many common user interface patterns such as comboboxes, buttons, lists, tabs, text input and calendar entry widgets amongst others.
+Dojo provides several off-the-shelf user interface components through its [widget suite](https://github.com/dojo/widgets/blob/master/README.md). Developers can make immediate use of widgets that address many common user interface patterns such as comboboxes, buttons, lists, tabs, text input and calendar entry widgets amongst others.
 
 Dojo's widgets natively support [internationalization, accessibility](/learn/overview/accessibility-and-internationalization) and [theming](/learn/overview/user-experience#theming), giving developers flexibility in delivering user experiences that are unique to their application without needing to create bespoke user interface components.
 
@@ -154,7 +154,7 @@ Dojo's routing system allows applications to register URL subpaths as routes tha
 
 While outlets are ‘rendered’ when users navigate to them, they seldom deal directly with the rendering of application functionality. Outlets are primarily wrappers that handle navigational concerns - passing of query parameters, or handling error fallbacks - and instead delegate to other widgets within an application for functional rendering.
 
-Applications can provide navigation options to users via Link widgets which are associated to Outlets, in a similar manner to using anchors in traditional HTML pages.
+Applications can provide navigation options to users via Link widgets which are associated with Outlets, in a similar manner to using anchors in traditional HTML pages.
 
 When using routing, Dojo’s build system can [automatically generate separate bundles](/learn/overview/efficiency-and-performance#automated-layering) for each top level route within the application. Each bundle can then be independently delivered to users as they are needed.
 
@@ -186,7 +186,7 @@ A single layer should contain the set of resources related to particular functio
 
 ### Automated layering
 
-When using Dojo’s [routing system](#navigational-routing), applications can benefit from automatic layering and bundling. An application’s top-level routes each become a separate layer, and Dojo’s build system will automatically generate bundles for each subsection. This gives layer separation and resource bundling without needing any additional tool chain configuration. There is a tradeoff with this automation in that common dependencies shared across multiple layers are inlined and duplicated within each bundle.
+When using Dojo’s [routing system](/learn/overview/user-experience#navigational-routing), applications can benefit from automatic layering and bundling. An application’s top-level routes each become a separate layer, and Dojo’s build system will automatically generate bundles for each subsection. This gives layer separation and resource bundling without needing any additional tool chain configuration. There is a tradeoff with this automation in that common dependencies shared across multiple layers are inlined and duplicated within each bundle.
 
 ### Declarative layering
 
@@ -208,7 +208,7 @@ See the [Dojo Internationalization reference guide](/learn/i18n/introduction) fo
 
 # Adaptable presentation
 
-With the importance of the internet in modern society, web applications have required to adapt to a proliferation of ways that users access the web. Smaller form-factor mobile experiences have eclipsed desktop usage but larger presentation formats remain valid to deliver complex application requirements. Dojo provides a variety of solutions to help developers create applications that adapt to their users' access needs.
+With the importance of the internet in modern society, web applications have been required to adapt to a proliferation of ways that users access the web. Smaller form-factor mobile experiences have eclipsed desktop usage but larger presentation formats remain valid to deliver complex application requirements. Dojo provides a variety of solutions to help developers create applications that adapt to their users' access needs.
 
 When pre-rendered content is needed (such as when developing static sites), Dojo applications can make use of build-time rendering ([BTR](/learn/building/buildtime-rendering)) where some or all of the application structure is computed at build time rather than at runtime within a user's browser. Dojo provides a flexible block-based [BTR](/learn/building/buildtime-rendering) solution that can run Node.js scripts when building an application, allowing for features such as reading files to obtain content. Dojo's BTR solution also allows for progressive hydration to support dynamic behavior on top of pre-rendered content. Developers can make use of BTR in this way to optimize the initial set of content and application assets that are delivered to users when they initially access an application.
 
@@ -218,9 +218,9 @@ Dojo allows developers to make use of several upcoming web APIs in a consistent 
 
 # Application development lifecycle
 
-Dojo provides an end-to-end pipeline for developing web applications. Application authors can quickly create new Dojo applications via the [`dojo create app`](https://github.com/dojo/cli-create-app/blob/master/README.md) CLI command. Applications can then be built in both development and production modes using the [`dojo build app`](https://github.com/dojo/cli-build-app/blob/master/README.md) command. The build tool allows for rapid development and validation iteration through serving a local HTTP server and watching for further changes to project files. Using this mechanism, developers can make changes and see immediate results in a fully running application.
+Dojo provides an end-to-end pipeline for developing web applications. Application authors can quickly create new Dojo applications via the [`dojo create app`](https://github.com/dojo/cli-create-app/blob/master/README.md) CLI command. Applications can then be built in both development and production modes using the [`dojo build app`](https://github.com/dojo/cli-build-app/blob/master/README.md) command. The build tool allows for rapid development and iteration by serving the app using a local HTTP server and watching for further changes to project files. Using this mechanism, developers can make changes and see immediate results in a running application.
 
-These commands form part of a modular [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) toolchain that support a variety of uses across the development lifecycle. Applications can configure their build pipeline through a `.dojorc` configuration file in the project root.
+These commands form part of a modular [Dojo CLI](https://github.com/dojo/cli/blob/master/README.md) toolchain that supports a variety of uses across the development lifecycle. Applications can configure their build pipeline through a `.dojorc` configuration file in the project root.
 
 See the [Dojo Build reference guide](/learn/building/introduction) for more information on how to build a variety of applications using Dojo.
 
