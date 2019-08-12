@@ -1,8 +1,8 @@
 # Introduction
 
-Dojo encourages writing simple, modular components known as **widgets** which implement single responsibilities out of the wider requirements of an application. Widgets are designed to be composable and reusable across a variety of scenarios, and can be wired together in a reactive manner to form more complex web application requirements.
+Dojo encourages writing simple, modular components known as **widgets** which implement single responsibilities out of the wider requirements of an application. Widgets are designed to be composable and reusable across a variety of scenarios, and can be wired together in a reactive manner to fulfill more complex web application requirements.
 
-Widgets describe their intended structural representation through virtual nodes returned from their rendering functions. Dojo's rendering system then handles ongoing translation of a widget hierarchy's render output to targeted, efficient DOM updates during application runtime.
+Widgets describe their intended structural representation by returning virtual nodes from their rendering functions. Dojo's rendering system then handles ongoing translation of a widget hierarchy's render output to targeted, efficient DOM updates during application runtime.
 
 | Feature                  | Description                                                                                                                                                                                             |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
