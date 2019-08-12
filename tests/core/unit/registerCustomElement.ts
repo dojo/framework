@@ -64,7 +64,7 @@ class DelayedChildrenWidget extends WidgetBase {
 }
 
 function createTestWidget(options: any) {
-	const { properties, attributes, events, childType = CustomElementChildType.DOJO } = options;
+	const { properties, attributes, events, childType } = options;
 	@customElement<any>({
 		tag: 'bar-element',
 		properties,
@@ -202,7 +202,9 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with child dojo element', () => {
-		const BarA = createTestWidget({});
+		const BarA = createTestWidget({
+			childType: CustomElementChildType.DOJO
+		});
 		const CustomElementA = create((BarA as any).__customElementDescriptor, BarA);
 		customElements.define('bar-a', CustomElementA);
 		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
@@ -245,6 +247,27 @@ describe('registerCustomElement', () => {
 		assert.equal(handler.innerHTML, 'true');
 	});
 
+	it('custom element with child dojo element (implicit)', () => {
+		const ImplicitA = createTestWidget({});
+		const CustomElementA = create((ImplicitA as any).__customElementDescriptor, ImplicitA);
+		customElements.define('implicit-a', CustomElementA);
+		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
+		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
+		customElements.define('implicit-b', CustomElementB);
+		element = document.createElement('implicit-a');
+		const barB = document.createElement('implicit-b');
+		let childRenderCounter = 0;
+		element.addEventListener('dojo-ce-render', () => {
+			childRenderCounter++;
+		});
+		element.appendChild(barB);
+		document.body.appendChild(element);
+		(barB as any).myProp = 'set property on child';
+		resolvers.resolve();
+
+		assert.strictEqual(3, childRenderCounter);
+	});
+
 	it('custom element with child dom node', () => {
 		const BazA = createTestWidget({ childType: CustomElementChildType.NODE });
 		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
@@ -260,6 +283,20 @@ describe('registerCustomElement', () => {
 		assert.equal((child as any).myProp, 'can write prop to dom node');
 	});
 
+	it('custom element with child dom node (implicit)', () => {
+		const BazB = createTestWidget({});
+		const CustomElementA = create((BazB as any).__customElementDescriptor, BazB);
+		customElements.define('baz-b', CustomElementA);
+		element = document.createElement('baz-b');
+		const div = document.createElement('div');
+		div.innerHTML = 'hello world';
+		element.appendChild(div);
+		document.body.appendChild(element);
+		const children = element.querySelector('.children') as HTMLElement;
+		const child = children.firstChild as HTMLElement;
+		assert.equal(child.innerHTML, 'hello world');
+	});
+
 	it('custom element with child text node', () => {
 		const QuxA = createTestWidget({ childType: CustomElementChildType.TEXT });
 		const CustomElementA = create((QuxA as any).__customElementDescriptor, QuxA);
@@ -270,6 +307,19 @@ describe('registerCustomElement', () => {
 		document.body.appendChild(element);
 		const children = element.querySelector('.children') as HTMLElement;
 		const child = children.firstChild as HTMLElement;
+		assert.equal(child.nodeType, Node.TEXT_NODE);
+		assert.equal(child.textContent, 'text node');
+	});
+
+	it('custom element with child text node (implicit)', () => {
+		const QuxB = createTestWidget({});
+		const CustomElementA = create((QuxB as any).__customElementDescriptor, QuxB);
+		customElements.define('qux-b', CustomElementA);
+		element = document.createElement('qux-b');
+		const textNode = document.createTextNode('text node');
+		element.appendChild(textNode);
+		document.body.appendChild(element);
+		const child = element.firstChild as HTMLElement;
 		assert.equal(child.nodeType, Node.TEXT_NODE);
 		assert.equal(child.textContent, 'text node');
 	});
