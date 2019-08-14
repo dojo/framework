@@ -37,7 +37,8 @@ describe('StateHistory', () => {
 	});
 
 	it('location defers to the global object', () => {
-		assert.equal(new StateHistory({ onChange }).current, window.location.pathname + window.location.search);
+		let location = window.location.pathname.slice(1);
+		assert.equal(new StateHistory({ onChange }).current, location + window.location.search);
 	});
 
 	it('prefixes sanatizes path removing / and # characters', () => {
