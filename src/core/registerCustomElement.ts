@@ -39,7 +39,10 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 }
 
 const propertyMap: any = {
-	focus: 'hasFocus'
+	focus: 'doFocus',
+	blur: 'doBlur',
+	scrollIntoView: 'doScrollIntoView',
+	click: 'doClick'
 };
 
 export function create(descriptor: any, WidgetConstructor: any): any {

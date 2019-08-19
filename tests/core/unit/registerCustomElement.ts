@@ -108,7 +108,7 @@ function createTestWidget(options: any) {
 				v('div', { classes: ['handler'] }, [`${this._called}`]),
 				v('div', { classes: ['childProp'] }, [`${childProp}`]),
 				v('div', { classes: ['children'] }, this.children),
-				v('div', { classes: ['focus'] }, [this.properties.hasFocus ? 'yes' : 'no'])
+				v('div', { classes: ['focus'] }, [this.properties.doFocus ? 'yes' : 'no'])
 			]);
 		}
 	}
@@ -442,7 +442,7 @@ describe('registerCustomElement', () => {
 		element = document.createElement('ce-test-focus');
 		document.body.appendChild(element);
 
-		element.setAttribute('hasfocus', 'true');
+		element.setAttribute('dofocus', 'true');
 		resolvers.resolve();
 		assert.equal(element.getElementsByClassName('focus')[0].innerHTML, 'yes');
 	});
