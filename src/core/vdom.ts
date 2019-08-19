@@ -347,6 +347,7 @@ export function w<W extends WidgetBaseTypes>(
 export function v(node: VNode, properties: VNodeProperties, children: undefined | DNode[]): VNode;
 export function v(node: VNode, properties: VNodeProperties): VNode;
 export function v(tag: string, children: undefined | DNode[]): VNode;
+export function v<K extends keyof HTMLElementTagNameMap>(tag: K, properties: DeferredVirtualProperties | VNodeProperties<HTMLElementTagNameMap[K]>, children?: DNode[]): VNode;
 export function v(tag: string, properties: DeferredVirtualProperties | VNodeProperties, children?: DNode[]): VNode;
 export function v(tag: string): VNode;
 export function v(
