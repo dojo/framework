@@ -258,6 +258,30 @@ describe('registerCustomElement', () => {
 		assert.equal((child as any).myProp, 'can write prop to dom node');
 	});
 
+	it('custom element with child dom node and widget node', () => {
+		const BazA = createTestWidget({ childType: 'NODE' });
+		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
+		customElements.define('baz-a', CustomElementA);
+		element = document.createElement('baz-a');
+
+		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
+		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
+		customElements.define('bar-b', CustomElementB);
+		const barB = document.createElement('bar-b');
+
+		const div = document.createElement('div');
+		div.innerHTML = 'hello world';
+		element.appendChild(div);
+		element.appendChild(barB);
+		document.body.appendChild(element);
+		const children = element.querySelector('.children') as HTMLElement;
+		const child = children.firstChild as HTMLElement;
+		assert.equal(child.innerHTML, 'hello world');
+		assert.equal((child as any).myProp, 'can write prop to dom node');
+
+		console.error(element.innerHTML);
+	});
+
 	it('custom element with child text node', () => {
 		const QuxA = createTestWidget({ childType: 'DOJO' });
 		const CustomElementA = create((QuxA as any).__customElementDescriptor, QuxA);
