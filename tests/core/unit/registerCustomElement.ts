@@ -107,7 +107,8 @@ function createTestWidget(options: any) {
 				v('div', { classes: ['attr'] }, [`${myAttr}`]),
 				v('div', { classes: ['handler'] }, [`${this._called}`]),
 				v('div', { classes: ['childProp'] }, [`${childProp}`]),
-				v('div', { classes: ['children'] }, this.children)
+				v('div', { classes: ['children'] }, this.children),
+				v('div', { classes: ['focus'] }, [this.properties.hasFocus ? 'yes' : 'no'])
 			]);
 		}
 	}
@@ -431,5 +432,18 @@ describe('registerCustomElement', () => {
 				}
 			});
 		});
+	});
+
+	it('uses the property map to create change the name of the focus property', () => {
+		const BarA = createTestWidget({ attributes: ['focus'] });
+		const CustomElement = create((BarA as any).__customElementDescriptor, BarA);
+
+		customElements.define('ce-test-focus', CustomElement);
+		element = document.createElement('ce-test-focus');
+		document.body.appendChild(element);
+
+		element.setAttribute('hasfocus', 'true');
+		resolvers.resolve();
+		assert.equal(element.getElementsByClassName('focus')[0].innerHTML, 'yes');
 	});
 });
