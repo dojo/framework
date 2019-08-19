@@ -261,13 +261,13 @@ describe('registerCustomElement', () => {
 	it('custom element with child dom node and widget node', () => {
 		const BazA = createTestWidget({ childType: 'NODE' });
 		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
-		customElements.define('baz-a', CustomElementA);
-		element = document.createElement('baz-a');
+		customElements.define('cetest-a', CustomElementA);
+		element = document.createElement('cetest-a');
 
 		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
 		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
-		customElements.define('bar-b', CustomElementB);
-		const barB = document.createElement('bar-b');
+		customElements.define('cetest-b', CustomElementB);
+		const barB = document.createElement('cetest-b');
 
 		const div = document.createElement('div');
 		div.innerHTML = 'hello world';
