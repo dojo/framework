@@ -95,7 +95,8 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			[...attributes, ...properties].forEach((propertyName: string) => {
 				const isReservedProp = RESERVED_PROPS.indexOf(propertyName) !== -1;
-				const value = this._propertiesMap[propertyName] || !isReservedProp ? (this as any)[propertyName] : undefined;
+				const value =
+					this._propertiesMap[propertyName] || !isReservedProp ? (this as any)[propertyName] : undefined;
 				let filteredPropertyName = propertyName.replace(/^on/, '__');
 				if (isReservedProp) {
 					filteredPropertyName = `__${propertyName}`;

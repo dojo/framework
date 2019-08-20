@@ -463,7 +463,7 @@ describe('registerCustomElement', () => {
 		class WidgetA extends WidgetBase<any> {
 			render() {
 				console.log('A', this.properties, this.children);
-				return v('div', {}, [ this.properties.focus, ...this.children ]);
+				return v('div', {}, [this.properties.focus, ...this.children]);
 			}
 		}
 		@customElement({
@@ -490,11 +490,17 @@ describe('registerCustomElement', () => {
 		resolvers.resolve();
 		(childElement as any).set('focus', 'child focus property');
 		resolvers.resolve();
-		assert.strictEqual('<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>child focus property</div></ce-test-focus-child></div></ce-test-focus>', element.outerHTML);
+		assert.strictEqual(
+			'<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>child focus property</div></ce-test-focus-child></div></ce-test-focus>',
+			element.outerHTML
+		);
 		(childElement as any).set('focus', 'second child focus property');
 		console.log(element.outerHTML);
 		resolvers.resolve();
-		assert.strictEqual('<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>second child focus property</div></ce-test-focus-child></div></ce-test-focus>', element.outerHTML);
+		assert.strictEqual(
+			'<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>second child focus property</div></ce-test-focus-child></div></ce-test-focus>',
+			element.outerHTML
+		);
 		console.log(element.outerHTML);
 	});
 });
