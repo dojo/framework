@@ -109,6 +109,46 @@ const r = renderer(() => w(App, {}));
 r.mount({ transition });
 ```
 
+#### [Better typing for VNodeProperties event handlers](https://github.com/dojo/framework/pull/497)
+
+The `VNodeProperties` interface has been updated, making the `event` argument of event handlers not optional and also to detect the event's target type based on the tag name.
+
+You may experience compilation errors if there are any occurrences in your project where the `event` argument has been explicitly typed as optional, for example:
+
+```ts
+render() {
+	return v('button', { onclick: (event?: MouseEvent) => {
+
+	} });
+}
+```
+
+Removing `?` should resolve any compilation errors:
+
+```ts
+render() {
+	return v('button', { onclick: (event: MouseEvent) => {
+
+	} });
+}
+```
+
+#### [Auto detection of custom element child types](https://github.com/dojo/framework/pull/494)
+
+The child type of a custom element was previously required for types other than `DOJO`, this child type is now auto detected and the configuration property on the `customElement` decorator has been removed.
+
+```ts
+@customElement({
+	tag: 'my-custom-element',
+	properties: ['disabled']
+	childType: CustomElementChildType.TEXT
+})
+class MyWidget extends WidgetBase {
+}
+```
+
+Removing the `childType` property from the custom element decorator will fix the errors from the change and the behavior of the CE should remain the same.
+
 ## Widget changes
 
 Work has begun on adding `helperText` and a consistent validation approach to `@dojo/widgets`.
