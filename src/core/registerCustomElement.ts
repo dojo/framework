@@ -6,6 +6,8 @@ import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';
 
+const RESERVED_PROPS = ['focus'];
+
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
 	@alwaysRender()
 	class DomToWidgetWrapper extends WidgetBase<any> {
@@ -13,7 +15,7 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 			const properties = Object.keys(this.properties).reduce(
 				(props, key: string) => {
 					const value = this.properties[key];
-					if (key.indexOf('on') === 0) {
+					if (key.indexOf('on') === 0 || RESERVED_PROPS.indexOf(key) !== -1) {
 						key = `__${key}`;
 					}
 					props[key] = value;
@@ -46,6 +48,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _properties: any = {};
 		private _children: any[] = [];
 		private _eventProperties: any = {};
+		private _propertiesMap: any = {};
 		private _initialised = false;
 
 		public connectedCallback() {
@@ -91,8 +94,13 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			this._properties = { ...this._properties, ...this._attributesToProperties(attributes) };
 
 			[...attributes, ...properties].forEach((propertyName: string) => {
-				const value = (this as any)[propertyName];
-				const filteredPropertyName = propertyName.replace(/^on/, '__');
+				const isReservedProp = RESERVED_PROPS.indexOf(propertyName) !== -1;
+				const value =
+					this._propertiesMap[propertyName] || !isReservedProp ? (this as any)[propertyName] : undefined;
+				let filteredPropertyName = propertyName.replace(/^on/, '__');
+				if (isReservedProp) {
+					filteredPropertyName = `__${propertyName}`;
+				}
 				if (value !== undefined) {
 					this._properties[propertyName] = value;
 				}
@@ -104,10 +112,12 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					};
 				}
 
-				domProperties[propertyName] = {
-					get: () => this._getProperty(propertyName),
-					set: (value: any) => this._setProperty(propertyName, value)
-				};
+				if (!isReservedProp) {
+					domProperties[propertyName] = {
+						get: () => this._getProperty(propertyName),
+						set: (value: any) => this._setProperty(propertyName, value)
+					};
+				}
 			});
 
 			events.forEach((propertyName: string) => {
@@ -261,6 +271,13 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 		public get isWidget() {
 			return true;
+		}
+
+		public set(key: string, value: any) {
+			this._propertiesMap[key] = value;
+			if (this._renderer) {
+				this._setProperty(key, value);
+			}
 		}
 	};
 }
