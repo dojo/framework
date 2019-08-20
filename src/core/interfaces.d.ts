@@ -37,6 +37,37 @@ export interface MouseEventHandler {
 	(event?: MouseEvent): EventHandlerResult;
 }
 
+/**
+ * Cannot extend the global due to TS error: `All declarations of 'target' must have identical modifiers.`
+ */
+export interface DojoEvent<T extends EventTarget = EventTarget> extends Event {
+	target: T;
+}
+
+declare global {
+	interface MouseEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface PointerEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface TouchEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface KeyboardEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface FocusEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface UIEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+	interface WheelEvent<T extends EventTarget = EventTarget> {
+		target: T;
+	}
+}
+
 export type BlurEventHandler = FocusEventHandler;
 export type ChangeEventHandler = EventHandler;
 export type ClickEventHandler = MouseEventHandler;
@@ -108,7 +139,7 @@ export interface VDomOptions {
 	on?: On;
 }
 
-export interface VNodeProperties {
+export interface VNodeProperties<T extends EventTarget = EventTarget> {
 	enterAnimation?: SupportedClassName;
 
 	exitAnimation?: SupportedClassName;
@@ -133,21 +164,21 @@ export interface VNodeProperties {
 	readonly styles?: Partial<CSSStyleDeclaration>;
 
 	// Pointer Events
-	onpointermove?(ev?: PointerEvent): boolean | void;
-	onpointerdown?(ev?: PointerEvent): boolean | void;
-	onpointerup?(ev?: PointerEvent): boolean | void;
-	onpointerover?(ev?: PointerEvent): boolean | void;
-	onpointerout?(ev?: PointerEvent): boolean | void;
-	onpointerenter?(ev?: PointerEvent): boolean | void;
-	onpointerleave?(ev?: PointerEvent): boolean | void;
-	onpointercancel?(ev?: PointerEvent): boolean | void;
+	onpointermove?(ev: PointerEvent<T>): boolean | void;
+	onpointerdown?(ev: PointerEvent<T>): boolean | void;
+	onpointerup?(ev: PointerEvent<T>): boolean | void;
+	onpointerover?(ev: PointerEvent<T>): boolean | void;
+	onpointerout?(ev: PointerEvent<T>): boolean | void;
+	onpointerenter?(ev: PointerEvent<T>): boolean | void;
+	onpointerleave?(ev: PointerEvent<T>): boolean | void;
+	onpointercancel?(ev: PointerEvent<T>): boolean | void;
 	// For Pointer Event Polyfill see: https://github.com/jquery/PEP
 	readonly 'touch-action'?: string;
 	// From Element
-	ontouchcancel?(ev?: TouchEvent): boolean | void;
-	ontouchend?(ev?: TouchEvent): boolean | void;
-	ontouchmove?(ev?: TouchEvent): boolean | void;
-	ontouchstart?(ev?: TouchEvent): boolean | void;
+	ontouchcancel?(ev: TouchEvent<T>): boolean | void;
+	ontouchend?(ev: TouchEvent<T>): boolean | void;
+	ontouchmove?(ev: TouchEvent<T>): boolean | void;
+	ontouchstart?(ev: TouchEvent<T>): boolean | void;
 	// From HTMLFormElement
 	readonly action?: string;
 	readonly encoding?: string;
@@ -156,26 +187,26 @@ export interface VNodeProperties {
 	readonly name?: string;
 	readonly target?: string;
 	// From HTMLElement
-	onblur?(ev?: FocusEvent): boolean | void;
-	onchange?(ev?: Event): boolean | void;
-	onclick?(ev?: MouseEvent): boolean | void;
-	ondblclick?(ev?: MouseEvent): boolean | void;
-	onfocus?(ev?: FocusEvent): boolean | void;
-	oninput?(ev?: Event): boolean | void;
-	onkeydown?(ev?: KeyboardEvent): boolean | void;
-	onkeypress?(ev?: KeyboardEvent): boolean | void;
-	onkeyup?(ev?: KeyboardEvent): boolean | void;
-	onload?(ev?: Event): boolean | void;
-	onmousedown?(ev?: MouseEvent): boolean | void;
-	onmouseenter?(ev?: MouseEvent): boolean | void;
-	onmouseleave?(ev?: MouseEvent): boolean | void;
-	onmousemove?(ev?: MouseEvent): boolean | void;
-	onmouseout?(ev?: MouseEvent): boolean | void;
-	onmouseover?(ev?: MouseEvent): boolean | void;
-	onmouseup?(ev?: MouseEvent): boolean | void;
-	onmousewheel?(ev?: WheelEvent | MouseWheelEvent): boolean | void;
-	onscroll?(ev?: UIEvent): boolean | void;
-	onsubmit?(ev?: Event): boolean | void;
+	onblur?(ev: FocusEvent<T>): boolean | void;
+	onchange?(ev: DojoEvent<T>): boolean | void;
+	onclick?(ev: MouseEvent<T>): boolean | void;
+	ondblclick?(ev: MouseEvent<T>): boolean | void;
+	onfocus?(ev: FocusEvent<T>): boolean | void;
+	oninput?(ev: DojoEvent<T>): boolean | void;
+	onkeydown?(ev: KeyboardEvent<T>): boolean | void;
+	onkeypress?(ev: KeyboardEvent<T>): boolean | void;
+	onkeyup?(ev: KeyboardEvent<T>): boolean | void;
+	onload?(ev: DojoEvent<T>): boolean | void;
+	onmousedown?(ev: MouseEvent<T>): boolean | void;
+	onmouseenter?(ev: MouseEvent<T>): boolean | void;
+	onmouseleave?(ev: MouseEvent<T>): boolean | void;
+	onmousemove?(ev: MouseEvent<T>): boolean | void;
+	onmouseout?(ev: MouseEvent<T>): boolean | void;
+	onmouseover?(ev: MouseEvent<T>): boolean | void;
+	onmouseup?(ev: MouseEvent<T>): boolean | void;
+	onmousewheel?(ev: WheelEvent<T>): boolean | void;
+	onscroll?(ev: UIEvent<T>): boolean | void;
+	onsubmit?(ev: DojoEvent<T>): boolean | void;
 	readonly spellcheck?: boolean;
 	readonly tabIndex?: number;
 	readonly disabled?: boolean;
