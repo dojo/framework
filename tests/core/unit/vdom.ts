@@ -4365,6 +4365,9 @@ jsdomDescribe('vdom', () => {
 					value: typedKeys,
 					oninput: (evt) => {
 						typedKeys = evt.target.value;
+					},
+					onclick: (evt) => {
+						typedKeys = evt.target.value;
 					}
 				});
 
