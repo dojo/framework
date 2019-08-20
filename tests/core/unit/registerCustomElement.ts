@@ -6,7 +6,7 @@ import WidgetBase from '../../../src/core/WidgetBase';
 import Container from '../../../src/core/Container';
 import Registry from '../../../src/core/Registry';
 import { v, w } from '../../../src/core/vdom';
-import register, { create, CustomElementChildType } from '../../../src/core/registerCustomElement';
+import register, { create } from '../../../src/core/registerCustomElement';
 import { createResolvers } from '../support/util';
 import { ThemedMixin, theme } from '../../../src/core/mixins/Themed';
 import { waitFor } from './waitFor';
@@ -42,8 +42,7 @@ class DisplayElementDefault extends WidgetBase {
 }
 
 @customElement({
-	tag: 'delayed-children-element',
-	childType: CustomElementChildType.TEXT
+	tag: 'delayed-children-element'
 })
 class DelayedChildrenWidget extends WidgetBase {
 	render() {
@@ -64,13 +63,12 @@ class DelayedChildrenWidget extends WidgetBase {
 }
 
 function createTestWidget(options: any) {
-	const { properties, attributes, events, childType = CustomElementChildType.DOJO } = options;
+	const { properties, attributes, events, childType = 'DOJO' } = options;
 	@customElement<any>({
 		tag: 'bar-element',
 		properties,
 		attributes,
-		events,
-		childType
+		events
 	})
 	@diffProperty('onExternalFunction', reference)
 	class Bar extends WidgetBase<any> {
@@ -84,7 +82,7 @@ function createTestWidget(options: any) {
 			let childProp = '';
 			if (this.children.length) {
 				const [child] = this.children;
-				if (childType === CustomElementChildType.DOJO) {
+				if (childType === 'DOJO') {
 					(child as any).properties.myAttr = 'set attribute from parent';
 					(child as any).properties.onBar = () => {
 						this._called = true;
@@ -93,7 +91,7 @@ function createTestWidget(options: any) {
 					if ((child as any).properties.myProp) {
 						childProp = (child as any).properties.myProp;
 					}
-				} else if (childType === CustomElementChildType.NODE) {
+				} else if (childType === 'NODE') {
 					childProp = (child as any).properties.myProp = 'can write prop to dom node';
 				}
 			}
@@ -246,7 +244,7 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with child dom node', () => {
-		const BazA = createTestWidget({ childType: CustomElementChildType.NODE });
+		const BazA = createTestWidget({ childType: 'NODE' });
 		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
 		customElements.define('baz-a', CustomElementA);
 		element = document.createElement('baz-a');
@@ -260,8 +258,32 @@ describe('registerCustomElement', () => {
 		assert.equal((child as any).myProp, 'can write prop to dom node');
 	});
 
+	it('custom element with child dom node and widget node', () => {
+		const BazA = createTestWidget({ childType: 'NODE' });
+		const CustomElementA = create((BazA as any).__customElementDescriptor, BazA);
+		customElements.define('cetest-a', CustomElementA);
+		element = document.createElement('cetest-a');
+
+		const BarB = createTestWidget({ attributes: ['myAttr'], properties: ['myProp'], events: ['onBar'] });
+		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
+		customElements.define('cetest-b', CustomElementB);
+		const barB = document.createElement('cetest-b');
+
+		const div = document.createElement('div');
+		div.innerHTML = 'hello world';
+		element.appendChild(div);
+		element.appendChild(barB);
+		document.body.appendChild(element);
+		const children = element.querySelector('.children') as HTMLElement;
+		const child = children.firstChild as HTMLElement;
+		assert.equal(child.innerHTML, 'hello world');
+		assert.equal((child as any).myProp, 'can write prop to dom node');
+
+		console.error(element.innerHTML);
+	});
+
 	it('custom element with child text node', () => {
-		const QuxA = createTestWidget({ childType: CustomElementChildType.TEXT });
+		const QuxA = createTestWidget({ childType: 'DOJO' });
 		const CustomElementA = create((QuxA as any).__customElementDescriptor, QuxA);
 		customElements.define('qux-a', CustomElementA);
 		element = document.createElement('qux-a');

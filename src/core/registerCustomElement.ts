@@ -6,12 +6,6 @@ import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';
 
-export enum CustomElementChildType {
-	DOJO = 'DOJO',
-	NODE = 'NODE',
-	TEXT = 'TEXT'
-}
-
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
 	@alwaysRender()
 	class DomToWidgetWrapper extends WidgetBase<any> {
@@ -39,11 +33,7 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
-	const {
-		attributes = [],
-		childType = CustomElementChildType.DOJO,
-		registryFactory = () => new Registry()
-	} = descriptor;
+	const { attributes = [], registryFactory = () => new Registry() } = descriptor;
 	const attributeMap: any = {};
 
 	attributes.forEach((propertyName: string) => {
@@ -146,10 +136,11 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			Object.defineProperties(this, domProperties);
 
-			const children = childType === CustomElementChildType.TEXT ? this.childNodes : this.children;
+			const hasWidgets = from(this.childNodes).some((childNode) => (childNode as any).isWidget);
+			const children = hasWidgets ? this.children : this.childNodes;
 
 			from(children).forEach((childNode: Node) => {
-				if (childType === CustomElementChildType.DOJO) {
+				if ((childNode as any).isWidget) {
 					childNode.addEventListener('dojo-ce-render', () => this._render());
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
 					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
@@ -222,14 +213,13 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			if (childType === CustomElementChildType.DOJO) {
-				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
-					const { domNode } = Child;
-					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
-				});
-			} else {
-				return this._children;
-			}
+			return this._children.map((child: any) => {
+				if ((child as any).domNode.isWidget) {
+					const { domNode } = child;
+					return w(child, { ...domNode.__properties__() }, [...domNode.__children__()]);
+				}
+				return child;
+			});
 		}
 
 		public attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
