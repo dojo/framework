@@ -158,6 +158,7 @@ describe('registerCustomElement', () => {
 	it('custom element', () => {
 		register(Foo);
 		element = document.createElement('foo-element');
+		(element as any).set();
 		document.body.appendChild(element);
 		assert.equal(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
 	});
@@ -214,7 +215,7 @@ describe('registerCustomElement', () => {
 		});
 		element.appendChild(barB);
 		document.body.appendChild(element);
-		(barB as any).myProp = 'set property on child';
+		(barB as any).set('myProp', 'set property on child');
 		resolvers.resolve();
 
 		assert.strictEqual(3, childRenderCounter);
@@ -278,8 +279,6 @@ describe('registerCustomElement', () => {
 		const child = children.firstChild as HTMLElement;
 		assert.equal(child.innerHTML, 'hello world');
 		assert.equal((child as any).myProp, 'can write prop to dom node');
-
-		console.error(element.innerHTML);
 	});
 
 	it('custom element with child text node', () => {
@@ -453,5 +452,50 @@ describe('registerCustomElement', () => {
 				}
 			});
 		});
+	});
+
+	it('uses the property map to create change the name of the focus property', () => {
+		@customElement({
+			tag: 'widgetA-element',
+			properties: ['focus'],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				console.log('A', this.properties, this.children);
+				return v('div', {}, [ this.properties.focus, ...this.children ]);
+			}
+		}
+		@customElement({
+			tag: 'widgetB-element',
+			properties: ['focus'],
+			attributes: [],
+			events: []
+		})
+		class WidgetB extends WidgetBase<any> {
+			render() {
+				return v('div', {}, this.properties.focus);
+			}
+		}
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const ChildCustomElement = create((WidgetB as any).__customElementDescriptor, WidgetB);
+
+		element = document.createElement('ce-test-focus');
+		customElements.define('ce-test-focus', CustomElement);
+		customElements.define('ce-test-focus-child', ChildCustomElement);
+		const childElement = document.createElement('ce-test-focus-child');
+		element.appendChild(childElement);
+		document.body.appendChild(element);
+		(element as any).set('focus', 'parent focus property');
+		resolvers.resolve();
+		(childElement as any).set('focus', 'child focus property');
+		resolvers.resolve();
+		assert.strictEqual('<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>child focus property</div></ce-test-focus-child></div></ce-test-focus>', element.outerHTML);
+		(childElement as any).set('focus', 'second child focus property');
+		console.log(element.outerHTML);
+		resolvers.resolve();
+		assert.strictEqual('<ce-test-focus style="display: block;"><div>parent focus property<ce-test-focus-child style="display: block;"><div>second child focus property</div></ce-test-focus-child></div></ce-test-focus>', element.outerHTML);
+		console.log(element.outerHTML);
 	});
 });
