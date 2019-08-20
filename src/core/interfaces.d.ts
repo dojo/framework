@@ -38,8 +38,8 @@ export interface MouseEventHandler {
 }
 
 /**
-* Cannot extend the global due to TS error: `All declarations of 'target' must have identical modifiers.`
-*/
+ * Cannot extend the global due to TS error: `All declarations of 'target' must have identical modifiers.`
+ */
 export interface DojoEvent<T extends EventTarget = EventTarget> extends Event {
 	target: T;
 }
@@ -378,7 +378,7 @@ export type LazyDefine<W extends WidgetBaseTypes = DefaultWidgetBaseInterface> =
 
 export interface MiddlewareMap<
 	Middleware extends () => { api: {}; properties: {} } = () => { api: {}; properties: {} }
-	> {
+> {
 	[index: string]: Middleware;
 }
 
@@ -467,7 +467,7 @@ export type WidgetBaseConstructor<P extends WidgetProperties = WidgetProperties,
 	WidgetBaseInterface<P, C>
 >;
 
-export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode> { }
+export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode> {}
 
 export interface WidgetBaseTypes<P = any, C extends DNode = DNode> {
 	/**
@@ -509,7 +509,7 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 /**
  * Meta Base type
  */
-export interface MetaBase extends Destroyable { }
+export interface MetaBase extends Destroyable {}
 
 /**
  * Meta Base type
@@ -523,7 +523,7 @@ export interface WidgetMetaBase extends MetaBase {
  * Meta Base constructor type
  */
 export interface WidgetMetaConstructor<T extends MetaBase> {
-	new(properties: WidgetMetaProperties): T;
+	new (properties: WidgetMetaProperties): T;
 }
 
 export interface NodeHandlerInterface extends Evented {
