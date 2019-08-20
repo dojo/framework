@@ -158,7 +158,6 @@ describe('registerCustomElement', () => {
 	it('custom element', () => {
 		register(Foo);
 		element = document.createElement('foo-element');
-		(element as any).set();
 		document.body.appendChild(element);
 		assert.equal(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
 	});
