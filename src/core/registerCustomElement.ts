@@ -1,6 +1,6 @@
 import Registry from './Registry';
 import { WidgetBase } from './WidgetBase';
-import { renderer, w, dom } from './vdom';
+import { renderer, w, dom, isTextNode } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
@@ -12,6 +12,14 @@ export enum CustomElementChildType {
 	DOJO = 'DOJO',
 	NODE = 'NODE',
 	TEXT = 'TEXT'
+}
+
+function isElement(item: any): item is Element {
+	return item && item.nodeType === 1;
+}
+
+function isDojoChild(item: any): boolean {
+	return isElement(item) && item.tagName.indexOf('-') > -1;
 }
 
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
@@ -41,11 +49,7 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
-	const {
-		attributes = [],
-		childType = CustomElementChildType.DOJO,
-		registryFactory = () => new Registry()
-	} = descriptor;
+	const { attributes = [], registryFactory = () => new Registry() } = descriptor;
 	const attributeMap: any = {};
 
 	attributes.forEach((propertyName: string) => {
@@ -60,6 +64,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _eventProperties: any = {};
 		private _propertiesMap: any = {};
 		private _initialised = false;
+		private _childType = descriptor.childType;
 
 		public connectedCallback() {
 			if (this._initialised) {
@@ -156,10 +161,20 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			Object.defineProperties(this, domProperties);
 
-			const children = childType === CustomElementChildType.TEXT ? this.childNodes : this.children;
+			const children = from(this.childNodes).filter(
+				(childNode) => !isTextNode(childNode) || childNode.data.replace(/^\s+|\s+$/g, '')
+			);
 
-			from(children).forEach((childNode: Node) => {
-				if (childType === CustomElementChildType.DOJO) {
+			if (!this._childType) {
+				if (children.some((child) => isDojoChild(child))) {
+					this._childType = CustomElementChildType.DOJO;
+				} else {
+					this._childType = CustomElementChildType.NODE;
+				}
+			}
+
+			from(children).forEach((childNode) => {
+				if (this._childType === CustomElementChildType.DOJO) {
 					childNode.addEventListener('dojo-ce-render', () => this._render());
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
 					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
@@ -232,7 +247,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			if (childType === CustomElementChildType.DOJO) {
+			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
 					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);

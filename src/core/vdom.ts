@@ -225,7 +225,7 @@ const WNODE = '__WNODE_TYPE';
 const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
 
-function isTextNode(item: any): item is Text {
+export function isTextNode(item: any): item is Text {
 	return item && item.nodeType === 3;
 }
 
