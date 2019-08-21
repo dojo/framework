@@ -149,12 +149,6 @@ describe('assertionTemplate', () => {
 		h.expect(propertyAssertion);
 	});
 
-	it('can replace a node', () => {
-		const h = harness(() => w(MyWidget, {}));
-		const childAssertion = baseAssertion.replace('~header', v('h2', { '~key': 'header' }, ['hello']));
-		h.expect(childAssertion);
-	});
-
 	it('can remove a node', () => {
 		const h = harness(() => w(MyWidget, { removeHeader: true }));
 		const childAssertion = baseAssertion.remove('~header');
@@ -167,9 +161,9 @@ describe('assertionTemplate', () => {
 		h.expect(insertionAssertion);
 	});
 
-	it('can remove a node', () => {
-		const h = harness(() => w(MyWidget, { removeHeader: true }));
-		const childAssertion = baseAssertion.remove('~header');
+	it('can replace a node', () => {
+		const h = harness(() => w(MyWidget, { replaceChild: true }));
+		const childAssertion = baseAssertion.replace('~header', v('h2', ['replace']));
 		h.expect(childAssertion);
 	});
 

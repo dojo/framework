@@ -41,24 +41,39 @@ dojo test --functional --config local
 
 ## Writing unit tests
 
--   Using Dojo's [`harness`](https://github.com/dojo/framework/tree/master/src/testing) API for unit testing widgets.
+-   Using Dojo's [`harness` API](/learn/testing/dojo-test-harness#harness-api) for unit testing widgets.
 
-> src/tests/unit/widgets/Home.ts
+> src/widgets/Home.tsx
+
+```ts
+import { create, tsx } from '@dojo/framework/core/vdom';
+import * as css from './Home.m.css';
+
+const factory = create();
+
+const Home = factory(function Home() {
+	return <h1 classes={[css.root]}>Home Page</h1>;
+});
+
+export default Home;
+```
+
+> tests/unit/widgets/Home.tsx
 
 ```ts
 const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
 import harness from '@dojo/framework/testing/harness';
 import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import { w, v } from '@dojo/framework/widget-core/d';
 
 import Home from '../../../src/widgets/Home';
-import * as css from '../../../src/widgets/styles/Home.m.css';
+import * as css from '../../../src/widgets/Home.m.css';
 
-const baseTemplate = assertionTemplate(() => v('h1', { classes: [css.root] }, ['Home Page']));
+const baseTemplate = assertionTemplate(() => <h1 classes={[css.root]}>Home Page</h1>);
 
 describe('Home', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => w(Home, {}));
+		const h = harness(() => <Home />);
 		h.expect(baseTemplate);
 	});
 });
@@ -109,61 +124,78 @@ Assertion templates provide a way to create a base assertion that allow parts of
 
 -   Given a widget that renders output differently based on property values:
 
-> src/widgets/Profile.ts
+> src/widgets/Profile.tsx
 
 ```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+
+import * as css from './Profile.m.css';
+
 export interface ProfileProperties {
 	username?: string;
 }
 
-export default class Profile extends WidgetBase<ProfileProperties> {
-	protected render() {
-		const { username } = this.properties;
-		return v('h1', { classes: [css.root] }, [`Welcome ${username || 'Stranger'}!`]);
-	}
-}
+const factory = create().properties<ProfileProperties>();
+
+const Profile = factory(function Profile({ properties }) {
+	const { username } = properties();
+	return <h1 classes={[css.root]}>{`Welcome ${username || 'Stranger'}!`}</h1>;
+});
+
+export default Profile;
 ```
 
 -   Create an assertion template using `@dojo/framework/testing/assertionTemplate`
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import harness from '@dojo/framework/testing/harness';
+
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/Profile.m.css';
+
 // Create an assertion
-const profileAssertion = assertionTemplate(() =>
-	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
-);
+const profileAssertion = assertionTemplate(() => (
+	<h1 classes={[css.root]} assertion-key="welcome">
+		Welcome Stranger!
+	</h1>
+));
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => w(Profile, {}));
+		const h = harness(() => <Profile />);
 		// Test against my base assertion
 		h.expect(profileAssertion);
 	});
 });
 ```
 
-A value can be provided to any virtual DOM node under test using the `~key` properties defined in the assertion template. In `.tsx` this would be the `assertion-key` attribute.
+A value can be provided to any virtual DOM node under test using `assertion-key` properties defined in the assertion template. Note: when `v()` and `w()` from `@dojo/framework/core/vdom` are used, the `~key` property serves the same purpose.
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => w(Profile, {}));
+		const h = harness(() => <Profile />);
+		// Test against my base assertion
 		h.expect(profileAssertion);
 	});
 
 	it('renders given username correctly', () => {
 		// update the expected result with a given username
 		const namedAssertion = profileAssertion.setChildren('~welcome', () => ['Welcome Kel Varnsen!']);
-		const h = harness(() => w(Profile, { username: 'Kel Varnsen' }));
+		const h = harness(() => <Profile username="Kel Varnsen" />);
 		h.expect(namedAssertion);
 	});
 });
 ```
 
-Using the `setChildren` method of an assertion template with the assigned `~key` value will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
+Using the `setChildren` method of an assertion template with the assigned `assertion-key` value, ~welcome in this case, will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/

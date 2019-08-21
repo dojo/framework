@@ -8,7 +8,10 @@ interface CallbackResults {
 }
 
 registerSuite('Polyfills', {
-	Polyfills() {
+	Polyfills(test) {
+		if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+			test.skip();
+		}
 		return this.remote
 			.get(`${__dirname}/polyfills.html`)
 			.then(

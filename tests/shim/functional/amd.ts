@@ -3,7 +3,10 @@ const { assert } = intern.getPlugin('chai');
 import pollUntil from '@theintern/leadfoot/helpers/pollUntil';
 
 registerSuite('AMD Util', {
-	async 'Utility injects dependencies if they are not present'() {
+	async 'Utility injects dependencies if they are not present'(test) {
+		if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+			test.skip();
+		}
 		return this.remote
 			.get(
 				`${__dirname}/amd.html?q=${encodeURIComponent(
@@ -33,7 +36,10 @@ registerSuite('AMD Util', {
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'resize-observer-polyfill'), 1);
 			});
 	},
-	async 'Utility does not inject dependency if it already exists'() {
+	async 'Utility does not inject dependency if it already exists'(test) {
+		if (this.remote.environmentType && this.remote.environmentType.browserName === 'chrome') {
+			test.skip();
+		}
 		return this.remote
 			.get(
 				`${__dirname}/amd.html?q=` +
