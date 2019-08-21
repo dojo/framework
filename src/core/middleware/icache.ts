@@ -10,7 +10,7 @@ interface CacheWrapper<T = any> {
 
 export interface IcacheResult {
 	getOrSet: {
-		<T>(key: any, value: () => Promise<T>): undefined;
+		<T>(key: any, value: () => Promise<T>): undefined | T;
 		<T>(key: any, value: () => T): T;
 		<T>(key: any, value: T): T;
 	};

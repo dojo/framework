@@ -1,8 +1,8 @@
 # Introduction
 
-Dojo encourages writing simple, modular components known as **widgets** which implement single responsibilities out of the wider requirements of an application. Widgets are designed to be composable and reusable across a variety of scenarios, and can be wired together in a reactive manner to form more complex web application requirements.
+Dojo encourages writing simple, modular components known as **widgets** which implement single responsibilities out of the wider requirements of an application. Widgets are designed to be composable and reusable across a variety of scenarios, and can be wired together in a reactive manner to fulfill more complex web application requirements.
 
-Widgets describe their intended structural representation through virtual nodes returned from their rendering functions. Dojo's rendering system then handles ongoing translation of a widget hierarchy's render output to targeted, efficient DOM updates during application runtime.
+Widgets describe their intended structural representation by returning virtual nodes from their rendering functions. Dojo's rendering system then handles ongoing translation of a widget hierarchy's render output to targeted, efficient DOM updates during application runtime.
 
 | Feature                  | Description                                                                                                                                                                                             |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -33,7 +33,7 @@ export default factory(function MyWidget() {
 
 ## Specifying widget properties
 
--   Making widgets more reusable by abstracting out [state](/learn/creating-widgets/managing-state), configuration and [event handling](/learn/creating-widgets/enabling-interactivity) via a [typed properties interface](./supplemental.md#intermediate-passing-widget-properties)
+-   Making widgets more reusable by abstracting out [state](/learn/creating-widgets/managing-state), configuration and [event handling](/learn/creating-widgets/enabling-interactivity) via a [typed properties interface](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties)
 -   Providing [middleware](/learn/middleware/introduction) to widgets via their `create` factory
 -   Specifying [node `key`s](/learn/creating-widgets/configuring-widgets-through-properties#vdom-node-keys) to differentiate between sibling elements of the same type - here, two `div` elements. This allows the framework to more efficiently target only the relevant elements when updating the DOM as a result of an application state change
 

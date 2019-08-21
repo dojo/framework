@@ -1,5 +1,4 @@
 import { WidgetProperties } from '../interfaces';
-import { CustomElementChildType } from '../registerCustomElement';
 import Registry from '../Registry';
 
 export type CustomElementPropertyNames<P extends object> = ((keyof P) | (keyof WidgetProperties))[];
@@ -27,8 +26,6 @@ export interface CustomElementConfig<P extends object = { [index: string]: any }
 	 * List of events to expose
 	 */
 	events?: CustomElementPropertyNames<P>;
-
-	childType?: CustomElementChildType;
 
 	registryFactory?: () => Registry;
 }

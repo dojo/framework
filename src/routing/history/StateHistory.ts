@@ -5,33 +5,42 @@ import has from '../../core/has';
 const trailingSlash = new RegExp(/\/$/);
 const leadingSlash = new RegExp(/^\//);
 
-function stripBase(base: string, path: string): string {
-	if (base === '/') {
+function stripBase(base: string | undefined, path: string): string {
+	if (!base) {
 		return path;
 	}
-
 	if (path.indexOf(base) === 0) {
-		return path.slice(base.length - 1);
+		return path.slice(base.length);
 	}
-	return '/';
+	return path;
+}
+
+function sanatizePath(path: string) {
+	if (path[0] === '#') {
+		path = path.slice(1);
+	}
+	if (path[0] === '/') {
+		path = path.slice(1);
+	}
+	return path;
 }
 
 export class StateHistory implements HistoryInterface {
 	private _current!: string;
 	private _onChangeFunction: OnChangeFunction;
 	private _window: Window;
-	private _base: string;
+	private _base: string | undefined;
 
 	constructor({ onChange, window = global.window, base }: HistoryOptions) {
-		if (!base) {
-			base = has('public-path') ? `${has('public-path')}` : '/';
+		if (has('dojo-debug') && base) {
+			console.warn(`Base is no longer supported via history options, please set 'base' in the '.dojorc'`);
 		}
-		if (/(#|\?)/.test(base)) {
+		this._base = has('app-base') ? `${has('app-base')}` : '/';
+		if (/(#|\?)/.test(this._base)) {
 			throw new TypeError("base must not contain '#' or '?'");
 		}
 		this._onChangeFunction = onChange;
 		this._window = window;
-		this._base = base;
 		if (!trailingSlash.test(this._base)) {
 			this._base = `${this._base}/`;
 		}
@@ -43,13 +52,11 @@ export class StateHistory implements HistoryInterface {
 	}
 
 	public prefix(path: string) {
-		if (path[0] === '#') {
-			path = path.slice(1);
-		}
-		if (path[0] === '/') {
-			path = path.slice(1);
-		}
-		return `${this._base}${path}`;
+		return sanatizePath(path);
+	}
+
+	private _setBasePath(path: string) {
+		return `${this._base}${sanatizePath(path)}`;
 	}
 
 	public set(path: string) {
@@ -58,7 +65,7 @@ export class StateHistory implements HistoryInterface {
 			return;
 		}
 
-		this._window.history.pushState({}, '', this.prefix(value));
+		this._window.history.pushState({}, '', this._setBasePath(value));
 		this._onChange();
 	}
 

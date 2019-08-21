@@ -179,7 +179,7 @@ const router = new Router(routes);
 const outletContext = router.getOutlet('home');
 ```
 
-# Using the outlet `MatchDetails`
+# Using the outlet MatchDetails
 
 For every `outlet` that is matched on a route change, `MatchDetails` are injected into the `Outlet` widget's `renderer` property. The `MatchDetails` object contains specific details for the matched outlet.
 

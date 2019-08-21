@@ -4359,11 +4359,17 @@ jsdomDescribe('vdom', () => {
 
 		it('does not clear a value that was set by a testing tool which manipulates input.value directly', () => {
 			let typedKeys = '';
-			const handleInput = (evt: Event) => {
-				typedKeys = (evt.target as HTMLInputElement).value;
-			};
 
-			const renderFunction = () => v('input', { value: typedKeys, oninput: handleInput });
+			const renderFunction = () =>
+				v('input', {
+					value: typedKeys,
+					oninput: (evt) => {
+						typedKeys = evt.target.value;
+					},
+					onclick: (evt) => {
+						typedKeys = evt.target.value;
+					}
+				});
 
 			const [Widget, meta] = getWidget(renderFunction());
 			const r = renderer(() => w(Widget, {}));
