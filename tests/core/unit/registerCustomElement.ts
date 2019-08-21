@@ -288,7 +288,7 @@ describe('registerCustomElement', () => {
 			properties: ['myProp'],
 			events: ['onBar'],
 			childType: CustomElementChildType.DOJO,
-			auto: true 
+			auto: true
 		});
 		const CustomElementB = create((BarB as any).__customElementDescriptor, BarB);
 		customElements.define('auto-bar-b', CustomElementB);
