@@ -1,12 +1,26 @@
 import Registry from './Registry';
 import { WidgetBase } from './WidgetBase';
-import { renderer, w, dom } from './vdom';
+import { renderer, w, dom, isTextNode } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import { registerThemeInjector } from './mixins/Themed';
 import { alwaysRender } from './decorators/alwaysRender';
 
 const RESERVED_PROPS = ['focus'];
+
+export enum CustomElementChildType {
+	DOJO = 'DOJO',
+	NODE = 'NODE',
+	TEXT = 'TEXT'
+}
+
+function isElement(item: any): item is Element {
+	return item && item.nodeType === 1;
+}
+
+function isDojoChild(item: any): boolean {
+	return isElement(item) && item.tagName.indexOf('-') > -1;
+}
 
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
 	@alwaysRender()
@@ -50,6 +64,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _eventProperties: any = {};
 		private _propertiesMap: any = {};
 		private _initialised = false;
+		private _childType = descriptor.childType;
 
 		public connectedCallback() {
 			if (this._initialised) {
@@ -146,11 +161,20 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			Object.defineProperties(this, domProperties);
 
-			const hasWidgets = from(this.childNodes).some((childNode) => (childNode as any).isWidget);
-			const children = hasWidgets ? this.children : this.childNodes;
+			const children = from(this.childNodes).filter(
+				(childNode) => !isTextNode(childNode) || childNode.data.replace(/^\s+|\s+$/g, '')
+			);
 
-			from(children).forEach((childNode: Node) => {
-				if ((childNode as any).isWidget) {
+			if (!this._childType) {
+				if (children.some((child) => isDojoChild(child))) {
+					this._childType = CustomElementChildType.DOJO;
+				} else {
+					this._childType = CustomElementChildType.NODE;
+				}
+			}
+
+			from(children).forEach((childNode) => {
+				if (this._childType === CustomElementChildType.DOJO) {
 					childNode.addEventListener('dojo-ce-render', () => this._render());
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
 					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
@@ -223,13 +247,14 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			return this._children.map((child: any) => {
-				if ((child as any).domNode.isWidget) {
-					const { domNode } = child;
-					return w(child, { ...domNode.__properties__() }, [...domNode.__children__()]);
-				}
-				return child;
-			});
+			if (this._childType === CustomElementChildType.DOJO) {
+				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
+					const { domNode } = Child;
+					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
+				});
+			} else {
+				return this._children;
+			}
 		}
 
 		public attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
