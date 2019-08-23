@@ -170,6 +170,8 @@ To create a text-input with a leading dollar sign for example:
 
 ### Textarea
 
+Renamed to `TextArea` in line with `TextInput` and other camcel cased widget names.
+
 #### Removed Properties
 
 -   `labelAfter`
@@ -181,6 +183,7 @@ To create a text-input with a leading dollar sign for example:
 #### Associated Pull Requests
 
 -   https://github.com/dojo/widgets/pull/682
+-   https://github.com/dojo/widgets/pull/779
 
 ### SplitPane
 
