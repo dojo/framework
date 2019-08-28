@@ -111,9 +111,9 @@ r.mount({ transition });
 
 #### [Better typing for VNodeProperties event handlers](https://github.com/dojo/framework/pull/497)
 
-The `VNodeProperties` interface has been updated, making the `event` argument of event handlers not optional and also to detect the event's target type based on the tag name.
+The `VNodeProperties` interface has been updated, changing the `event` argument of event handlers from optional to required. The interface also now detects the event's target type based on the tag name.
 
-You may experience compilation errors if there are any occurrences in your project where the `event` argument has been explicitly typed as optional, for example:
+You may experience compilation errors for any occurrences in your project where the `event` argument has been explicitly typed as optional, for example:
 
 ```ts
 render() {
