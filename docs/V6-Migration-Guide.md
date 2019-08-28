@@ -109,6 +109,30 @@ const r = renderer(() => w(App, {}));
 r.mount({ transition });
 ```
 
+#### [Better typing for VNodeProperties event handlers](https://github.com/dojo/framework/pull/497)
+
+The `VNodeProperties` interface has been updated, changing the `event` argument of event handlers from optional to required. The interface also now detects the event's target type based on the tag name.
+
+You may experience compilation errors for any occurrences in your project where the `event` argument has been explicitly typed as optional, for example:
+
+```ts
+render() {
+	return v('button', { onclick: (event?: MouseEvent) => {
+
+	} });
+}
+```
+
+Removing `?` should resolve any compilation errors:
+
+```ts
+render() {
+	return v('button', { onclick: (event: MouseEvent) => {
+
+	} });
+}
+```
+
 ## Widget changes
 
 Work has begun on adding `helperText` and a consistent validation approach to `@dojo/widgets`.
