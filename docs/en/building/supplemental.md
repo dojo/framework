@@ -7,9 +7,35 @@ All of your applications links, images, and resources are served from your appli
 ```json
 {
 	"build-app": {
-		"base": "./some-directory"
+		"base": "./some-directory/"
 	}
 }
+```
+
+## Not Hosted from Root
+
+You may need to change your base path if your Dojo app is not served from the root of your web server. For example, if your app is served from `http://example.com/incredible-app`, you would update your base path to be `/incredible-app/`.
+
+## Local Builds
+
+Depending on your environment, you may need to change the base path during a development build, but keep the default base path (or a different, custom, one) for production builds. Let's say that your development machine serves all content under `/var/www/html` , but you have several projects under that directory -so each project is served from a different subdirectory. You want to serve your app from `/var/www/html/incredible-app/output/dev` when you run it locally.
+
+You would create a `.dojorc` file that you use soley for development.
+
+> .dojorc.local
+
+```json
+{
+	"build-app": {
+		"base": "incredible-app/output/dev/"
+	}
+}
+```
+
+With this in place, you would build your app using the configuration.
+
+```shell
+dojo build app --dojorc .dojorc.local -m dev
 ```
 
 # Creating bundles
