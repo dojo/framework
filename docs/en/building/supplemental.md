@@ -1,3 +1,17 @@
+# Application Base Path
+
+All of your applications links, images, and resources are served from your applications base path. By default, the base path is `/`, but you can configure the base path by adding the `base` option to your `.dojorc`.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"base": "./some-directory"
+	}
+}
+```
+
 # Creating bundles
 
 A bundle is a portion of code that represents a slice of functionality. Bundles can be loaded asynchronously on demand and in parallel. An application that is appropriately bundled can be significantly more responsive and require fewer kilobytes and less load time than an application that does not use any kind of code splitting. This is especially important when working with large applications where much of the presentation logic isn't needed on the initial load.
