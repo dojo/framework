@@ -92,6 +92,6 @@ export function createICacheMiddleware<S = any>() {
 	return icache;
 }
 
-const icache = createICacheMiddleware();
+export const icache = createICacheMiddleware();
 
 export default icache;
