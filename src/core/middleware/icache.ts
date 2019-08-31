@@ -1,3 +1,4 @@
+/* tslint:disable:interface-name */
 import { create, invalidator } from '../vdom';
 import cache from './cache';
 
