@@ -836,8 +836,8 @@ Dojo 提供的 [Store 组件](/learn/stores/introduction) 解决了这些问题�
 
 -   部件应只能读取传入其中的属性(properties)。
     -   如果修改了传入部件中的属性值，则不能回传给框架，以避免导致部件和框架之间出现差异。
--   Widgets should avoid deriving further render state from their properties, and instead rely on their complete render state being provided to them.
-    -   Deriving render state can cause similar divergences between the widget and the framework as modifying received properties; the framework is not aware of the derived state, so cannot properly determine when a widget has been updated and requires invalidation and re-rendering.
+-   部件应避免基于属性进一步派生渲染状态，而是完全依赖于向其提供的渲染状态。
+    -   与修改接收到的属性一样，派生渲染状态也会导致部件与框架之间产生类似的歧义；框架无从得知派生出的状态，所以无法正确判断部件何时更新，从而需要让部件失效并重新渲染。
 -   如果需要，内部或私有状态可以完全封装在部件内。
     -   实现“纯”部件是一个有效且通常是可取的模式，它不会产生副作用，并用属性接收它们的所有状态，但这不是开发 Dojo 部件的唯一模式。
 
