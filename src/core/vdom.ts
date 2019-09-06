@@ -69,6 +69,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 }
 
 export interface WidgetMeta {
+	mountNode: HTMLElement;
 	dirty: boolean;
 	invalidator: () => void;
 	middleware?: any;
@@ -689,10 +690,7 @@ function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	const widgetMeta = widgetMetaMap.get(id);
 	if (widgetMeta) {
 		widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
-		const existingNode = widgetMeta.nodeMap.get(key);
-		if (!existingNode) {
-			widgetMeta.nodeMap.set(key, node);
-		}
+		widgetMeta.nodeMap.set(key, node);
 		if (requestedDomNodes.has(`${id}-${key}`)) {
 			widgetMeta.invalidator();
 			requestedDomNodes.delete(`${id}-${key}`);
@@ -731,8 +729,9 @@ export const node = factory(({ id }) => {
 			const widgetMeta = widgetMetaMap.get(widgetId);
 			if (widgetMeta) {
 				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
+				const mountNode = widgetMeta.mountNode;
 				const node = widgetMeta.nodeMap.get(key);
-				if (node) {
+				if (node && mountNode.contains(node)) {
 					return node;
 				}
 				requestedDomNodes.add(`${widgetId}-${key}`);
@@ -1718,6 +1717,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				};
 
 				widgetMeta = {
+					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
 					properties: next.node.properties,
