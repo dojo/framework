@@ -3501,6 +3501,50 @@ jsdomDescribe('vdom', () => {
 						assert.isTrue(fooDestroyStub.calledOnce);
 						assert.isTrue(barDestroyStub.calledOnce);
 					});
+
+					it('should call destroy in the correct order, deepest middleware first', () => {
+						const middlewareCalled: string[] = [];
+						const factoryOne = create({ destroy });
+
+						const middlewareOne = factoryOne(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('1'));
+							return {};
+						});
+
+						const middlewareTwo = factoryOne(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('2'));
+							return {};
+						});
+
+						const factoryTwo = create({ destroy, middlewareTwo });
+
+						const middlewareThree = factoryTwo(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('3'));
+							return {};
+						});
+
+						let show = true;
+						let invalidate: any;
+
+						const createWidget = create({ middlewareThree, middlewareOne, invalidator });
+
+						const Foo = createWidget(() => {
+							return null;
+						});
+
+						const App = createWidget(({ middleware }) => {
+							invalidate = middleware.invalidator;
+							return show ? Foo({}) : null;
+						});
+
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.deepEqual(middlewareCalled, ['2', '3', '1']);
+					});
 				});
 
 				describe('getRegistry', () => {
