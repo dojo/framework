@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/supplemental.md
-commit 028b93451e93ef2a4f4ff4c3b0dde8b58e7a5b1d
+commit 2d25590f3feeda753080f47c3bd1851f8e55bb1c
 -->
 
 当使用 `@dojo/framework/testing` 时，`harness()` 是最重要的 API，主要用于设置每一个测试并提供一个执行虚拟 DOM 断言和交互的上下文。目的在于当更新 `properties` 或 `children`，以及部件失效时，镜像部件的核心行为，并且不需要任何特殊或自定义逻辑。
@@ -34,25 +34,20 @@ harness 函数返回一个 `Harness` 对象，该对象提供了几个与被测�
 
 使用 `@dojo/framework/core` 中的 `w()` 函数生成一个用于测试的部件是非常简单的：
 
+> tests/unit/widgets/MyWidget.tsx
+
 ```ts
 const { describe, it } = intern.getInterface('bdd');
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import harness from '@dojo/framework/testing/harness';
-import { w, v } from '@dojo/framework/widget-core/d';
 
-class MyWidget extends WidgetBase<{ foo: string }> {
-	protected render() {
-		const { foo } = this.properties;
-		return v('div', { foo }, this.children);
-	}
-}
+const factory = create().properties<{ foo: string }>();
 
-const h = harness(() => w(MyWidget, { foo: 'bar' }, ['child']));
-```
+const MyWidget = factory(function MyWidget({ properties, children }) {
+	const { foo } = properties();
+	return <div foo={foo}>{children}</div>;
+});
 
-如下所示，harness 函数也支持 `tsx`。
-
-```ts
 const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
 ```
 
@@ -60,18 +55,16 @@ const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
 
 ```ts
 describe('MyWidget', () => {
-  it('renders with foo correctly', () => {
+	it('renders with foo correctly', () => {
 		let foo = 'bar';
 
-		const h = harness(() => {
-			return w(MyWidget, { foo }, [ 'child' ]));
-		};
+		const h = harness(() => <MyWidget foo={foo}>child</MyWidget>);
 
 		h.expect(/** 断言包含 bar **/);
 		// 更新传入部件的属性值
 		foo = 'foo';
-		h.expect(/** 断言包含 foo **/)
-  });
+		h.expect(/** 断言包含 foo **/);
+	});
 });
 ```
 
@@ -363,14 +356,18 @@ expect(expectedRenderFunction: () => DNode | DNode[], actualRenderFunction?: () 
 
 ```ts
 h.expect(() =>
-	v('div', { key: 'foo' }, [w(Widget, { key: 'child-widget' }), 'text node', v('span', { classes: ['class'] })])
+	<div key="foo">
+		<Widget key="child-widget" />
+		text node
+		<span classes={[class]} />
+	</div>
 );
 ```
 
 `expect` 也可以接收第二个可选参数，返回要断言的渲染结果的函数。
 
 ```ts
-h.expect(() => v('div', { key: 'foo' }), () => v('div', { key: 'foo' }));
+h.expect(() => <div key="foo" />, () => <div key="foo" />);
 ```
 
 如果实际的渲染输出和期望的渲染输出不同，就会抛出一个异常，并使用结构化的可视方法，用 `(A)` （实际值）和 `(E)` （期望值）指出所有不同点。
@@ -503,11 +500,10 @@ import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 
 可创建一个基本断言，它定义了部件的默认渲染状态。假定有以下部件：
 
-> src/widgets/Profile.ts
+> src/widgets/Profile.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 
 import * as css from './styles/Profile.m.css';
 
@@ -515,44 +511,50 @@ export interface ProfileProperties {
 	username?: string;
 }
 
-export default class Profile extends WidgetBase<ProfileProperties> {
-	protected render() {
-		const { username } = this.properties;
-		return v('h1', { classes: [css.root] }, [`Welcome ${username || 'Stranger'}!`]);
-	}
-}
+const factory = create().properties<ProfileProperties>();
+
+const Profile = factory(function Profile({ properties }) {
+	const { username } = properties();
+	return <h1 classes={[css.root]}>{`Welcome ${username || 'Stranger'}!`}</h1>;
+});
+
+export default Profile;
 ```
 
 基本断言如下所示：
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import harness from '@dojo/framework/testing/harness';
 import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import { w, v } from '@dojo/framework/widget-core/d';
+import { tsx } from '@dojo/framework/core/vdom';
 
 import Profile from '../../../src/widgets/Profile';
-import * as css from '../../../src/widgets/styles/Profile.m.css';
+import * as css from '../../../src/widgets/Profile.m.css';
 
-const profileAssertion = assertionTemplate(() =>
-	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
-);
+const profileAssertion = assertionTemplate(() => (
+	<h1 classes={[css.root]} assertion-key="welcome">
+		Welcome Stranger!
+	</h1>
+));
 ```
 
 在测试中这样写：
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
-const profileAssertion = assertionTemplate(() =>
-	v('h1', { classes: [css.root], '~key': 'welcome' }, ['Welcome Stranger!'])
-);
+const profileAssertion = assertionTemplate(() => (
+	<h1 classes={[css.root]} assertion-key="welcome">
+		Welcome Stranger!
+	</h1>
+));
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => w(Profile, {}));
+		const h = harness(() => <Profile />);
 		h.expect(profileAssertion);
 	});
 });
@@ -560,24 +562,24 @@ describe('Profile', () => {
 
 要测试为 `Profile` 传入 `username` 属性的场景，可以按如下方式为断言模板调参：
 
-> tests/unit/widgets/Profile.ts
+> tests/unit/widgets/Profile.tsx
 
 ```ts
 describe('Profile', () => {
 	...
 
-  it('renders given username correctly', () => {
-	// 使用给定的用户名更新期望的结果
-    const namedAssertion = profileAssertion.setChildren('~welcome', [
-      'Welcome Kel Varnsen!'
-    ]);
-    const h = harness(() => w(Profile, { username: 'Kel Varnsen' }));
-    h.expect(namedAssertion);
-  });
+	it('renders given username correctly', () => {
+		// 使用给定的用户名更新期望的结果
+		const namedAssertion = profileAssertion.setChildren('~welcome', () => [
+			'Welcome Kel Varnsen!'
+		]);
+		const h = harness(() => <Profile username="Kel Varnsen" />);
+		h.expect(namedAssertion);
+	});
 });
 ```
 
-这里使用 baseAssertion 的 `setChildren()` api，然后使用特定的 `~` 选择器来定位 key 值为 `~welcome` 的节点。`~key` 属性（使用 tsx 的模板中是 `assertion-key`）是断言模板的一个特殊属性，在断言时会被删除，因此在匹配渲染结构时不会显示出来。此功能能让断言模板简单的选择节点，而不需要扩展实际的部件渲染函数。一旦找到 `welcome` 节点，它的子节点将被设置为新值 `Welcome Kel Varnsen!`，然后在 `h.expect` 中使用生成的模板。需要注意的是，断言模板在设置值时总是返回一个新的断言模板，这可以确保现有模板不会被意外地修改，若被修改可能导致其他测试失败，并允许基于新模板，增量逐层构建出新的模板。
+这里使用 baseAssertion 的 `setChildren()` api，然后使用特定的 `~` 选择器来定位 key 值为 `~welcome` 的节点。`assertion-key` 属性（当使用 `w()` 或 `v()` 函数时为 `~key`）是断言模板的一个特殊属性，在断言时会被删除，因此在匹配渲染结构时不会显示出来。此功能能让断言模板简单的选择节点，而不需要扩展实际的部件渲染函数。一旦找到 `welcome` 节点，它的子节点将被设置为新值 `['Welcome Kel Varnsen!']`，然后在 `h.expect` 中使用生成的模板。需要注意的是，断言模板在设置值时总是返回一个新的断言模板，这可以确保现有模板不会被意外地修改，若被修改可能导致其他测试失败，并允许基于新模板，增量逐层构建出新的模板。
 
 断言模板具有以下 API：
 
@@ -602,41 +604,58 @@ remove(selector: string): AssertionTemplateResult;
 
 一种常见的测试类型是验证部件的用户界面是否按预期渲染，而不必关心部件的底层业务逻辑。但这些测试可能希望断言一些场景，如单击按钮以调用部件的属性方法，并不关心属性方法的实现逻辑，只是希望按预期调用了接口。在这种情况下，可借助类似 [Sinon] 的 mock 库。
 
-> src/widgets/Action.ts
+> src/widgets/Action.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { v, w } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Button from '@dojo/widgets/button';
 
-import * as css from './styles/Action.m.css';
+import * as css from './Action.m.css';
 
-export default class Action extends WidgetBase<{ fetchItems: () => void }> {
-	protected render() {
-		return v('div', { classes: [css.root] }, [w(Button, { onClick: this.handleClick, key: 'button' }, ['Fetch'])]);
-	}
-	private handleClick() {
-		this.properties.fetchItems();
-	}
-}
+const factory = create().properties<{ fetchItems: () => void }>();
+
+const Action = factory(function Action({ properties }) {
+	return (
+		<div classes={[css.root]}>
+			<Button key="button" onClick={() => properties().fetchItems()}>
+				Fetch
+			</Button>
+		</div>
+	);
+});
+
+export default Action;
 ```
 
-测试当单击按钮后，会调用 `this.properties.fetchItems` 方法。
+测试当单击按钮后，会调用 `properties().fetchItems` 方法。
 
-> tests/unit/widgets/Action.ts
+> tests/unit/widgets/Action.tsx
 
 ```ts
 const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 import harness from '@dojo/framework/testing/harness';
-import { w, v } from '@dojo/framework/widget-core/d';
+
+import Action from '../../../src/widgets/Action';
+import * as css from '../../../src/widgets/Action.m.css';
+
+import Button from '@dojo/widgets/button';
 
 import { stub } from 'sinon';
+import { assert } from 'chai';
 
 describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
-		const h = harness(() => w(Action, { fetchItems }));
-		h.expect(() => v('div', { classes: [css.root] }, [w(Button, { onClick: () => {}, key: 'button' }, ['Fetch'])]));
+		const h = harness(() => <Action fetchItems={fetchItems} />);
+		h.expect(() => (
+			<div classes={[css.root]}>
+				<Button key="button" onClick={() => {}}>
+					Fetch
+				</Button>
+			</div>
+		));
 		h.trigger('@button', 'onClick');
 		assert.isTrue(fetchItems.calledOnce);
 	});
@@ -653,52 +672,34 @@ describe('Action', () => {
 
 当要校验某个路由对应的应用程序输出内容，需要为对应的路由链接添加 `id` 属性，以便快速定位链接。
 
-> src/widgets/Menu.ts
+> src/widgets/Menu.tsx
 
 ```ts
-import WidgetBase from '@dojo/framework/widget-core/WidgetBase';
-import { w } from '@dojo/framework/widget-core/d';
+import { create, tsx } from '@dojo/framework/core/vdom';
 import Link from '@dojo/framework/routing/ActiveLink';
 import Toolbar from '@dojo/widgets/toolbar';
 
-import * as css from './styles/Menu.m.css';
+import * as css from './Menu.m.css';
 
-export default class Menu extends WidgetBase {
-	protected render() {
-		return w(Toolbar, { heading: 'My Dojo App!', collapseWidth: 600 }, [
-			w(
-				Link,
-				{
-					id: 'home', // 添加 id 属性
-					to: 'home',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['Home']
-			),
-			w(
-				Link,
-				{
-					id: 'about', // 添加 id 属性
-					to: 'about',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['About']
-			),
-			w(
-				Link,
-				{
-					id: 'profile', // 添加 id 属性
-					to: 'profile',
-					classes: [css.link],
-					activeClasses: [css.selected]
-				},
-				['Profile']
-			)
-		]);
-	}
-}
+const factory = create();
+
+const Menu = factory(function Menu() {
+	return (
+		<Toolbar heading="My Dojo App!" collapseWidth={600}>
+			<Link id="home" to="home" classes={[css.link]} activeClasses={[css.selected]}>
+				Home
+			</Link>
+			<Link id="about" to="about" classes={[css.link]} activeClasses={[css.selected]}>
+				About
+			</Link>
+			<Link id="profile" to="profile" classes={[css.link]} activeClasses={[css.selected]}>
+				Profile
+			</Link>
+		</Toolbar>
+	);
+});
+
+export default Menu;
 ```
 
 在使用应用程序时，用户会单击 `profile` 链接，然后被导航到欢迎用户页面。可编写一个功能测试来验证此行为。
@@ -739,7 +740,7 @@ describe('routing', () => {
 在命令行中执行功能测试：
 
 ```bash
-npm run test:functional
+dojo test --functional
 ```
 
 这将会在构建机器中，将 HTML 页面加载到 Chrome 的 remote 实例中，，以测试交互功能。
