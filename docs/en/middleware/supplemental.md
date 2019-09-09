@@ -201,6 +201,63 @@ import icache from '@dojo/framework/core/middleware/icache';
 -   `clear()`
     -   Clears all values currently stored in the widget's local cache.
 
+`icache` can be typed in two different ways, the first is using generics that enables the return type to be specified at the call-site and for `getOrSet` the return type can be inferred from the value type. If the `value` for `getOrSet` is a function then the type will be inferred from the functions return type.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
+
+const factory = create({ icache });
+
+interface FetchResult {
+	foo: string;
+}
+
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}) {
+	// `results` will infer the type of the resolved promise, `FetchResult | undefined`
+	const results = icache.getOrSet('key', async () => {
+		const response = await fetch('url');
+		const body: FetchResult = await response.json();
+		return body;
+	});
+
+	return (
+		<div>{results}</div>
+	);
+});
+```
+
+This however doesn't give any typing for the cache keys, the preferred way to type `icache` is to create a pre-typed middleware using  `createICacheMiddleware`. This allows for passing an interface which will create an `icache` middleware typed specifically for the passed interface and provides type safety for the cache keys.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createICacheMiddleware } from '@dojo/framework/core/middleware/icache';
+
+interface FetchResult {
+	foo: string;
+}
+
+interface MyIcacheWidgetState {
+	key: FetchResult;
+}
+
+const icache = createICacheMiddleware<MyIcacheWidgetState>();
+const factory = create({ icache });
+
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}) {
+	// `results` will be typed to `FetchResult | undefined` based on the `MyIcacheWidgetState`
+	const results = icache.getOrSet('key', async () => {
+		const response = await fetch('url');
+		const body: FetchResult = await response.json();
+		return body;
+	});
+
+	return (
+		<div>{results}</div>
+	);
+});
+```
+
 ## `theme`
 
 Allows widgets to theme their CSS classes when rendering, and also provides applications the ability to set themes and determine what the currently set theme is, if any.
