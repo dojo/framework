@@ -338,7 +338,7 @@ import { ActiveLink } from '@dojo/framework/routing/ActiveLink';
 
 render() {
 	return v('div', [
-		w(ActiveLink, { to: 'foo', params: { foo: 'bar' }, activeClasses: [ 'link-active' ]}, [ 'Link Text' ])
+		w(ActiveLink, { to: 'foo', params: { foo: 'bar' }, isExact: false, activeClasses: [ 'link-active' ]}, [ 'Link Text' ])
 	]);
 }
 ```
