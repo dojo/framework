@@ -3439,14 +3439,14 @@ jsdomDescribe('vdom', () => {
 						const App = createWidget(({ middleware }) => {
 							divNode = middleware.node.get(1);
 							invalidate = middleware.invalidator;
-							return v('div', [show ? v('div', { key: 1 }) : null]);
+							return v('div', [show ? v('div', [v('div', { key: 1 }, ['hello'])]) : null]);
 						});
 						const r = renderer(() => App({}));
 						const root = document.createElement('div');
 						r.mount({ domNode: root });
 						assert.isNull(divNode);
 						resolvers.resolve();
-						let expectedDiv = root.childNodes[0].childNodes[0];
+						let expectedDiv = root.childNodes[0].childNodes[0].childNodes[0];
 						assert.strictEqual(expectedDiv, divNode);
 						show = false;
 						invalidate();
@@ -3457,7 +3457,7 @@ jsdomDescribe('vdom', () => {
 						resolvers.resolve();
 						assert.isNull(divNode);
 						resolvers.resolve();
-						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+						assert.strictEqual(root.childNodes[0].childNodes[0].childNodes[0], divNode);
 					});
 				});
 
