@@ -699,10 +699,19 @@ function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	}
 }
 
-function destroyHandles(destroyMap: Map<string, () => void>, middlewareIds: string[]) {
+function destroyHandles(meta: WidgetMeta) {
+	const { destroyMap, middlewareIds } = meta;
+	if (!destroyMap) {
+		return;
+	}
 	for (let i = 0; i < middlewareIds.length; i++) {
-		const destroy = destroyMap.get(middlewareIds[i]);
+		const id = middlewareIds[i];
+		const destroy = destroyMap.get(id);
 		destroy && destroy();
+		destroyMap.delete(id);
+		if (destroyMap.size === 0) {
+			break;
+		}
 	}
 	destroyMap.clear();
 }
@@ -1912,7 +1921,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		};
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
-			meta.destroyMap && destroyHandles(meta.destroyMap, meta.middlewareIds);
+			destroyHandles(meta);
 			widgetMetaMap.delete(current.id);
 		} else {
 			processResult.widget = { type: 'detach', current, instance: current.instance };
@@ -2078,7 +2087,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
 								meta.registryHandler && meta.registryHandler.destroy();
-								meta.destroyMap && destroyHandles(meta.destroyMap, meta.middlewareIds);
+								destroyHandles(meta);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}
