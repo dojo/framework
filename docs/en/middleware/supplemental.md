@@ -213,7 +213,7 @@ interface FetchResult {
 	foo: string;
 }
 
-const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}) {
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache } }) {
 	// `results` will infer the type of the resolved promise, `FetchResult | undefined`
 	const results = icache.getOrSet('key', async () => {
 		const response = await fetch('url');
@@ -221,13 +221,11 @@ const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}
 		return body;
 	});
 
-	return (
-		<div>{results}</div>
-	);
+	return <div>{results}</div>;
 });
 ```
 
-This however doesn't give any typing for the cache keys, the preferred way to type `icache` is to create a pre-typed middleware using  `createICacheMiddleware`. This allows for passing an interface which will create an `icache` middleware typed specifically for the passed interface and provides type safety for the cache keys.
+This however doesn't give any typing for the cache keys, the preferred way to type `icache` is to create a pre-typed middleware using `createICacheMiddleware`. This allows for passing an interface which will create an `icache` middleware typed specifically for the passed interface and provides type safety for the cache keys.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -244,7 +242,7 @@ interface MyIcacheWidgetState {
 const icache = createICacheMiddleware<MyIcacheWidgetState>();
 const factory = create({ icache });
 
-const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}) {
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache } }) {
 	// `results` will be typed to `FetchResult | undefined` based on the `MyIcacheWidgetState`
 	const results = icache.getOrSet('key', async () => {
 		const response = await fetch('url');
@@ -252,9 +250,7 @@ const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache }}
 		return body;
 	});
 
-	return (
-		<div>{results}</div>
-	);
+	return <div>{results}</div>;
 });
 ```
 
