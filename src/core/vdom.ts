@@ -73,6 +73,7 @@ export interface WidgetMeta {
 	dirty: boolean;
 	invalidator: () => void;
 	middleware?: any;
+	middlewareIds: string[];
 	registryHandler?: RegistryHandler;
 	registry: Registry;
 	properties: any;
@@ -698,8 +699,20 @@ function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	}
 }
 
-function destroyHandles(destroyMap: Map<string, () => void>) {
-	destroyMap.forEach((destroy) => destroy());
+function destroyHandles(meta: WidgetMeta) {
+	const { destroyMap, middlewareIds } = meta;
+	if (!destroyMap) {
+		return;
+	}
+	for (let i = 0; i < middlewareIds.length; i++) {
+		const id = middlewareIds[i];
+		const destroy = destroyMap.get(id);
+		destroy && destroy();
+		destroyMap.delete(id);
+		if (destroyMap.size === 0) {
+			break;
+		}
+	}
 	destroyMap.clear();
 }
 
@@ -1648,7 +1661,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return {};
 	}
 
-	function resolveMiddleware(middlewares: any, id: string): any {
+	function resolveMiddleware(
+		middlewares: any,
+		id: string,
+		middlewareIds: string[] = []
+	): { middlewares: any; ids: string[] } {
 		const keys = Object.keys(middlewares);
 		const results: any = {};
 		const uniqueId = `${id}-${metaId++}`;
@@ -1672,14 +1689,19 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 			};
 			if (middleware.middlewares) {
-				const resolvedMiddleware = resolveMiddleware(middleware.middlewares, id);
+				const { middlewares: resolvedMiddleware } = resolveMiddleware(
+					middleware.middlewares,
+					id,
+					middlewareIds
+				);
 				payload.middleware = resolvedMiddleware;
 				results[keys[i]] = middleware.callback(payload);
 			} else {
 				results[keys[i]] = middleware.callback(payload);
 			}
 		}
-		return results;
+		middlewareIds.push(uniqueId);
+		return { middlewares: results, ids: middlewareIds };
 	}
 
 	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult | false {
@@ -1724,13 +1746,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					children: next.node.children,
 					deferRefs: 0,
 					rendering: true,
+					middleware: {},
+					middlewareIds: [],
 					registry: _mountOptions.registry
 				};
 
 				widgetMetaMap.set(next.id, widgetMeta);
-				widgetMeta.middleware = (Constructor as any).middlewares
-					? resolveMiddleware((Constructor as any).middlewares, id)
-					: {};
+				if ((Constructor as any).middlewares) {
+					const { middlewares, ids } = resolveMiddleware((Constructor as any).middlewares, id);
+					widgetMeta.middleware = middlewares;
+					widgetMeta.middlewareIds = ids;
+				}
 			} else {
 				invalidate = widgetMeta.invalidator;
 			}
@@ -1895,7 +1921,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		};
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
-			meta.destroyMap && destroyHandles(meta.destroyMap);
+			destroyHandles(meta);
 			widgetMetaMap.delete(current.id);
 		} else {
 			processResult.widget = { type: 'detach', current, instance: current.instance };
@@ -2061,7 +2087,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
 								meta.registryHandler && meta.registryHandler.destroy();
-								meta.destroyMap && destroyHandles(meta.destroyMap);
+								destroyHandles(meta);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}
