@@ -50,7 +50,8 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 		super();
 		this._options = options;
 		this._register(config);
-		if (options.autostart || true) {
+		const autostart = options.autostart === undefined ? true : options.autostart;
+		if (autostart) {
 			this.start();
 		}
 	}
