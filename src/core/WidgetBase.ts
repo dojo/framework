@@ -50,13 +50,15 @@ function autoBind(instance: any) {
 	} else {
 		while (prototype) {
 			const ownKeys = Object.getOwnPropertyNames(prototype);
-
 			if (prototype.constructor.hasOwnProperty('_type')) {
 				break;
 			}
+			const descriptors = Object.getOwnPropertyDescriptors(prototype);
+			const descriptorKeys = Object.keys(descriptors);
+			const getterKeys = descriptorKeys.filter((key) => descriptors[key].get || descriptors[key].set);
+			const filteredKeys = ownKeys.filter((key) => getterKeys.indexOf(key) === -1);
 
-			keys = [...keys, ...ownKeys];
-
+			keys = [...keys, ...filteredKeys];
 			prototype = Object.getPrototypeOf(prototype);
 		}
 

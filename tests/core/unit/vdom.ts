@@ -2750,6 +2750,22 @@ jsdomDescribe('vdom', () => {
 			);
 		});
 
+		it('Should skip binding getters', () => {
+			const root = document.createElement('div');
+			class MyWidget extends WidgetBase<any> {
+				get bar() {
+					return this.properties.foo.length;
+				}
+				render() {
+					return 'hello';
+				}
+			}
+			const r = renderer(() => w(MyWidget, { foo: 'hello' }));
+			r.mount({ domNode: root });
+			resolvers.resolve();
+			assert.strictEqual(root.innerHTML, 'hello');
+		});
+
 		describe('supports merging with a widget returned a the top level', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
