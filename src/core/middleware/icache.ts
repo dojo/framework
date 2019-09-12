@@ -9,32 +9,32 @@ interface CacheWrapper {
 	value: any;
 }
 
-export interface ICacheResult<S = null> {
+export interface ICacheResult<S = void> {
 	getOrSet: {
-		<T extends null extends S ? any : keyof S>(
-			key: null extends S ? any : T,
-			value: null extends S ? () => Promise<T> : () => Promise<S[T]>
-		): null extends S ? undefined | T : undefined | S[T];
-		<T extends null extends S ? any : keyof S>(
-			key: null extends S ? any : T,
-			value: null extends S ? () => T : () => S[T]
-		): null extends S ? T : S[T];
-		<T extends null extends S ? any : keyof S>(
-			key: null extends S ? any : T,
-			value: null extends S ? T : S[T]
-		): null extends S ? T : S[T];
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+		): void extends S ? undefined | T : undefined | S[T];
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? () => T : () => S[T]
+		): void extends S ? T : S[T];
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? T : S[T]
+		): void extends S ? T : S[T];
 	};
-	get<T extends null extends S ? any : keyof S>(
-		key: null extends S ? any : T
-	): null extends S ? T | undefined : S[T] | undefined;
-	set<T extends null extends S ? any : keyof S>(
-		key: null extends S ? any : T,
-		value: null extends S ? T : S[T]
+	get<T extends void extends S ? any : keyof S>(
+		key: void extends S ? any : T
+	): void extends S ? T | undefined : S[T] | undefined;
+	set<T extends void extends S ? any : keyof S>(
+		key: void extends S ? any : T,
+		value: void extends S ? T : S[T]
 	): void;
 	clear(): void;
 }
 
-export function createICacheMiddleware<S = any>() {
+export function createICacheMiddleware<S = void>() {
 	const icache = factory(
 		({ middleware: { invalidator, cache } }): ICacheResult<S> => {
 			return {
