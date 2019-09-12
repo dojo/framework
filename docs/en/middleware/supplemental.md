@@ -201,7 +201,7 @@ import icache from '@dojo/framework/core/middleware/icache';
 -   `clear()`
     -   Clears all values currently stored in the widget's local cache.
 
-`icache` can be typed in two different ways, the first is using generics that enables the return type to be specified at the call-site and for `getOrSet` the return type can be inferred from the value type. If the `value` for `getOrSet` is a function then the type will be inferred from the functions return type.
+`icache` can be typed in two different ways. One approach uses generics to enable the return type to get specified at the call-site, and for `getOrSet`, the return type can get inferred from the value type. If the `value` for `getOrSet` is a function then the type will get inferred from the functions return type.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -225,7 +225,7 @@ const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache } 
 });
 ```
 
-This however doesn't give any typing for the cache keys, the preferred way to type `icache` is to create a pre-typed middleware using `createICacheMiddleware`. This allows for passing an interface which will create an `icache` middleware typed specifically for the passed interface and provides type safety for the cache keys.
+However this approach doesn't provide any typing for the cache keys. The preferred way to type `icache` is to create a pre-typed middleware using `createICacheMiddleware`. This allows for passing an interface which will create an `icache` middleware typed specifically for the passed interface and provides type safety for the cache keys.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
