@@ -1,8 +1,15 @@
 import global from '../../shim/global';
 import { create, diffProperty, node, destroy, invalidator } from '../vdom';
-import { icache } from './icache';
+import { createICacheMiddleware } from './icache';
 import { cache } from './cache';
 import { FocusProperties } from '../mixins/Focus';
+
+interface FocusState {
+	previous: number;
+	current: number;
+}
+
+const icache = createICacheMiddleware<FocusState>();
 
 const factory = create({ icache, cache, diffProperty, node, destroy, invalidator }).properties<FocusProperties>();
 
