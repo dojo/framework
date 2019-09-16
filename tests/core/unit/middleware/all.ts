@@ -2,6 +2,7 @@ import './block';
 import './breakpoint';
 import './cache';
 import './dimensions';
+import './drag';
 import './i18n';
 import './focus';
 import './icache';
