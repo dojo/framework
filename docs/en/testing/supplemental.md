@@ -312,6 +312,65 @@ describe('MyWidget', () => {
 });
 ```
 
+#### Mock `iCache` middleware
+
+Using `createICacheMiddleware` from `@dojo/framework/testing/mocks/middleware/icache` allows tests to access cache items directly while the mock provides a sufficient icache experience for the widget under test. This is particularly useful when `icache` is used to asynchronously retrieve data. Direct cache access enables the test to `await` the same promise as the widget.
+
+Consider the following widget which retrieves data from an API:
+
+> src/MyWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import { icache } from '@dojo/framework/core/middleware/icache';
+import fetch from '@dojo/framework/shim/fetch';
+
+const factory = create({ icache });
+
+export default factory(function MyWidget({ middleware: { icache } }) {
+	const value = icache.getOrSet('users', async () => {
+		const response = await fetch('url');
+		return await response.json();
+	});
+
+	return value ? <div>{value}</div> : <div>Loading</div>;
+});
+```
+
+Testing the asynchrounous result using the mock icache middleware is simple:
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+const { describe, it, afterEach } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import { tsx } from '@dojo/framework/core/vdom';
+import * as sinon from 'sinon';
+import global from '@dojo/framework/shim/global';
+import icache from '@dojo/framework/core/middleware/icache';
+import createICacheMock from '@dojo/framework/testing/mocks/middleware/icache';
+import MyWidget from '../../src/MyWidget';
+
+describe('MyWidget', () => {
+	afterEach(() => {
+		sinon.restore();
+	});
+
+	it('test', async () => {
+		// stub the fetch call to return a known value
+		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
+
+		const mockICache = createICacheMock();
+		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
+		h.expect(() => <div>Loading</div>);
+
+		// await the async method passed to the mock cache
+		await mockICache('users');
+		h.expect(() => <pre>api data</pre>);
+	});
+});
+```
+
 ## Custom comparators
 
 There are circumstances where the exact value of a property is unknown during testing, so will require the use of a custom compare descriptor.
