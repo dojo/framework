@@ -371,6 +371,48 @@ describe('MyWidget', () => {
 });
 ```
 
+#### Custom middleware mocks
+
+Not all testing scenarios will be covered by the provided mocks. Custom middleware mocks can also be created. A middleware mock should provide an overloaded interface. The parameterless overload should return the middleware implementation; this is what will be injected into the widget under test. Other overloads are created as needed to provide an interface for the tests.
+
+As an example, consider the framework's `icache` mock. The mock provides these overloads:
+
+```ts
+function mockCache(): MiddlewareResult<any, any, any>;
+function mockCache(key: string): Promise<any>;
+function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
+```
+
+The overload which accepts a `key` provides the test direct access to cache items. This abbreviated example demonstrates how the mock contains both the middleware implementation and the test interface; this enabled the mock to bridge the gap between the widget and the test.
+
+```ts
+export function createMockMiddleware() {
+	const sharedData = new Map<string, any>();
+
+	const mockFactory = factory(() => {
+		// actual middlware implementation; uses `sharedData` to bridge the gap
+		return {
+			get(id: string): any {},
+			set(id: string, value: any): void {}
+		};
+	});
+
+	function mockMiddleware(): MiddlewareResult<any, any, any>;
+	function mockMiddleware(id: string): any;
+	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
+		if (id) {
+			// expose access to `sharedData` directly to
+			return sharedData.get(id);
+		} else {
+			// provides the middleware implementation to the widget
+			return mockFactory();
+		}
+	}
+}
+```
+
+There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
+
 ## Custom comparators
 
 There are circumstances where the exact value of a property is unknown during testing, so will require the use of a custom compare descriptor.
