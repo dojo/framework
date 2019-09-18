@@ -1,50 +1,36 @@
 /* tslint:disable:interface-name */
 import { create, invalidator } from '../../../core/vdom';
 import { MiddlewareResult } from '../../../core/interfaces';
+import { cache } from '../../../core/middleware/cache';
+import { icache } from '../../../core/middleware/icache';
 import Map from '../../../shim/Map';
 
 export function createICacheMock() {
-	const map = new Map<any, any>();
-	const factory = create({ invalidator });
+	const map = new Map<string, any>();
+	const factory = create({ cache, invalidator });
+	const mockICacheFactory = factory(({ id, middleware, properties, children }) => {
+		const { callback } = icache();
+		const icacheMiddleware = callback({
+			id,
+			middleware: { invalidator: middleware.invalidator, cache: middleware.cache },
+			properties,
+			children
+		});
+		const setter = icacheMiddleware.set;
 
-	const mockICacheFactory = factory(({ middleware: { invalidator } }) => {
-		return {
-			getOrSet<T = any>(key: any, value: any): T | undefined {
-				if (map.has(key)) {
-					return this.get(key);
+		icacheMiddleware.set = (key: any, value: any) => {
+			if (typeof value === 'function') {
+				value = value();
+				map.set(key, value);
+				if (value && typeof value.then === 'function') {
+					setter(key, () => value);
 				} else {
-					this.set(key, value);
-					return undefined;
+					setter(key, value);
 				}
-			},
-			get<T = any>(key: any): T | undefined {
-				if (map.has(key)) {
-					const mapValue = map.get(key);
-					if (typeof mapValue === 'function') {
-						return undefined;
-					} else {
-						return mapValue as T;
-					}
-				}
-				return undefined;
-			},
-			set(key: any, value: any): void {
-				if (typeof value === 'function') {
-					value = value();
-					if (value.then && typeof value.then === 'function') {
-						value.then((result: any) => {
-							map.set(key, result);
-							invalidator();
-						});
-					}
-					map.set(key, value);
-				} else {
-					map.set(key, value);
-					invalidator();
-				}
-			},
-			clear(): void {}
+			}
 		};
+
+		return icacheMiddleware;
 	});
 
 	function mockCache(): MiddlewareResult<any, any, any>;
