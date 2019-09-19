@@ -1,4 +1,3 @@
-/* tslint:disable:interface-name */
 import { create, invalidator } from '../../../core/vdom';
 import { MiddlewareResult } from '../../../core/interfaces';
 import { cache } from '../../../core/middleware/cache';
@@ -21,13 +20,14 @@ export function createICacheMock() {
 		icacheMiddleware.set = (key: any, value: any) => {
 			if (typeof value === 'function') {
 				value = value();
-				map.set(key, value);
 				if (value && typeof value.then === 'function') {
+					map.set(key, value);
 					setter(key, () => value);
-				} else {
-					setter(key, value);
+					return;
 				}
 			}
+
+			setter(key, value);
 		};
 
 		return icacheMiddleware;
@@ -38,13 +38,7 @@ export function createICacheMock() {
 	function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any> {
 		if (key) {
 			if (map.has(key)) {
-				const mapValue = map.get(key);
-
-				if (mapValue.then && typeof mapValue.then === 'function') {
-					return mapValue;
-				} else {
-					return Promise.resolve(mapValue);
-				}
+				return map.get(key);
 			} else {
 				return Promise.resolve(undefined);
 			}
