@@ -92,22 +92,130 @@ The harness automatically mocks a number of core middlewares that will be inject
 
 There are a number of mock middleware available to support testing widgets that use the corresponding Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
 
-#### Mock `node` middleware
+#### Mock `breakpoint` middleware
 
-Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+Using `createBreakpointMock` from `@dojo/framework/testing/mocks/middlware/breakpoint` offers tests manual control over resizing events to trigger breakpoint tests.
 
-```ts
-import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+Consider the following widget which displays an additonal `h2` when the `LG` breakpoint is activated:
 
-// create the mock node middleware
-const mockNode = createNodeMock();
+> src/Breakpoint.tsx
 
-// create a mock DOM node
-const domNode = {};
+```
+import { tsx, create } from '@dojo/framework/core/vdom';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 
-// call the mock middleware with a key and the DOM
-// to return.
-mockNode('key', domNode);
+const factory = create({ breakpoint });
+
+export default factory(function Breakpoint({ middleware: { breakpoint } }) {
+  const bp = breakpoint.get('root');
+  const isLarge = bp && bp.breakpoint === 'LG';
+
+  return (
+    <div key="root">
+      <h1>Header</h1>
+      {isLarge && <h2>Subtitle</h2>}
+      <div>Longer description</div>
+    </div>
+  );
+});
+```
+
+By using the `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` method on the breakpoint middleware mock, the test can explicitly trigger a given resize:
+
+> tests/unit/Breakpoint.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
+import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
+import Breakpoint from '../../src/Breakpoint';
+
+describe('Breakpoint', () => {
+	it('resizes correctly', () => {
+		const mockBreakpoint = createBreakpointMock();
+
+		const h = harness(() => <Breakpoint />, {
+			middleware: [[breakpoint, mockBreakpoint]]
+		});
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<div>Longer description</div>
+			</div>
+		));
+
+		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
+
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<h2>Subtitle</h2>
+				<div>Longer description</div>
+			</div>
+		));
+	});
+});
+```
+
+#### Mock `iCache` middleware
+
+Using `createICacheMiddleware` from `@dojo/framework/testing/mocks/middleware/icache` allows tests to access cache items directly while the mock provides a sufficient icache experience for the widget under test. This is particularly useful when `icache` is used to asynchronously retrieve data. Direct cache access enables the test to `await` the same promise as the widget.
+
+Consider the following widget which retrieves data from an API:
+
+> src/MyWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import { icache } from '@dojo/framework/core/middleware/icache';
+import fetch from '@dojo/framework/shim/fetch';
+
+const factory = create({ icache });
+
+export default factory(function MyWidget({ middleware: { icache } }) {
+	const value = icache.getOrSet('users', async () => {
+		const response = await fetch('url');
+		return await response.json();
+	});
+
+	return value ? <div>{value}</div> : <div>Loading</div>;
+});
+```
+
+Testing the asynchrounous result using the mock icache middleware is simple:
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+const { describe, it, afterEach } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import { tsx } from '@dojo/framework/core/vdom';
+import * as sinon from 'sinon';
+import global from '@dojo/framework/shim/global';
+import icache from '@dojo/framework/core/middleware/icache';
+import createICacheMock from '@dojo/framework/testing/mocks/middleware/icache';
+import MyWidget from '../../src/MyWidget';
+
+describe('MyWidget', () => {
+	afterEach(() => {
+		sinon.restore();
+	});
+
+	it('test', async () => {
+		// stub the fetch call to return a known value
+		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
+
+		const mockICache = createICacheMock();
+		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
+		h.expect(() => <div>Loading</div>);
+
+		// await the async method passed to the mock cache
+		await mockICache('users');
+		h.expect(() => <pre>api data</pre>);
+	});
+});
 ```
 
 #### Mock `intersection` middleware
@@ -157,6 +265,24 @@ describe('MyWidget', () => {
 		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
 	});
 });
+```
+
+#### Mock `node` middleware
+
+Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+
+```ts
+import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+
+// create the mock node middleware
+const mockNode = createNodeMock();
+
+// create a mock DOM node
+const domNode = {};
+
+// call the mock middleware with a key and the DOM
+// to return.
+mockNode('key', domNode);
 ```
 
 #### Mock `resize` middleware
@@ -311,6 +437,48 @@ describe('MyWidget', () => {
      });
 });
 ```
+
+#### Custom middleware mocks
+
+Not all testing scenarios will be covered by the provided mocks. Custom middleware mocks can also be created. A middleware mock should provide an overloaded interface. The parameterless overload should return the middleware implementation; this is what will be injected into the widget under test. Other overloads are created as needed to provide an interface for the tests.
+
+As an example, consider the framework's `icache` mock. The mock provides these overloads:
+
+```ts
+function mockCache(): MiddlewareResult<any, any, any>;
+function mockCache(key: string): Promise<any>;
+function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
+```
+
+The overload which accepts a `key` provides the test direct access to cache items. This abbreviated example demonstrates how the mock contains both the middleware implementation and the test interface; this enabled the mock to bridge the gap between the widget and the test.
+
+```ts
+export function createMockMiddleware() {
+	const sharedData = new Map<string, any>();
+
+	const mockFactory = factory(() => {
+		// actual middlware implementation; uses `sharedData` to bridge the gap
+		return {
+			get(id: string): any {},
+			set(id: string, value: any): void {}
+		};
+	});
+
+	function mockMiddleware(): MiddlewareResult<any, any, any>;
+	function mockMiddleware(id: string): any;
+	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
+		if (id) {
+			// expose access to `sharedData` directly to
+			return sharedData.get(id);
+		} else {
+			// provides the middleware implementation to the widget
+			return mockFactory();
+		}
+	}
+}
+```
+
+There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
 
 ## Custom comparators
 

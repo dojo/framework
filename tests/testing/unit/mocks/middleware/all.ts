@@ -3,3 +3,4 @@ import './node';
 import './resize';
 import './store';
 import './breakpoint';
+import './icache';
