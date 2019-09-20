@@ -8,6 +8,7 @@ import Router from './Router';
 
 export interface ActiveLinkProperties extends LinkProperties {
 	activeClasses: SupportedClassName[];
+	isExact?: boolean;
 }
 
 function paramsEqual(linkParams: any = {}, contextParams: any = {}) {
@@ -22,7 +23,7 @@ export const ActiveLink = factory(function ActiveLink({
 	children
 }) {
 	const { to, routerKey = 'router', params } = properties();
-	let { activeClasses, classes = [], ...props } = properties();
+	let { activeClasses, isExact, classes = [], ...props } = properties();
 
 	diffProperty('to', (current: ActiveLinkProperties, next: ActiveLinkProperties) => {
 		if (current.to !== next.to) {
@@ -55,9 +56,10 @@ export const ActiveLink = factory(function ActiveLink({
 		}
 		const context = router.getOutlet(to);
 		const isActive = context && paramsEqual(params, context.params);
+		const contextIsExact = context && context.isExact();
 
 		classes = Array.isArray(classes) ? classes : [classes];
-		if (isActive) {
+		if (isActive && (!isExact || contextIsExact)) {
 			classes = [...classes, ...activeClasses];
 		}
 		props = { ...props, classes };
