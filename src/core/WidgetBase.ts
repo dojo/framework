@@ -264,7 +264,6 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			this._properties = diffPropertyResults;
 			this._changedPropertyKeys = changedPropertyKeys;
 		} else {
-			this._initialProperties = false;
 			for (let i = 0; i < propertyNames.length; i++) {
 				const propertyName = propertyNames[i];
 				if (typeof properties[propertyName] === 'function') {
@@ -276,6 +275,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 			this._changedPropertyKeys = changedPropertyKeys;
 			this._properties = { ...properties };
 		}
+		this._initialProperties = false;
 
 		if (this._changedPropertyKeys.length > 0) {
 			this.invalidate();
