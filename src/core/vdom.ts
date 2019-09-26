@@ -40,6 +40,9 @@ declare global {
 		interface IntrinsicElements {
 			[key: string]: VNodeProperties;
 		}
+		interface ElementChildrenAttribute {
+            children: {};
+        }
 	}
 }
 
@@ -325,6 +328,14 @@ export function w<W extends WidgetBaseTypes>(
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W> {
+
+	if ((properties as any).children) {
+		if (!children) {
+			children = (properties as any).children;
+		}
+		delete (properties as any).children;
+	}
+
 	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
 		return widgetConstructorOrNode(properties, children);
 	}
@@ -439,8 +450,10 @@ function spreadChildren(children: any[], child: any): any[] {
 	}
 }
 
-export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
-	children = children.reduce(spreadChildren, []);
+export function tsx(tag: any, properties = {}, ...children: any): DNode {
+	if (Array.isArray(children)) {
+		children = children.reduce(spreadChildren, []);
+	}
 	properties = properties === null ? {} : properties;
 	if (typeof tag === 'string') {
 		return v(tag, properties, children);
@@ -641,7 +654,7 @@ function createFactory(callback: any, middlewares: any): any {
 export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
 ) {
-	function properties<Props extends {}>() {
+	function properties<Props>() {
 		function returns<ReturnValue>(
 			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
 		): ReturnValue extends RenderResult
