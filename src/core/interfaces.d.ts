@@ -384,17 +384,12 @@ export interface MiddlewareMap<
 
 export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: ReturnType<U[P]>['api'] };
 
-type OmitProp<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>
-
-// type KeysWithoutChildren<Props> = Exclude<keyof Props, "children">;
-// type PropsWithoutChildren<Props = Pick<Props, Exclude<keyof Props, "children">>;
-
-export interface Callback<Props extends any, Middleware, ReturnValue> {
+export interface Callback<Props, Middleware, ReturnValue> {
 	(
 		options: {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
-			properties: () => Props;
+			properties: () => Props & { children?: never };
 			children: () => Props extends { children: any } ? Props['children'] : DNode[];
 		}
 	): ReturnValue;
