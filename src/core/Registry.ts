@@ -224,7 +224,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		this._widgetRegistry.set(label, promise);
 
 		promise.then(
-			(widgetCtor) => {
+			(widgetCtor: any) => {
 				if (isWidgetConstructorDefaultExport<T>(widgetCtor)) {
 					widgetCtor = widgetCtor.default;
 				}

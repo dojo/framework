@@ -64,10 +64,7 @@ export const ActiveLink = factory(function ActiveLink({
 		}
 		props = { ...props, classes };
 	}
-	const a = children();
-	return Link(props, a);
-	
-	w(Link, props, children());
+	return w(Link, props, children());
 });
 
 export default ActiveLink;

@@ -4,6 +4,10 @@ import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 import { RegistryHandler } from './RegistryHandler';
 
+export type OmitProp<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 /**
  * Generic constructor type
  */
@@ -395,7 +399,7 @@ export interface Callback<Props, Middleware, ReturnValue> {
 	): ReturnValue;
 }
 
-export interface MiddlewareResult<Props  extends { children?: {} }, Middleware, ReturnValue> {
+export interface MiddlewareResult<Props extends { children?: {} }, Middleware, ReturnValue> {
 	api: ReturnValue;
 	properties: Props;
 	callback: Callback<Props, Middleware, ReturnValue>;
@@ -407,7 +411,10 @@ export interface MiddlewareResultFactory<Props, Middleware, ReturnValue> {
 }
 
 export interface WNodeFactory<W extends WidgetBaseTypes> {
-	(properties: W['properties'], children?: W['children']): WNode<W>;
+	(
+		properties: WithOptional<W['properties'], 'children'>,
+		children?: W['properties'] extends { children?: any } ? W['properties']['children'] : W['children']
+	): WNode<W>;
 }
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void)

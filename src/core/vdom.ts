@@ -24,7 +24,8 @@ import {
 	WidgetBaseTypes,
 	RegistryLabel,
 	DeferredVirtualProperties,
-	DomOptions
+	DomOptions,
+	WithOptional
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -41,8 +42,8 @@ declare global {
 			[key: string]: VNodeProperties;
 		}
 		interface ElementChildrenAttribute {
-            children: {};
-        }
+			children: {};
+		}
 	}
 }
 
@@ -310,10 +311,15 @@ function updateAttributes(
 export function w<W extends WidgetBaseTypes>(
 	node: WNode<W>,
 	properties: Partial<W['properties']>,
-	children?: W['children']
+	children?: W['properties'] extends { children: any } ? W['properties']['children'] : W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
-	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyDefine<W>,
+	widgetConstructor: WNodeFactory<W>,
+	properties: WithOptional<W['properties'], 'children'>,
+	children?: W['properties'] extends { children: any } ? W['properties']['children'] : W['children']
+): WNode<W>;
+export function w<W extends WidgetBaseTypes>(
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W>,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
@@ -326,9 +332,8 @@ export function w<W extends WidgetBaseTypes>(
 		| LazyDefine<W>
 		| Callback<any, any, RenderResult>,
 	properties: W['properties'],
-	children?: W['children']
+	children?: any
 ): WNode<W> {
-
 	if ((properties as any).children) {
 		if (!children) {
 			children = (properties as any).children;
