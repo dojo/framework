@@ -393,8 +393,8 @@ export interface Callback<Props, Middleware, ReturnValue> {
 		options: {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
-			properties: () => Props & { children?: never };
-			children: () => (Props extends { children: any } ? Props['children'] : DNode[]) | undefined;
+			properties: () => Props & { __children__?: never };
+			children: () => (Props extends { __children__: any } ? Props['__children__'] : DNode[]) | undefined;
 		}
 	): ReturnValue;
 }
@@ -412,8 +412,8 @@ export interface MiddlewareResultFactory<Props, Middleware, ReturnValue> {
 
 export interface WNodeFactory<W extends WidgetBaseTypes> {
 	(
-		properties: WithOptional<W['properties'], 'children'>,
-		children?: W['properties'] extends { children?: any } ? W['properties']['children'] : W['children']
+		properties: WithOptional<W['properties'], '__children__'>,
+		children?: W['properties'] extends { __children__?: any } ? W['properties']['__children__'] : W['children']
 	): WNode<W>;
 }
 

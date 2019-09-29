@@ -3432,7 +3432,7 @@ jsdomDescribe('vdom', () => {
 
 			it('typed children', () => {
 				const factory = create({ node }).children<(value: string) => RenderResult>();
-				const Foo = factory(function Foo({ children, properties }) {
+				const Foo = factory(function Foo({ children }) {
 					const c = children();
 					if (c) {
 						return c('result');
