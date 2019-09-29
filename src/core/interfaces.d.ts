@@ -399,7 +399,7 @@ export interface Callback<Props, Middleware, ReturnValue> {
 	): ReturnValue;
 }
 
-export interface MiddlewareResult<Props extends { children?: {} }, Middleware, ReturnValue> {
+export interface MiddlewareResult<Props extends { __children__?: {} }, Middleware, ReturnValue> {
 	api: ReturnValue;
 	properties: Props;
 	callback: Callback<Props, Middleware, ReturnValue>;
