@@ -352,7 +352,7 @@ export function w<W extends WidgetBaseTypes>(
 	}
 
 	return {
-		children: children || [],
+		children,
 		widgetConstructor: widgetConstructorOrNode,
 		properties,
 		type: WNODE
@@ -670,6 +670,76 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 			: MiddlewareResultFactory<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
 			return createFactory(callback, middlewares);
 		}
+
+		function children<Children extends {}>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & { children: Children } & UnionToIntersection<MiddlewareProps>,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? WNodeFactory<{
+						properties: Props & { children: Children } & WidgetProperties &
+							UnionToIntersection<MiddlewareProps>;
+						children: DNode[];
+				  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & { children: Children } & UnionToIntersection<MiddlewareProps>,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+		returns.children = children;
+		return returns;
+	}
+
+	function children<Children extends {}>() {
+		function properties<Props>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & { children: Children } & UnionToIntersection<MiddlewareProps>,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? WNodeFactory<{
+						properties: Props & { children: Children } & WidgetProperties &
+							UnionToIntersection<MiddlewareProps>;
+						children: DNode[];
+				  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & { children: Children } & UnionToIntersection<MiddlewareProps>,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+
+		function returns<ReturnValue>(
+			callback: Callback<
+				WidgetProperties & { children: Children } & UnionToIntersection<MiddlewareProps>,
+				T,
+				ReturnValue
+			>
+		): ReturnValue extends RenderResult
+			? WNodeFactory<{
+					properties: { children: Children } & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+					children: DNode[];
+			  }>
+			: MiddlewareResultFactory<
+					WidgetProperties & { children: Children } & UnionToIntersection<MiddlewareProps>,
+					T,
+					ReturnValue
+			  > {
+			return createFactory(callback, middlewares);
+		}
+		returns.properties = properties;
 		return returns;
 	}
 
@@ -683,6 +753,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
 		return createFactory(callback, middlewares);
 	}
+	returns.children = children;
 	returns.properties = properties;
 	return returns;
 }
@@ -1376,7 +1447,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					type: WNODE,
 					widgetConstructor: current.node.widgetConstructor,
 					properties: current.properties || {},
-					children: current.node.children || []
+					children: current.node.children
 				},
 				instance: current.instance,
 				id: current.id,
@@ -1806,7 +1877,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instanceData.invalidate = invalidate;
 			instanceData.rendering = true;
 			instance.__setProperties__(next.node.properties);
-			instance.__setChildren__(next.node.children);
+			instance.__setChildren__(next.node.children || []);
 			next.instance = instance;
 			rendered = instance.__render__();
 			instanceData.rendering = false;
@@ -1862,7 +1933,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				widgetMeta.properties = next.properties;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, next.properties);
-				if (current.node.children.length > 0 || next.node.children.length > 0) {
+				if (current.node.children || next.node.children) {
 					widgetMeta.dirty = true;
 				}
 				if (!widgetMeta.dirty) {
@@ -1896,7 +1967,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			next.instance = instance;
 			instanceData.rendering = true;
 			instance!.__setProperties__(next.node.properties);
-			instance!.__setChildren__(next.node.children);
+			instance!.__setChildren__(next.node.children || []);
 			if (instanceData.dirty) {
 				didRender = true;
 				_idToChildrenWrappers.delete(next.id);

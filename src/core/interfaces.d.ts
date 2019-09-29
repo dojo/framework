@@ -394,7 +394,7 @@ export interface Callback<Props, Middleware, ReturnValue> {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
 			properties: () => Props & { children?: never };
-			children: () => Props extends { children: any } ? Props['children'] : DNode[];
+			children: () => (Props extends { children: any } ? Props['children'] : DNode[]) | undefined;
 		}
 	): ReturnValue;
 }

@@ -19,7 +19,7 @@ import {
 	w,
 	dom as d
 } from '../../../src/core/vdom';
-import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
+import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
@@ -3428,6 +3428,42 @@ jsdomDescribe('vdom', () => {
 				swap();
 				resolvers.resolve();
 				assert.isTrue(consoleWarnStub.calledOnce);
+			});
+
+			it('typed children', () => {
+				const factory = create({ node }).children<(value: string) => RenderResult>();
+				const Foo = factory(function Foo({ children, properties }) {
+					const c = children();
+					if (c) {
+						return c('result');
+					}
+				});
+				const r = renderer(() => Foo({}, (foo) => v('div', [foo])));
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div>result</div></div>');
+			});
+
+			it('typed children and properties', () => {
+				const factory = create({ node })
+					.properties<{ foo: string }>()
+					.children<(value: string) => RenderResult>();
+				const Foo = factory(function Foo({ children, properties }) {
+					const c = children();
+					const { foo } = properties();
+					if (c) {
+						return c(foo);
+					}
+					return foo;
+				});
+				const r = renderer(() =>
+					v('div', [Foo({ foo: 'foo' }, (foo) => v('div', [foo])), Foo({ foo: 'foo' })])
+				);
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div><div>foo</div>foo</div></div>');
 			});
 
 			describe('core middleware', () => {
