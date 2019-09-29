@@ -2,8 +2,8 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Registry } from '../../../src/core/Registry';
-import { WNode } from '../../../src/core/interfaces';
-import { tsx, fromRegistry } from '../../../src/core/vdom';
+import { WNode, RenderResult } from '../../../src/core/interfaces';
+import { create, tsx, fromRegistry } from '../../../src/core/vdom';
 
 const registry = new Registry();
 
@@ -46,5 +46,27 @@ registerSuite('tsx integration', {
 		qux.registry.base = registry;
 		const firstQuxRender = qux.__render__() as WNode;
 		assert.strictEqual(firstQuxRender.widgetConstructor, 'LazyFoo');
+	},
+	'typed children'() {
+		const factory = create().children<{ left: () => RenderResult; right: () => RenderResult }>();
+		const Foo = factory(function Foo({ children }) {
+			const c = children();
+			if (c) {
+				return (
+					<div>
+						<div>{c.left()}</div>
+						<div>{c.right()}</div>
+					</div>
+				);
+			}
+			return null;
+		});
+		
+		// types correctly
+		<Foo>{{ left: () => 'left', right: () => 'right'}}</Foo>;
+		// uncomment to see compile errors
+		// <Foo>{{ left: () => 'left'}}</Foo>;
+		// <Foo>{{ right: () => 'right'}}</Foo>;
+		// <Foo><div></div></Foo>;
 	}
 });
