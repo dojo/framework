@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Registry } from '../../../src/core/Registry';
 import { WNode, RenderResult } from '../../../src/core/interfaces';
-import { create, tsx, fromRegistry, w } from '../../../src/core/vdom';
+import { create, tsx, fromRegistry } from '../../../src/core/vdom';
 
 const registry = new Registry();
 
@@ -61,9 +61,9 @@ registerSuite('tsx integration', {
 			}
 			return null;
 		});
-		
+
 		// types correctly
-		<Foo>{{ left: () => 'left', right: () => 'right'}}</Foo>;
+		<Foo>{{ left: () => 'left', right: () => 'right' }}</Foo>;
 		// uncomment to see compile errors
 		// <Foo>{{ left: () => 'left'}}</Foo>;
 		// <Foo>{{ right: () => 'right'}}</Foo>;
