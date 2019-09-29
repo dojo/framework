@@ -70,7 +70,7 @@ describe('selector', () => {
 			assert.deepEqual(adapter.getChildren(v('div', {}, [w(WidgetBase, {})])), [w(WidgetBase, {})]);
 			assert.deepEqual(adapter.getChildren(w(WidgetBase, {}, [v('span')])), [v('span')]);
 			assert.deepEqual(adapter.getChildren(w(WidgetBase, {}, [w(WidgetBase, {})])), [w(WidgetBase, {})]);
-			assert.deepEqual(adapter.getChildren(w(WidgetBase, {})), []);
+			assert.deepEqual(adapter.getChildren(w(WidgetBase, {})), undefined);
 			assert.deepEqual(adapter.getChildren(v('div')), undefined);
 			assert.deepEqual(adapter.getChildren(undefined), []);
 			assert.deepEqual(adapter.getChildren(null), []);

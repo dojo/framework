@@ -185,7 +185,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 				},
 				[...customDiffNames]
 			);
-			if (children.length || wNode.children.length) {
+			if ((children && children.length) || (wNode.children && wNode.children.length)) {
 				invalidated = true;
 			}
 			properties = { ...wNode.properties };
@@ -195,7 +195,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			}
 		} else {
 			widget.__setProperties__(wNode.properties);
-			widget.__setChildren__(wNode.children);
+			widget.__setChildren__(wNode.children || []);
 			if (invalidated) {
 				render = widget.__render__();
 			}
