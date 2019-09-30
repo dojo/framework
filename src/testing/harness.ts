@@ -198,7 +198,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			}
 		} else {
 			widget.__setProperties__(wNode.properties);
-			widget.__setChildren__(wNode.children || []);
+			widget.__setChildren__(wNode.children);
 			if (invalidated) {
 				render = widget.__render__();
 			}

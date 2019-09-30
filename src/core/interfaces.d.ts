@@ -4,10 +4,6 @@ import Map from '../shim/Map';
 import WeakMap from '../shim/WeakMap';
 import { RegistryHandler } from './RegistryHandler';
 
-export type OmitProp<T, K extends keyof any> = Pick<T, Exclude<keyof T, K>>;
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-export type WithOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
 /**
  * Generic constructor type
  */

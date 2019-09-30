@@ -354,7 +354,7 @@ export function w<W extends WidgetBaseTypes>(
 	}
 
 	return {
-		children,
+		children: children || [],
 		widgetConstructor: widgetConstructorOrNode,
 		properties,
 		type: WNODE
@@ -457,10 +457,8 @@ function spreadChildren(children: any[], child: any): any[] {
 	}
 }
 
-export function tsx(tag: any, properties = {}, ...children: any): DNode {
-	if (Array.isArray(children)) {
-		children = children.reduce(spreadChildren, []);
-	}
+export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
+	children = children.reduce(spreadChildren, []);
 	properties = properties === null ? {} : properties;
 	if (typeof tag === 'string') {
 		return v(tag, properties, children);
@@ -1453,7 +1451,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					type: WNODE,
 					widgetConstructor: current.node.widgetConstructor,
 					properties: current.properties || {},
-					children: current.node.children
+					children: current.node.children || []
 				},
 				instance: current.instance,
 				id: current.id,
@@ -1883,7 +1881,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instanceData.invalidate = invalidate;
 			instanceData.rendering = true;
 			instance.__setProperties__(next.node.properties);
-			instance.__setChildren__(next.node.children || []);
+			instance.__setChildren__(next.node.children);
 			next.instance = instance;
 			rendered = instance.__render__();
 			instanceData.rendering = false;
@@ -1939,7 +1937,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				widgetMeta.properties = next.properties;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, next.properties);
-				if (current.node.children || next.node.children) {
+				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
 				}
 				if (!widgetMeta.dirty) {
@@ -1973,7 +1971,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			next.instance = instance;
 			instanceData.rendering = true;
 			instance!.__setProperties__(next.node.properties);
-			instance!.__setChildren__(next.node.children || []);
+			instance!.__setChildren__(next.node.children);
 			if (instanceData.dirty) {
 				didRender = true;
 				_idToChildrenWrappers.delete(next.id);
