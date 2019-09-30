@@ -188,7 +188,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 				},
 				[...customDiffNames]
 			);
-			if ((children && children.length) || (wNode.children && wNode.children.length)) {
+			if (children.length || wNode.children.length) {
 				invalidated = true;
 			}
 			properties = { ...wNode.properties };
