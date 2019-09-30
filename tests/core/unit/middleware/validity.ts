@@ -26,7 +26,7 @@ describe('validity middleware', () => {
 			properties: () => ({}),
 			children: () => []
 		});
-		const result = validity.get('root', 'testValue');
+		const result = validity.get('root', 'testValue', true);
 		assert.deepEqual(result, { valid: undefined, message: '' });
 	});
 
@@ -43,11 +43,14 @@ describe('validity middleware', () => {
 		});
 		const domNode = {
 			validity: { valid: false },
+			attributes: {
+				getNamedItem: () => true
+			},
 			value: 'testValue',
 			validationMessage: 'test validation message'
 		};
 		nodeStub.get.withArgs('root').returns(domNode);
-		const result = validity.get('root', 'testValue');
+		const result = validity.get('root', 'testValue', true);
 		assert.deepEqual(result, { valid: false, message: 'test validation message' });
 		assert.isTrue(invalidatorStub.notCalled);
 	});
@@ -65,11 +68,44 @@ describe('validity middleware', () => {
 		});
 		const domNode = {
 			validity: { valid: false },
+			attributes: {
+				getNamedItem: () => true
+			},
 			value: 'otherValue',
 			validationMessage: 'test validation message'
 		};
 		nodeStub.get.withArgs('root').returns(domNode);
-		const result = validity.get('root', 'testValue');
+		const result = validity.get('root', 'testValue', true);
+		assert.deepEqual(result, { valid: false, message: 'test validation message' });
+		return new Promise((resolve) => {
+			setTimeout(() => {
+				assert.isTrue(invalidatorStub.calledOnce);
+				resolve();
+			}, 10);
+		});
+	});
+
+	it('should invalidate if the required value and domNode required attribute do not match', () => {
+		const { callback } = validityMiddleware();
+		const validity = callback({
+			id: 'test',
+			middleware: {
+				node: nodeStub,
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		const domNode = {
+			validity: { valid: false },
+			attributes: {
+				getNamedItem: () => false
+			},
+			value: 'otherValue',
+			validationMessage: 'test validation message'
+		};
+		nodeStub.get.withArgs('root').returns(domNode);
+		const result = validity.get('root', 'testValue', true);
 		assert.deepEqual(result, { valid: false, message: 'test validation message' });
 		return new Promise((resolve) => {
 			setTimeout(() => {

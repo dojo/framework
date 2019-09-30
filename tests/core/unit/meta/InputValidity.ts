@@ -34,7 +34,7 @@ registerSuite('meta - InputValidity', {
 				bind: bindInstance
 			});
 
-			const { message, valid } = validity.get('test', 'testValue');
+			const { message, valid } = validity.get('test', 'testValue', true);
 			assert.strictEqual(message, '');
 			assert.isUndefined(valid);
 		},
@@ -42,6 +42,9 @@ registerSuite('meta - InputValidity', {
 		'returns the validity and message for the element'() {
 			sandbox.stub(nodeHandler, 'get').returns({
 				validity: { valid: false },
+				attributes: {
+					getNamedItem: () => true
+				},
 				value: 'testValue',
 				validationMessage: 'test validation message'
 			});
@@ -51,7 +54,7 @@ registerSuite('meta - InputValidity', {
 				bind: bindInstance
 			});
 
-			const { message, valid } = validity.get('test', 'testValue');
+			const { message, valid } = validity.get('test', 'testValue', true);
 			assert.strictEqual(message, 'test validation message');
 			assert.isFalse(valid);
 		},
@@ -63,6 +66,9 @@ registerSuite('meta - InputValidity', {
 				.withArgs('input')
 				.returns({
 					validity: { valid: true },
+					attributes: {
+						getNamedItem: () => true
+					},
 					value: 'test1',
 					validationMessage: ''
 				});
@@ -73,7 +79,37 @@ registerSuite('meta - InputValidity', {
 				bind: bindInstance
 			});
 
-			validity.get('input', 'test2');
+			validity.get('input', 'test2', true);
+			return new Promise((resolve) => {
+				setTimeout(() => {
+					assert.isTrue(invalidateStub.calledOnce);
+					nodeStub.reset();
+					resolve();
+				}, 10);
+			});
+		},
+
+		async 'calls invalidate if the required value and node required attribute do not match'() {
+			const nodeHandler = new NodeHandler();
+			const nodeStub = sandbox
+				.stub(nodeHandler, 'get')
+				.withArgs('input')
+				.returns({
+					validity: { valid: true },
+					attributes: {
+						getNamedItem: () => false
+					},
+					value: 'test1',
+					validationMessage: ''
+				});
+
+			const validity = new InputValidity({
+				invalidate: invalidateStub,
+				nodeHandler,
+				bind: bindInstance
+			});
+
+			validity.get('input', 'test2', true);
 			return new Promise((resolve) => {
 				setTimeout(() => {
 					assert.isTrue(invalidateStub.calledOnce);
