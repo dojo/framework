@@ -493,7 +493,7 @@ export type WidgetBaseConstructor<P extends WidgetProperties = WidgetProperties,
 
 export interface DefaultWidgetBaseInterface extends WidgetBaseInterface<WidgetProperties, DNode> {}
 
-export interface WidgetBaseTypes<P = any, C = any> {
+export interface WidgetBaseTypes<P = any, C extends DNode = DNode> {
 	/**
 	 * Widget properties
 	 */
