@@ -47,9 +47,12 @@ export function createResizeMock() {
 		}
 	};
 
-	function mockResize(): MiddlewareResult<any, any, any>;
+	function mockResize(): MiddlewareResult<any, any, any, any>;
 	function mockResize(key: string, contentRect: Partial<DOMRectReadOnly>): void;
-	function mockResize(key?: string, contentRect?: Partial<DOMRectReadOnly>): void | MiddlewareResult<any, any, any> {
+	function mockResize(
+		key?: string,
+		contentRect?: Partial<DOMRectReadOnly>
+	): void | MiddlewareResult<any, any, any, any> {
 		if (key) {
 			if (!mockNodes[key]) {
 				mockNodes[key] = contentRect;

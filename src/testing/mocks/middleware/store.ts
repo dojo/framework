@@ -40,9 +40,9 @@ export function createMockStoreMiddleware<T = any>(processes: [Process<any, any>
 		};
 	});
 
-	function mockStore(): MiddlewareResult<any, any, any>;
+	function mockStore(): MiddlewareResult<any, any, any, any>;
 	function mockStore(operations: (path: StatePaths<T>) => PatchOperation[]): void;
-	function mockStore(operations?: (path: any) => PatchOperation[]): void | MiddlewareResult<any, any, any> {
+	function mockStore(operations?: (path: any) => PatchOperation[]): void | MiddlewareResult<any, any, any, any> {
 		if (operations) {
 			storeMock.apply(operations(storeMock.path), true);
 		} else {

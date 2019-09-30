@@ -35,7 +35,7 @@ export function createBreakpointMock(breakpoints: Breakpoints = { SM: 0, MD: 576
 		};
 	});
 
-	function mockBreakpoint(): MiddlewareResult<any, any, any>;
+	function mockBreakpoint(): MiddlewareResult<any, any, any, any>;
 	function mockBreakpoint(
 		key: string,
 		breakpointResult: {
@@ -49,7 +49,7 @@ export function createBreakpointMock(breakpoints: Breakpoints = { SM: 0, MD: 576
 			breakpoint: string;
 			contentRect: Partial<DOMRectReadOnly>;
 		}
-	): void | MiddlewareResult<any, any, any> {
+	): void | MiddlewareResult<any, any, any, any> {
 		if (key && breakpointResult) {
 			if (!mockBreakpoints[key]) {
 				mockBreakpoints[key] = breakpointResult.breakpoint;

@@ -33,9 +33,9 @@ export function createICacheMock() {
 		return icacheMiddleware;
 	});
 
-	function mockCache(): MiddlewareResult<any, any, any>;
+	function mockCache(): MiddlewareResult<any, any, any, any>;
 	function mockCache(key: string): Promise<any>;
-	function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any> {
+	function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any, any> {
 		if (key) {
 			if (map.has(key)) {
 				return map.get(key);

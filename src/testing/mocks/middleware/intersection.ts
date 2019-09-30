@@ -39,12 +39,12 @@ export function createIntersectionMock() {
 		}
 	};
 
-	function mockIntersection(): MiddlewareResult<any, any, any>;
+	function mockIntersection(): MiddlewareResult<any, any, any, any>;
 	function mockIntersection(key: string, intersectionDetails: Partial<IntersectionResult>): void;
 	function mockIntersection(
 		key?: string,
 		intersectionDetails?: Partial<IntersectionResult>
-	): void | MiddlewareResult<any, any, any> {
+	): void | MiddlewareResult<any, any, any, any> {
 		if (key) {
 			if (!mockNodes[key]) {
 				mockNodes[key] = intersectionDetails;

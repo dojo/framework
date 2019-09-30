@@ -50,17 +50,21 @@ registerSuite('tsx integration', {
 	'typed children'() {
 		const factory = create().children<{ left: () => RenderResult; right: () => RenderResult }>();
 		const Foo = factory(function Foo({ children }) {
-			const c = children();
-			if (c) {
-				return (
-					<div>
-						<div>{c.left()}</div>
-						<div>{c.right()}</div>
-					</div>
-				);
-			}
-			return null;
+			const [c] = children();
+			return (
+				<div>
+					<div>{c.left()}</div>
+					<div>{c.right()}</div>
+				</div>
+			);
 		});
+		const Other = create()(function Other() {
+			return '';
+		});
+
+		<Other>
+			<div />
+		</Other>;
 
 		// types correctly
 		<Foo>{{ left: () => 'left', right: () => 'right' }}</Foo>;

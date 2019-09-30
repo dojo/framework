@@ -368,13 +368,13 @@ jsdomDescribe('vdom', () => {
 		});
 
 		it('DNodes are bound to the parent widget', () => {
-			class Foo extends WidgetBase<any> {
+			class Foo extends WidgetBase<{ onClick: () => any }> {
 				render() {
 					return v('div', { onclick: this.properties.onClick }, this.children);
 				}
 			}
 
-			class Bar extends WidgetBase<any> {
+			class Bar extends WidgetBase<{ onClick: () => any }> {
 				render() {
 					return v('div', { onclick: this.properties.onClick });
 				}
@@ -3433,12 +3433,12 @@ jsdomDescribe('vdom', () => {
 			it('typed children', () => {
 				const factory = create({ node }).children<(value: string) => RenderResult>();
 				const Foo = factory(function Foo({ children }) {
-					const c = children();
+					const [c] = children();
 					if (c) {
 						return c('result');
 					}
 				});
-				const r = renderer(() => Foo({}, (foo) => v('div', [foo])));
+				const r = renderer(() => Foo({}, [(foo) => v('div', [foo])]));
 				const root = document.createElement('div');
 				r.mount({ domNode: root });
 				resolvers.resolve();
@@ -3450,7 +3450,7 @@ jsdomDescribe('vdom', () => {
 					.properties<{ foo: string }>()
 					.children<(value: string) => RenderResult>();
 				const Foo = factory(function Foo({ children, properties }) {
-					const c = children();
+					const [c] = children();
 					const { foo } = properties();
 					if (c) {
 						return c(foo);
@@ -3458,12 +3458,16 @@ jsdomDescribe('vdom', () => {
 					return foo;
 				});
 				const r = renderer(() =>
-					v('div', [w(Foo, { foo: 'foo' }, (foo) => foo), Foo({ foo: 'foo' }, (foo) => v('div', [foo])), Foo({ foo: 'foo' })])
+					v('div', [
+						w(Foo, { foo: '1' }, (foo) => foo),
+						Foo({ foo: 'foo' }, [(foo) => v('div', [foo])]),
+						Foo({ foo: 'foo' }, [() => ''])
+					])
 				);
 				const root = document.createElement('div');
 				r.mount({ domNode: root });
 				resolvers.resolve();
-				assert.strictEqual(root.outerHTML, '<div><div>foo<div>foo</div>foo</div></div>');
+				assert.strictEqual(root.outerHTML, '<div><div>1<div>foo</div></div></div>');
 			});
 
 			describe('core middleware', () => {

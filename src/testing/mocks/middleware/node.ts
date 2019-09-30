@@ -16,9 +16,9 @@ export function createNodeMock() {
 		};
 	});
 
-	function mockNode(): MiddlewareResult<any, any, any>;
+	function mockNode(): MiddlewareResult<any, any, any, any>;
 	function mockNode(key: string, element: any): void;
-	function mockNode(key?: string, element?: any): void | MiddlewareResult<any, any, any> {
+	function mockNode(key?: string, element?: any): void | MiddlewareResult<any, any, any, any> {
 		if (key) {
 			if (!nodes[key]) {
 				nodes[key] = element;
