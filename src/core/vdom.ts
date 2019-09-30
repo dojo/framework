@@ -311,12 +311,12 @@ function updateAttributes(
 export function w<W extends WidgetBaseTypes>(
 	node: WNode<W>,
 	properties: Partial<W['properties']>,
-	children?: W['properties'] extends { children: any } ? W['properties']['children'] : W['children']
+	children?: W['properties'] extends { __children__: any } ? W['properties']['__children__'] : W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
 	widgetConstructor: WNodeFactory<W>,
-	properties: WithOptional<W['properties'], 'children'>,
-	children?: W['properties'] extends { children: any } ? W['properties']['children'] : W['children']
+	properties: WithOptional<W['properties'], '__children__'>,
+	children?: W['properties'] extends { __children__: any } ? W['properties']['__children__'] : W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
 	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W>,
@@ -334,8 +334,8 @@ export function w<W extends WidgetBaseTypes>(
 	properties: W['properties'],
 	children?: any
 ): WNode<W> {
-	if ((properties as any).children) {
-		delete (properties as any).children;
+	if ((properties as any).__children__) {
+		delete (properties as any).__children__;
 	}
 
 	if (isWNodeFactory<W>(widgetConstructorOrNode)) {

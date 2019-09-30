@@ -3458,12 +3458,12 @@ jsdomDescribe('vdom', () => {
 					return foo;
 				});
 				const r = renderer(() =>
-					v('div', [Foo({ foo: 'foo' }, (foo) => v('div', [foo])), Foo({ foo: 'foo' })])
+					v('div', [w(Foo, { foo: 'foo' }, (foo) => foo), Foo({ foo: 'foo' }, (foo) => v('div', [foo])), Foo({ foo: 'foo' })])
 				);
 				const root = document.createElement('div');
 				r.mount({ domNode: root });
 				resolvers.resolve();
-				assert.strictEqual(root.outerHTML, '<div><div><div>foo</div>foo</div></div>');
+				assert.strictEqual(root.outerHTML, '<div><div>foo<div>foo</div>foo</div></div>');
 			});
 
 			describe('core middleware', () => {
