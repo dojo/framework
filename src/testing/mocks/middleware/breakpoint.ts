@@ -3,7 +3,7 @@ import resize from '../../../core/middleware/resize';
 import icache from '../../../core/middleware/icache';
 import breakpoint, { Breakpoints } from '../../../core/middleware/breakpoint';
 import createResizeMock from './resize';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 
 export function createBreakpointMock(breakpoints: Breakpoints = { SM: 0, MD: 576, LG: 768, XL: 960 }) {
 	const mockBreakpoints: any = {};
@@ -35,7 +35,7 @@ export function createBreakpointMock(breakpoints: Breakpoints = { SM: 0, MD: 576
 		};
 	});
 
-	function mockBreakpoint(): MiddlewareResult<any, any, any, any>;
+	function mockBreakpoint(): DefaultMiddlewareResult;
 	function mockBreakpoint(
 		key: string,
 		breakpointResult: {
@@ -49,7 +49,7 @@ export function createBreakpointMock(breakpoints: Breakpoints = { SM: 0, MD: 576
 			breakpoint: string;
 			contentRect: Partial<DOMRectReadOnly>;
 		}
-	): void | MiddlewareResult<any, any, any, any> {
+	): void | DefaultMiddlewareResult {
 		if (key && breakpointResult) {
 			if (!mockBreakpoints[key]) {
 				mockBreakpoints[key] = breakpointResult.breakpoint;

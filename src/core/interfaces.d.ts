@@ -402,6 +402,8 @@ export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {
 	middlewares: Middleware;
 }
 
+export interface DefaultMiddlewareResult extends MiddlewareResult<any, any, any, any> {}
+
 export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValue> {
 	(): MiddlewareResult<Props, Children, Middleware, ReturnValue>;
 }

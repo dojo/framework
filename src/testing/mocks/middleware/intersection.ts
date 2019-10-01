@@ -3,7 +3,7 @@ import { create, destroy, invalidator } from '../../../core/vdom';
 import cache from '../../../core/middleware/cache';
 import intersection from '../../../core/middleware/intersection';
 import { ExtendedIntersectionObserverEntry, IntersectionResult } from '../../../core/meta/Intersection';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 
 export function createIntersectionMock() {
 	const mockNodes: any = {};
@@ -39,12 +39,12 @@ export function createIntersectionMock() {
 		}
 	};
 
-	function mockIntersection(): MiddlewareResult<any, any, any, any>;
+	function mockIntersection(): DefaultMiddlewareResult;
 	function mockIntersection(key: string, intersectionDetails: Partial<IntersectionResult>): void;
 	function mockIntersection(
 		key?: string,
 		intersectionDetails?: Partial<IntersectionResult>
-	): void | MiddlewareResult<any, any, any, any> {
+	): void | DefaultMiddlewareResult {
 		if (key) {
 			if (!mockNodes[key]) {
 				mockNodes[key] = intersectionDetails;

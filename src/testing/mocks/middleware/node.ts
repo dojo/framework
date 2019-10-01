@@ -1,5 +1,5 @@
 import { create, invalidator } from '../../../core/vdom';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 
 export function createNodeMock() {
 	const nodes: any = {};
@@ -16,9 +16,9 @@ export function createNodeMock() {
 		};
 	});
 
-	function mockNode(): MiddlewareResult<any, any, any, any>;
+	function mockNode(): DefaultMiddlewareResult;
 	function mockNode(key: string, element: any): void;
-	function mockNode(key?: string, element?: any): void | MiddlewareResult<any, any, any, any> {
+	function mockNode(key?: string, element?: any): void | DefaultMiddlewareResult {
 		if (key) {
 			if (!nodes[key]) {
 				nodes[key] = element;

@@ -1,5 +1,5 @@
 import { create, invalidator } from '../../../core/vdom';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 import { cache } from '../../../core/middleware/cache';
 import { icache } from '../../../core/middleware/icache';
 import Map from '../../../shim/Map';
@@ -33,9 +33,9 @@ export function createICacheMock() {
 		return icacheMiddleware;
 	});
 
-	function mockCache(): MiddlewareResult<any, any, any, any>;
+	function mockCache(): DefaultMiddlewareResult;
 	function mockCache(key: string): Promise<any>;
-	function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any, any> {
+	function mockCache(key?: string): Promise<any> | DefaultMiddlewareResult {
 		if (key) {
 			if (map.has(key)) {
 				return map.get(key);
