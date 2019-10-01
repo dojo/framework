@@ -49,10 +49,7 @@ export function createResizeMock() {
 
 	function mockResize(): DefaultMiddlewareResult;
 	function mockResize(key: string, contentRect: Partial<DOMRectReadOnly>): void;
-	function mockResize(
-		key?: string,
-		contentRect?: Partial<DOMRectReadOnly>
-	): void | DefaultMiddlewareResult {
+	function mockResize(key?: string, contentRect?: Partial<DOMRectReadOnly>): void | DefaultMiddlewareResult {
 		if (key) {
 			if (!mockNodes[key]) {
 				mockNodes[key] = contentRect;
