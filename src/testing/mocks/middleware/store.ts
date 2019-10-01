@@ -2,7 +2,7 @@ import { create, destroy, invalidator } from '../../../core/vdom';
 import injector from '../../../core/middleware/injector';
 import { createStoreMiddleware } from '../../../core/middleware/store';
 import Store, { StatePaths } from '../../../stores/Store';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 import { PatchOperation } from '../../../stores/state/Patch';
 import { Process } from '../../../stores/process';
 
@@ -40,9 +40,9 @@ export function createMockStoreMiddleware<T = any>(processes: [Process<any, any>
 		};
 	});
 
-	function mockStore(): MiddlewareResult<any, any, any>;
+	function mockStore(): DefaultMiddlewareResult;
 	function mockStore(operations: (path: StatePaths<T>) => PatchOperation[]): void;
-	function mockStore(operations?: (path: any) => PatchOperation[]): void | MiddlewareResult<any, any, any> {
+	function mockStore(operations?: (path: any) => PatchOperation[]): void | DefaultMiddlewareResult {
 		if (operations) {
 			storeMock.apply(operations(storeMock.path), true);
 		} else {

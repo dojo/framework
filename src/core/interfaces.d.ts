@@ -384,30 +384,56 @@ export interface MiddlewareMap<
 
 export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: ReturnType<U[P]>['api'] };
 
-export interface Callback<Props, Middleware, ReturnValue> {
+export interface Callback<Props, Children, Middleware, ReturnValue> {
 	(
 		options: {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
 			properties: () => Props;
-			children: () => DNode[];
+			children: () => Children extends any[] ? Children : [Children];
 		}
 	): ReturnValue;
 }
 
-export interface MiddlewareResult<Props, Middleware, ReturnValue> {
+export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {
 	api: ReturnValue;
 	properties: Props;
-	callback: Callback<Props, Middleware, ReturnValue>;
+	callback: Callback<Props, Children, Middleware, ReturnValue>;
 	middlewares: Middleware;
 }
 
-export interface MiddlewareResultFactory<Props, Middleware, ReturnValue> {
-	(): MiddlewareResult<Props, Middleware, ReturnValue>;
+export interface DefaultMiddlewareResult extends MiddlewareResult<any, any, any, any> {}
+
+export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValue> {
+	(): MiddlewareResult<Props, Children, Middleware, ReturnValue>;
 }
 
-export interface WNodeFactory<W extends WidgetBaseTypes> {
-	(properties: W['properties'], children?: W['children']): WNode<W>;
+export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
+	(properties: W['properties'], children?: W['children'] extends any[] ? W['children'] : [W['children']]): WNode<W>;
+	new (): {
+		properties: W['properties'] & { __children__?: DNode | DNode[] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+}
+
+export interface WNodeFactory<W extends WNodeFactoryTypes> {
+	(
+		properties: W['properties'],
+		children: W['children'] extends [any]
+			? W['children'][0][]
+			: W['children'] extends any[] ? W['children'] : [W['children']]
+	): WNode<W>;
+	new (): {
+		properties: W['properties'] & { __children__: W['children'] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+}
+
+export interface WNodeFactoryTypes<P = any, C = any> {
+	readonly properties: P;
+	readonly children: C;
 }
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void)
@@ -421,7 +447,7 @@ export interface WNode<W extends WidgetBaseTypes = any> {
 	/**
 	 * Constructor to create a widget or string constructor label
 	 */
-	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W> | Callback<any, any, RenderResult>;
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W> | Callback<any, any, any, RenderResult>;
 
 	/**
 	 * Properties to set against a widget instance
@@ -431,7 +457,7 @@ export interface WNode<W extends WidgetBaseTypes = any> {
 	/**
 	 * DNode children
 	 */
-	children: DNode[];
+	children: any[];
 
 	/**
 	 * The type of node

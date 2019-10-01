@@ -24,7 +24,8 @@ import {
 	WidgetBaseTypes,
 	RegistryLabel,
 	DeferredVirtualProperties,
-	DomOptions
+	DomOptions,
+	DefaultChildrenWNodeFactory
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -39,6 +40,9 @@ declare global {
 		}
 		interface IntrinsicElements {
 			[key: string]: VNodeProperties;
+		}
+		interface ElementChildrenAttribute {
+			__children__: {};
 		}
 	}
 }
@@ -64,7 +68,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 	instance?: any;
 	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
-	registryItem?: Callback<any, any, RenderResult> | Constructor<any> | null;
+	registryItem?: Callback<any, any, any, RenderResult> | Constructor<any> | null;
 	properties: any;
 }
 
@@ -307,10 +311,20 @@ function updateAttributes(
 export function w<W extends WidgetBaseTypes>(
 	node: WNode<W>,
 	properties: Partial<W['properties']>,
-	children?: W['children']
+	children?: W['properties'] extends { __children__: any } ? W['properties']['__children__'] : W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
-	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyDefine<W>,
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W>,
+	properties: W['properties'],
+	children?: W['children']
+): WNode<W>;
+export function w<W extends WNodeFactory<any>>(
+	widgetConstructor: W,
+	properties: W['properties'],
+	children: W['children']
+): WNode<W>;
+export function w<W extends DefaultChildrenWNodeFactory<any>>(
+	widgetConstructor: W,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
@@ -321,10 +335,14 @@ export function w<W extends WidgetBaseTypes>(
 		| WNodeFactory<W>
 		| WNode<W>
 		| LazyDefine<W>
-		| Callback<any, any, RenderResult>,
+		| Callback<any, any, any, RenderResult>,
 	properties: W['properties'],
-	children?: W['children']
+	children?: any
 ): WNode<W> {
+	if ((properties as any).__children__) {
+		delete (properties as any).__children__;
+	}
+
 	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
 		return widgetConstructorOrNode(properties, children);
 	}
@@ -641,30 +659,105 @@ function createFactory(callback: any, middlewares: any): any {
 export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
 ) {
-	function properties<Props extends {}>() {
+	function properties<Props>() {
 		function returns<ReturnValue>(
-			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 		): ReturnValue extends RenderResult
-			? WNodeFactory<{
+			? DefaultChildrenWNodeFactory<{
 					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
 					children: DNode[];
 			  }>
-			: MiddlewareResultFactory<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+			: MiddlewareResultFactory<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					DNode[],
+					T,
+					ReturnValue
+			  > {
 			return createFactory(callback, middlewares);
 		}
+
+		function children<Children>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					Children,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? WNodeFactory<{
+						properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: Children;
+				  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+		returns.children = children;
+		return returns;
+	}
+
+	function children<Children extends {}>() {
+		function properties<Props>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					Children,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? WNodeFactory<{
+						properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: Children;
+				  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+
+		function returns<ReturnValue>(
+			callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, Children, T, ReturnValue>
+		): ReturnValue extends RenderResult
+			? WNodeFactory<{
+					properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+					children: Children;
+			  }>
+			: MiddlewareResultFactory<
+					WidgetProperties & UnionToIntersection<MiddlewareProps>,
+					Children,
+					T,
+					ReturnValue
+			  > {
+			return createFactory(callback, middlewares);
+		}
+		returns.properties = properties;
 		return returns;
 	}
 
 	function returns<ReturnValue>(
-		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 	): ReturnValue extends RenderResult
-		? WNodeFactory<{
+		? DefaultChildrenWNodeFactory<{
 				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
 				children: DNode[];
 		  }>
-		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue> {
 		return createFactory(callback, middlewares);
 	}
+	returns.children = children;
 	returns.properties = properties;
 	return returns;
 }
@@ -1269,7 +1362,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
-		const renderResult = wrapNodes(renderer)({});
+		const renderResult = wrapNodes(renderer)({}, []);
 		const nextWrapper = {
 			id: `${wrapperId++}`,
 			node: renderResult,

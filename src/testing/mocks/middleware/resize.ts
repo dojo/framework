@@ -2,7 +2,7 @@ import global from '../../../shim/global';
 import { create, destroy, invalidator } from '../../../core/vdom';
 import icache from '../../../core/middleware/icache';
 import resize from '../../../core/middleware/resize';
-import { MiddlewareResult } from '../../../core/interfaces';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
 
 export function createResizeMock() {
 	const mockNodes: any = {};
@@ -47,9 +47,9 @@ export function createResizeMock() {
 		}
 	};
 
-	function mockResize(): MiddlewareResult<any, any, any>;
+	function mockResize(): DefaultMiddlewareResult;
 	function mockResize(key: string, contentRect: Partial<DOMRectReadOnly>): void;
-	function mockResize(key?: string, contentRect?: Partial<DOMRectReadOnly>): void | MiddlewareResult<any, any, any> {
+	function mockResize(key?: string, contentRect?: Partial<DOMRectReadOnly>): void | DefaultMiddlewareResult {
 		if (key) {
 			if (!mockNodes[key]) {
 				mockNodes[key] = contentRect;

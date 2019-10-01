@@ -49,7 +49,7 @@ let middlewareId = 0;
 
 interface HarnessOptions {
 	customComparator?: CustomComparator[];
-	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
+	middleware?: [MiddlewareResultFactory<any, any, any, any>, MiddlewareResultFactory<any, any, any, any>][];
 }
 
 const factory = create();
@@ -60,14 +60,17 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let invalidated = true;
 	let wNode = renderFunc();
 	const renderStack: (DNode | DNode[])[] = [];
-	let widget: WidgetBase | Callback<any, any, RenderResult>;
+	let widget: WidgetBase | Callback<any, any, any, RenderResult>;
 	let middleware: any = {};
 	let properties: any = {};
 	let children: any = [];
 	let customDiffs: any[] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
-	let mockMiddleware: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][] = [];
+	let mockMiddleware: [
+		MiddlewareResultFactory<any, any, any, any>,
+		MiddlewareResultFactory<any, any, any, any>
+	][] = [];
 	if (Array.isArray(options)) {
 		customComparator = options;
 	} else {
