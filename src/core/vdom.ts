@@ -841,7 +841,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
 	let _nodeToWrapperMap = new WeakMap<VNode | WNode<any>, WNodeWrapper>();
 	let _renderScheduled: number | undefined;
-	let _idleCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
 	let _allMergedNodes: Node[] = [];
@@ -1197,7 +1196,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function runDeferredRenderCallbacks() {
+	function _runDeferredRenderCallbacks() {
 		const { sync } = _mountOptions;
 		const callbacks = _deferredRenderCallbacks;
 		_deferredRenderCallbacks = [];
@@ -1212,29 +1211,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				run();
 			} else {
 				global.requestAnimationFrame(run);
-			}
-		}
-	}
-
-	function runAfterRenderCallbacks() {
-		const { sync } = _mountOptions;
-		const callbacks = _idleCallbacks;
-		_idleCallbacks = [];
-		if (callbacks.length) {
-			const run = () => {
-				let callback: Function | undefined;
-				while ((callback = callbacks.shift())) {
-					callback();
-				}
-			};
-			if (sync) {
-				run();
-			} else {
-				if (global.requestIdleCallback) {
-					global.requestIdleCallback(run);
-				} else {
-					setTimeout(run);
-				}
 			}
 		}
 	}
@@ -1298,7 +1274,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_insertBeforeMap = undefined;
-		_runCallbacks();
+		_runDeferredRenderCallbacks();
 	}
 
 	function invalidate() {
@@ -1380,7 +1356,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
-		_runCallbacks();
+		_runDeferredRenderCallbacks();
 	}
 
 	function _cleanUpMergedNodes() {
@@ -1492,11 +1468,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function _runCallbacks() {
-		runAfterRenderCallbacks();
-		runDeferredRenderCallbacks();
-	}
-
 	function _processMergeNodes(next: DNodeWrapper, mergeNodes: Node[]) {
 		const { merge } = _mountOptions;
 		if (merge && mergeNodes.length) {
@@ -1523,11 +1494,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
-		_idleCallbacks.push(() => {
-			const parentWNodeWrapper = getWNodeWrapper(childNodes[index].owningId);
-			checkDistinguishable(childNodes, index, parentWNodeWrapper);
-		});
+	function distinguishableCheck(childNodes: DNodeWrapper[], index: number) {
+		const parentWNodeWrapper = getWNodeWrapper(childNodes[index].owningId);
+		checkDistinguishable(childNodes, index, parentWNodeWrapper);
 	}
 
 	function createKeyMap(wrappers: DNodeWrapper[]): (string | number)[] | false {
@@ -1588,16 +1557,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 					instructions.push({ current: currentWrapper, next: nextWrapper });
 				} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-					has('dojo-debug') && current.length && registerDistinguishableCallback(next, newIndex);
+					has('dojo-debug') && current.length && distinguishableCheck(next, newIndex);
 					instructions.push({ current: undefined, next: nextWrapper });
 					newIndex++;
 				} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
-					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					has('dojo-debug') && distinguishableCheck(current, oldIndex);
 					instructions.push({ current: currentWrapper, next: undefined });
 					oldIndex++;
 				} else {
-					has('dojo-debug') && registerDistinguishableCallback(next, newIndex);
-					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					has('dojo-debug') && distinguishableCheck(next, newIndex);
+					has('dojo-debug') && distinguishableCheck(current, oldIndex);
 					instructions.push({ current: currentWrapper, next: undefined });
 					instructions.push({ current: undefined, next: nextWrapper });
 					oldIndex++;
@@ -1609,7 +1578,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			if (currentLength > oldIndex && newIndex >= nextLength) {
 				for (let i = oldIndex; i < currentLength; i++) {
-					has('dojo-debug') && registerDistinguishableCallback(current, i);
+					has('dojo-debug') && distinguishableCheck(current, i);
 					instructions.push({ current: current[i], next: undefined });
 				}
 			}
