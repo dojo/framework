@@ -3,7 +3,8 @@ import { WidgetBase } from './../WidgetBase';
 import { diffProperty } from './../decorators/diffProperty';
 
 export interface FocusProperties {
-	focus?: (() => boolean);
+	/** Function to determine if the widget should focus */
+	focus?: () => boolean;
 }
 
 export interface FocusMixin {
