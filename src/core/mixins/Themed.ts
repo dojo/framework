@@ -38,7 +38,7 @@ export interface ThemedProperties<T = ClassNames> {
 	theme?: Theme;
 	/** Map of widget keys and associated overriding classes */
 	classes?: Classes;
-	/** Extra classes for to be applied to the widget */
+	/** Extra classes to be applied to the widget */
 	extraClasses?: { [P in keyof T]?: string };
 }
 
