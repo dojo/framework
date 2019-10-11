@@ -1,6 +1,5 @@
-import { v } from '../../../../src/core/vdom';
+import { v, w, renderer } from '../../../../src/core/vdom';
 import WidgetBase from '../../../../src/core/WidgetBase';
-import Projector from '../../../../src/core/mixins/Projector';
 import Drag from '../../../../src/core/meta/Drag';
 
 class DragExample extends WidgetBase {
@@ -24,6 +23,5 @@ class DragExample extends WidgetBase {
 	}
 }
 
-const projector = new (Projector(DragExample))();
-
-projector.append();
+const r = renderer(() => w(DragExample, {}));
+r.mount();
