@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/supplemental.md
-commit 2d25590f3feeda753080f47c3bd1851f8e55bb1c
+commit adada1e2395d7cdf5e322bb6006415eb50257691
 -->
 
 当使用 `@dojo/framework/testing` 时，`harness()` 是最重要的 API，主要用于设置每一个测试并提供一个执行虚拟 DOM 断言和交互的上下文。目的在于当更新 `properties` 或 `children`，以及部件失效时，镜像部件的核心行为，并且不需要任何特殊或自定义逻辑。
@@ -97,21 +97,130 @@ Harness 会自动 mock 很多核心中间件，并注入到任何需要他们的
 
 当测试使用了 Dojo 中间件的部件时，有很多 mock 中间件可以使用。Mock 会导出一个 factory，该 factory 会创建一个受限作用域的 mock 中间件，会在每个测试中使用。
 
-#### Mock `node` 中间件
+#### Mock `breakpoint` 中间件
 
-使用 `@dojo/framework/testing/mocks/middleware/node` 中的 `createNodeMock` 可 mock 一个 node 中间件。要设置从 node mock 中返回的期望值，需要调用创建的 mock node 中间件，并传入 `key` 和期望的 DOM node。
+使用 `@dojo/framework/testing/mocks/middlware/breakpoint` 中的 `createBreakpointMock` 可手动控制 resize 事件来触发断点测试。
 
-```ts
-import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+考虑下面的部件，当激活 `LG` 断点时，它会显示附加 `h2`：
 
-// 创建一个 mock node 的中间件
-const mockNode = createNodeMock();
+> src/Breakpoint.tsx
 
-// mock 一个 DOM 节点
-const domNode = {};
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 
-// 调用 mock 中间件，并传入 key 和将返回的 DOM
-mockNode('key', domNode);
+const factory = create({ breakpoint });
+
+export default factory(function Breakpoint({ middleware: { breakpoint } }) {
+	const bp = breakpoint.get('root');
+	const isLarge = bp && bp.breakpoint === 'LG';
+
+	return (
+		<div key="root">
+			<h1>Header</h1>
+			{isLarge && <h2>Subtitle</h2>}
+			<div>Longer description</div>
+		</div>
+	);
+});
+```
+
+使用 mock 的 breakpoint 中间件上的 `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` 方法，测试中可以使用给定的值显式触发一个 resize 事件：
+
+> tests/unit/Breakpoint.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
+import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
+import Breakpoint from '../../src/Breakpoint';
+
+describe('Breakpoint', () => {
+	it('resizes correctly', () => {
+		const mockBreakpoint = createBreakpointMock();
+
+		const h = harness(() => <Breakpoint />, {
+			middleware: [[breakpoint, mockBreakpoint]]
+		});
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<div>Longer description</div>
+			</div>
+		));
+
+		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
+
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<h2>Subtitle</h2>
+				<div>Longer description</div>
+			</div>
+		));
+	});
+});
+```
+
+#### Mock `iCache` 中间件
+
+使用 `@dojo/framework/testing/mocks/middleware/icache` 中的 `createICacheMiddleware`，能让测试代码直接访问缓存中的项，而此 mock 为被测的小部件提供了足够的 icache 功能。当使用 `icache` 异步获取数据时特别有用。直接访问缓存让测试可以 `await` 部件，就如 `await` promise 一样。
+
+考虑以下部件，从一个 API 中获取数据：
+
+> src/MyWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import { icache } from '@dojo/framework/core/middleware/icache';
+import fetch from '@dojo/framework/shim/fetch';
+
+const factory = create({ icache });
+
+export default factory(function MyWidget({ middleware: { icache } }) {
+	const value = icache.getOrSet('users', async () => {
+		const response = await fetch('url');
+		return await response.json();
+	});
+
+	return value ? <div>{value}</div> : <div>Loading</div>;
+});
+```
+
+使用 mock 的 icache 中间件测试异步结果很简单：
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+const { describe, it, afterEach } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import { tsx } from '@dojo/framework/core/vdom';
+import * as sinon from 'sinon';
+import global from '@dojo/framework/shim/global';
+import icache from '@dojo/framework/core/middleware/icache';
+import createICacheMock from '@dojo/framework/testing/mocks/middleware/icache';
+import MyWidget from '../../src/MyWidget';
+
+describe('MyWidget', () => {
+	afterEach(() => {
+		sinon.restore();
+	});
+
+	it('test', async () => {
+		// stub 一个 fetch 调用，让返回一个已知的值
+		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
+
+		const mockICache = createICacheMock();
+		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
+		h.expect(() => <div>Loading</div>);
+
+		// 等待模拟缓存的异步方法
+		await mockICache('users');
+		h.expect(() => <pre>api data</pre>);
+	});
+});
 ```
 
 #### Mock `intersection` 中间件
@@ -161,6 +270,23 @@ describe('MyWidget', () => {
 		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
 	});
 });
+```
+
+#### Mock `node` 中间件
+
+使用 `@dojo/framework/testing/mocks/middleware/node` 中的 `createNodeMock` 可 mock 一个 node 中间件。要设置从 node mock 中返回的期望值，需要调用创建的 mock node 中间件，并传入 `key` 和期望的 DOM node。
+
+```ts
+import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+
+// 创建一个 mock node 的中间件
+const mockNode = createNodeMock();
+
+// mock 一个 DOM 节点
+const domNode = {};
+
+// 调用 mock 中间件，并传入 key 和将返回的 DOM
+mockNode('key', domNode);
 ```
 
 #### Mock `resize` 中间件
@@ -315,6 +441,48 @@ describe('MyWidget', () => {
      });
 });
 ```
+
+#### 自定义模拟的中间件
+
+已提供的模拟（mock）并未覆盖所有的测试场景。也可以创建自定义的模拟中间件。模拟中间件应该提供一个可重载的接口。无参的重载应该返回中间件的实现，它将被注入到被测的部件中。根据需要创建其他重载，以便为测试提供接口。
+
+例如，考虑框架中的 `icache` 模拟。这个模拟提供了以下重载：
+
+```ts
+function mockCache(): MiddlewareResult<any, any, any>;
+function mockCache(key: string): Promise<any>;
+function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
+```
+
+接收 `key` 的重载让测试可以直接访问缓存中的项。这个简短的示例演示了模拟如何同时包含中间件实现和测试接口；这使得模拟（mock）可以在部件和测试之间的搭起桥梁。
+
+```ts
+export function createMockMiddleware() {
+	const sharedData = new Map<string, any>();
+
+	const mockFactory = factory(() => {
+		// 实际的中间件实现；使用 `sharedData` 来搭起桥梁
+		return {
+			get(id: string): any {},
+			set(id: string, value: any): void {}
+		};
+	});
+
+	function mockMiddleware(): MiddlewareResult<any, any, any>;
+	function mockMiddleware(id: string): any;
+	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
+		if (id) {
+			// 直接访问 `shardData`
+			return sharedData.get(id);
+		} else {
+			// 向部件提供中间件的实现
+			return mockFactory();
+		}
+	}
+}
+```
+
+在 [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) 中有很多完整的模拟示例可供参考。
 
 ## 自定义比较
 
