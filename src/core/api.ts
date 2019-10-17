@@ -1,7 +1,5 @@
 import global from '../shim/global';
 
-global.__DOJO_SCOPE = '';
-
 // @ts-ignore
 const scope = __DOJO_SCOPE;
 
