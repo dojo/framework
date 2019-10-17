@@ -6407,7 +6407,7 @@ jsdomDescribe('vdom', () => {
 		beforeEach(() => {
 			global.dojo_test_scope = {};
 		});
-	
+
 		it('set rendering', () => {
 			assert.strictEqual(global.dojo_test_scope.rendering, undefined);
 			setRendering(true);
@@ -6415,7 +6415,7 @@ jsdomDescribe('vdom', () => {
 			setRendering(false);
 			assert.strictEqual(global.dojo_test_scope.rendering, false);
 		});
-	
+
 		it('block count', () => {
 			assert.strictEqual(global.dojo_test_scope.blocksPending, undefined);
 			incrementBlockCount();
@@ -6427,7 +6427,6 @@ jsdomDescribe('vdom', () => {
 			decrementBlockCount();
 			assert.strictEqual(global.dojo_test_scope.blocksPending, 0);
 		});
-
 	});
 
 	describe('focus', () => {
