@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/middleware/supplemental.md
-commit 64c125b997a939fbfa82b4210239a3121f7aeda8
+commit a53cb2224f75e05acf3d61507137cb44f2581618
 -->
 
 Dojo 提供了渲染中间件的概念，以帮助衔接响应式、函数部件与底层的命令式 DOM 结构。
@@ -205,6 +205,59 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   将提供的 `value` 设置给指定的 `key`。如果 `value` 是一个函数，则将调用它以获取要缓存的实际值。如果函数返回的是 promise，则会先缓存一个“pending”值，直到解析出最终的值。在所有场景中，一旦一个值可用并存储到缓存中，该部件将被标记为无效，这样就可以使用最终的值重新渲染。
 -   `clear()`
     -   清除当前在部件本地缓存中存储的所有值。
+
+可以使用两种方式为 `icache` 设置类型。一种方式是使用泛型来在调用的地方指定返回类型，对于 `getOrSet`，可以根据值类型推断出返回的类型，如果 `getOrSet` 的 `value` 是一个函数，则使用函数返回的类型推断出值类型。
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
+
+const factory = create({ icache });
+
+interface FetchResult {
+	foo: string;
+}
+
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache } }) {
+	// `results` will infer the type of the resolved promise, `FetchResult | undefined`
+	const results = icache.getOrSet('key', async () => {
+		const response = await fetch('url');
+		const body: FetchResult = await response.json();
+		return body;
+	});
+
+	return <div>{results}</div>;
+});
+```
+
+但是，这种方式没有为缓存的 key 提供任何类型信息。为 `icache` 设置类型的首选方式是使用 `createICacheMiddleware` 创建一个预先设置了类型的中间件。这样就允许传入一个接口来创建一个明确指定了类型的 `icache` 中间件，并为缓存的 key 提供了类型安全。
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createICacheMiddleware } from '@dojo/framework/core/middleware/icache';
+
+interface FetchResult {
+	foo: string;
+}
+
+interface MyIcacheWidgetState {
+	key: FetchResult;
+}
+
+const icache = createICacheMiddleware<MyIcacheWidgetState>();
+const factory = create({ icache });
+
+const MyIcacheWidget = factory(function MyIcacheWidget({ middleware: { icache } }) {
+	// `results` will be typed to `FetchResult | undefined` based on the `MyIcacheWidgetState`
+	const results = icache.getOrSet('key', async () => {
+		const response = await fetch('url');
+		const body: FetchResult = await response.json();
+		return body;
+	});
+
+	return <div>{results}</div>;
+});
+```
 
 ## `theme`
 
