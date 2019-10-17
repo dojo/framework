@@ -31,6 +31,7 @@ import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeF
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
+import { setRendering } from './api';
 
 declare global {
 	namespace JSX {
@@ -1379,6 +1380,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (sync) {
 			_runInvalidationQueue();
 		} else if (!_renderScheduled) {
+			setRendering(true);
 			_renderScheduled = global.requestAnimationFrame(() => {
 				_runInvalidationQueue();
 			});
@@ -1450,6 +1452,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_runDeferredRenderCallbacks();
+		setRendering(false);
 	}
 
 	function _cleanUpMergedNodes() {

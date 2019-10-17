@@ -2,6 +2,7 @@ import { Destroyable } from '../../core/Destroyable';
 import Map from '../../shim/Map';
 import WeakMap from '../../shim/WeakMap';
 import { WidgetMetaProperties, MetaBase } from '../interfaces';
+import { incrementBlockCount, decrementBlockCount } from '../api';
 
 export class Block extends Destroyable implements MetaBase {
 	private _moduleMap = new WeakMap<Function, any>();
@@ -24,12 +25,14 @@ export class Block extends Destroyable implements MetaBase {
 			}
 			const result = module(...args);
 			if (result && typeof result.then === 'function') {
+				incrementBlockCount();
 				result.then((result: any) => {
 					if (!valueMap) {
 						valueMap = new Map();
 						this._moduleMap.set(module, valueMap);
 					}
 					valueMap.set(argsString, result);
+					decrementBlockCount();
 					this._invalidate();
 				});
 				return null;
