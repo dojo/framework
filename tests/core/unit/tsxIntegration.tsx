@@ -47,7 +47,7 @@ registerSuite('tsx integration', {
 		const firstQuxRender = qux.__render__() as WNode;
 		assert.strictEqual(firstQuxRender.widgetConstructor, 'LazyFoo');
 	},
-	'typed children'() {
+	'function-based typed children'() {
 		const factory = create().children<{ left: () => RenderResult; right: () => RenderResult }>();
 		const Foo = factory(function Foo({ children }) {
 			const [c] = children();
@@ -72,5 +72,16 @@ registerSuite('tsx integration', {
 		// <Foo>{{ left: () => 'left'}}</Foo>;
 		// <Foo>{{ right: () => 'right'}}</Foo>;
 		// <Foo><div></div></Foo>;
+	},
+	'class-based widget with children'() {
+		class Foo extends WidgetBase<{ foo: string }> {
+			render() {
+				return this.children;
+			}
+		}
+
+		<Foo key="" foo="">
+			<div />
+		</Foo>;
 	}
 });

@@ -411,7 +411,7 @@ export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValu
 export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
 	(properties: W['properties'], children?: W['children'] extends any[] ? W['children'] : [W['children']]): WNode<W>;
 	new (): {
-		properties: W['properties'] & { __children__?: DNode | DNode[] };
+		__properties__: W['properties'] & { __children__?: DNode | DNode[] };
 	};
 	properties: W['properties'];
 	children: W['children'];
@@ -425,7 +425,7 @@ export interface WNodeFactory<W extends WNodeFactoryTypes> {
 			: W['children'] extends any[] ? W['children'] : [W['children']]
 	): WNode<W>;
 	new (): {
-		properties: W['properties'] & { __children__: W['children'] };
+		__properties__: W['properties'] & { __children__: W['children'] };
 	};
 	properties: W['properties'];
 	children: W['children'];
@@ -530,6 +530,11 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	 * Main internal function for dealing with widget rendering
 	 */
 	__render__(): RenderResult;
+
+	/**
+	 * property used for typing with tsx
+	 */
+	__properties__: P & { __children__?: DNode[] | DNode };
 }
 
 /**
