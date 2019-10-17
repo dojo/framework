@@ -21,8 +21,8 @@ export function decrementBlockCount() {
 	global[scope].blocksPending = blocksPending - 1;
 }
 
-export function registerBtrPath(path: string) {
-	const paths = global[scope].paths || [];
-	paths.push(path);
-	global[scope].paths = paths;
+export function registerBtrPath(path: string | string[]) {
+	const paths = Array.isArray(path) ? path : [path];
+	const currentPaths = global[scope].btrPaths || [];
+	global[scope].btrPaths = [...currentPaths, ...paths];
 }
