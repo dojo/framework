@@ -31,7 +31,6 @@ import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeF
 import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
-import { setRendering } from './api';
 
 declare global {
 	namespace JSX {
@@ -231,6 +230,27 @@ const NAMESPACE_XLINK = NAMESPACE_W3 + '1999/xlink';
 const WNODE = '__WNODE_TYPE';
 const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
+
+// @ts-ignore
+const scope = __DOJO_SCOPE;
+
+if (!global[scope]) {
+	global[scope] = {};
+}
+
+export function setRendering(value: boolean) {
+	global[scope].rendering = value;
+}
+
+export function incrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending + 1;
+}
+
+export function decrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending - 1;
+}
 
 export function isTextNode(item: any): item is Text {
 	return item && item.nodeType === 3;

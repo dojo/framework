@@ -2,7 +2,7 @@ import { Destroyable } from '../../core/Destroyable';
 import Map from '../../shim/Map';
 import WeakMap from '../../shim/WeakMap';
 import { WidgetMetaProperties, MetaBase } from '../interfaces';
-import { incrementBlockCount, decrementBlockCount } from '../api';
+import { incrementBlockCount, decrementBlockCount } from '../vdom';
 
 export class Block extends Destroyable implements MetaBase {
 	private _moduleMap = new WeakMap<Function, any>();

@@ -1,6 +1,7 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
+import global from '../../../src/shim/global';
 import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
@@ -17,7 +18,10 @@ import {
 	widgetInstanceMap,
 	v,
 	w,
-	dom as d
+	dom as d,
+	setRendering,
+	incrementBlockCount,
+	decrementBlockCount
 } from '../../../src/core/vdom';
 import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
@@ -6397,6 +6401,33 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(transitionStrategy.exit.calledWithExactly(node, 'exit', undefined));
 			});
 		});
+	});
+
+	describe('render hooks', () => {
+		beforeEach(() => {
+			global.dojo_test_scope = {};
+		});
+	
+		it('set rendering', () => {
+			assert.strictEqual(global.dojo_test_scope.rendering, undefined);
+			setRendering(true);
+			assert.strictEqual(global.dojo_test_scope.rendering, true);
+			setRendering(false);
+			assert.strictEqual(global.dojo_test_scope.rendering, false);
+		});
+	
+		it('block count', () => {
+			assert.strictEqual(global.dojo_test_scope.blocksPending, undefined);
+			incrementBlockCount();
+			assert.strictEqual(global.dojo_test_scope.blocksPending, 1);
+			incrementBlockCount();
+			assert.strictEqual(global.dojo_test_scope.blocksPending, 2);
+			decrementBlockCount();
+			assert.strictEqual(global.dojo_test_scope.blocksPending, 1);
+			decrementBlockCount();
+			assert.strictEqual(global.dojo_test_scope.blocksPending, 0);
+		});
+
 	});
 
 	describe('focus', () => {

@@ -1,7 +1,6 @@
-import { create, defer } from '../vdom';
+import { create, defer, decrementBlockCount, incrementBlockCount } from '../vdom';
 import cache from './cache';
 import icache from './icache';
-import { decrementBlockCount, incrementBlockCount } from '../api';
 
 const blockFactory = create({ defer, cache, icache });
 

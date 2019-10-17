@@ -1,4 +1,3 @@
-import './api';
 import './Destroyable';
 import './Evented';
 import './util';
