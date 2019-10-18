@@ -34,8 +34,11 @@ export interface Classes {
  * Properties required for the Themed mixin
  */
 export interface ThemedProperties<T = ClassNames> {
+	/** Overriding custom theme for the widget */
 	theme?: Theme;
+	/** Map of widget keys and associated overriding classes */
 	classes?: Classes;
+	/** Extra classes to be applied to the widget */
 	extraClasses?: { [P in keyof T]?: string };
 }
 
