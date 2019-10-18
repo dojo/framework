@@ -4,7 +4,20 @@ import { create, invalidator, getRegistry } from '../vdom';
 import injector from './injector';
 import Map from '../../shim/Map';
 import Injector from '../Injector';
-import { I18nProperties, LocaleData, LocalizedMessages, INJECTOR_KEY, registerI18nInjector } from '../mixins/I18n';
+import Registry from '../Registry';
+import { I18nProperties, LocalizedMessages, LocaleData } from '../interfaces';
+export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
+
+export const INJECTOR_KEY = '__i18n_injector';
+
+export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {
+	const injector = new Injector(localeData);
+	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
+		injector.setInvalidator(invalidator);
+		return () => injector;
+	});
+	return injector;
+}
 
 const factory = create({ invalidator, injector, getRegistry }).properties<I18nProperties>();
 
