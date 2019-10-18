@@ -11,8 +11,8 @@ registerSuite('tsx', {
 		const registryWrapper = new RegistryWrapper();
 		assert.strictEqual(registryWrapper.name, 'tag');
 		// These will always be undefined but show the type inference of properties.
-		registryWrapper.properties = {};
-		assert.isUndefined(registryWrapper.properties.key);
+		registryWrapper.__properties__ = {};
+		assert.isUndefined(registryWrapper.__properties__.key);
 	},
 	tsx: {
 		'tsx generate a VNode'() {

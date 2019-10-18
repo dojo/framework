@@ -36,7 +36,7 @@ declare global {
 	namespace JSX {
 		type Element = WNode;
 		interface ElementAttributesProperty {
-			properties: {};
+			__properties__: {};
 		}
 		interface IntrinsicElements {
 			[key: string]: VNodeProperties;
@@ -437,7 +437,8 @@ export const REGISTRY_ITEM = '__registry_item';
 
 export class FromRegistry<P> {
 	static type = REGISTRY_ITEM;
-	properties: P = {} as P;
+	/* tslint:disable-next-line:variable-name */
+	__properties__: P = {} as P;
 	name: string | undefined;
 }
 

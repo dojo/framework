@@ -90,6 +90,12 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	static _type = WIDGET_BASE_TYPE;
 
 	/**
+	 * property specifically for typing when using tsx
+	 */
+	/* tslint:disable-next-line:variable-name */
+	public __properties__!: P & WidgetProperties & { __children__?: DNode[] | DNode };
+
+	/**
 	 * children array
 	 */
 	private _children: (C | null)[];
