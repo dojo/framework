@@ -231,6 +231,27 @@ const WNODE = '__WNODE_TYPE';
 const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
 
+// @ts-ignore
+const scope = __DOJO_SCOPE;
+
+if (!global[scope]) {
+	global[scope] = {};
+}
+
+export function setRendering(value: boolean) {
+	global[scope].rendering = value;
+}
+
+export function incrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending + 1;
+}
+
+export function decrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending - 1;
+}
+
 export function isTextNode(item: any): item is Text {
 	return item && item.nodeType === 3;
 }
@@ -1380,6 +1401,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (sync) {
 			_runInvalidationQueue();
 		} else if (!_renderScheduled) {
+			setRendering(true);
 			_renderScheduled = global.requestAnimationFrame(() => {
 				_runInvalidationQueue();
 			});
@@ -1451,6 +1473,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_runDeferredRenderCallbacks();
+		setRendering(false);
 	}
 
 	function _cleanUpMergedNodes() {
