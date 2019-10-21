@@ -4,74 +4,15 @@ import Map from '../../shim/Map';
 import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
-import { Constructor, DNode, VNodeProperties } from './../interfaces';
+import { Constructor, DNode, VNodeProperties, LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 import { decorate } from '../util';
 
+export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
+
 export const INJECTOR_KEY = '__i18n_injector';
-
-export interface LocaleData {
-	/**
-	 * The locale for the widget. If not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
-	 * If specified, the widget's node will have a `lang` property set to the locale.
-	 */
-	locale?: string;
-
-	/**
-	 * An optional flag indicating the widget's text direction. If `true`, then the underlying node's `dir`
-	 * property is set to "rtl". If it is `false`, then the `dir` property is set to "ltr". Otherwise, the property
-	 * is not set.
-	 */
-	rtl?: boolean;
-}
-
-export interface I18nProperties extends LocaleData {
-	/**
-	 * An optional override for the bundle passed to the `localizeBundle`. If the override contains a `messages` object,
-	 * then it will completely replace the underlying bundle. Otherwise, a new bundle will be created with the additional
-	 * locale loaders.
-	 */
-	i18nBundle?: Bundle<Messages> | Map<Bundle<Messages>, Bundle<Messages>>;
-}
-
-/**
- * @private
- * An internal helper interface for defining locale and text direction attributes on widget nodes.
- */
-interface I18nVNodeProperties extends VNodeProperties {
-	dir: string;
-	lang: string;
-}
-
-export type LocalizedMessages<T extends Messages> = {
-	/**
-	 * Indicates whether the messages are placeholders while waiting for the actual localized messages to load.
-	 * This is always `false` if the associated bundle does not list any supported locales.
-	 */
-	readonly isPlaceholder: boolean;
-
-	/**
-	 * Formats an ICU-formatted message template for the represented bundle.
-	 *
-	 * @param key
-	 * The message key.
-	 *
-	 * @param options
-	 * The values to pass to the formatter.
-	 *
-	 * @return
-	 * The formatted string.
-	 */
-	format(key: string, options?: any): string;
-
-	/**
-	 * The localized messages if available, or either the default messages or a blank bundle depending on the
-	 * call signature for `localizeBundle`.
-	 */
-	readonly messages: T;
-};
 
 /**
  * interface for I18n functionality
@@ -92,6 +33,15 @@ export interface I18nMixin {
 	localizeBundle<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T>;
 
 	properties: I18nProperties;
+}
+
+/**
+ * @private
+ * An internal helper interface for defining locale and text direction attributes on widget nodes.
+ */
+interface I18nVNodeProperties extends VNodeProperties {
+	dir: string;
+	lang: string;
 }
 
 export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {

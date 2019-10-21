@@ -1,4 +1,4 @@
-import { Constructor, SupportedClassName } from './../interfaces';
+import { Theme, Classes, ClassNames, Constructor, SupportedClassName } from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -7,28 +7,7 @@ import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
 import { shallow } from './../diff';
 
-/**
- * A lookup object for available class names
- */
-export type ClassNames = {
-	[key: string]: string;
-};
-
-/**
- * A lookup object for available widget classes names
- */
-export interface Theme {
-	[key: string]: object;
-}
-
-/**
- * Classes property interface
- */
-export interface Classes {
-	[widgetKey: string]: {
-		[classKey: string]: SupportedClassName[];
-	};
-}
+export { Theme, Classes, ClassNames } from './../interfaces';
 
 /**
  * Properties required for the Themed mixin
