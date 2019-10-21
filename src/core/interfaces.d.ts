@@ -427,7 +427,7 @@ export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValu
 export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
 	(properties: W['properties'], children?: W['children'] extends any[] ? W['children'] : [W['children']]): WNode<W>;
 	new (): {
-		__properties__: W['properties'] & { __children__?: DNode | DNode[] };
+		__properties__: W['properties'] & { __children__?: DNode | DNode[] | (DNode | DNode[])[] };
 	};
 	properties: W['properties'];
 	children: W['children'];
@@ -473,7 +473,7 @@ export interface WNode<W extends WidgetBaseTypes = any> {
 	/**
 	 * DNode children
 	 */
-	children: any[];
+	children: DNode[];
 
 	/**
 	 * The type of node
