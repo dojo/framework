@@ -6405,27 +6405,27 @@ jsdomDescribe('vdom', () => {
 
 	describe('render hooks', () => {
 		beforeEach(() => {
-			global.dojo = {};
+			global.dojo_scope = {};
 		});
 
 		it('set rendering', () => {
-			assert.strictEqual(global.dojo.rendering, undefined);
+			assert.strictEqual(global.dojo_scope.rendering, undefined);
 			setRendering(true);
-			assert.strictEqual(global.dojo.rendering, true);
+			assert.strictEqual(global.dojo_scope.rendering, true);
 			setRendering(false);
-			assert.strictEqual(global.dojo.rendering, false);
+			assert.strictEqual(global.dojo_scope.rendering, false);
 		});
 
 		it('block count', () => {
-			assert.strictEqual(global.dojo.blocksPending, undefined);
+			assert.strictEqual(global.dojo_scope.blocksPending, undefined);
 			incrementBlockCount();
-			assert.strictEqual(global.dojo.blocksPending, 1);
+			assert.strictEqual(global.dojo_scope.blocksPending, 1);
 			incrementBlockCount();
-			assert.strictEqual(global.dojo.blocksPending, 2);
+			assert.strictEqual(global.dojo_scope.blocksPending, 2);
 			decrementBlockCount();
-			assert.strictEqual(global.dojo.blocksPending, 1);
+			assert.strictEqual(global.dojo_scope.blocksPending, 1);
 			decrementBlockCount();
-			assert.strictEqual(global.dojo.blocksPending, 0);
+			assert.strictEqual(global.dojo_scope.blocksPending, 0);
 		});
 	});
 
