@@ -232,7 +232,7 @@ const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
 
 // @ts-ignore
-const scope = __DOJO_SCOPE;
+const scope = typeof __DOJO_SCOPE === 'string' ? __DOJO_SCOPE : 'dojo_scope';
 
 if (!global[scope]) {
 	global[scope] = {};
