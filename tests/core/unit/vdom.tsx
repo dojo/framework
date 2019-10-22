@@ -3511,7 +3511,6 @@ jsdomDescribe('vdom', () => {
 						<div>
 							<button
 								onclick={() => {
-									console.log(`${value}1`);
 									icache.set('value', `${value}1`);
 								}}
 							>
@@ -3529,6 +3528,10 @@ jsdomDescribe('vdom', () => {
 				resolvers.resolve();
 				(root as any).children[0].children[1].children[0].click();
 				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>11</div></div></div></div>'
+				);
 				(root as any).children[0].children[0].click();
 				resolvers.resolve();
 				(root as any).children[0].children[0].click();
@@ -3541,7 +3544,7 @@ jsdomDescribe('vdom', () => {
 				resolvers.resolve();
 				assert.strictEqual(
 					root.outerHTML,
-					'<div><div><button>Increment Value</button><div><button>Click me</button><div>11111</div></div></div></div>'
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>111111</div></div></div></div>'
 				);
 			});
 
