@@ -1849,8 +1849,20 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 			rendered = Constructor({
 				id,
-				properties: () => next.node.properties,
-				children: () => next.node.children,
+				properties: () => {
+					const widgetMeta = widgetMetaMap.get(next.id);
+					if (widgetMeta) {
+						return widgetMeta.properties;
+					}
+					return next.node.properties
+				},
+				children: () => {
+					const widgetMeta = widgetMetaMap.get(next.id);
+					if (widgetMeta) {
+						return widgetMeta.children;
+					}
+					return next.node.children;
+				},
 				middleware: widgetMeta.middleware
 			});
 			widgetMeta.rendering = false;
@@ -1928,6 +1940,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(next.id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
+				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, next.properties);
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
@@ -1949,8 +1962,20 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					widgetMeta.dirty = false;
 					rendered = Constructor({
 						id: next.id,
-						properties: () => next.node.properties,
-						children: () => next.node.children,
+						properties: () => {
+							const widgetMeta = widgetMetaMap.get(next.id);
+							if (widgetMeta) {
+								return widgetMeta.properties;
+							}
+							return next.node.properties
+						},
+						children: () => {
+							const widgetMeta = widgetMetaMap.get(next.id);
+							if (widgetMeta) {
+								return widgetMeta.children;
+							}
+							return next.node.children;
+						},
 						middleware: widgetMeta.middleware
 					});
 					if (widgetMeta.deferRefs > 0) {
