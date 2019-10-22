@@ -11,7 +11,6 @@ import i18n, {
 	getCachedMessages,
 	getMessageFormatter,
 	invalidate,
-	Messages,
 	observeLocale,
 	setLocaleMessages,
 	switchLocale,
@@ -74,88 +73,82 @@ registerSuite('i18n', {
 						);
 					},
 
-					'assert tokens replaced'() {
-						return i18n(partyBundle).then(() => {
-							const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
-								host: 'Nita',
-								guest: 'Bryan'
-							});
-							assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
-
-							assert.throws(
-								() => {
-									formatMessage(partyBundle, 'simpleGuestInfo', {
-										host: 'Nita'
-									});
-								},
-								Error,
-								'Missing property guest'
-							);
+					async 'assert tokens replaced'() {
+						await i18n(partyBundle);
+						const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
+							host: 'Nita',
+							guest: 'Bryan'
 						});
+						assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+
+						assert.throws(
+							() => {
+								formatMessage(partyBundle, 'simpleGuestInfo', {
+									host: 'Nita'
+								});
+							},
+							Error,
+							'Missing property guest'
+						);
 					},
 
-					'assert message without tokens'() {
-						return i18n(bundle).then(() => {
-							const formatted = formatMessage(bundle, 'hello');
-							assert.strictEqual(formatted, 'Hello');
-						});
+					async 'assert message without tokens'() {
+						await i18n(bundle);
+						const formatted = formatMessage(bundle, 'hello');
+						assert.strictEqual(formatted, 'Hello');
 					},
 
-					'assert default locale used'() {
+					async 'assert default locale used'() {
 						switchLocale('ar');
-						return i18n(bundle, 'ar').then(() => {
-							const formatted = formatMessage(bundle, 'hello');
-							assert.strictEqual(formatted, 'السلام عليكم');
-						});
+						await i18n(bundle, 'ar');
+						const formatted = formatMessage(bundle, 'hello');
+						assert.strictEqual(formatted, 'السلام عليكم');
 					}
 				}
 			},
 
 			'with CLDR data': {
-				'assert without a locale'() {
-					return i18n(partyBundle).then(() => {
-						let formatted = formatMessage(partyBundle, 'guestInfo', {
-							host: 'Nita',
-							guestCount: 0
-						});
-						assert.strictEqual(formatted, 'Nita does not host a party.');
-
-						formatted = formatMessage(partyBundle, 'guestInfo', {
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 1,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
-
-						formatted = formatMessage(partyBundle, 'guestInfo', {
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 2,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
-
-						formatted = formatMessage(partyBundle, 'guestInfo', {
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 42,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+				async 'assert without a locale'() {
+					await i18n(partyBundle);
+					let formatted = formatMessage(partyBundle, 'guestInfo', {
+						host: 'Nita',
+						guestCount: 0
 					});
+					assert.strictEqual(formatted, 'Nita does not host a party.');
+
+					formatted = formatMessage(partyBundle, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 1,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+					formatted = formatMessage(partyBundle, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 2,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+					formatted = formatMessage(partyBundle, 'guestInfo', {
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 42,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
 				},
 
-				'assert supported locale'() {
-					return i18n(bundle, 'ar').then(() => {
-						assert.strictEqual(formatMessage(bundle, 'hello', {}, 'ar'), 'السلام عليكم');
-					});
+				async 'assert supported locale'() {
+					await i18n(bundle, 'ar');
+					assert.strictEqual(formatMessage(bundle, 'hello', {}, 'ar'), 'السلام عليكم');
 				},
 
-				'assert unsupported locale'() {
-					return i18n(bundle, 'fr').then(() => {
-						assert.strictEqual(formatMessage(bundle, 'hello', {}, 'fr'), 'Hello');
-					});
+				async 'assert unsupported locale'() {
+					await i18n(bundle, 'fr');
+					assert.strictEqual(formatMessage(bundle, 'hello', {}, 'fr'), 'Hello');
 				}
 			}
 		},
@@ -165,18 +158,17 @@ registerSuite('i18n', {
 				assert.isUndefined(getCachedMessages(bundle, 'ar'));
 			},
 
-			'assert supported locale'() {
-				return i18n(bundle, 'ar').then(() => {
-					assert.deepEqual(
-						getCachedMessages(bundle, 'ar'),
-						{
-							hello: 'السلام عليكم',
-							helloReply: 'و عليكم السام',
-							goodbye: 'مع السلامة'
-						},
-						'Locale messages can be retrieved with a bundle object.'
-					);
-				});
+			async 'assert supported locale'() {
+				await i18n(bundle, 'ar');
+				assert.deepEqual(
+					getCachedMessages(bundle, 'ar'),
+					{
+						hello: 'السلام عليكم',
+						helloReply: 'و عليكم السام',
+						goodbye: 'مع السلامة'
+					},
+					'Locale messages can be retrieved with a bundle object.'
+				);
 			},
 
 			'assert unsupported locale'(this: any) {
@@ -196,15 +188,24 @@ registerSuite('i18n', {
 				);
 			},
 
-			'assert most specific supported locale returned'() {
-				return i18n(bundle, 'ar').then(() => {
-					const cached = getCachedMessages(bundle, 'ar');
-					assert.deepEqual(
-						getCachedMessages(bundle, 'ar-IR'),
-						cached,
-						'Messages are returned for the most specific supported locale.'
-					);
-				});
+			async 'assert most specific supported locale returned'() {
+				await i18n(bundle, 'ar');
+				const cached = getCachedMessages(bundle, 'ar');
+				assert.deepEqual(
+					getCachedMessages(bundle, 'ar-IR'),
+					cached,
+					'Messages are returned for the most specific supported locale.'
+				);
+			},
+
+			async 'assert locale order does not effect result'() {
+				await i18n(bundle, 'ar-IR');
+				const cached = getCachedMessages(bundle, 'ar-IR');
+				assert.deepEqual(
+					getCachedMessages(bundle, 'ar'),
+					cached,
+					'Caching is not affected by the order in which locale messages are requested'
+				);
 			}
 		},
 
@@ -229,208 +230,206 @@ registerSuite('i18n', {
 						);
 					},
 
-					'assert tokens replaced'() {
-						return i18n(partyBundle).then(() => {
-							const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
-							const formatted = formatter({
-								host: 'Nita',
-								guest: 'Bryan'
-							});
-							assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
-
-							assert.throws(
-								() => {
-									formatter({
-										host: 'Nita'
-									});
-								},
-								Error,
-								'Missing property guest'
-							);
+					async 'assert tokens replaced'() {
+						await i18n(partyBundle);
+						const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
+						const formatted = formatter({
+							host: 'Nita',
+							guest: 'Bryan'
 						});
+						assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+
+						assert.throws(
+							() => {
+								formatter({
+									host: 'Nita'
+								});
+							},
+							Error,
+							'Missing property guest'
+						);
 					},
 
-					'assert message without tokens'() {
-						return i18n(bundle).then(() => {
-							const formatter = getMessageFormatter(bundle, 'hello');
-							assert.strictEqual(formatter(), 'Hello');
-						});
+					async 'assert message without tokens'() {
+						await i18n(bundle);
+						const formatter = getMessageFormatter(bundle, 'hello');
+						assert.strictEqual(formatter(), 'Hello');
+					},
+
+					async 'assert unsupported locale'() {
+						await i18n(bundle, 'en-GB');
+						const formatter = getMessageFormatter(bundle, 'hello');
+						assert.strictEqual(formatter(), 'Hello');
+					},
+
+					async 'assert partially-supported locale'() {
+						await i18n(bundle, 'ar-IR');
+						const formatter = getMessageFormatter(bundle, 'hello', 'ar-IR');
+						assert.strictEqual(formatter(), 'السلام عليكم');
 					}
 				}
 			},
 
 			'with CLDR data': {
-				'assert without a locale'() {
-					return i18n(partyBundle).then(() => {
-						const formatter = getMessageFormatter(partyBundle, 'guestInfo');
-						let formatted = formatter({
-							host: 'Nita',
-							guestCount: 0
-						});
-						assert.strictEqual(formatted, 'Nita does not host a party.');
-
-						formatted = formatter({
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 1,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
-
-						formatted = formatter({
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 2,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
-
-						formatted = formatter({
-							host: 'Nita',
-							gender: 'female',
-							guestCount: 42,
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+				async 'assert without a locale'() {
+					await i18n(partyBundle);
+					const formatter = getMessageFormatter(partyBundle, 'guestInfo');
+					let formatted = formatter({
+						host: 'Nita',
+						guestCount: 0
 					});
+					assert.strictEqual(formatted, 'Nita does not host a party.');
+
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 1,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 2,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+					formatted = formatter({
+						host: 'Nita',
+						gender: 'female',
+						guestCount: 42,
+						guest: 'Bryan'
+					});
+					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
 				},
 
-				'assert supported locale'() {
-					return i18n(bundle, 'ar').then(() => {
-						const formatter = getMessageFormatter(bundle, 'hello', 'ar');
-						assert.strictEqual(formatter(), 'السلام عليكم');
-					});
+				async 'assert supported locale'() {
+					await i18n(bundle, 'ar');
+					const formatter = getMessageFormatter(bundle, 'hello', 'ar');
+					assert.strictEqual(formatter(), 'السلام عليكم');
 				},
 
-				'assert unsupported locale'() {
-					return i18n(bundle, 'fr').then(() => {
-						const formatter = getMessageFormatter(bundle, 'hello', 'fr');
-						assert.strictEqual(formatter(), 'Hello');
-					});
+				async 'assert unsupported locale'() {
+					await i18n(bundle, 'fr');
+					const formatter = getMessageFormatter(bundle, 'hello', 'fr');
+					assert.strictEqual(formatter(), 'Hello');
+				},
+
+				async 'assert partially-supported locale'() {
+					await i18n(bundle, 'ar-IR');
+					const formatter = getMessageFormatter(bundle, 'hello', 'ar-IR');
+					assert.strictEqual(formatter(), 'السلام عليكم');
 				}
 			}
 		},
 
 		i18n: {
-			'assert system locale used as default'() {
-				return i18n(bundle).then(function(messages: Messages) {
-					assert.deepEqual(messages, {
+			async 'assert system locale used as default'() {
+				const messages = await i18n(bundle);
+				assert.deepEqual(messages, {
+					hello: 'Hello',
+					helloReply: 'Hello',
+					goodbye: 'Goodbye'
+				});
+			},
+
+			async 'assert with string locale'() {
+				const messages = await i18n(bundle, 'ar');
+				assert.deepEqual(
+					messages,
+					{
+						hello: 'السلام عليكم',
+						helloReply: 'و عليكم السام',
+						goodbye: 'مع السلامة'
+					},
+					'Locale dictionary is used.'
+				);
+			},
+
+			async 'assert with nested locale'() {
+				const messages = await i18n(bundle, 'ar-JO');
+				// ar-JO is missing "goodbye" key
+				assert.deepEqual(
+					messages,
+					{
+						hello: 'مرحبا',
+						helloReply: 'مرحبتين',
+						goodbye: 'مع السلامة'
+					},
+					'Most specific dictionary is used with fallbacks provided.'
+				);
+			},
+
+			async 'assert with invalid locale'() {
+				const messages = await i18n(bundle, 'ar-JO-');
+				assert.deepEqual(
+					messages,
+					{
+						hello: 'مرحبا',
+						helloReply: 'مرحبتين',
+						goodbye: 'مع السلامة'
+					},
+					'Only non-empty locale segments are considered.'
+				);
+			},
+
+			async 'assert unsupported locale'() {
+				const messages = await i18n(bundle, 'fr-CA');
+				assert.deepEqual(messages, {
+					hello: 'Hello',
+					helloReply: 'Hello',
+					goodbye: 'Goodbye'
+				});
+			},
+
+			async 'assert bundle without locales'() {
+				const localeless = { messages: bundle.messages };
+
+				const messages = await i18n(localeless, 'ar');
+				assert.deepEqual(
+					messages,
+					{
 						hello: 'Hello',
 						helloReply: 'Hello',
 						goodbye: 'Goodbye'
-					});
-				});
+					},
+					'Default messages returned when bundle provides no locales.'
+				);
 			},
 
-			'assert with string locale'() {
-				return i18n(bundle, 'ar').then(function(messages: Messages) {
-					assert.deepEqual(
-						messages,
-						{
-							hello: 'السلام عليكم',
-							helloReply: 'و عليكم السام',
-							goodbye: 'مع السلامة'
-						},
-						'Locale dictionary is used.'
-					);
-				});
+			async 'assert messages cached'() {
+				await i18n(bundle, 'ar-JO');
+				const messages = await i18n(bundle, 'ar-JO');
+				const cached = getCachedMessages(bundle, 'ar-JO');
+				assert.strictEqual(cached, messages as any, 'Message dictionaries are cached.');
 			},
 
-			'assert with nested locale'() {
-				return i18n(bundle, 'ar-JO').then(function(messages: Messages) {
-					// ar-JO is missing "goodbye" key
-					assert.deepEqual(
-						messages,
-						{
-							hello: 'مرحبا',
-							helloReply: 'مرحبتين',
-							goodbye: 'مع السلامة'
-						},
-						'Most specific dictionary is used with fallbacks provided.'
-					);
-				});
-			},
+			async 'assert message dictionaries are frozen'() {
+				await i18n(bundle, 'ar-JO');
+				const cached = getCachedMessages(bundle, 'ar-JO');
 
-			'assert with invalid locale'() {
-				return i18n(bundle, 'ar-JO-').then(function(messages: Messages) {
-					assert.deepEqual(
-						messages,
-						{
-							hello: 'مرحبا',
-							helloReply: 'مرحبتين',
-							goodbye: 'مع السلامة'
-						},
-						'Only non-empty locale segments are considered.'
-					);
-				});
-			},
-
-			'assert unsupported locale'() {
-				return i18n(bundle, 'fr-CA').then(function(messages: Messages) {
-					assert.deepEqual(messages, {
-						hello: 'Hello',
-						helloReply: 'Hello',
-						goodbye: 'Goodbye'
-					});
-				});
-			},
-
-			'assert bundle without locales'() {
-				const { messages } = bundle;
-				const localeless = { messages };
-
-				return i18n(localeless, 'ar').then(function(messages: Messages) {
-					assert.deepEqual(
-						messages,
-						{
-							hello: 'Hello',
-							helloReply: 'Hello',
-							goodbye: 'Goodbye'
-						},
-						'Default messages returned when bundle provides no locales.'
-					);
-				});
-			},
-
-			'assert messages cached'() {
-				return i18n(bundle, 'ar-JO')
-					.then(function() {
-						return i18n(bundle, 'ar-JO');
-					})
-					.then((messages: Messages) => {
-						const cached = getCachedMessages(bundle, 'ar-JO');
-
-						assert.strictEqual(cached, messages as any, 'Message dictionaries are cached.');
-					});
-			},
-
-			'assert message dictionaries are frozen'() {
-				return i18n(bundle, 'ar-JO').then(function() {
-					const cached = getCachedMessages(bundle, 'ar-JO');
-
-					assert.throws(() => {
-						cached!.hello = 'Hello';
-					});
+				assert.throws(() => {
+					cached!.hello = 'Hello';
 				});
 			}
 		},
 
 		invalidate: {
-			'assert with a bundle'() {
-				return i18n(bundle, 'ar').then((messages: Messages) => {
-					invalidate(bundle);
-					assert.isUndefined(
-						getCachedMessages(bundle, 'ar'),
-						'The cache is invalidated for the specified bundle.'
-					);
-				});
+			async 'assert with a bundle'() {
+				await i18n(bundle, 'ar');
+				invalidate(bundle);
+				assert.isUndefined(
+					getCachedMessages(bundle, 'ar'),
+					'The cache is invalidated for the specified bundle.'
+				);
 			},
 
-			'assert without a bundle'() {
-				return i18n(bundle, 'ar').then((messages: Messages) => {
-					invalidate();
-					assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for all bundles.');
-				});
+			async 'assert without a bundle'() {
+				await i18n(bundle, 'ar');
+				invalidate();
+				assert.isUndefined(getCachedMessages(bundle, 'ar'), 'The cache is invalidated for all bundles.');
 			}
 		},
 
