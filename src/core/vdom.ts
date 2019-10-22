@@ -1790,6 +1790,27 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return { middlewares: results, ids: middlewareIds };
 	}
 
+	function createWidgetOptions(id: string, middleware: any) {
+		return {
+			id,
+			properties: () => {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.properties;
+				}
+				return {};
+			},
+			children: () => {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.children;
+				}
+				return {};
+			},
+			middleware
+		};
+	}
+
 	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult | false {
 		let {
 			node: { widgetConstructor }
@@ -1847,24 +1868,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				invalidate = widgetMeta.invalidator;
 			}
 
-			rendered = Constructor({
-				id,
-				properties: () => {
-					const widgetMeta = widgetMetaMap.get(next.id);
-					if (widgetMeta) {
-						return widgetMeta.properties;
-					}
-					return next.node.properties
-				},
-				children: () => {
-					const widgetMeta = widgetMetaMap.get(next.id);
-					if (widgetMeta) {
-						return widgetMeta.children;
-					}
-					return next.node.children;
-				},
-				middleware: widgetMeta.middleware
-			});
+			rendered = Constructor(createWidgetOptions(id, widgetMeta.middleware));
 			widgetMeta.rendering = false;
 			if (widgetMeta.deferRefs > 0) {
 				return false;
@@ -1960,24 +1964,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					_idToChildrenWrappers.delete(next.id);
 					didRender = true;
 					widgetMeta.dirty = false;
-					rendered = Constructor({
-						id: next.id,
-						properties: () => {
-							const widgetMeta = widgetMetaMap.get(next.id);
-							if (widgetMeta) {
-								return widgetMeta.properties;
-							}
-							return next.node.properties
-						},
-						children: () => {
-							const widgetMeta = widgetMetaMap.get(next.id);
-							if (widgetMeta) {
-								return widgetMeta.children;
-							}
-							return next.node.children;
-						},
-						middleware: widgetMeta.middleware
-					});
+					rendered = Constructor(createWidgetOptions(next.id, widgetMeta.middleware));
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}
