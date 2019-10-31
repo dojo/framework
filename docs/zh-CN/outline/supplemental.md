@@ -69,7 +69,7 @@ Dojo 部件可以是一个渲染函数工厂或者 TypeScript 类，通常包含
 
 虽然部件的 CSS 模块可以完全封装自身的样式，但通常也需要一些灵活性。部件可以在应用程序的不同配置下使用，每个配置都有自己独特的外观需求。Dojo 提供了覆盖特定样式的能力以满足这个需求。
 
-为了支持应用程序层面外观的一致性，可以通过[主题](/learn/overview/user-experience#theming)进一步控制部件的样式。
+为了支持应用程序层面外观的一致性，可以通过[主题](/learn/overview/用户体验主题)进一步控制部件的样式。
 
 详见 [Dojo 样式和主题参考文档](/learn/styling/introduction)，了解如何为单个部件设置样式。
 
@@ -139,7 +139,7 @@ Dojo 的样式管道使用 CSS 模块将样式规则封装到特定的部件中�
 
 通过[部件套件](https://github.com/dojo/widgets/blob/master/README.md)，Dojo 提供了一些现成的 UI 组件。开发人员可以立即使用这些部件制作许多常见的页面，如 combobox、button、list、tab、text input 和 calendar 等部件。
 
-Dojo 的部件支持[国际化、可访问性](/learn/overview/accessibility-and-internationalization)和[主题](/learn/overview/user-experience#theming)，让开发人员在无需自定义 UI 组件的情况下，能够灵活的交付应用程序专有的用户体验。
+Dojo 的部件支持[国际化、可访问性](/learn/overview/可访问性与国际化)和[主题](/learn/overview/用户体验主题)，让开发人员在无需自定义 UI 组件的情况下，能够灵活的交付应用程序专有的用户体验。
 
 ## 导航路由
 
@@ -161,7 +161,7 @@ Dojo 的路由系统允许将 URL 的子路径注册为路由，以链接到某�
 
 类似于在传统 HTML 页面中使用的锚点，应用程序可以使用与 Outlet 关联的 Link 部件向用户提供导航选项。
 
-当使用路由时，Dojo 的构建系统能为应用程序中的所有顶级路由[自动生成单独的包](/learn/overview/efficiency-and-performance#automated-layering)。然后可以根据需要将每个包独立的交付给用户。
+当使用路由时，Dojo 的构建系统能为应用程序中的所有顶级路由[自动生成单独的包](/learn/overview/效率和性能#自动分层)。然后可以根据需要将每个包独立的交付给用户。
 
 详见 [Dojo 路由参考指南](/learn/routing/introduction)，了解如何在自己的应用程序中实现路由。
 
@@ -191,7 +191,7 @@ Dojo 将 DOM 从应用程序中抽象出来，推荐使用响应式状态流来�
 
 ### 自动分层
 
-当使用 Dojo 的[路由系统](/learn/overview/user-experience#navigational-routing)时，应用程序可以从自动分层和打包中获益。应用程序中的每个顶级路由都成为一个单独的层，Dojo 的构建系统会自动打包每层内容。这样就可以对层分离，以及打包资源，而不需要配置额外的工具链。这种自动化方案有一处折衷，即在每个包中都内联和复制了跨多个层的公共依赖项。
+当使用 Dojo 的[路由系统](/learn/overview/用户体验#导航路由)时，应用程序可以从自动分层和打包中获益。应用程序中的每个顶级路由都成为一个单独的层，Dojo 的构建系统会自动打包每层内容。这样就可以对层分离，以及打包资源，而不需要配置额外的工具链。这种自动化方案有一处折衷，即在每个包中都内联和复制了跨多个层的公共依赖项。
 
 ### 声明分层
 
