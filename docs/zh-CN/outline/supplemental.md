@@ -53,13 +53,13 @@ Dojo 中的部件与 DOM 元素类似，是 Dojo 应用程序中封装的核心�
 
 类似地，并非 DOM 中的所有元素都对用户可见，Dojo 部件不仅提供用户界面，也可以实现应用程序的所有幕后需求。
 
-详见[创建 Dojo 部件参考文档](/learn/creating-widgets/widget-fundamentals)，了解如何在应用程序中创建部件。
+详见[创建 Dojo 部件参考文档](/learn/creating-widgets/部件的基本原理)，了解如何在应用程序中创建部件。
 
 ## TypeScript 模块
 
-Dojo 部件可以是一个渲染函数工厂或者 TypeScript 类，通常包含在单个 TypeScript 模块中。该模块封装了组成部件的大部分内容，包括它的行为以及[虚拟 DOM](/learn/creating-widgets/rendering-widgets#working-with-the-vdom) 的语义化表示。
+Dojo 部件可以是一个渲染函数工厂或者 TypeScript 类，通常包含在单个 TypeScript 模块中。该模块封装了组成部件的大部分内容，包括它的行为以及[虚拟 DOM](/learn/creating-widgets/渲染部件#使用-VDOM) 的语义化表示。
 
-部件通过[属性](/learn/creating-widgets/configuring-widgets-through-properties)接口向外部消费者提供 API。这个接口既可包含状态字段列表，在渲染时注入到部件中；也可以包含函数，当事件发生时，部件需要通知应用程序的其他部分时调用，比如部件状态的变更。
+部件通过[属性](/learn/creating-widgets/通过属性配置部件)接口向外部消费者提供 API。这个接口既可包含状态字段列表，在渲染时注入到部件中；也可以包含函数，当事件发生时，部件需要通知应用程序的其他部分时调用，比如部件状态的变更。
 
 ## CSS 模块
 
@@ -108,9 +108,9 @@ Dojo 部件可以是一个渲染函数工厂或者 TypeScript 类，通常包含
 
 ## Dojo 的状态管理
 
-对于最[基本的状态管理](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state)需求，部件可以使用本地变量管理自身的状态。虽然这种方法有助于隔离和封装，但它只适用于非常简单的用例，如只在应用程序中出现一次的部件，或者与应用程序处理的所有其他状态都断开了连接的部件。
+对于最[基本的状态管理](/learn/creating-widgets/状态管理#基础自封装的部件状态)需求，部件可以使用本地变量管理自身的状态。虽然这种方法有助于隔离和封装，但它只适用于非常简单的用例，如只在应用程序中出现一次的部件，或者与应用程序处理的所有其他状态都断开了连接的部件。
 
-随着在部件间共享状态的需求增加，Dojo 支持响应式的控制反转。将状态提升到父容器部件中，然后使用子部件的 [properties 接口](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties)注入到子部件中。如果需要，这种状态提升可以横穿整个部件层级，将状态集中在应用程序根部件中，然后将部分状态注入到相关的子分支中。
+随着在部件间共享状态的需求增加，Dojo 支持响应式的控制反转。将状态提升到父容器部件中，然后使用子部件的 [properties 接口](/learn/creating-widgets/状态管理#中级传入部件属性)注入到子部件中。如果需要，这种状态提升可以横穿整个部件层级，将状态集中在应用程序根部件中，然后将部分状态注入到相关的子分支中。
 
 对于更复杂的需求，或者对于较深的部件层级且不希望在不相关的中间层传递状态，则外部的数据存储可能是最好的方法。集中的数据存储能够帮助应用程序处理大量的状态，允许复杂的状态编辑操作，或者在多处请求相同的状态子集。
 
@@ -173,7 +173,7 @@ Dojo 的路由系统允许将 URL 的子路径注册为路由，以链接到某�
 
 近年来，随着 web 应用程序越来越复杂，浏览器已通过 DOM 性能优化做出了回应，针对动态内容作了优化。然而，为了渲染用户界面，web 应用程序仍然需要与一套几十年不变的命令式 API 交互。围绕响应式数据传播而设计的现代 web 应用程序需要一种更高效的方式，将用户界面转换为网页的 DOM。
 
-Dojo 将 DOM 从应用程序中抽象出来，推荐使用响应式状态流来最小化应用程序的样板文件，同时提高了渲染性能。部件会在渲染函数中输出虚拟节点，这些渲染函数使用[虚拟 DOM](/learn/creating-widgets/rendering-widgets#working-with-the-vdom) 描述部件的结构层级。然后，框架以尽可能高效的方式处理 VDOM 的[渲染](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom)，只会影响实际需要修改的 DOM 元素。
+Dojo 将 DOM 从应用程序中抽象出来，推荐使用响应式状态流来最小化应用程序的样板文件，同时提高了渲染性能。部件会在渲染函数中输出虚拟节点，这些渲染函数使用[虚拟 DOM](/learn/creating-widgets/渲染部件#使用-VDOM) 描述部件的结构层级。然后，框架以尽可能高效的方式处理 VDOM 的[渲染](/learn/creating-widgets/渲染部件#渲染到-DOM-中)，只会影响实际需要修改的 DOM 元素。
 
 需要从 DOM 中获取具体信息来实现其需求的应用程序，Dojo 通过[中间件](/learn/middleware/introduction)系统提供了另一种 DOM 抽象层。Dojo 中间件以一致的方式解决了这些问题，并仍然支持横跨应用程序的响应式数据流。
 

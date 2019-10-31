@@ -435,7 +435,7 @@ import store from '@dojo/framework/core/middleware/store';
 
 ## `focus`
 
-组合使用 [VDOM focus 原生方法](/learn/creating-widgets/enabling-interactivity#handling-focus) ，允许部件检查和控制输出的 DOM 间的焦点。
+组合使用 [VDOM focus 原生方法](/learn/creating-widgets/支持交互#处理-focus) ，允许部件检查和控制输出的 DOM 间的焦点。
 
 **API:**
 

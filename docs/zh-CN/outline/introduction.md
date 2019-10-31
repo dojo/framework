@@ -11,15 +11,15 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 ## 管理复杂的应用程序
 
--   开发[称为 **Widget** 的简单且模块化的组件](/learn/creating-widgets/widget-fundamentals#basic-widget-structure)，这些组件可通过多种方式组装，以实现日益复杂的需求。
--   使用[响应式的状态管理和数据流](/learn/creating-widgets/managing-state)来连接部件，当应用程序的状态更改时，Dojo 框架就可以高效地渲染更新。
+-   开发[称为 **Widget** 的简单且模块化的组件](/learn/creating-widgets/部件的基本原理#基本的部件结构)，这些组件可通过多种方式组装，以实现日益复杂的需求。
+-   使用[响应式的状态管理和数据流](/learn/creating-widgets/状态管理)来连接部件，当应用程序的状态更改时，Dojo 框架就可以高效地渲染更新。
 -   使用[集中的、面向命令的数据存储](/learn/stores/introduction)来管理高级的应用程序状态。
 -   允许用户使用[声明式路由](/learn/routing/route-configuration)在单页面应用程序（SPA）内导航，并支持跟踪历史记录。
 -   通过功能切换检测来禁用处于开发阶段的功能——甚至在构建时删除未使用的模块，缩减应用程序的交付大小。编写适合在浏览器或服务器上运行的程序。
 
 ## 创建高效的应用程序
 
--   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/rendering-widgets#working-with-the-vdom)声明部件结构，避免高昂的 DOM 操作和布局抖动。
+-   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/渲染部件#使用-VDOM)声明部件结构，避免高昂的 DOM 操作和布局抖动。
 -   简化[资源分层和绑定](/learn/building/creating-bundles)，缩减用户实际需要的应用程序交互时间（Time-to-Interactive）。当模块及其依赖跨多个绑定时，Dojo 框架能自动将 import 转换为延迟加载。
 
 ## 创建全面的应用程序
