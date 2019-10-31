@@ -69,7 +69,7 @@ Dojo 部件可以是一个渲染函数工厂或者 TypeScript 类，通常包含
 
 虽然部件的 CSS 模块可以完全封装自身的样式，但通常也需要一些灵活性。部件可以在应用程序的不同配置下使用，每个配置都有自己独特的外观需求。Dojo 提供了覆盖特定样式的能力以满足这个需求。
 
-为了支持应用程序层面外观的一致性，可以通过[主题](/learn/overview/用户体验主题)进一步控制部件的样式。
+为了支持应用程序层面外观的一致性，可以通过[主题](/learn/overview/用户体验#主题)进一步控制部件的样式。
 
 详见 [Dojo 样式和主题参考文档](/learn/styling/introduction)，了解如何为单个部件设置样式。
 
@@ -139,7 +139,7 @@ Dojo 的样式管道使用 CSS 模块将样式规则封装到特定的部件中�
 
 通过[部件套件](https://github.com/dojo/widgets/blob/master/README.md)，Dojo 提供了一些现成的 UI 组件。开发人员可以立即使用这些部件制作许多常见的页面，如 combobox、button、list、tab、text input 和 calendar 等部件。
 
-Dojo 的部件支持[国际化、可访问性](/learn/overview/可访问性与国际化)和[主题](/learn/overview/用户体验主题)，让开发人员在无需自定义 UI 组件的情况下，能够灵活的交付应用程序专有的用户体验。
+Dojo 的部件支持[国际化、可访问性](/learn/overview/可访问性与国际化)和[主题](/learn/overview/用户体验#主题)，让开发人员在无需自定义 UI 组件的情况下，能够灵活的交付应用程序专有的用户体验。
 
 ## 导航路由
 
