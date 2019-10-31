@@ -419,13 +419,13 @@ export default class FocusExample extends WidgetBase {
 
 ### 委托 focus
 
-基于函数的部件可使用 [`focus` 中间件](/learn/middleware/available-middleware#focus)为其子部件设置焦点，或者接受来自父部件的焦点。基于类的部件可使用 `FocusMixin`(来自 `@dojo/framework/core/mixins/Focus`)以相同的方式委托 focus。
+基于函数的部件可使用 [`focus` 中间件](/learn/middleware/可用的中间件#focus)为其子部件设置焦点，或者接受来自父部件的焦点。基于类的部件可使用 `FocusMixin`(来自 `@dojo/framework/core/mixins/Focus`)以相同的方式委托 focus。
 
 `FocusMixin` 会给部件的类中添加一个 `this.shouldFocus()` 方法，而基于函数的部件使用 `focus.shouldFocus()` 中间件方法实现相同的目的。此方法会检查部件是否处于执行了获取焦点的状态（译注：即调用了 `this.focus()`），并且仅对单个调用返回 `true`，直到再次调用部件的 `this.focus()` 方法（基于函数的部件使用等价的 `focus.focus()`）。
 
 `FocusMixin` 或者 `focus` 中间件也会为部件的 API 添加一个 `focus` 函数属性。框架使用此属性的布尔结果来确定渲染时，部件（或其一个子部件）是否应获得焦点。通常，部件通过其 `focus` 属性将 `shouldFocus` 方法传递给特定的子部件或输出的节点上，从而允许父部件将焦点委托给其子部件。
 
-基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/available-middleware#focus-delegation-example)
+基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/可用的中间件#Focus-委托示例)
 
 下面基于类的部件示例，显示了在部件层次结构内和输出的 VNode 之间委托和控制焦点：
 
@@ -536,7 +536,7 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 ## 基础：自封装的部件状态
 
-部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`cache`](/learn/middleware/available-middleware#cache) 或 [`icache`](/learn/middleware/available-middleware#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
+部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`cache`](/learn/middleware/可用的中间件#cache) 或 [`icache`](/learn/middleware/可用的中间件#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
 
 内部状态数据可能直接影响部件的渲染输出，也可能作为属性传递给子部件，而它们继而又直接影响了子部件的渲染输出。部件还可能允许更改其内部状态，例如响应用户交互事件。
 
@@ -606,7 +606,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 
 ### 让部件失效
 
-基于函数的部件可以使用 [`icache` 中间件](/learn/middleware/available-middleware#icache)处理本地的状态管理，当状态更新时会自动失效部件。`icache` 组合了 [`cache`](/learn/middleware/available-middleware#cache) 和 [`invalidator`](/learn/middleware/available-middleware#invalidator) 中间件，拥有 `cache` 的处理部件状态管理的功能，和 `invalidator` 的当状态变化时让部件失效的功能。如果需要，基于函数的部件也可以直接使用 `invalidator`。
+基于函数的部件可以使用 [`icache` 中间件](/learn/middleware/可用的中间件#icache)处理本地的状态管理，当状态更新时会自动失效部件。`icache` 组合了 [`cache`](/learn/middleware/可用的中间件#cache) 和 [`invalidator`](/learn/middleware/可用的中间件#invalidator) 中间件，拥有 `cache` 的处理部件状态管理的功能，和 `invalidator` 的当状态变化时让部件失效的功能。如果需要，基于函数的部件也可以直接使用 `invalidator`。
 
 基于类的部件，则有两种失效的方法：
 

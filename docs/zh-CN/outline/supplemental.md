@@ -219,7 +219,7 @@ Dojo 允许轻松使用消息包将文本消息从应用程序逻辑中分离出
 
 渐进式 web 应用程序（[PWA](/learn/building/progressive-web-applications)）有助于提供与本地设备 App 接近的体验，同时依然能从 web 支持的可移植性和易交付等功能中受益。Dojo 通过简单的构建配置就能帮助创建 [PWA](/learn/building/progressive-web-applications)，开发人员可以在应用程序中添加离线使用、后台数据同步和推送通知等。
 
-Dojo 允许开发人员通过[中间件](/learn/middleware/introduction)系统，在所有的交付目标上以一致的方式使用几个即将可用的 web API。[Intersection observer](/learn/middleware/available-middleware#intersection) API 用于更好的控制渲染，仅渲染用户可见的部件，例如支持无线滚动列表。[Resize observer](/learn/middleware/available-middleware#resize) API 能够让应用程序动态响应视窗大小的变化，允许界面在桌面和移动视窗的所有分辨率间逐步适应。
+Dojo 允许开发人员通过[中间件](/learn/middleware/introduction)系统，在所有的交付目标上以一致的方式使用几个即将可用的 web API。[Intersection observer](/learn/middleware/可用的中间件#intersection) API 用于更好的控制渲染，仅渲染用户可见的部件，例如支持无线滚动列表。[Resize observer](/learn/middleware/可用的中间件#resize) API 能够让应用程序动态响应视窗大小的变化，允许界面在桌面和移动视窗的所有分辨率间逐步适应。
 
 # 应用程序的开发生命周期
 

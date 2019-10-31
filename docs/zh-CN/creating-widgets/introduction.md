@@ -86,7 +86,7 @@ export default factory(function Greeter({ middleware: { icache }, properties }) 
 
 -   通过将部件组合在一起形成多层结构，以满足更复杂的应用程序需求
 -   为子部件提供 state 和事件处理函数等[属性(properties)](/learn/creating-widgets/通过属性配置部件)
--   使用 [`icache` 中间件](/learn/middleware/available-middleware#icache)管理 state，并当状态变更时，失效或重新渲染受影响的部件
+-   使用 [`icache` 中间件](/learn/middleware/可用的中间件#icache)管理 state，并当状态变更时，失效或重新渲染受影响的部件
 
 > src/widgets/NameHandler.tsx
 
