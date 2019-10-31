@@ -20,7 +20,7 @@ harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
 -   `renderFunction`: 返回被测部件 WNode 的函数
--   [`customComparators`](/learn/testing/dojo-test-harness#custom-comparators): 一组自定义的比较器描述符。每个描述符提供一个比较器函数，用于比较通过 `selector` 和 `property` 定位到的 `properties`
+-   [`customComparators`](/learn/testing/dojo-test-harness#自定义比较): 一组自定义的比较器描述符。每个描述符提供一个比较器函数，用于比较通过 `selector` 和 `property` 定位到的 `properties`
 -   `options`: harness 的扩展选项，包括 `customComparators` 和一组 middleware/mocks 元组。
 
 harness 函数返回一个 `Harness` 对象，该对象提供了几个与被测部件交互的 API：
