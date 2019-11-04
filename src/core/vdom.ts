@@ -1390,6 +1390,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_cleanUpMergedNodes();
 		_insertBeforeMap = undefined;
 		_runDeferredRenderCallbacks();
+		if (!_renderScheduled) {
+			setRendering(false);
+		}
 	}
 
 	function invalidate() {
@@ -1473,7 +1476,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_runDeferredRenderCallbacks();
-		setRendering(false);
+		if (!_renderScheduled) {
+			setRendering(false);
+		}
 	}
 
 	function _cleanUpMergedNodes() {
