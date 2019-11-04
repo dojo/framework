@@ -189,7 +189,7 @@ import cache from '@dojo/framework/core/middleware/cache';
 
 ## `icache`
 
-组合了 [`cache`](/learn/middleware/available-middleware#cache) 和 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件功能，以提供一个缓存，支持延迟值的解析，并在值可用时自动让部件失效。
+组合了 [`cache`](/learn/middleware/可用的中间件#cache) 和 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件功能，以提供一个缓存，支持延迟值的解析，并在值可用时自动让部件失效。
 
 **API:**
 
@@ -376,7 +376,7 @@ import resize from '@dojo/framework/core/middleware/resize';
 
 允许部件确定一个指定的宽度断点，该断点与其中一个虚拟节点的当前宽度匹配。此中间件在创建能够适配各种显示宽度的部件时非常有用，比如在移动端和桌面分辨率下同时使用的部件。
 
-与 [`resize`](/learn/middleware/available-middleware#resize) 中间件组合使用，以获取元素的宽度，并在调整宽度时自动让部件失效。
+与 [`resize`](/learn/middleware/可用的中间件#resize) 中间件组合使用，以获取元素的宽度，并在调整宽度时自动让部件失效。
 
 **注意：** 如果没有设置自定义的宽度断点，Dojo 将默认使用以下集合：
 
@@ -435,7 +435,7 @@ import store from '@dojo/framework/core/middleware/store';
 
 ## `focus`
 
-组合使用 [VDOM focus 原生方法](/learn/creating-widgets/enabling-interactivity#handling-focus) ，允许部件检查和控制输出的 DOM 间的焦点。
+组合使用 [VDOM focus 原生方法](/learn/creating-widgets/支持交互#处理-focus) ，允许部件检查和控制输出的 DOM 间的焦点。
 
 **API:**
 
@@ -547,7 +547,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 ```
 
 -   `injector.subscribe(label: RegistryLabel, callback: Function = invalidator)`
-    -   为注册表 `label` 指定的注入器（如果存在的话）订阅给定的 `callback` 失效函数。如果未指定 `callback`，则默认使用 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件，以便当注入器使其数据可用时，将当前部件标记为失效并重新渲染。
+    -   为注册表 `label` 指定的注入器（如果存在的话）订阅给定的 `callback` 失效函数。如果未指定 `callback`，则默认使用 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件，以便当注入器使其数据可用时，将当前部件标记为失效并重新渲染。
 -   `injector.get<T>(label: RegistryLabel): T | null`
     -   获取当前与给定的注册表 `label` 关联的注册器，如果注册器不存在则返回 `null`。
 
@@ -568,7 +568,7 @@ import block from '@dojo/framework/core/middleware/block';
 
 # 核心渲染中间件
 
-`@dojo/framework/core/vdom` 模块中包含基础中间件，大多数 Dojo 应用程序都会用到。这些主要用于构建其他自定义中间件（框架提供的[附加中间件](/learn/middleware/available-middleware)就是由他们构成的），但在一般的部件开发中也偶尔会用到。
+`@dojo/framework/core/vdom` 模块中包含基础中间件，大多数 Dojo 应用程序都会用到。这些主要用于构建其他自定义中间件（框架提供的[附加中间件](/learn/middleware/可用的中间件)就是由他们构成的），但在一般的部件开发中也偶尔会用到。
 
 ## `invalidator`
 
@@ -600,7 +600,7 @@ import node from '@dojo/framework/core/vdom';
 
 通过为指定的属性注册自己的 diff 函数，以允许部件对差异检测进行细粒度控制。当尝试重新渲染部件时，框架将调用该函数，以确定是否发生了变化，从而需要进行完全的重新渲染。如果在部件的属性集中没有检测到差异，将跳过更新，并且现有的所有 DOM 节点都保持原样。
 
-编写自定义的 diff 函数时，通常需要与 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件组合使用，以便需要更新部件的 DOM 节点时，将当前部件标记为无效。
+编写自定义的 diff 函数时，通常需要与 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件组合使用，以便需要更新部件的 DOM 节点时，将当前部件标记为无效。
 
 **注意：** 在组合部件或中间件的生命周期中，只能为指定的属性注册一个 diff 函数，后续的调用将被忽略。渲染引擎有一套默认算法，该算法对对象和数组进行 shallow 对比，忽略函数，而对其他所有属性进行相等检查。为属性设置了自定义的 diff 函数后，将会覆盖 Dojo 默认的差异检测策略。
 

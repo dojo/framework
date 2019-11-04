@@ -300,7 +300,7 @@ process(store)({ one: 'one', two: 'two' });
 
 有两个状态容器可用于部件：`StoreContainer` 和 `StoreProvider`。这些容器将应用程序的 store 与部件关联起来。当使用函数部件时，也可以创建类型化的 store 中间件。
 
-注意，本节旨在介绍部件和状态（通过 store 提供的）是如何关联起来的。有关部件状态管理的更多信息，请参阅[创建部件参考指南](/learn/creating-widgets/managing-state)。
+注意，本节旨在介绍部件和状态（通过 store 提供的）是如何关联起来的。有关部件状态管理的更多信息，请参阅[创建部件参考指南](/learn/creating-widgets/状态管理)。
 
 ### Store 中间件
 

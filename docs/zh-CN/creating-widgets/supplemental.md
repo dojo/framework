@@ -59,9 +59,9 @@ export default class MyWidget extends WidgetBase {
 }
 ```
 
-因为此部件的渲染函数返回的是空数组，所以在应用程序的输出中没有任何内容。部件通常[返回一到多个虚拟 DOM 节点](/learn/creating-widgets/rendering-widgets#virtual-nodes-example)，以便在应用程序的 HTML 输出中包含有意义的结构。
+因为此部件的渲染函数返回的是空数组，所以在应用程序的输出中没有任何内容。部件通常[返回一到多个虚拟 DOM 节点](/learn/creating-widgets/渲染部件#虚拟节点示例)，以便在应用程序的 HTML 输出中包含有意义的结构。
 
-将虚拟 DOM 节点转换为网页中的输出是由 [Dojo 的渲染系统](/learn/creating-widgets/rendering-widgets)处理的。
+将虚拟 DOM 节点转换为网页中的输出是由 [Dojo 的渲染系统](/learn/creating-widgets/渲染部件)处理的。
 
 ## 部件样式
 
@@ -71,11 +71,11 @@ export default class MyWidget extends WidgetBase {
 
 Dojo 是一个响应式框架，负责处理数据变更的传播和相关的后台更新渲染。Dojo 采用虚拟 DOM(VDOM) 的概念来描述输出的元素，VDOM 中的节点是简单的 JavaScript 对象，旨在提高开发人员效率，而不用与实际的 DOM 元素交互。
 
-应用程序只需要关心，将它们的期望的输出结构声明为有层级的虚拟 DOM 节点即可，通常是作为[部件的渲染函数](/learn/creating-widgets/widget-fundamentals#basic-widget-structure)的返回值来完成的。然后，框架的 [`Renderer`](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom) 组件会将期望的输出同步为 DOM 中的具体元素。也可以通过给虚拟 DOM 节点传入属性，从而配置部件和元素，以及为部件和元素提供状态。
+应用程序只需要关心，将它们的期望的输出结构声明为有层级的虚拟 DOM 节点即可，通常是作为[部件的渲染函数](/learn/creating-widgets/部件的基本原理#基本的部件结构)的返回值来完成的。然后，框架的 [`Renderer`](/learn/creating-widgets/渲染部件#渲染到-dom-中) 组件会将期望的输出同步为 DOM 中的具体元素。也可以通过给虚拟 DOM 节点传入属性，从而配置部件和元素，以及为部件和元素提供状态。
 
 Dojo 支持树的部分子节点渲染，这意味着当状态发生变化时，框架能够定位到受变化影响的 VDOM 节点的对应子集。然后，只更新 DOM 树中受影响的子树，从而响应变化、提高渲染性能并改善用户的交互体验。
 
-> **注意：** 部件渲染函数中返回的虚拟节点，是唯一影响应用程序渲染的因素。尝试使用任何其他实践，[在 Dojo 应用程序开发中是被视为反模式的](/learn/creating-widgets/best-practice-development)，应当避免。
+> **注意：** 部件渲染函数中返回的虚拟节点，是唯一影响应用程序渲染的因素。尝试使用任何其他实践，[在 Dojo 应用程序开发中是被视为反模式的](/learn/creating-widgets/最佳开发实践)，应当避免。
 
 ## 支持 TSX
 
@@ -160,11 +160,11 @@ Dojo 会在 VDOM 中识别出两类节点：
 -   `VNode`，或称为 _Virtual Nodes_，是具体 DOM 元素的虚拟表示，作为所有 Dojo 应用程序最底层的渲染输出。
 -   `WNode`，或称为 _Widget Nodes_，将 Dojo 部件关联到 VDOM 的层级结构上。
 
-Dojo 的虚拟节点中，`VNode` 和 `WNode` 都可看作 `DNode` 的子类型，但应用程序通常不处理抽象层面的 `DNode`。推荐使用 [TSX 语法](/learn/creating-widgets/rendering-widgets#tsx-support)，因为它能以统一的语法渲染两类虚拟节点。
+Dojo 的虚拟节点中，`VNode` 和 `WNode` 都可看作 `DNode` 的子类型，但应用程序通常不处理抽象层面的 `DNode`。推荐使用 [TSX 语法](/learn/creating-widgets/渲染部件#支持-tsx)，因为它能以统一的语法渲染两类虚拟节点。
 
 ### 实例化 VDOM 节点
 
-如果不想使用 TSX，在部件中可以导入 `@dojo/framework/core/vdom` 模块中的 `v()` 或 `w()` 函数。它们分别创建 `VNode` 和 `WNode`，并可作为[部件渲染函数](/learn/creating-widgets/widget-fundamentals#basic-widget-structure)返回值的一部分。它们的签名，抽象地说，如下：
+如果不想使用 TSX，在部件中可以导入 `@dojo/framework/core/vdom` 模块中的 `v()` 或 `w()` 函数。它们分别创建 `VNode` 和 `WNode`，并可作为[部件渲染函数](/learn/creating-widgets/部件的基本原理#基本的部件结构)返回值的一部分。它们的签名，抽象地说，如下：
 
 -   `v(tagName | VNode, properties?, children?)`:
 -   `w(Widget | constructor, properties, children?)`
@@ -173,7 +173,7 @@ Dojo 的虚拟节点中，`VNode` 和 `WNode` 都可看作 `DNode` 的子类型�
 | ---------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tagName | VNode`      | 否               | 通常，会以字符串的形式传入 `tagName`，该字符串对应 `VNode` 将要渲染的相应 DOM 元素的标签名。如果传入的是 `VNode`，新创建的 `VNode` 将是原始 `VNode` 的副本。如果传入了 `properties` 参数，则会合并 `properties` 中重复的属性，并应用到副本 `VNode` 中。如果传入了 `children` 参数，将在新的副本中完全覆盖原始 `VNode` 中的所有子节点。 |
 | `Widget | constructor` | 否               | 通常，会传入 `Widget`，它将导入部件当作泛型类型引用。还可以传入几种类型的 `constructor`，它允许 Dojo 以各种不同的方式实例化部件。它们支持延迟加载等高级功能。                                                                                                                                                                          |
-| `properties`           | `v`: 是, `w`: 否 | [用于配置新创建的 VDOM 节点的属性集](/learn/creating-widgets/configuring-widgets-through-properties)。它们还允许框架检测节点是否已更新，从而重新渲染。                                                                                                                                                                                 |
+| `properties`           | `v`: 是, `w`: 否 | [用于配置新创建的 VDOM 节点的属性集](/learn/creating-widgets/通过属性配置部件)。它们还允许框架检测节点是否已更新，从而重新渲染。                                                                                                                                                                                                       |
 | `children`             | 是               | 一组节点，会渲染为新创建节点的子节点。如果需要，还可以使用字符串字面值表示任何文本节点。部件通常会封装自己的子节点，因此此参数更可能会与 `v()` 一起使用，而不是 `w()`。                                                                                                                                                                |
 
 ### 虚拟节点示例
@@ -299,7 +299,7 @@ r.mount({ domNode: dojoAppRootElement });
 
 ## 向 VDOM 中加入外部的 DOM 节点
 
-Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序的 VDOM 中，用作渲染输出的一部分。这是通过 `@dojo/framework/core/vdom` 模块中的 `dom()` 工具方法完成的。它的工作原理与 [`v()`](/learn/creating-widgets/rendering-widgets#instantiating-vdom-nodes) 类似，但它的主参数使用的是现有的 DOM 节点而不是元素标记字符串。在返回 `VNode` 时，它会引用传递给它的 DOM 节点，而不是使用 `v()` 新创建的元素。
+Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序的 VDOM 中，用作渲染输出的一部分。这是通过 `@dojo/framework/core/vdom` 模块中的 `dom()` 工具方法完成的。它的工作原理与 [`v()`](/learn/creating-widgets/渲染部件#实例化-vdom-节点) 类似，但它的主参数使用的是现有的 DOM 节点而不是元素标记字符串。在返回 `VNode` 时，它会引用传递给它的 DOM 节点，而不是使用 `v()` 新创建的元素。
 
 一旦 `dom()` 返回的 `VNode` 添加到应用程序的 VDOM 中，Dojo 应用程序就实际获得了被包装 DOM 节点的所有权。请注意，此过程仅适用于 Dojo 应用程序的外部节点，如挂载应用程序元素的兄弟节点，或与主网页的 DOM 断开连接的新创建的节点。如果包装的节点是挂载了应用程序的元素的祖先或子孙节点，将无效。
 
@@ -307,14 +307,14 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 
 -   `dom({ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach })`
 
-| 参数       | 可选 | 描述                                                                                                                                                        |
-| ---------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `node`     | 否   | 添加到 Dojo VDOM 中的外部 DOM 节点                                                                                                                          |
-| `attrs`    | 是   | 应用到外部 DOM 节点上的 HTML 属性(attributes)                                                                                                               |
-| `props`    | 是   | 附加到 DOM 节点上的属性(properties)                                                                                                                         |
-| `on`       | 是   | 应用到外部 DOM 节点上的事件集合                                                                                                                             |
-| `diffType` | 是   | 默认为: `none`。[更改检测策略](/learn/creating-widgets/rendering-widgets#external-dom-node-change-detection)，确定 Dojo 应用程序是否需要更新外部的 DOM 节点 |
-| `onAttach` | 是   | 一个可选的回调函数，在节点追加到 DOM 后执行                                                                                                                 |
+| 参数       | 可选 | 描述                                                                                                                                    |
+| ---------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `node`     | 否   | 添加到 Dojo VDOM 中的外部 DOM 节点                                                                                                      |
+| `attrs`    | 是   | 应用到外部 DOM 节点上的 HTML 属性(attributes)                                                                                           |
+| `props`    | 是   | 附加到 DOM 节点上的属性(properties)                                                                                                     |
+| `on`       | 是   | 应用到外部 DOM 节点上的事件集合                                                                                                         |
+| `diffType` | 是   | 默认为: `none`。[更改检测策略](/learn/creating-widgets/渲染部件#检测外部-dom-节点的变化)，确定 Dojo 应用程序是否需要更新外部的 DOM 节点 |
+| `onAttach` | 是   | 一个可选的回调函数，在节点追加到 DOM 后执行                                                                                             |
 
 ### 检测外部 DOM 节点的变化
 
@@ -346,25 +346,25 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 
 当重新渲染 VDOM 中受影响部分时，Dojo 使用虚拟节点的 key 来唯一标识特定实例。如果没有使用 key 在 VDOM 中区分开同一层级中的相同类型的多个节点，则 Dojo 就无法准确地确定哪些子节点受到了失效更改(invalidating change)的影响。
 
-> **注意：** 虚拟节点的 `key` 应在多次渲染函数的调用中保持一致。在每一次的渲染调用中，为相同的输出节点生成不同的 key，[在 Dojo 应用程序开发中被认为是反模式的](/learn/creating-widgets/best-practice-development#the-virtual-dom)，应当避免。
+> **注意：** 虚拟节点的 `key` 应在多次渲染函数的调用中保持一致。在每一次的渲染调用中，为相同的输出节点生成不同的 key，[在 Dojo 应用程序开发中被认为是反模式的](/learn/creating-widgets/最佳开发实践#虚拟-dom)，应当避免。
 
 ## 配置 `VNode`
 
 `VNodeProperties` 包含很多字段，是与 DOM 中的元素交互的重要 API。其中很多属性镜像了 [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) 中的可用属性，包括指定各种 `oneventname` 的事件处理器。
 
-应用程序的这些属性是单向的，因为 Dojo 将给定的属性集应用到具体的 DOM 元素上，但不会将相应的 DOM 属性后续的任何更改同步到 `VNodeProperties`。任何此类更改都应该通过事件处理器回传给 Dojo 应用程序。当调用事件处理程序时，应用程序可以处理事件所需的任何状态更改，在输出 VDOM 结构进行渲染时，更新对应的 `VNodeProperties` 视图，然后 Dojo 的 [`Renderer` 会同步所有相关的 DOM 更新](/learn/creating-widgets/rendering-widgets#rendering-to-the-dom)。
+应用程序的这些属性是单向的，因为 Dojo 将给定的属性集应用到具体的 DOM 元素上，但不会将相应的 DOM 属性后续的任何更改同步到 `VNodeProperties`。任何此类更改都应该通过事件处理器回传给 Dojo 应用程序。当调用事件处理程序时，应用程序可以处理事件所需的任何状态更改，在输出 VDOM 结构进行渲染时，更新对应的 `VNodeProperties` 视图，然后 Dojo 的 [`Renderer` 会同步所有相关的 DOM 更新](/learn/creating-widgets/渲染部件#渲染到-dom-中)。
 
 ## 修改属性和差异检测
 
 Dojo 使用虚拟节点的属性来确定给定节点是否已更新，从而是否需要重新渲染。具体来说，它使用差异检测策略来比较前一次和当前渲染帧的属性集。如果在节点接收的最新属性集中检测到差异，则该节点将失效，并在下一个绘制周期中重新渲染。
 
-> **注意：** 属性更改检测是由框架内部管理的，依赖于在部件的渲染函数中声明的 VDOM 输出结构。试图保留属性的引用，并在正常的部件渲染周期之外对其进行修改，[在 Dojo 应用程序开发中被视为反模式的](/learn/creating-widgets/best-practice-development)，应当避免。
+> **注意：** 属性更改检测是由框架内部管理的，依赖于在部件的渲染函数中声明的 VDOM 输出结构。试图保留属性的引用，并在正常的部件渲染周期之外对其进行修改，[在 Dojo 应用程序开发中被视为反模式的](/learn/creating-widgets/最佳开发实践)，应当避免。
 
 # 支持交互
 
 ## 事件监听器
 
-在实例化节点时，为虚拟节点指定事件监听器的方法与指定[任何其他属性](/learn/creating-widgets/configuring-widgets-through-properties)的方法相同。当输出 `VNode` 时，`VNodeProperties` 上事件监听器的名字会镜像到 [`HTMLElement` 的等价事件上](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement)。虽然自定义部件的作者可以根据自己的选择命名事件，但通常也遵循类似的 `onEventName` 的命名约定。
+在实例化节点时，为虚拟节点指定事件监听器的方法与指定[任何其他属性](/learn/creating-widgets/通过属性配置部件)的方法相同。当输出 `VNode` 时，`VNodeProperties` 上事件监听器的名字会镜像到 [`HTMLElement` 的等价事件上](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement)。虽然自定义部件的作者可以根据自己的选择命名事件，但通常也遵循类似的 `onEventName` 的命名约定。
 
 函数属性（如事件处理程序）会自动绑定到实例化此虚拟节点的部件的 `this` 上下文。但是，如果将已绑定的函数传给属性值，将不会重复绑定给 `this`。
 
@@ -372,7 +372,7 @@ Dojo 使用虚拟节点的属性来确定给定节点是否已更新，从而是
 
 输出 `VNode` 时，部件可以使用 `VNodeProperties` 的 `focus` 属性来控制生成的 DOM 元素在渲染时是否获取焦点。这是一个特殊属性，它可接收一个 `boolean` 类型的对象或者是返回一个 `boolean` 类型的函数。
 
-当直接传入 `true` 时，只有上一次的值不是 `true` 时，元素才会获取焦点（类似于[常规属性变更检测](/learn/creating-widgets/configuring-widgets-through-properties#changing-properties-and-diff-detection)）。而传入函数时，只要函数返回 `true`，元素就会获取焦点，而不管上一次返回值。
+当直接传入 `true` 时，只有上一次的值不是 `true` 时，元素才会获取焦点（类似于[常规属性变更检测](/learn/creating-widgets/通过属性配置部件#修改属性和差异检测)）。而传入函数时，只要函数返回 `true`，元素就会获取焦点，而不管上一次返回值。
 
 例如：
 
@@ -419,13 +419,13 @@ export default class FocusExample extends WidgetBase {
 
 ### 委托 focus
 
-基于函数的部件可使用 [`focus` 中间件](/learn/middleware/available-middleware#focus)为其子部件设置焦点，或者接受来自父部件的焦点。基于类的部件可使用 `FocusMixin`(来自 `@dojo/framework/core/mixins/Focus`)以相同的方式委托 focus。
+基于函数的部件可使用 [`focus` 中间件](/learn/middleware/可用的中间件#focus)为其子部件设置焦点，或者接受来自父部件的焦点。基于类的部件可使用 `FocusMixin`(来自 `@dojo/framework/core/mixins/Focus`)以相同的方式委托 focus。
 
 `FocusMixin` 会给部件的类中添加一个 `this.shouldFocus()` 方法，而基于函数的部件使用 `focus.shouldFocus()` 中间件方法实现相同的目的。此方法会检查部件是否处于执行了获取焦点的状态（译注：即调用了 `this.focus()`），并且仅对单个调用返回 `true`，直到再次调用部件的 `this.focus()` 方法（基于函数的部件使用等价的 `focus.focus()`）。
 
 `FocusMixin` 或者 `focus` 中间件也会为部件的 API 添加一个 `focus` 函数属性。框架使用此属性的布尔结果来确定渲染时，部件（或其一个子部件）是否应获得焦点。通常，部件通过其 `focus` 属性将 `shouldFocus` 方法传递给特定的子部件或输出的节点上，从而允许父部件将焦点委托给其子部件。
 
-基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/available-middleware#focus-delegation-example)
+基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/可用的中间件#focus-委托示例)
 
 下面基于类的部件示例，显示了在部件层次结构内和输出的 VNode 之间委托和控制焦点：
 
@@ -528,15 +528,15 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 # 状态管理
 
-在数据不需要在多个组件之间流动的简单应用程序中，状态管理是非常简单的。可将部件需要的数据封装在部件内，这是 Dojo 应用程序中[状态管理的最基本形式](/learn/creating-widgets/managing-state#basic-self-encapsulated-widget-state)。
+在数据不需要在多个组件之间流动的简单应用程序中，状态管理是非常简单的。可将部件需要的数据封装在部件内，这是 Dojo 应用程序中[状态管理的最基本形式](/learn/creating-widgets/状态管理#基础自封装的部件状态)。
 
-随着应用程序变得越来越复杂，并且开始要求在多个部件之间共享和传输数据，就需要一种更健壮的状态管理形式。在这里，Dojo 开始展现出其响应式框架的价值，允许应用程序定义数据如何在组件之间流动，然后由框架管理变更检测和重新渲染。这是通过在部件的渲染函数中声明 VDOM 输出时[将部件和属性连接在一起](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties)而做到的。
+随着应用程序变得越来越复杂，并且开始要求在多个部件之间共享和传输数据，就需要一种更健壮的状态管理形式。在这里，Dojo 开始展现出其响应式框架的价值，允许应用程序定义数据如何在组件之间流动，然后由框架管理变更检测和重新渲染。这是通过在部件的渲染函数中声明 VDOM 输出时[将部件和属性连接在一起](/learn/creating-widgets/状态管理#中级传入部件属性)而做到的。
 
 对于大型应用程序，状态管理可能是最具挑战性的工作之一，需要开发人员在数据一致性、可用性和容错性之间进行平衡。虽然这种复杂性大多超出了 web 应用程序层的范围，但 Dojo 提供了更进一步的解决方案，以确保数据的一致性。[Dojo Store](/learn/stores/introduction) 组件提供了一个集中式的状态存储，它提供一致的 API，用于访问和管理应用程序中多个位置的数据。
 
 ## 基础：自封装的部件状态
 
-部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`cache`](/learn/middleware/available-middleware#cache) 或 [`icache`](/learn/middleware/available-middleware#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
+部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`cache`](/learn/middleware/可用的中间件#cache) 或 [`icache`](/learn/middleware/可用的中间件#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
 
 内部状态数据可能直接影响部件的渲染输出，也可能作为属性传递给子部件，而它们继而又直接影响了子部件的渲染输出。部件还可能允许更改其内部状态，例如响应用户交互事件。
 
@@ -600,13 +600,13 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 }
 ```
 
-注意，这个示例是不完整的，在正在运行的应用程序中，单击“Change State”按钮不会对部件的渲染输出产生任何影响。这是因为状态完全封装在 `MyEncapsulatedStateWidget` 部件中，而 Dojo [无从得知对部件的任何更改](/learn/creating-widgets/best-practice-development#widget-properties)。框架只处理了部件的初始渲染。
+注意，这个示例是不完整的，在正在运行的应用程序中，单击“Change State”按钮不会对部件的渲染输出产生任何影响。这是因为状态完全封装在 `MyEncapsulatedStateWidget` 部件中，而 Dojo [无从得知对部件的任何更改](/learn/creating-widgets/最佳开发实践#部件属性)。框架只处理了部件的初始渲染。
 
 要通知 Dojo 重新渲染，则需要封装渲染状态的部件自行失效。
 
 ### 让部件失效
 
-基于函数的部件可以使用 [`icache` 中间件](/learn/middleware/available-middleware#icache)处理本地的状态管理，当状态更新时会自动失效部件。`icache` 组合了 [`cache`](/learn/middleware/available-middleware#cache) 和 [`invalidator`](/learn/middleware/available-middleware#invalidator) 中间件，拥有 `cache` 的处理部件状态管理的功能，和 `invalidator` 的当状态变化时让部件失效的功能。如果需要，基于函数的部件也可以直接使用 `invalidator`。
+基于函数的部件可以使用 [`icache` 中间件](/learn/middleware/可用的中间件#icache)处理本地的状态管理，当状态更新时会自动失效部件。`icache` 组合了 [`cache`](/learn/middleware/可用的中间件#cache) 和 [`invalidator`](/learn/middleware/可用的中间件#invalidator) 中间件，拥有 `cache` 的处理部件状态管理的功能，和 `invalidator` 的当状态变化时让部件失效的功能。如果需要，基于函数的部件也可以直接使用 `invalidator`。
 
 基于类的部件，则有两种失效的方法：
 
@@ -682,7 +682,7 @@ export default class MyEncapsulatedStateWidget extends WidgetBase {
 
 ## 中级：传入部件属性
 
-通过虚拟节点的 [`properties`](/learn/creating-widgets/configuring-widgets-through-properties) 将状态传入部件是 Dojo 应用程序中连接响应式数据流最有效的方法。
+通过虚拟节点的 [`properties`](/learn/creating-widgets/通过属性配置部件) 将状态传入部件是 Dojo 应用程序中连接响应式数据流最有效的方法。
 
 部件指定自己的属性[接口](https://www.typescriptlang.org/docs/handbook/interfaces.html)，该接口包含部件希望向使用者公开的任何字段，包括配置选项、表示注入状态的字段以及任何事件处理函数。
 
@@ -848,7 +848,7 @@ Dojo 提供的 [Store 组件](/learn/stores/introduction) 解决了这些问题�
 
 ## 虚拟 DOM
 
--   虚拟节点的 [`key`](/learn/creating-widgets/configuring-widgets-through-properties#vdom-node-keys) 应在多次渲染调用中保持一致。
+-   虚拟节点的 [`key`](/learn/creating-widgets/通过属性配置部件#vdom-节点的-key) 应在多次渲染调用中保持一致。
     -   如果在每次渲染调用中都指定一个不同的 `key`，则 Dojo 无法有效地将前一次渲染和本次渲染中的相同节点关联上。Dojo 会将上一次渲染中没有看到的新 `key` 当作新元素，这会导致从 DOM 中删除之前的节点并重新添加一套，即使属性没有发生变化，不需要重新更新 DOM。
     -   一个常见的反模式是在部件的渲染函数中为节点的 `key` 分配一个随机生成的 ID（如 GUID 或 UUID）。除非生成策略是等幂的，否则不应在渲染函数中生成节点的 `key` 值。
 -   应用程序不应存储虚拟节点的引用，以便从部件的渲染函数返回它们后，进行后续操作；也不应尝试通过使用单个实例跨多个渲染调用来优化内存分配。
