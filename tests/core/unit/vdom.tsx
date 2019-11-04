@@ -19,6 +19,7 @@ import {
 	v,
 	w,
 	dom as d,
+	tsx,
 	setRendering,
 	incrementBlockCount,
 	decrementBlockCount
@@ -27,6 +28,7 @@ import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfac
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
+import icache from '../../../src/core/middleware/icache';
 import registry from '../../../src/core/decorators/registry';
 import { alwaysRender } from '../../../src/core/decorators/alwaysRender';
 
@@ -3472,6 +3474,78 @@ jsdomDescribe('vdom', () => {
 				r.mount({ domNode: root });
 				resolvers.resolve();
 				assert.strictEqual(root.outerHTML, '<div><div>1<div>foo</div></div></div>');
+			});
+
+			it('properties should have a live binding', () => {
+				const factory = create({ icache }).properties<any>();
+
+				const RunnerWidget = factory(({ properties, middleware: { icache } }) => {
+					return (
+						<div>
+							<button
+								onclick={() => {
+									const { doSomething } = properties();
+									icache.set('value', doSomething());
+								}}
+							>
+								Click me
+							</button>
+							<div>{icache.getOrSet('value', '')}</div>
+						</div>
+					);
+				});
+
+				const MyWidget = factory(({ properties }) => {
+					return (
+						<RunnerWidget
+							doSomething={() => {
+								return properties().value;
+							}}
+						/>
+					);
+				});
+
+				const App = factory(function App({ middleware: { icache } }) {
+					const value = icache.getOrSet('value', '1');
+					return (
+						<div>
+							<button
+								onclick={() => {
+									icache.set('value', `${value}1`);
+								}}
+							>
+								Increment Value
+							</button>
+							<MyWidget value={value} />
+						</div>
+					);
+				});
+
+				const root = document.createElement('div');
+				const r = renderer(() => <App />);
+				r.mount({ domNode: root });
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[1].children[0].click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>11</div></div></div></div>'
+				);
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[1].children[0].click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>111111</div></div></div></div>'
+				);
 			});
 
 			describe('core middleware', () => {
