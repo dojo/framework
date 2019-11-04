@@ -160,7 +160,7 @@ Dojo 会在 VDOM 中识别出两类节点：
 -   `VNode`，或称为 _Virtual Nodes_，是具体 DOM 元素的虚拟表示，作为所有 Dojo 应用程序最底层的渲染输出。
 -   `WNode`，或称为 _Widget Nodes_，将 Dojo 部件关联到 VDOM 的层级结构上。
 
-Dojo 的虚拟节点中，`VNode` 和 `WNode` 都可看作 `DNode` 的子类型，但应用程序通常不处理抽象层面的 `DNode`。推荐使用 [TSX 语法](/learn/creating-widgets/渲染部件#支持-TSX)，因为它能以统一的语法渲染两类虚拟节点。
+Dojo 的虚拟节点中，`VNode` 和 `WNode` 都可看作 `DNode` 的子类型，但应用程序通常不处理抽象层面的 `DNode`。推荐使用 [TSX 语法](/learn/creating-widgets/渲染部件#支持-tsx)，因为它能以统一的语法渲染两类虚拟节点。
 
 ### 实例化 VDOM 节点
 
@@ -299,7 +299,7 @@ r.mount({ domNode: dojoAppRootElement });
 
 ## 向 VDOM 中加入外部的 DOM 节点
 
-Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序的 VDOM 中，用作渲染输出的一部分。这是通过 `@dojo/framework/core/vdom` 模块中的 `dom()` 工具方法完成的。它的工作原理与 [`v()`](/learn/creating-widgets/渲染部件#实例化-VDOM-节点) 类似，但它的主参数使用的是现有的 DOM 节点而不是元素标记字符串。在返回 `VNode` 时，它会引用传递给它的 DOM 节点，而不是使用 `v()` 新创建的元素。
+Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序的 VDOM 中，用作渲染输出的一部分。这是通过 `@dojo/framework/core/vdom` 模块中的 `dom()` 工具方法完成的。它的工作原理与 [`v()`](/learn/creating-widgets/渲染部件#实例化-vdom-节点) 类似，但它的主参数使用的是现有的 DOM 节点而不是元素标记字符串。在返回 `VNode` 时，它会引用传递给它的 DOM 节点，而不是使用 `v()` 新创建的元素。
 
 一旦 `dom()` 返回的 `VNode` 添加到应用程序的 VDOM 中，Dojo 应用程序就实际获得了被包装 DOM 节点的所有权。请注意，此过程仅适用于 Dojo 应用程序的外部节点，如挂载应用程序元素的兄弟节点，或与主网页的 DOM 断开连接的新创建的节点。如果包装的节点是挂载了应用程序的元素的祖先或子孙节点，将无效。
 
@@ -313,7 +313,7 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 | `attrs`    | 是   | 应用到外部 DOM 节点上的 HTML 属性(attributes)                                                                                           |
 | `props`    | 是   | 附加到 DOM 节点上的属性(properties)                                                                                                     |
 | `on`       | 是   | 应用到外部 DOM 节点上的事件集合                                                                                                         |
-| `diffType` | 是   | 默认为: `none`。[更改检测策略](/learn/creating-widgets/渲染部件#检测外部-DOM-节点的变化)，确定 Dojo 应用程序是否需要更新外部的 DOM 节点 |
+| `diffType` | 是   | 默认为: `none`。[更改检测策略](/learn/creating-widgets/渲染部件#检测外部-dom-节点的变化)，确定 Dojo 应用程序是否需要更新外部的 DOM 节点 |
 | `onAttach` | 是   | 一个可选的回调函数，在节点追加到 DOM 后执行                                                                                             |
 
 ### 检测外部 DOM 节点的变化
@@ -346,13 +346,13 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 
 当重新渲染 VDOM 中受影响部分时，Dojo 使用虚拟节点的 key 来唯一标识特定实例。如果没有使用 key 在 VDOM 中区分开同一层级中的相同类型的多个节点，则 Dojo 就无法准确地确定哪些子节点受到了失效更改(invalidating change)的影响。
 
-> **注意：** 虚拟节点的 `key` 应在多次渲染函数的调用中保持一致。在每一次的渲染调用中，为相同的输出节点生成不同的 key，[在 Dojo 应用程序开发中被认为是反模式的](/learn/creating-widgets/最佳开发实践#虚拟-DOM)，应当避免。
+> **注意：** 虚拟节点的 `key` 应在多次渲染函数的调用中保持一致。在每一次的渲染调用中，为相同的输出节点生成不同的 key，[在 Dojo 应用程序开发中被认为是反模式的](/learn/creating-widgets/最佳开发实践#虚拟-dom)，应当避免。
 
 ## 配置 `VNode`
 
 `VNodeProperties` 包含很多字段，是与 DOM 中的元素交互的重要 API。其中很多属性镜像了 [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) 中的可用属性，包括指定各种 `oneventname` 的事件处理器。
 
-应用程序的这些属性是单向的，因为 Dojo 将给定的属性集应用到具体的 DOM 元素上，但不会将相应的 DOM 属性后续的任何更改同步到 `VNodeProperties`。任何此类更改都应该通过事件处理器回传给 Dojo 应用程序。当调用事件处理程序时，应用程序可以处理事件所需的任何状态更改，在输出 VDOM 结构进行渲染时，更新对应的 `VNodeProperties` 视图，然后 Dojo 的 [`Renderer` 会同步所有相关的 DOM 更新](/learn/creating-widgets/渲染部件#渲染到-DOM-中)。
+应用程序的这些属性是单向的，因为 Dojo 将给定的属性集应用到具体的 DOM 元素上，但不会将相应的 DOM 属性后续的任何更改同步到 `VNodeProperties`。任何此类更改都应该通过事件处理器回传给 Dojo 应用程序。当调用事件处理程序时，应用程序可以处理事件所需的任何状态更改，在输出 VDOM 结构进行渲染时，更新对应的 `VNodeProperties` 视图，然后 Dojo 的 [`Renderer` 会同步所有相关的 DOM 更新](/learn/creating-widgets/渲染部件#渲染到-dom-中)。
 
 ## 修改属性和差异检测
 
@@ -425,7 +425,7 @@ export default class FocusExample extends WidgetBase {
 
 `FocusMixin` 或者 `focus` 中间件也会为部件的 API 添加一个 `focus` 函数属性。框架使用此属性的布尔结果来确定渲染时，部件（或其一个子部件）是否应获得焦点。通常，部件通过其 `focus` 属性将 `shouldFocus` 方法传递给特定的子部件或输出的节点上，从而允许父部件将焦点委托给其子部件。
 
-基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/可用的中间件#Focus-委托示例)
+基于函数的部件的示例，请参阅 Dojo 中间件参考指南中的 [`focus` 中间件委派示例](/learn/middleware/可用的中间件#focus-委托示例)
 
 下面基于类的部件示例，显示了在部件层次结构内和输出的 VNode 之间委托和控制焦点：
 
@@ -848,7 +848,7 @@ Dojo 提供的 [Store 组件](/learn/stores/introduction) 解决了这些问题�
 
 ## 虚拟 DOM
 
--   虚拟节点的 [`key`](/learn/creating-widgets/通过属性配置部件#VDOM-节点的-key) 应在多次渲染调用中保持一致。
+-   虚拟节点的 [`key`](/learn/creating-widgets/通过属性配置部件#vdom-节点的-key) 应在多次渲染调用中保持一致。
     -   如果在每次渲染调用中都指定一个不同的 `key`，则 Dojo 无法有效地将前一次渲染和本次渲染中的相同节点关联上。Dojo 会将上一次渲染中没有看到的新 `key` 当作新元素，这会导致从 DOM 中删除之前的节点并重新添加一套，即使属性没有发生变化，不需要重新更新 DOM。
     -   一个常见的反模式是在部件的渲染函数中为节点的 `key` 分配一个随机生成的 ID（如 GUID 或 UUID）。除非生成策略是等幂的，否则不应在渲染函数中生成节点的 `key` 值。
 -   应用程序不应存储虚拟节点的引用，以便从部件的渲染函数返回它们后，进行后续操作；也不应尝试通过使用单个实例跨多个渲染调用来优化内存分配。

@@ -19,7 +19,7 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 ## 创建高效的应用程序
 
--   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/渲染部件#使用-VDOM)声明部件结构，避免高昂的 DOM 操作和布局抖动。
+-   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/渲染部件#使用-vdom)声明部件结构，避免高昂的 DOM 操作和布局抖动。
 -   简化[资源分层和绑定](/learn/building/creating-bundles)，缩减用户实际需要的应用程序交互时间（Time-to-Interactive）。当模块及其依赖跨多个绑定时，Dojo 框架能自动将 import 转换为延迟加载。
 
 ## 创建全面的应用程序
