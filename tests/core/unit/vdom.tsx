@@ -6507,15 +6507,20 @@ jsdomDescribe('vdom', () => {
 			let key = 0;
 			const Foo = factory(function App({ properties }) {
 				properties().doSomething();
-				return <div></div>;
+				return <div />;
 			});
-			const App = factory(function App({ middleware: { icache }}) {
-				return <Foo key={key} doSomething={() => {
-					icache.set('key', key);
-				}}></Foo>
+			const App = factory(function App({ middleware: { icache } }) {
+				return (
+					<Foo
+						key={key}
+						doSomething={() => {
+							icache.set('key', key);
+						}}
+					/>
+				);
 			});
 			const domNode = document.createElement('div');
-			const r = renderer(() => <App/>);
+			const r = renderer(() => <App />);
 			r.mount({ domNode });
 			assert.strictEqual(global.dojo_scope.rendering, true);
 			key++;
