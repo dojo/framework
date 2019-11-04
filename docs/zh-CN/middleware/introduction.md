@@ -43,7 +43,7 @@ export default myMiddleware;
 ## 组合中间件
 
 -   组合中间件并返回一个对象以公开更复杂的 API
--   使用核心的 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件将组合部件标记为需要重新渲染
+-   使用核心的 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件将组合部件标记为需要重新渲染
 
 > src/middleware/myComposingMiddleware.ts
 
