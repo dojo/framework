@@ -1747,6 +1747,27 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return {};
 	}
 
+	function createWidgetOptions(id: string, widgetId: string, middleware?: any) {
+		return {
+			id,
+			properties: () => {
+				const widgetMeta = widgetMetaMap.get(widgetId);
+				if (widgetMeta) {
+					return { ...widgetMeta.properties };
+				}
+				return {};
+			},
+			children: () => {
+				const widgetMeta = widgetMetaMap.get(widgetId);
+				if (widgetMeta) {
+					return widgetMeta.children;
+				}
+				return [];
+			},
+			middleware
+		};
+	}
+
 	function resolveMiddleware(
 		middlewares: any,
 		id: string,
@@ -1757,23 +1778,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const uniqueId = `${id}-${metaId++}`;
 		for (let i = 0; i < keys.length; i++) {
 			const middleware = middlewares[keys[i]]();
-			const payload: any = {
-				id: uniqueId,
-				properties: () => {
-					const widgetMeta = widgetMetaMap.get(id);
-					if (widgetMeta) {
-						return { ...widgetMeta.properties };
-					}
-					return {};
-				},
-				children: () => {
-					const widgetMeta = widgetMetaMap.get(id);
-					if (widgetMeta) {
-						return widgetMeta.children;
-					}
-					return [];
-				}
-			};
+			const payload = createWidgetOptions(uniqueId, id);
 			if (middleware.middlewares) {
 				const { middlewares: resolvedMiddleware } = resolveMiddleware(
 					middleware.middlewares,
@@ -1788,27 +1793,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		middlewareIds.push(uniqueId);
 		return { middlewares: results, ids: middlewareIds };
-	}
-
-	function createWidgetOptions(id: string, middleware: any) {
-		return {
-			id,
-			properties: () => {
-				const widgetMeta = widgetMetaMap.get(id);
-				if (widgetMeta) {
-					return widgetMeta.properties;
-				}
-				return {};
-			},
-			children: () => {
-				const widgetMeta = widgetMetaMap.get(id);
-				if (widgetMeta) {
-					return widgetMeta.children;
-				}
-				return {};
-			},
-			middleware
-		};
 	}
 
 	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult | false {
@@ -1868,7 +1852,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				invalidate = widgetMeta.invalidator;
 			}
 
-			rendered = Constructor(createWidgetOptions(id, widgetMeta.middleware));
+			rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
 			widgetMeta.rendering = false;
 			if (widgetMeta.deferRefs > 0) {
 				return false;
@@ -1918,7 +1902,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
 		current = getWNodeWrapper(current.id) || current;
-		const { instance, domNode, hasAnimations } = current;
+		const { instance, domNode, hasAnimations, id } = current;
 		let {
 			node: { widgetConstructor }
 		} = next;
@@ -1932,7 +1916,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let didRender = false;
 		let currentChildren = _idToChildrenWrappers.get(current.id);
 		next.hasAnimations = hasAnimations;
-		next.id = current.id;
+		next.id = id;
 		next.childDomWrapperId = current.childDomWrapperId;
 		next.properties = next.node.properties;
 		_wrapperSiblingMap.delete(current);
@@ -1941,7 +1925,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 
 		if (!isWidgetBaseConstructor(Constructor)) {
-			const widgetMeta = widgetMetaMap.get(next.id);
+			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
 				widgetMeta.children = next.node.children;
@@ -1961,10 +1945,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					);
 				}
 				if (widgetMeta.dirty) {
-					_idToChildrenWrappers.delete(next.id);
+					_idToChildrenWrappers.delete(id);
 					didRender = true;
 					widgetMeta.dirty = false;
-					rendered = Constructor(createWidgetOptions(next.id, widgetMeta.middleware));
+					rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}
@@ -1979,19 +1963,19 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instance!.__setChildren__(next.node.children);
 			if (instanceData.dirty) {
 				didRender = true;
-				_idToChildrenWrappers.delete(next.id);
+				_idToChildrenWrappers.delete(id);
 				rendered = instance!.__render__();
 			}
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
-		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
+		processResult.widget = { type: 'attach', instance, id, attached: false };
 
 		let children: DNodeWrapper[] | undefined;
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
 			children = renderedToWrapper(rendered, next, current);
-			_idToChildrenWrappers.set(next.id, children);
+			_idToChildrenWrappers.set(id, children);
 		}
 
 		if (didRender) {
