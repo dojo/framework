@@ -11,15 +11,15 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 ## 管理复杂的应用程序
 
--   开发[称为 **Widget** 的简单且模块化的组件](/learn/creating-widgets/widget-fundamentals#basic-widget-structure)，这些组件可通过多种方式组装，以实现日益复杂的需求。
--   使用[响应式的状态管理和数据流](/learn/creating-widgets/managing-state)来连接部件，当应用程序的状态更改时，Dojo 框架就可以高效地渲染更新。
+-   开发[称为 **Widget** 的简单且模块化的组件](/learn/creating-widgets/部件的基本原理#基本的部件结构)，这些组件可通过多种方式组装，以实现日益复杂的需求。
+-   使用[响应式的状态管理和数据流](/learn/creating-widgets/状态管理)来连接部件，当应用程序的状态更改时，Dojo 框架就可以高效地渲染更新。
 -   使用[集中的、面向命令的数据存储](/learn/stores/introduction)来管理高级的应用程序状态。
 -   允许用户使用[声明式路由](/learn/routing/route-configuration)在单页面应用程序（SPA）内导航，并支持跟踪历史记录。
 -   通过功能切换检测来禁用处于开发阶段的功能——甚至在构建时删除未使用的模块，缩减应用程序的交付大小。编写适合在浏览器或服务器上运行的程序。
 
 ## 创建高效的应用程序
 
--   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/rendering-widgets#working-with-the-vdom)声明部件结构，避免高昂的 DOM 操作和布局抖动。
+-   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/渲染部件#使用-vdom)声明部件结构，避免高昂的 DOM 操作和布局抖动。
 -   简化[资源分层和绑定](/learn/building/creating-bundles)，缩减用户实际需要的应用程序交互时间（Time-to-Interactive）。当模块及其依赖跨多个绑定时，Dojo 框架能自动将 import 转换为延迟加载。
 
 ## 创建全面的应用程序
@@ -32,7 +32,7 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 -   开发[渐进式 web 应用程序（PWA）](/learn/building/progressive-web-applications)，支持与本地设备 APP 类似的功能，如离线使用、后台数据同步和推送通知。
 -   使用[构建时渲染（BTR）](/learn/building/buildtime-rendering)，提供可以与服务器端渲染（SSR）的应用程序媲美的预渲染功能，并且不需要托管到动态的 web 服务器上。创建完全不使用 JavaScript 的、真正的静态站点；或者借助 BTR 让应用程序实现更好的首次加载体验。
--   利用先进的 web 技术，如 [Web Animations](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)、[Intersection Observers](/learn/middleware/available-middleware#intersection) 和 [Resize Observers](/learn/middleware/available-middleware#resize)。Dojo 框架为用户在多种运行环境上使用最新功能提供了一致的应用程序体验。
+-   利用先进的 web 技术，如 [Web Animations](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)、[Intersection Observers](/learn/middleware/可用的中间件#intersection) 和 [Resize Observers](/learn/middleware/可用的中间件#resize)。Dojo 框架为用户在多种运行环境上使用最新功能提供了一致的应用程序体验。
 -   如果需要的话，需要定制的应用程序可以[脱离 Dojo 的构建管道](/learn/building/ejecting)，转而使用自己的解决方案，并只使用框架提供的部分功能。
 
 ## 加快开发
