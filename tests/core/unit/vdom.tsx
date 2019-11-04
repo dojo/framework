@@ -6501,6 +6501,37 @@ jsdomDescribe('vdom', () => {
 			decrementBlockCount();
 			assert.strictEqual(global.dojo_scope.blocksPending, 0);
 		});
+
+		it('should not set rendering to false if a render has been scheduled', () => {
+			const factory = create({ icache }).properties<any>();
+			let key = 0;
+			const Foo = factory(function App({ properties }) {
+				properties().doSomething();
+				return <div />;
+			});
+			const App = factory(function App({ middleware: { icache } }) {
+				return (
+					<Foo
+						key={key}
+						doSomething={() => {
+							icache.set('key', key);
+						}}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			key++;
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			key++;
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, false);
+		});
 	});
 
 	describe('focus', () => {
