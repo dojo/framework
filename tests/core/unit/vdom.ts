@@ -3672,7 +3672,6 @@ jsdomDescribe('vdom', () => {
 						let counter = 0;
 						const Foo = createWidget(({ middleware }) => {
 							middleware.diffProperty('key', (current: any, properties: any) => {
-								assert.deepEqual(current, { key: 'foo' });
 								assert.deepEqual(properties, { key: 'foo' });
 								middleware.invalidator();
 							});
@@ -3722,6 +3721,25 @@ jsdomDescribe('vdom', () => {
 						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 						resolvers.resolve();
 						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
+					});
+
+					it('should call diff property for the first render', () => {
+						const createWidget = create({ diffProperty });
+						let counter = 0;
+						const Foo = createWidget(({ middleware }) => {
+							middleware.diffProperty('key', () => {
+								counter++;
+							});
+							return v('div', [`${counter}`]);
+						});
+						const App = createWidget(() => {
+							return v('div', [v('button', {}), Foo({ key: 'foo' })]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 					});
 				});
 			});
