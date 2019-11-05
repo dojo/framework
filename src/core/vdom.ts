@@ -1644,7 +1644,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			children: () => {
 				const widgetMeta = widgetMetaMap.get(widgetId);
 				if (widgetMeta) {
-					return widgetMeta.children;
+					return widgetMeta.children || [];
 				}
 				return [];
 			},
