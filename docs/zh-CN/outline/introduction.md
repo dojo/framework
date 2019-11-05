@@ -20,7 +20,7 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 ## 创建高效的应用程序
 
 -   通过[虚拟化 DOM（VDOM）](/learn/creating-widgets/渲染部件#使用-vdom)声明部件结构，避免高昂的 DOM 操作和布局抖动。
--   简化[资源分层和绑定](/learn/building/creating-bundles)，缩减用户实际需要的应用程序交互时间（Time-to-Interactive）。当模块及其依赖跨多个绑定时，Dojo 框架能自动将 import 转换为延迟加载。
+-   简化[资源分层和绑定](/learn/building/创建包)，缩减用户实际需要的应用程序交互时间（Time-to-Interactive）。当模块及其依赖跨多个绑定时，Dojo 框架能自动将 import 转换为延迟加载。
 
 ## 创建全面的应用程序
 
@@ -30,10 +30,10 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 ## 创建可适配的应用程序
 
--   开发[渐进式 web 应用程序（PWA）](/learn/building/progressive-web-applications)，支持与本地设备 APP 类似的功能，如离线使用、后台数据同步和推送通知。
--   使用[构建时渲染（BTR）](/learn/building/buildtime-rendering)，提供可以与服务器端渲染（SSR）的应用程序媲美的预渲染功能，并且不需要托管到动态的 web 服务器上。创建完全不使用 JavaScript 的、真正的静态站点；或者借助 BTR 让应用程序实现更好的首次加载体验。
+-   开发[渐进式 web 应用程序（PWA）](/learn/building/渐进式-web-应用程序)，支持与本地设备 APP 类似的功能，如离线使用、后台数据同步和推送通知。
+-   使用[构建时渲染（BTR）](/learn/building/构建时渲染)，提供可以与服务器端渲染（SSR）的应用程序媲美的预渲染功能，并且不需要托管到动态的 web 服务器上。创建完全不使用 JavaScript 的、真正的静态站点；或者借助 BTR 让应用程序实现更好的首次加载体验。
 -   利用先进的 web 技术，如 [Web Animations](https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API)、[Intersection Observers](/learn/middleware/可用的中间件#intersection) 和 [Resize Observers](/learn/middleware/可用的中间件#resize)。Dojo 框架为用户在多种运行环境上使用最新功能提供了一致的应用程序体验。
--   如果需要的话，需要定制的应用程序可以[脱离 Dojo 的构建管道](/learn/building/ejecting)，转而使用自己的解决方案，并只使用框架提供的部分功能。
+-   如果需要的话，需要定制的应用程序可以[脱离 Dojo 的构建管道](/learn/building/脱离-dojo-构建管道)，转而使用自己的解决方案，并只使用框架提供的部分功能。
 
 ## 加快开发
 

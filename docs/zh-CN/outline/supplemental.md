@@ -197,7 +197,7 @@ Dojo 将 DOM 从应用程序中抽象出来，推荐使用响应式状态流来�
 
 复杂的应用程序可能需要对层或包的定义做更细粒度的控制。例如，如果应用程序有一组横跨多个路由的公共依赖项，不要在每个包中内联或复制这些依赖，则需要将公共依赖提取到自己的包中，然后在第一次引用时延迟加载。
 
-Dojo 的构建管道允许在应用程序的 `.dojorc` 构建配置文件中指定资源[包](/learn/building/creating-bundles)，然后能自动将横跨多个包的模块依赖项转换为延迟加载的引用。
+Dojo 的构建管道允许在应用程序的 `.dojorc` 构建配置文件中指定资源[包](/learn/building/介绍)，然后能自动将横跨多个包的模块依赖项转换为延迟加载的引用。
 
 # 可访问性与国际化
 
@@ -215,9 +215,9 @@ Dojo 允许轻松使用消息包将文本消息从应用程序逻辑中分离出
 
 当前社会，Internet 的重要性与日俱增，应用程序被要求能适应用户访问 web 的各种方式。较小尺寸的移动体验已经超过了桌面，但较大的外观仍然可以满足复杂的应用程序需求。Dojo 提供了多种解决方案，帮助开发人员创建适应用户访问需求的应用程序。
 
-当需要预渲染内容时（如开发静态站点时），Dojo 应用程序可以利用构建时渲染（[BTR](/learn/building/buildtime-rendering)），应用程序结构的一部分或全部都是在构建时计算的，而不是在用户浏览器中运行时计算的。Dojo 提供了一个灵活的基于块 [BTR](/learn/building/buildtime-rendering) 的解决方案，当构建应用程序时能运行 Node.js 脚本，支持读取文件来获取内容等功能。Dojo 的 BTR 解决方案也支持渐进式融合，以在预渲染内容之上支持动态行为。
+当需要预渲染内容时（如开发静态站点时），Dojo 应用程序可以利用构建时渲染（[BTR](/learn/building/构建时渲染)），应用程序结构的一部分或全部都是在构建时计算的，而不是在用户浏览器中运行时计算的。Dojo 提供了一个灵活的基于块 [BTR](/learn/building/构建时渲染) 的解决方案，当构建应用程序时能运行 Node.js 脚本，支持读取文件来获取内容等功能。Dojo 的 BTR 解决方案也支持渐进式融合，以在预渲染内容之上支持动态行为。
 
-渐进式 web 应用程序（[PWA](/learn/building/progressive-web-applications)）有助于提供与本地设备 App 接近的体验，同时依然能从 web 支持的可移植性和易交付等功能中受益。Dojo 通过简单的构建配置就能帮助创建 [PWA](/learn/building/progressive-web-applications)，开发人员可以在应用程序中添加离线使用、后台数据同步和推送通知等。
+渐进式 web 应用程序（[PWA](/learn/building/渐进式-web-应用程序)）有助于提供与本地设备 App 接近的体验，同时依然能从 web 支持的可移植性和易交付等功能中受益。Dojo 通过简单的构建配置就能帮助创建 [PWA](/learn/building/渐进式-web-应用程序)，开发人员可以在应用程序中添加离线使用、后台数据同步和推送通知等。
 
 Dojo 允许开发人员通过[中间件](/learn/middleware/introduction)系统，在所有的交付目标上以一致的方式使用几个即将可用的 web API。[Intersection observer](/learn/middleware/可用的中间件#intersection) API 用于更好的控制渲染，仅渲染用户可见的部件，例如支持无线滚动列表。[Resize observer](/learn/middleware/可用的中间件#resize) API 能够让应用程序动态响应视窗大小的变化，允许界面在桌面和移动视窗的所有分辨率间逐步适应。
 

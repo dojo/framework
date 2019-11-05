@@ -555,7 +555,7 @@ import injector from '@dojo/framework/core/middleware/injector';
 
 在构建时，允许部件在 Node.js 中执行称为 **blocks** 的模块。通常用于构建时渲染。
 
-在[构建(build)参考指南](/learn/building/buildtime-rendering)中有详细说明。
+在[构建(build)参考指南](/learn/building/构建时渲染)中有详细说明。
 
 **API:**
 
