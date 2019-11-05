@@ -3851,11 +3851,7 @@ jsdomDescribe('vdom', () => {
 							return v('div', [`${counter}`]);
 						});
 						const App = createWidget(() => {
-							return v('div', [
-								v('button', {
-								}),
-								Foo({ key: 'foo' })
-							]);
+							return v('div', [v('button', {}), Foo({ key: 'foo' })]);
 						});
 						const r = renderer(() => App({}));
 						const root = document.createElement('div');
