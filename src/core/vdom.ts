@@ -878,6 +878,7 @@ export const diffProperty = factory(({ id }) => {
 			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
+				diff({}, widgetMeta.properties);
 				propertyDiffMap.set(propertyName, diff);
 				widgetMeta.customDiffProperties.add(propertyName);
 			}

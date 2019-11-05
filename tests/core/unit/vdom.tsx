@@ -3790,7 +3790,6 @@ jsdomDescribe('vdom', () => {
 						let counter = 0;
 						const Foo = createWidget(({ middleware }) => {
 							middleware.diffProperty('key', (current: any, properties: any) => {
-								assert.deepEqual(current, { key: 'foo' });
 								assert.deepEqual(properties, { key: 'foo' });
 								middleware.invalidator();
 							});
