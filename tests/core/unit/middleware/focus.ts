@@ -45,7 +45,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -57,6 +56,10 @@ describe('focus middleware', () => {
 		assert.isFalse(focus.shouldFocus());
 		focus.focus();
 		assert.isTrue(focus.shouldFocus());
+		assert.isFalse(focus.shouldFocus());
+		focus.focus();
+		assert.isTrue(focus.shouldFocus());
+		assert.isFalse(focus.shouldFocus());
 	});
 
 	it('`shouldFocus` returns true when focus property returns true', () => {
@@ -65,7 +68,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -84,7 +86,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -103,7 +104,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -121,7 +121,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
