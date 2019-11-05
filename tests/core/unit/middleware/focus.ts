@@ -45,7 +45,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -69,7 +68,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -88,7 +86,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -107,7 +104,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -125,7 +121,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,

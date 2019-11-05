@@ -1,35 +1,34 @@
 import global from '../../shim/global';
 import { create, diffProperty, node, destroy, invalidator } from '../vdom';
 import { createICacheMiddleware } from './icache';
-import { cache } from './cache';
 import { FocusProperties } from '../mixins/Focus';
 
 interface FocusState {
-	previous: number;
 	current: number;
+	previous: number;
 }
 
 const icache = createICacheMiddleware<FocusState>();
 
-const factory = create({ icache, cache, diffProperty, node, destroy, invalidator }).properties<FocusProperties>();
+const factory = create({ icache, diffProperty, node, destroy, invalidator }).properties<FocusProperties>();
 
-export const focus = factory(({ middleware: { icache, cache, diffProperty, node, destroy, invalidator } }) => {
+export const focus = factory(({ middleware: { icache, diffProperty, node, destroy, invalidator } }) => {
 	let initialized = false;
+	let currentElement: HTMLElement | undefined;
 	const nodeSet = new Set<HTMLElement>();
 	diffProperty('focus', (_: FocusProperties, next: FocusProperties) => {
 		const result = next.focus && next.focus();
 		if (result) {
-			const current = icache.get('current') || 0;
+			const current = icache.getOrSet('current', 0);
 			icache.set('current', current + 1);
 		}
 	});
 	function onFocusChange() {
-		const currentElement = cache.get('active-element');
 		const activeElement = global.document.activeElement;
-		if ((nodeSet.has(currentElement) || nodeSet.has(activeElement)) && currentElement !== activeElement) {
+		if ((nodeSet.has(currentElement!) || nodeSet.has(activeElement)) && currentElement !== activeElement) {
 			invalidator();
 		}
-		cache.set('active-element', activeElement);
+		currentElement = activeElement;
 	}
 	destroy(() => {
 		global.document.removeEventListener('focusin', onFocusChange);
@@ -38,13 +37,13 @@ export const focus = factory(({ middleware: { icache, cache, diffProperty, node,
 	});
 	return {
 		shouldFocus(): boolean {
-			const current = icache.get('current') || 0;
-			const previous = cache.get('previous') || 0;
-			cache.set('previous', current);
+			const current = icache.getOrSet('current', 0);
+			const previous = icache.getOrSet('previous', 0);
+			icache.set('previous', current);
 			return current !== previous;
 		},
 		focus(): void {
-			const current = cache.get('current') || 0;
+			const current = icache.getOrSet('current', 0);
 			icache.set('current', current + 1);
 		},
 		isFocused(key: string | number): boolean {
