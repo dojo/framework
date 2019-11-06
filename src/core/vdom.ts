@@ -859,7 +859,11 @@ export const node = factory(({ id }) => {
 				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
 				const mountNode = widgetMeta.mountNode;
 				const node = widgetMeta.nodeMap.get(key);
-				if (node && mountNode.contains(node)) {
+				if (
+					node &&
+					(mountNode.contains(node) ||
+						(global.document.body !== mountNode && global.document.body.contains(node)))
+				) {
 					return node;
 				}
 				requestedDomNodes.add(`${widgetId}-${key}`);
