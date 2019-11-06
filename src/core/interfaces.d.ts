@@ -400,6 +400,8 @@ export interface MiddlewareMap<
 
 export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: ReturnType<U[P]>['api'] };
 
+export type MiddlewareApi<T extends MiddlewareResultFactory<any, any, any, any>> = ReturnType<ReturnType<T>['api']>;
+
 export interface Callback<Props, Children, Middleware, ReturnValue> {
 	(
 		options: {
