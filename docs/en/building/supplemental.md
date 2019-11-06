@@ -1,3 +1,43 @@
+# Application Base Path
+
+All of an application's links, images, and resources are served from an applications base path. By default, the base path is `/`, but the base path can be configured by adding the `base` option to the `.dojorc`.
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"base": "./some-directory/"
+	}
+}
+```
+
+## Not Hosted from Root
+
+If a Dojo app is not served from the root of the web server, it may be necessary to change the base path. For example, if an app is served from `http://example.com/incredible-app`, update the base path to be `/incredible-app/`.
+
+## Local Builds
+
+Depending on the environment, it may be necessary to change the base path during a development build, but keep the default base path (or a different, custom, one) for production builds. Let's say that the development machine serves all content under `/var/www/html` , but several projects exist under that directory -so each project is served from a different subdirectory. It may make sense to serve an app from `/var/www/html/incredible-app/output/dev` when run locally.
+
+To achieve this configuration, create a `.dojorc` file only for development.
+
+> .dojorc.local
+
+```json
+{
+	"build-app": {
+		"base": "incredible-app/output/dev/"
+	}
+}
+```
+
+With this local development configuration in place, build the app using this configuration.
+
+```shell
+dojo build app --dojorc .dojorc.local -m dev
+```
+
 # Creating bundles
 
 A bundle is a portion of code that represents a slice of functionality. Bundles can be loaded asynchronously on demand and in parallel. An application that is appropriately bundled can be significantly more responsive and require fewer kilobytes and less load time than an application that does not use any kind of code splitting. This is especially important when working with large applications where much of the presentation logic isn't needed on the initial load.
