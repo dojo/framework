@@ -32,7 +32,7 @@ To achieve this configuration, create a `.dojorc` file only for development.
 }
 ```
 
-With this loval development configuration in place, build the app using this configuration.
+With this local development configuration in place, build the app using this configuration.
 
 ```shell
 dojo build app --dojorc .dojorc.local -m dev
