@@ -3577,7 +3577,7 @@ jsdomDescribe('vdom', () => {
 						r.mount({ domNode: root });
 						assert.isNull(divNode);
 						resolvers.resolve();
-						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+						assert.strictEqual(document.body.lastElementChild, divNode);
 					});
 
 					it('should remove nodes from the map', () => {
