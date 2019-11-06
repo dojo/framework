@@ -3565,6 +3565,21 @@ jsdomDescribe('vdom', () => {
 						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
 					});
 
+					it('should invalidate widget once body node is available', () => {
+						const createWidget = create({ node });
+						let divNode: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.node.get('div');
+							return v('div', [undefined, v('body', [v('div', { key: 'div' })]), undefined]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+					});
+
 					it('should remove nodes from the map', () => {
 						const createWidget = create({ node, invalidator });
 						let divNode: any;
