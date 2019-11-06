@@ -1,6 +1,6 @@
 # Application Base Path
 
-All of your applications links, images, and resources are served from your applications base path. By default, the base path is `/`, but you can configure the base path by adding the `base` option to your `.dojorc`.
+All of an application's links, images, and resources are served from an applications base path. By default, the base path is `/`, but the base path can be configured by adding the `base` option to the `.dojorc`.
 
 > .dojorc
 
@@ -14,13 +14,13 @@ All of your applications links, images, and resources are served from your appli
 
 ## Not Hosted from Root
 
-You may need to change your base path if your Dojo app is not served from the root of your web server. For example, if your app is served from `http://example.com/incredible-app`, you would update your base path to be `/incredible-app/`.
+If a Dojo app is not served from the root of the web server, it may be necessary to change the base path. For example, if an app is served from `http://example.com/incredible-app`, update the base path to be `/incredible-app/`.
 
 ## Local Builds
 
-Depending on your environment, you may need to change the base path during a development build, but keep the default base path (or a different, custom, one) for production builds. Let's say that your development machine serves all content under `/var/www/html` , but you have several projects under that directory -so each project is served from a different subdirectory. You want to serve your app from `/var/www/html/incredible-app/output/dev` when you run it locally.
+Depending on the environment, it may be necessary to change the base path during a development build, but keep the default base path (or a different, custom, one) for production builds. Let's say that the development machine serves all content under `/var/www/html` , but several projects exist under that directory -so each project is served from a different subdirectory. It may make sense to serve an app from `/var/www/html/incredible-app/output/dev` when run locally.
 
-You would create a `.dojorc` file that you use soley for development.
+To achieve this configuration, create a `.dojorc` file only for development.
 
 > .dojorc.local
 
@@ -32,7 +32,7 @@ You would create a `.dojorc` file that you use soley for development.
 }
 ```
 
-With this in place, you would build your app using the configuration.
+With this loval development configuration in place, build the app using this configuration.
 
 ```shell
 dojo build app --dojorc .dojorc.local -m dev
