@@ -79,11 +79,14 @@ registerSuite('tsx integration', {
 
 		<Widget>{'hello dojo'}</Widget>;
 		w(Widget, {}, ['hello dojo']);
+		Widget({}, ['hello dojo']);
 		// compile errors
 		// <Widget></Widget>;
 		// w(Widget, {});
+		// Widget({});
 		// <Widget>{''}{''}</Widget>;
 		// w(Widget, {}, ['hello', 'dojo'])
+		// Widget({}, ['hello', 'dojo']);
 	},
 	'optional string child'() {
 		const factory = create().children<string | undefined>();
@@ -91,11 +94,14 @@ registerSuite('tsx integration', {
 
 		<Widget>{'hello dojo'}</Widget>;
 		<Widget />;
-		// w(Widget, {}, '');
-		// w(Widget, {});
+		w(Widget, {}, ['']);
+		w(Widget, {});
+		Widget({}, ['']);
+		Widget({});
 		// compile errors
 		// <Widget>{''}{''}</Widget>;
-		// w(Widget, {}, [''])
+		// w(Widget, {}, ['', '']);
+		// Widget({}, ['', '']);
 	},
 	'string children'() {
 		const factory = create().children<string[]>();
@@ -105,10 +111,12 @@ registerSuite('tsx integration', {
 			{'hello'}
 			{'dojo'}
 		</Widget>;
+		Widget({}, ['hello', 'dojo']);
 		w(Widget, {}, ['hello', 'dojo']);
 		// compile errors
 		// <Widget></Widget>;
 		// w(Widget, {});
+		// Widget({})
 		// <Widget>{''}</Widget>;
 		// w(Widget, {}, '');
 	},
@@ -148,8 +156,16 @@ registerSuite('tsx integration', {
 
 		<Widget>{() => ''}</Widget>;
 		<Widget />;
+		w(Widget, {}, [() => 'hello']);
+		w(Widget, {});
+		Widget({}, [() => 'hello']);
+		Widget({});
 		// compile errors
 		// <Widget>{''}</Widget>;
+		// w(Widget, {}, [() => 'hello', () => 'hello']);
+		// w(Widget, {}, ['']);
+		// Widget({}, [() => 'hello', () => 'hello']);
+		// Widget({}, ['']);
 	},
 	'string child with props with props'() {
 		const factory = create()
@@ -158,9 +174,15 @@ registerSuite('tsx integration', {
 		const Widget = factory(({ children }) => children());
 
 		<Widget>{'hello dojo'}</Widget>;
+		w(Widget, {}, ['hello dojo']);
+		Widget({}, ['hello dojo']);
 		// compile errors
 		// <Widget></Widget>;
+		// w(Widget, {});
+		// Widget({});
 		// <Widget>{''}{''}</Widget>;
+		// w(Widget, {}, ['hello', 'dojo'])
+		// Widget({}, ['hello', 'dojo']);
 	},
 	'optional string child with props'() {
 		const factory = create()
@@ -170,8 +192,14 @@ registerSuite('tsx integration', {
 
 		<Widget>{'hello dojo'}</Widget>;
 		<Widget />;
+		w(Widget, {}, ['']);
+		w(Widget, {});
+		Widget({}, ['']);
+		Widget({});
 		// compile errors
 		// <Widget>{''}{''}</Widget>;
+		// w(Widget, {}, ['', '']);
+		// Widget({}, ['', '']);
 	},
 	'string children with props'() {
 		const factory = create()
@@ -229,8 +257,16 @@ registerSuite('tsx integration', {
 
 		<Widget>{() => ''}</Widget>;
 		<Widget />;
+		w(Widget, {}, [() => 'hello']);
+		w(Widget, {});
+		Widget({}, [() => 'hello']);
+		Widget({});
 		// compile errors
 		// <Widget>{''}</Widget>;
+		// w(Widget, {}, [() => 'hello', () => 'hello']);
+		// w(Widget, {}, ['']);
+		// Widget({}, [() => 'hello', () => 'hello']);
+		// Widget({}, ['']);
 	},
 	'class-based widget with children'() {
 		class Foo extends WidgetBase<{ foo: string }> {

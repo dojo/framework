@@ -454,7 +454,7 @@ export interface WNodeFactory<W extends WNodeFactoryTypes> {
 export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
 	(
 		properties: W['properties'],
-		children: W['children'] extends [any]
+		children?: W['children'] extends [any]
 			? W['children'][0][]
 			: W['children'] extends any[] ? W['children'] : [W['children']]
 	): WNode<W>;
