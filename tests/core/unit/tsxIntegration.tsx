@@ -73,6 +73,156 @@ registerSuite('tsx integration', {
 		// <Foo>{{ right: () => 'right'}}</Foo>;
 		// <Foo><div></div></Foo>;
 	},
+	'string child'() {
+		const factory = create().children<string>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>{'hello dojo'}</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}{''}</Widget>;
+	},
+	'optional string child'() {
+		const factory = create().children<string | undefined>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>{'hello dojo'}</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}{''}</Widget>;
+	},
+	'string children'() {
+		const factory = create().children<string[]>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>
+			{'hello'}
+			{'dojo'}
+		</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}</Widget>;
+	},
+	'optional string children'() {
+		const factory = create().children<string[] | undefined>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>
+			{'hello'}
+			{'dojo'}
+		</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}</Widget>;
+	},
+	'function child'() {
+		const factory = create().children<(() => string)>();
+		const Widget = factory(({ children }) => {
+			const [c] = children();
+			return c();
+		});
+
+		<Widget>{() => ''}</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}</Widget>;
+	},
+	'optional function child'() {
+		const factory = create().children<undefined | (() => string)>();
+		const Widget = factory(({ children }) => {
+			const [c] = children();
+			if (c) {
+				return c();
+			}
+			return null;
+		});
+
+		<Widget>{() => ''}</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}</Widget>;
+	},
+	'string child with props with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<string>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>{'hello dojo'}</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}{''}</Widget>;
+	},
+	'optional string child with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<string | undefined>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>{'hello dojo'}</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}{''}</Widget>;
+	},
+	'string children with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<string[]>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>
+			{'hello'}
+			{'dojo'}
+		</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}</Widget>;
+	},
+	'optional string children with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<string[] | undefined>();
+		const Widget = factory(({ children }) => children());
+
+		<Widget>
+			{'hello'}
+			{'dojo'}
+		</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}</Widget>;
+	},
+	'function child with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<(() => string)>();
+		const Widget = factory(({ children }) => {
+			const [c] = children();
+			return c();
+		});
+
+		<Widget>{() => ''}</Widget>;
+		// compile errors
+		// <Widget></Widget>;
+		// <Widget>{''}</Widget>;
+	},
+	'optional function child with props'() {
+		const factory = create()
+			.properties<{ foo?: string }>()
+			.children<undefined | (() => string)>();
+		const Widget = factory(({ children }) => {
+			const [c] = children();
+			if (c) {
+				return c();
+			}
+			return null;
+		});
+
+		<Widget>{() => ''}</Widget>;
+		<Widget />;
+		// compile errors
+		// <Widget>{''}</Widget>;
+	},
 	'class-based widget with children'() {
 		class Foo extends WidgetBase<{ foo: string }> {
 			render() {

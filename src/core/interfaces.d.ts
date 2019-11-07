@@ -449,6 +449,20 @@ export interface WNodeFactory<W extends WNodeFactoryTypes> {
 	children: W['children'];
 }
 
+export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
+	(
+		properties: W['properties'],
+		children: W['children'] extends [any]
+			? W['children'][0][]
+			: W['children'] extends any[] ? W['children'] : [W['children']]
+	): WNode<W>;
+	new (): {
+		__properties__: W['properties'] & { __children__?: W['children'] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+}
+
 export interface WNodeFactoryTypes<P = any, C = any> {
 	readonly properties: P;
 	readonly children: C;
