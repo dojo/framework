@@ -433,6 +433,7 @@ export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
 	};
 	properties: W['properties'];
 	children: W['children'];
+	type: 'default';
 }
 
 export interface WNodeFactory<W extends WNodeFactoryTypes> {
@@ -447,6 +448,7 @@ export interface WNodeFactory<W extends WNodeFactoryTypes> {
 	};
 	properties: W['properties'];
 	children: W['children'];
+	type: 'required';
 }
 
 export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
@@ -461,6 +463,7 @@ export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
 	};
 	properties: W['properties'];
 	children: W['children'];
+	type: 'optional';
 }
 
 export interface WNodeFactoryTypes<P = any, C = any> {

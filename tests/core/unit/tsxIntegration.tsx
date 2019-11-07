@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { Registry } from '../../../src/core/Registry';
 import { WNode, RenderResult } from '../../../src/core/interfaces';
-import { create, tsx, fromRegistry } from '../../../src/core/vdom';
+import { create, tsx, fromRegistry, w } from '../../../src/core/vdom';
 
 const registry = new Registry();
 
@@ -78,9 +78,12 @@ registerSuite('tsx integration', {
 		const Widget = factory(({ children }) => children());
 
 		<Widget>{'hello dojo'}</Widget>;
+		w(Widget, {}, ['hello dojo']);
 		// compile errors
 		// <Widget></Widget>;
+		// w(Widget, {});
 		// <Widget>{''}{''}</Widget>;
+		// w(Widget, {}, ['hello', 'dojo'])
 	},
 	'optional string child'() {
 		const factory = create().children<string | undefined>();
@@ -88,8 +91,11 @@ registerSuite('tsx integration', {
 
 		<Widget>{'hello dojo'}</Widget>;
 		<Widget />;
+		// w(Widget, {}, '');
+		// w(Widget, {});
 		// compile errors
 		// <Widget>{''}{''}</Widget>;
+		// w(Widget, {}, [''])
 	},
 	'string children'() {
 		const factory = create().children<string[]>();
@@ -99,9 +105,12 @@ registerSuite('tsx integration', {
 			{'hello'}
 			{'dojo'}
 		</Widget>;
+		w(Widget, {}, ['hello', 'dojo']);
 		// compile errors
 		// <Widget></Widget>;
+		// w(Widget, {});
 		// <Widget>{''}</Widget>;
+		// w(Widget, {}, '');
 	},
 	'optional string children'() {
 		const factory = create().children<string[] | undefined>();

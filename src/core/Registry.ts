@@ -14,12 +14,16 @@ import {
 	Callback,
 	WNodeFactory,
 	RenderResult,
-	WidgetBaseTypes
+	WidgetBaseTypes,
+	DefaultChildrenWNodeFactory,
+	OptionalWNodeFactory
 } from './interfaces';
 
 export type RegistryItem =
 	| WidgetBaseConstructor
 	| WNodeFactory<any>
+	| DefaultChildrenWNodeFactory<any>
+	| OptionalWNodeFactory<any>
 	| Promise<WidgetBaseConstructor | WNodeFactory<any>>
 	| WidgetBaseConstructorFunction
 	| ESMDefaultWidgetBaseFunction;
@@ -31,7 +35,12 @@ export const WIDGET_BASE_TYPE = '__widget_base_type';
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;
-	item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem;
+	item:
+		| WNodeFactory<any>
+		| DefaultChildrenWNodeFactory<any>
+		| OptionalWNodeFactory<any>
+		| WidgetBaseConstructor
+		| InjectorItem;
 }
 /**
  * Widget Registry Interface
@@ -143,7 +152,12 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	 */
 	private emitLoadedEvent(
 		widgetLabel: RegistryLabel,
-		item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem
+		item:
+			| DefaultChildrenWNodeFactory<any>
+			| OptionalWNodeFactory<any>
+			| WNodeFactory<any>
+			| WidgetBaseConstructor
+			| InjectorItem
 	): void {
 		this.emit({
 			type: widgetLabel,
