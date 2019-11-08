@@ -1,4 +1,3 @@
-import './test';
 import './Destroyable';
 import './Evented';
 import './util';
