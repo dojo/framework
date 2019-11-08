@@ -340,20 +340,20 @@ export function w<W extends WidgetBaseTypes>(
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
-export function w<W extends OptionalWNodeFactory<any>>(
+export function w<W extends WNodeFactory<any>>(
 	widgetConstructor: W,
 	properties: W['properties'],
-	children?: W['children'] extends any[] ? W['children'] : [W['children']]
+	children: W['children'] extends any[] ? W['children'] : [W['children']]
 ): WNode<W>;
 export function w<W extends DefaultChildrenWNodeFactory<any>>(
 	widgetConstructor: W,
 	properties: W['properties'],
 	children?: W['children']
 ): WNode<W>;
-export function w<W extends WNodeFactory<any>>(
+export function w<W extends OptionalWNodeFactory<any>>(
 	widgetConstructor: W,
 	properties: W['properties'],
-	children: W['children'] extends any[] ? W['children'] : [W['children']]
+	children?: W['children'] extends any[] ? W['children'] : [W['children']]
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
 	widgetConstructorOrNode:

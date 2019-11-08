@@ -116,7 +116,7 @@ registerSuite('tsx integration', {
 		// compile errors
 		// <Widget></Widget>;
 		// w(Widget, {});
-		// Widget({})
+		// Widget({});
 		// <Widget>{''}</Widget>;
 		// w(Widget, {}, '');
 	},
