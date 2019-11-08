@@ -18,6 +18,7 @@ import {
 	Callback,
 	MiddlewareMap,
 	WNodeFactory,
+	OptionalWNodeFactory,
 	UnionToIntersection,
 	WidgetProperties,
 	MiddlewareResultFactory,
@@ -342,12 +343,17 @@ export function w<W extends WidgetBaseTypes>(
 export function w<W extends WNodeFactory<any>>(
 	widgetConstructor: W,
 	properties: W['properties'],
-	children: W['children']
+	children: W['children'] extends any[] ? W['children'] : [W['children']]
 ): WNode<W>;
 export function w<W extends DefaultChildrenWNodeFactory<any>>(
 	widgetConstructor: W,
 	properties: W['properties'],
 	children?: W['children']
+): WNode<W>;
+export function w<W extends OptionalWNodeFactory<any>>(
+	widgetConstructor: W,
+	properties: W['properties'],
+	children?: W['children'] extends any[] ? W['children'] : [W['children']]
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
 	widgetConstructorOrNode:
@@ -707,10 +713,15 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 					ReturnValue
 				>
 			): ReturnValue extends RenderResult
-				? WNodeFactory<{
-						properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
-						children: Children;
-				  }>
+				? UnionToIntersection<Children> extends undefined
+					? OptionalWNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: NonNullable<Children>;
+					  }>
+					: WNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: Children;
+					  }>
 				: MiddlewareResultFactory<
 						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 						Children,
@@ -725,7 +736,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		return returns;
 	}
 
-	function children<Children extends {}>() {
+	function children<Children>() {
 		function properties<Props>() {
 			function returns<ReturnValue>(
 				callback: Callback<
@@ -735,10 +746,15 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 					ReturnValue
 				>
 			): ReturnValue extends RenderResult
-				? WNodeFactory<{
-						properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
-						children: Children;
-				  }>
+				? UnionToIntersection<Children> extends undefined
+					? OptionalWNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: NonNullable<Children>;
+					  }>
+					: WNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: Children;
+					  }>
 				: MiddlewareResultFactory<
 						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 						Children,
@@ -753,13 +769,18 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function returns<ReturnValue>(
 			callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, Children, T, ReturnValue>
 		): ReturnValue extends RenderResult
-			? WNodeFactory<{
-					properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
-					children: Children;
-			  }>
+			? UnionToIntersection<Children> extends undefined
+				? OptionalWNodeFactory<{
+						properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: NonNullable<Children>;
+				  }>
+				: WNodeFactory<{
+						properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: Children;
+				  }>
 			: MiddlewareResultFactory<
 					WidgetProperties & UnionToIntersection<MiddlewareProps>,
-					Children,
+					NonNullable<Children>,
 					T,
 					ReturnValue
 			  > {

@@ -3465,7 +3465,7 @@ jsdomDescribe('vdom', () => {
 				});
 				const r = renderer(() =>
 					v('div', [
-						w(Foo, { foo: '1' }, (foo) => foo),
+						w(Foo, { foo: '1' }, [(foo) => foo]),
 						Foo({ foo: 'foo' }, [(foo) => v('div', [foo])]),
 						Foo({ foo: 'foo' }, [() => ''])
 					])
