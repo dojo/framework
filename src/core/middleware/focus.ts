@@ -5,7 +5,6 @@ import { FocusProperties } from '../mixins/Focus';
 
 interface FocusState {
 	current: number;
-	previous: number;
 }
 
 const icache = createICacheMiddleware<FocusState>();
@@ -15,6 +14,7 @@ const factory = create({ icache, diffProperty, node, destroy, invalidator }).pro
 export const focus = factory(({ middleware: { icache, diffProperty, node, destroy, invalidator } }) => {
 	let initialized = false;
 	let currentElement: HTMLElement | undefined;
+	let previous = 0;
 	const nodeSet = new Set<HTMLElement>();
 	diffProperty('focus', (_: FocusProperties, next: FocusProperties) => {
 		const result = next.focus && next.focus();
@@ -37,10 +37,10 @@ export const focus = factory(({ middleware: { icache, diffProperty, node, destro
 	});
 	return {
 		shouldFocus(): boolean {
-			const current = icache.getOrSet('current', 0);
-			const previous = icache.getOrSet('previous', 0);
-			icache.set('previous', current);
-			return current !== previous;
+			const current = icache.get('current') || 0;
+			const shouldFocus = current !== previous;
+			previous = current;
+			return shouldFocus;
 		},
 		focus(): void {
 			const current = icache.getOrSet('current', 0);
