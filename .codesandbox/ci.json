@@ -3,5 +3,5 @@
   "publishDirectory": {
     "@dojo/framework": "dist/release"
   },
-  "sandboxes": ["dojo"]
+  "sandboxes": ["dojo-codesandbox-template"]
 }
