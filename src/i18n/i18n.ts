@@ -343,14 +343,18 @@ export function getMessageFormatter<T extends Messages>(
 	key: string,
 	locale?: string
 ): MessageFormatter {
-	const { id = getBundleId(bundle) } = bundle;
+	const { id = getBundleId(bundle), locales } = bundle;
+
+	locale = locale || getRootLocale();
+	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
+	const bundleLocale = supportedLocales[supportedLocales.length - 1];
 
 	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
-		return getIcuMessageFormatter(id, key, locale);
+		return getIcuMessageFormatter(id, key, bundleLocale);
 	}
 
 	const cached = bundleMap.get(id);
-	const messages = cached ? cached.get(locale || getRootLocale()) || cached.get('root') : null;
+	const messages = cached ? cached.get(bundleLocale) || cached.get('root') : null;
 
 	if (!messages) {
 		throw new Error(`The bundle has not been registered.`);
@@ -372,6 +376,18 @@ export function getMessageFormatter<T extends Messages>(
 /**
  * Load locale-specific messages for the specified bundle and locale.
  *
+ * Since messages for a given locale need not be complete, the i18n ecosystem generates a list of
+ * increasingly generic locales that are compatible with the specified locale and merges all of
+ * their messages into a single message dictionary. For example, if the locale is `ar-JO`, then
+ * all messages for both `ar-JO` and `ar` are loaded, and the final result contains all default
+ * messages, overridden by any messages provided by the `ar` bundle, and finally overridden with
+ * any messages provided by the most-specific `ar-JO` bundle.
+ *
+ * In the event that the specified locale is not compatible with any locale supported by the bundle,
+ * the bundle's default messages are returned. Further, if the exact locale (e.g., "ar-JO") is not
+ * supported by the bundle, but a more general locale is (e.g., "ar"), then the bundle is registered
+ * under the more general locale and its messages are returned.
+ *
  * @param bundle
  * The default bundle that is used to determine where the locale-specific bundles are located.
  *
@@ -391,9 +407,10 @@ async function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Pro
 	const locales = bundle.locales as LocaleLoaders<T>;
 	const supportedLocales = getSupportedLocales(currentLocale, Object.keys(locales));
 	const bundles = await loadLocaleBundles<T>(locales, supportedLocales);
+	const bundleLocale = supportedLocales[supportedLocales.length - 1];
 	return bundles.reduce((previous: any, partial: any): T => {
 		const localeMessages: T = { ...previous, ...partial };
-		loadMessages(getBundleId(bundle), <T>Object.freeze(localeMessages), currentLocale);
+		loadMessages(getBundleId(bundle), <T>Object.freeze(localeMessages), bundleLocale);
 		return localeMessages;
 	}, bundle.messages);
 }
