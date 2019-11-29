@@ -91,7 +91,7 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			const format =
 				isPlaceholder && !useDefaults
 					? () => ''
-					: (key: string, options?: any) => formatMessage(bundle, key, options, locale);
+					: (key: keyof T, options?: any) => formatMessage(bundle, key as string, options, locale);
 
 			return Object.create({
 				format,
