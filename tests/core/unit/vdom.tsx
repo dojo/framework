@@ -28,6 +28,7 @@ import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfac
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
+import { ThemedMixin } from '../../../src/core/mixins/Themed';
 import icache from '../../../src/core/middleware/icache';
 import registry from '../../../src/core/decorators/registry';
 import { alwaysRender } from '../../../src/core/decorators/alwaysRender';
@@ -7059,5 +7060,17 @@ jsdomDescribe('vdom', () => {
 		const root: any = document.createElement('div');
 		r.mount({ domNode: root });
 		assert.isTrue(stubby.calledOnce);
+	});
+
+	it('infer mixin typings correctly', () => {
+		class MyWidget extends ThemedMixin(I18nMixin(WidgetBase)) {
+			render() {
+				return <div>hello dojo</div>;
+			}
+		}
+		const root: any = document.createElement('div');
+		const r = renderer(() => <MyWidget theme={{}} classes={{}} locale="en" rtl={true} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div dir="rtl" lang="en">hello dojo</div>');
 	});
 });

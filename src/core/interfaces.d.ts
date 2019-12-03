@@ -569,7 +569,7 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	/**
 	 * property used for typing with tsx
 	 */
-	__properties__: P & { __children__?: DNode[] | DNode };
+	__properties__: this['properties'] & { __children__?: DNode[] | DNode };
 }
 
 /**
