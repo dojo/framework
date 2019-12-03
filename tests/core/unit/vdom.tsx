@@ -7071,6 +7071,9 @@ jsdomDescribe('vdom', () => {
 		const root: any = document.createElement('div');
 		const r = renderer(() => <MyWidget theme={{}} classes={{}} locale="en" rtl={true} />);
 		r.mount({ domNode: root });
-		assert.strictEqual(root.innerHTML, '<div lang="en" dir="rtl">hello dojo</div>');
+
+		assert.strictEqual(root.children[0].getAttribute('lang'), 'en');
+		assert.strictEqual(root.children[0].getAttribute('dir'), 'rtl');
+		assert.strictEqual(root.children[0].innerHTML, 'hello dojo');
 	});
 });
