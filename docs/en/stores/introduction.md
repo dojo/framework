@@ -27,7 +27,7 @@ The store holds the global, atomic state for the entire application. The store s
 > main.ts
 
 ```ts
-import { registerStoreInjector } from '@dojo/framework/store/StoreInjector';
+import { registerStoreInjector } from '@dojo/framework/stores/StoreInjector';
 import Store from '@dojo/framework/stores/Store';
 import { State } from './interfaces';
 

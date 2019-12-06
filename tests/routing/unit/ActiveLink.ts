@@ -106,7 +106,7 @@ describe('ActiveLink', () => {
 		h.expect(() => w(Link, { to: 'other', classes: ['foo'] }));
 	});
 
-	it('should look at route params when determining active', () => {
+	it('Should look at route params when determining active', () => {
 		router.setPath('/param/one');
 		const h1 = harness(
 			() =>
@@ -137,5 +137,18 @@ describe('ActiveLink', () => {
 			}
 		);
 		h2.expect(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } }));
+	});
+
+	it('Should be able to check for an exact match', () => {
+		router.setPath('/param/suffix');
+		let h = harness(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'] }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		h.expect(() => w(Link, { classes: ['foo'], to: 'param' }));
+
+		h = harness(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'], isExact: true }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		h.expect(() => w(Link, { classes: [], to: 'param' }));
 	});
 });

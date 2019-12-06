@@ -517,7 +517,14 @@ describe('Router', () => {
 
 	it('The router will not start automatically if autostart is set to false', () => {
 		let initialNavEvent = false;
-		const router = new Router(routeConfigDefaultRoute, { HistoryManager, autostart: false });
+		let historyManagerCount = 0;
+		class TestHistoryManager extends HistoryManager {
+			constructor(args: any) {
+				super(args);
+				historyManagerCount++;
+			}
+		}
+		const router = new Router(routeConfigDefaultRoute, { HistoryManager: TestHistoryManager, autostart: false });
 		let navCount = 0;
 		router.on('nav', (event) => {
 			navCount++;
@@ -533,6 +540,7 @@ describe('Router', () => {
 			}
 		});
 		router.start();
+		assert.strictEqual(historyManagerCount, 1);
 		assert.isTrue(initialNavEvent);
 	});
 });

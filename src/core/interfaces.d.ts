@@ -1,3 +1,5 @@
+/* tslint:disable:interface-name */
+import { Bundle, Messages } from '../i18n/i18n';
 import { Destroyable } from '../core/Destroyable';
 import { Evented, EventType, EventObject } from '../core/Evented';
 import Map from '../shim/Map';
@@ -113,6 +115,20 @@ export interface Projection {
 }
 
 export type SupportedClassName = string | null | undefined | boolean;
+
+export type ClassNames = {
+	[key: string]: string;
+};
+
+export interface Theme {
+	[key: string]: object;
+}
+
+export interface Classes {
+	[widgetKey: string]: {
+		[classKey: string]: SupportedClassName[];
+	};
+}
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
@@ -384,30 +400,75 @@ export interface MiddlewareMap<
 
 export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: ReturnType<U[P]>['api'] };
 
-export interface Callback<Props, Middleware, ReturnValue> {
+export type MiddlewareApi<T extends MiddlewareResultFactory<any, any, any, any>> = ReturnType<ReturnType<T>['api']>;
+
+export interface Callback<Props, Children, Middleware, ReturnValue> {
 	(
 		options: {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
 			properties: () => Props;
-			children: () => DNode[];
+			children: () => Children extends any[] ? Children : [Children];
 		}
 	): ReturnValue;
 }
 
-export interface MiddlewareResult<Props, Middleware, ReturnValue> {
+export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {
 	api: ReturnValue;
 	properties: Props;
-	callback: Callback<Props, Middleware, ReturnValue>;
+	callback: Callback<Props, Children, Middleware, ReturnValue>;
 	middlewares: Middleware;
 }
 
-export interface MiddlewareResultFactory<Props, Middleware, ReturnValue> {
-	(): MiddlewareResult<Props, Middleware, ReturnValue>;
+export interface DefaultMiddlewareResult extends MiddlewareResult<any, any, any, any> {}
+
+export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValue> {
+	(): MiddlewareResult<Props, Children, Middleware, ReturnValue>;
 }
 
-export interface WNodeFactory<W extends WidgetBaseTypes> {
-	(properties: W['properties'], children?: W['children']): WNode<W>;
+export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
+	(properties: W['properties'], children?: W['children'] extends any[] ? W['children'] : [W['children']]): WNode<W>;
+	new (): {
+		__properties__: W['properties'] & { __children__?: DNode | DNode[] | (DNode | DNode[])[] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+	type: 'default';
+}
+
+export interface WNodeFactory<W extends WNodeFactoryTypes> {
+	(
+		properties: W['properties'],
+		children: W['children'] extends [any]
+			? W['children'][0][]
+			: W['children'] extends any[] ? W['children'] : [W['children']]
+	): WNode<W>;
+	new (): {
+		__properties__: W['properties'] & { __children__: W['children'] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+	type: 'required';
+}
+
+export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
+	(
+		properties: W['properties'],
+		children?: W['children'] extends [any]
+			? W['children'][0][]
+			: W['children'] extends any[] ? W['children'] : [W['children']]
+	): WNode<W>;
+	new (): {
+		__properties__: W['properties'] & { __children__?: W['children'] };
+	};
+	properties: W['properties'];
+	children: W['children'];
+	type: 'optional';
+}
+
+export interface WNodeFactoryTypes<P = any, C = any> {
+	readonly properties: P;
+	readonly children: C;
 }
 
 export type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends ((k: infer I) => void)
@@ -421,7 +482,7 @@ export interface WNode<W extends WidgetBaseTypes = any> {
 	/**
 	 * Constructor to create a widget or string constructor label
 	 */
-	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W> | Callback<any, any, RenderResult>;
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W> | Callback<any, any, any, RenderResult>;
 
 	/**
 	 * Properties to set against a widget instance
@@ -504,6 +565,11 @@ export interface WidgetBaseInterface<P = WidgetProperties, C extends DNode = DNo
 	 * Main internal function for dealing with widget rendering
 	 */
 	__render__(): RenderResult;
+
+	/**
+	 * property used for typing with tsx
+	 */
+	__properties__: this['properties'] & { __children__?: DNode[] | DNode };
 }
 
 /**
@@ -570,3 +636,55 @@ export interface AfterRender {
 export interface BeforeProperties<P = any> {
 	(properties: P): P;
 }
+
+export interface LocaleData {
+	/**
+	 * The locale for the widget. If not specified, then the root locale (as determined by `@dojo/i18n`) is assumed.
+	 * If specified, the widget's node will have a `lang` property set to the locale.
+	 */
+	locale?: string;
+
+	/**
+	 * An optional flag indicating the widget's text direction. If `true`, then the underlying node's `dir`
+	 * property is set to "rtl". If it is `false`, then the `dir` property is set to "ltr". Otherwise, the property
+	 * is not set.
+	 */
+	rtl?: boolean;
+}
+
+export interface I18nProperties extends LocaleData {
+	/**
+	 * An optional override for the bundle passed to the `localizeBundle`. If the override contains a `messages` object,
+	 * then it will completely replace the underlying bundle. Otherwise, a new bundle will be created with the additional
+	 * locale loaders.
+	 */
+	i18nBundle?: Bundle<Messages> | Map<Bundle<Messages>, Bundle<Messages>>;
+}
+
+export type LocalizedMessages<T extends Messages> = {
+	/**
+	 * Indicates whether the messages are placeholders while waiting for the actual localized messages to load.
+	 * This is always `false` if the associated bundle does not list any supported locales.
+	 */
+	readonly isPlaceholder: boolean;
+
+	/**
+	 * Formats an ICU-formatted message template for the represented bundle.
+	 *
+	 * @param key
+	 * The message key.
+	 *
+	 * @param options
+	 * The values to pass to the formatter.
+	 *
+	 * @return
+	 * The formatted string.
+	 */
+	format(key: string, options?: any): string;
+
+	/**
+	 * The localized messages if available, or either the default messages or a blank bundle depending on the
+	 * call signature for `localizeBundle`.
+	 */
+	readonly messages: T;
+};

@@ -119,7 +119,6 @@ registerSuite('math', {
 			assert.strictEqual(hypot(0), 0);
 			assert.strictEqual(hypot(0, 0), 0);
 			assert.strictEqual(hypot(Infinity), Infinity);
-			assert.strictEqual(hypot(Infinity, NaN), Infinity);
 			assert.strictEqual(hypot(1, 2, 2), 3);
 			assert.closeTo(hypot(2, 4), 4.47213595499958, 1e-13);
 			assert.closeTo(hypot(2, 4, 6), 7.483314773547883, 1e-13);

@@ -1,6 +1,7 @@
 const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
+import global from '../../../src/shim/global';
 import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
@@ -17,12 +18,18 @@ import {
 	widgetInstanceMap,
 	v,
 	w,
-	dom as d
+	dom as d,
+	tsx,
+	setRendering,
+	incrementBlockCount,
+	decrementBlockCount
 } from '../../../src/core/vdom';
-import { VNode, DNode, DomVNode } from '../../../src/core/interfaces';
+import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
+import { ThemedMixin } from '../../../src/core/mixins/Themed';
+import icache from '../../../src/core/middleware/icache';
 import registry from '../../../src/core/decorators/registry';
 import { alwaysRender } from '../../../src/core/decorators/alwaysRender';
 
@@ -368,13 +375,13 @@ jsdomDescribe('vdom', () => {
 		});
 
 		it('DNodes are bound to the parent widget', () => {
-			class Foo extends WidgetBase<any> {
+			class Foo extends WidgetBase<{ onClick: () => any }> {
 				render() {
 					return v('div', { onclick: this.properties.onClick }, this.children);
 				}
 			}
 
-			class Bar extends WidgetBase<any> {
+			class Bar extends WidgetBase<{ onClick: () => any }> {
 				render() {
 					return v('div', { onclick: this.properties.onClick });
 				}
@@ -2750,6 +2757,22 @@ jsdomDescribe('vdom', () => {
 			);
 		});
 
+		it('Should skip binding getters', () => {
+			const root = document.createElement('div');
+			class MyWidget extends WidgetBase<any> {
+				get bar() {
+					return this.properties.foo.length;
+				}
+				render() {
+					return 'hello';
+				}
+			}
+			const r = renderer(() => w(MyWidget, { foo: 'hello' }));
+			r.mount({ domNode: root });
+			resolvers.resolve();
+			assert.strictEqual(root.innerHTML, 'hello');
+		});
+
 		describe('supports merging with a widget returned a the top level', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
@@ -3414,6 +3437,118 @@ jsdomDescribe('vdom', () => {
 				assert.isTrue(consoleWarnStub.calledOnce);
 			});
 
+			it('typed children', () => {
+				const factory = create({ node }).children<(value: string) => RenderResult>();
+				const Foo = factory(function Foo({ children }) {
+					const [c] = children();
+					if (c) {
+						return c('result');
+					}
+				});
+				const r = renderer(() => Foo({}, [(foo) => v('div', [foo])]));
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div>result</div></div>');
+			});
+
+			it('typed children and properties', () => {
+				const factory = create({ node })
+					.properties<{ foo: string }>()
+					.children<(value: string) => RenderResult>();
+				const Foo = factory(function Foo({ children, properties }) {
+					const [c] = children();
+					const { foo } = properties();
+					if (c) {
+						return c(foo);
+					}
+					return foo;
+				});
+				const r = renderer(() =>
+					v('div', [
+						w(Foo, { foo: '1' }, [(foo) => foo]),
+						Foo({ foo: 'foo' }, [(foo) => v('div', [foo])]),
+						Foo({ foo: 'foo' }, [() => ''])
+					])
+				);
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div>1<div>foo</div></div></div>');
+			});
+
+			it('properties should have a live binding', () => {
+				const factory = create({ icache }).properties<any>();
+
+				const RunnerWidget = factory(({ properties, middleware: { icache } }) => {
+					return (
+						<div>
+							<button
+								onclick={() => {
+									const { doSomething } = properties();
+									icache.set('value', doSomething());
+								}}
+							>
+								Click me
+							</button>
+							<div>{icache.getOrSet('value', '')}</div>
+						</div>
+					);
+				});
+
+				const MyWidget = factory(({ properties }) => {
+					return (
+						<RunnerWidget
+							doSomething={() => {
+								return properties().value;
+							}}
+						/>
+					);
+				});
+
+				const App = factory(function App({ middleware: { icache } }) {
+					const value = icache.getOrSet('value', '1');
+					return (
+						<div>
+							<button
+								onclick={() => {
+									icache.set('value', `${value}1`);
+								}}
+							>
+								Increment Value
+							</button>
+							<MyWidget value={value} />
+						</div>
+					);
+				});
+
+				const root = document.createElement('div');
+				const r = renderer(() => <App />);
+				r.mount({ domNode: root });
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[1].children[0].click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>11</div></div></div></div>'
+				);
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[0].click();
+				resolvers.resolve();
+				(root as any).children[0].children[1].children[0].click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<div><div><button>Increment Value</button><div><button>Click me</button><div>111111</div></div></div></div>'
+				);
+			});
+
 			describe('core middleware', () => {
 				describe('node', () => {
 					it('should invalidate widget once node is available', () => {
@@ -3431,6 +3566,21 @@ jsdomDescribe('vdom', () => {
 						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
 					});
 
+					it('should invalidate widget once body node is available', () => {
+						const createWidget = create({ node });
+						let divNode: any;
+						const App = createWidget(({ middleware }) => {
+							divNode = middleware.node.get('div');
+							return v('div', [undefined, v('body', [v('div', { key: 'div' })]), undefined]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isNull(divNode);
+						resolvers.resolve();
+						assert.strictEqual(document.body.lastElementChild, divNode);
+					});
+
 					it('should remove nodes from the map', () => {
 						const createWidget = create({ node, invalidator });
 						let divNode: any;
@@ -3439,14 +3589,14 @@ jsdomDescribe('vdom', () => {
 						const App = createWidget(({ middleware }) => {
 							divNode = middleware.node.get(1);
 							invalidate = middleware.invalidator;
-							return v('div', [show ? v('div', { key: 1 }) : null]);
+							return v('div', [show ? v('div', [v('div', { key: 1 }, ['hello'])]) : null]);
 						});
 						const r = renderer(() => App({}));
 						const root = document.createElement('div');
 						r.mount({ domNode: root });
 						assert.isNull(divNode);
 						resolvers.resolve();
-						let expectedDiv = root.childNodes[0].childNodes[0];
+						let expectedDiv = root.childNodes[0].childNodes[0].childNodes[0];
 						assert.strictEqual(expectedDiv, divNode);
 						show = false;
 						invalidate();
@@ -3457,7 +3607,7 @@ jsdomDescribe('vdom', () => {
 						resolvers.resolve();
 						assert.isNull(divNode);
 						resolvers.resolve();
-						assert.strictEqual(root.childNodes[0].childNodes[0], divNode);
+						assert.strictEqual(root.childNodes[0].childNodes[0].childNodes[0], divNode);
 					});
 				});
 
@@ -3500,6 +3650,50 @@ jsdomDescribe('vdom', () => {
 						resolvers.resolve();
 						assert.isTrue(fooDestroyStub.calledOnce);
 						assert.isTrue(barDestroyStub.calledOnce);
+					});
+
+					it('should call destroy in the correct order, deepest middleware first', () => {
+						const middlewareCalled: string[] = [];
+						const factoryOne = create({ destroy });
+
+						const middlewareOne = factoryOne(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('1'));
+							return {};
+						});
+
+						const middlewareTwo = factoryOne(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('2'));
+							return {};
+						});
+
+						const factoryTwo = create({ destroy, middlewareTwo });
+
+						const middlewareThree = factoryTwo(({ middleware: { destroy } }) => {
+							destroy(() => middlewareCalled.push('3'));
+							return {};
+						});
+
+						let show = true;
+						let invalidate: any;
+
+						const createWidget = create({ middlewareThree, middlewareOne, invalidator });
+
+						const Foo = createWidget(() => {
+							return null;
+						});
+
+						const App = createWidget(({ middleware }) => {
+							invalidate = middleware.invalidator;
+							return show ? Foo({}) : null;
+						});
+
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						show = false;
+						invalidate();
+						resolvers.resolve();
+						assert.deepEqual(middlewareCalled, ['2', '3', '1']);
 					});
 				});
 
@@ -3612,7 +3806,6 @@ jsdomDescribe('vdom', () => {
 						let counter = 0;
 						const Foo = createWidget(({ middleware }) => {
 							middleware.diffProperty('key', (current: any, properties: any) => {
-								assert.deepEqual(current, { key: 'foo' });
 								assert.deepEqual(properties, { key: 'foo' });
 								middleware.invalidator();
 							});
@@ -3662,6 +3855,25 @@ jsdomDescribe('vdom', () => {
 						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 						resolvers.resolve();
 						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>first</div></div></div>');
+					});
+
+					it('should call diff property for the first render', () => {
+						const createWidget = create({ diffProperty });
+						let counter = 0;
+						const Foo = createWidget(({ middleware }) => {
+							middleware.diffProperty('key', () => {
+								counter++;
+							});
+							return v('div', [`${counter}`]);
+						});
+						const App = createWidget(() => {
+							return v('div', [v('button', {}), Foo({ key: 'foo' })]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 					});
 				});
 			});
@@ -6299,6 +6511,63 @@ jsdomDescribe('vdom', () => {
 		});
 	});
 
+	describe('render hooks', () => {
+		beforeEach(() => {
+			global.dojo_scope = {};
+		});
+
+		it('set rendering', () => {
+			assert.strictEqual(global.dojo_scope.rendering, undefined);
+			setRendering(true);
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			setRendering(false);
+			assert.strictEqual(global.dojo_scope.rendering, false);
+		});
+
+		it('block count', () => {
+			assert.strictEqual(global.dojo_scope.blocksPending, undefined);
+			incrementBlockCount();
+			assert.strictEqual(global.dojo_scope.blocksPending, 1);
+			incrementBlockCount();
+			assert.strictEqual(global.dojo_scope.blocksPending, 2);
+			decrementBlockCount();
+			assert.strictEqual(global.dojo_scope.blocksPending, 1);
+			decrementBlockCount();
+			assert.strictEqual(global.dojo_scope.blocksPending, 0);
+		});
+
+		it('should not set rendering to false if a render has been scheduled', () => {
+			const factory = create({ icache }).properties<any>();
+			let key = 0;
+			const Foo = factory(function App({ properties }) {
+				properties().doSomething();
+				return <div />;
+			});
+			const App = factory(function App({ middleware: { icache } }) {
+				return (
+					<Foo
+						key={key}
+						doSomething={() => {
+							icache.set('key', key);
+						}}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			key++;
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			key++;
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, true);
+			resolvers.resolve();
+			assert.strictEqual(global.dojo_scope.rendering, false);
+		});
+	});
+
 	describe('focus', () => {
 		it('focus is only called once when set to true', () => {
 			const [Widget, meta] = getWidget(
@@ -6791,5 +7060,20 @@ jsdomDescribe('vdom', () => {
 		const root: any = document.createElement('div');
 		r.mount({ domNode: root });
 		assert.isTrue(stubby.calledOnce);
+	});
+
+	it('infer mixin typings correctly', () => {
+		class MyWidget extends ThemedMixin(I18nMixin(WidgetBase)) {
+			render() {
+				return <div>hello dojo</div>;
+			}
+		}
+		const root: any = document.createElement('div');
+		const r = renderer(() => <MyWidget theme={{}} classes={{}} locale="en" rtl={true} />);
+		r.mount({ domNode: root });
+
+		assert.strictEqual(root.children[0].getAttribute('lang'), 'en');
+		assert.strictEqual(root.children[0].getAttribute('dir'), 'rtl');
+		assert.strictEqual(root.children[0].innerHTML, 'hello dojo');
 	});
 });

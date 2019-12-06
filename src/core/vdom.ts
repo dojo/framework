@@ -18,13 +18,15 @@ import {
 	Callback,
 	MiddlewareMap,
 	WNodeFactory,
+	OptionalWNodeFactory,
 	UnionToIntersection,
 	WidgetProperties,
 	MiddlewareResultFactory,
 	WidgetBaseTypes,
 	RegistryLabel,
 	DeferredVirtualProperties,
-	DomOptions
+	DomOptions,
+	DefaultChildrenWNodeFactory
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -35,10 +37,13 @@ declare global {
 	namespace JSX {
 		type Element = WNode;
 		interface ElementAttributesProperty {
-			properties: {};
+			__properties__: {};
 		}
 		interface IntrinsicElements {
 			[key: string]: VNodeProperties;
+		}
+		interface ElementChildrenAttribute {
+			__children__: {};
 		}
 	}
 }
@@ -64,14 +69,16 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 	instance?: any;
 	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
-	registryItem?: Callback<any, any, RenderResult> | Constructor<any> | null;
+	registryItem?: Callback<any, any, any, RenderResult> | Constructor<any> | null;
 	properties: any;
 }
 
 export interface WidgetMeta {
+	mountNode: HTMLElement;
 	dirty: boolean;
 	invalidator: () => void;
 	middleware?: any;
+	middlewareIds: string[];
 	registryHandler?: RegistryHandler;
 	registry: Registry;
 	properties: any;
@@ -225,6 +232,27 @@ const WNODE = '__WNODE_TYPE';
 const VNODE = '__VNODE_TYPE';
 const DOMVNODE = '__DOMVNODE_TYPE';
 
+// @ts-ignore
+const scope = typeof __DOJO_SCOPE === 'string' ? __DOJO_SCOPE : 'dojo_scope';
+
+if (!global[scope]) {
+	global[scope] = {};
+}
+
+export function setRendering(value: boolean) {
+	global[scope].rendering = value;
+}
+
+export function incrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending + 1;
+}
+
+export function decrementBlockCount() {
+	const blocksPending = global[scope].blocksPending || 0;
+	global[scope].blocksPending = blocksPending - 1;
+}
+
 export function isTextNode(item: any): item is Text {
 	return item && item.nodeType === 3;
 }
@@ -305,12 +333,27 @@ function updateAttributes(
 export function w<W extends WidgetBaseTypes>(
 	node: WNode<W>,
 	properties: Partial<W['properties']>,
-	children?: W['children']
+	children?: W['properties'] extends { __children__: any } ? W['properties']['__children__'] : W['children']
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
-	widgetConstructor: Constructor<W> | RegistryLabel | WNodeFactory<W> | LazyDefine<W>,
+	widgetConstructor: Constructor<W> | RegistryLabel | LazyDefine<W>,
 	properties: W['properties'],
 	children?: W['children']
+): WNode<W>;
+export function w<W extends WNodeFactory<any>>(
+	widgetConstructor: W,
+	properties: W['properties'],
+	children: W['children'] extends any[] ? W['children'] : [W['children']]
+): WNode<W>;
+export function w<W extends DefaultChildrenWNodeFactory<any>>(
+	widgetConstructor: W,
+	properties: W['properties'],
+	children?: W['children']
+): WNode<W>;
+export function w<W extends OptionalWNodeFactory<any>>(
+	widgetConstructor: W,
+	properties: W['properties'],
+	children?: W['children'] extends any[] ? W['children'] : [W['children']]
 ): WNode<W>;
 export function w<W extends WidgetBaseTypes>(
 	widgetConstructorOrNode:
@@ -319,10 +362,14 @@ export function w<W extends WidgetBaseTypes>(
 		| WNodeFactory<W>
 		| WNode<W>
 		| LazyDefine<W>
-		| Callback<any, any, RenderResult>,
+		| Callback<any, any, any, RenderResult>,
 	properties: W['properties'],
-	children?: W['children']
+	children?: any
 ): WNode<W> {
+	if ((properties as any).__children__) {
+		delete (properties as any).__children__;
+	}
+
 	if (isWNodeFactory<W>(widgetConstructorOrNode)) {
 		return widgetConstructorOrNode(properties, children);
 	}
@@ -417,7 +464,8 @@ export const REGISTRY_ITEM = '__registry_item';
 
 export class FromRegistry<P> {
 	static type = REGISTRY_ITEM;
-	properties: P = {} as P;
+	/* tslint:disable-next-line:variable-name */
+	__properties__: P = {} as P;
 	name: string | undefined;
 }
 
@@ -639,30 +687,120 @@ function createFactory(callback: any, middlewares: any): any {
 export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
 ) {
-	function properties<Props extends {}>() {
+	function properties<Props>() {
 		function returns<ReturnValue>(
-			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 		): ReturnValue extends RenderResult
-			? WNodeFactory<{
+			? DefaultChildrenWNodeFactory<{
 					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
 					children: DNode[];
 			  }>
-			: MiddlewareResultFactory<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+			: MiddlewareResultFactory<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					DNode[],
+					T,
+					ReturnValue
+			  > {
 			return createFactory(callback, middlewares);
 		}
+
+		function children<Children>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					Children,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? UnionToIntersection<Children> extends undefined
+					? OptionalWNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: NonNullable<Children>;
+					  }>
+					: WNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: Children;
+					  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+		returns.children = children;
+		return returns;
+	}
+
+	function children<Children>() {
+		function properties<Props>() {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					Children,
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? UnionToIntersection<Children> extends undefined
+					? OptionalWNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: NonNullable<Children>;
+					  }>
+					: WNodeFactory<{
+							properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+							children: Children;
+					  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares);
+			}
+			return returns;
+		}
+
+		function returns<ReturnValue>(
+			callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, Children, T, ReturnValue>
+		): ReturnValue extends RenderResult
+			? UnionToIntersection<Children> extends undefined
+				? OptionalWNodeFactory<{
+						properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: NonNullable<Children>;
+				  }>
+				: WNodeFactory<{
+						properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: Children;
+				  }>
+			: MiddlewareResultFactory<
+					WidgetProperties & UnionToIntersection<MiddlewareProps>,
+					NonNullable<Children>,
+					T,
+					ReturnValue
+			  > {
+			return createFactory(callback, middlewares);
+		}
+		returns.properties = properties;
 		return returns;
 	}
 
 	function returns<ReturnValue>(
-		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue>
+		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 	): ReturnValue extends RenderResult
-		? WNodeFactory<{
+		? DefaultChildrenWNodeFactory<{
 				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
 				children: DNode[];
 		  }>
-		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, T, ReturnValue> {
+		: MiddlewareResultFactory<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue> {
 		return createFactory(callback, middlewares);
 	}
+	returns.children = children;
 	returns.properties = properties;
 	return returns;
 }
@@ -689,10 +827,7 @@ function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	const widgetMeta = widgetMetaMap.get(id);
 	if (widgetMeta) {
 		widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
-		const existingNode = widgetMeta.nodeMap.get(key);
-		if (!existingNode) {
-			widgetMeta.nodeMap.set(key, node);
-		}
+		widgetMeta.nodeMap.set(key, node);
 		if (requestedDomNodes.has(`${id}-${key}`)) {
 			widgetMeta.invalidator();
 			requestedDomNodes.delete(`${id}-${key}`);
@@ -700,8 +835,20 @@ function addNodeToMap(id: string, key: string | number, node: HTMLElement) {
 	}
 }
 
-function destroyHandles(destroyMap: Map<string, () => void>) {
-	destroyMap.forEach((destroy) => destroy());
+function destroyHandles(meta: WidgetMeta) {
+	const { destroyMap, middlewareIds } = meta;
+	if (!destroyMap) {
+		return;
+	}
+	for (let i = 0; i < middlewareIds.length; i++) {
+		const id = middlewareIds[i];
+		const destroy = destroyMap.get(id);
+		destroy && destroy();
+		destroyMap.delete(id);
+		if (destroyMap.size === 0) {
+			break;
+		}
+	}
 	destroyMap.clear();
 }
 
@@ -731,8 +878,13 @@ export const node = factory(({ id }) => {
 			const widgetMeta = widgetMetaMap.get(widgetId);
 			if (widgetMeta) {
 				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
+				const mountNode = widgetMeta.mountNode;
 				const node = widgetMeta.nodeMap.get(key);
-				if (node) {
+				if (
+					node &&
+					(mountNode.contains(node) ||
+						(global.document.body !== mountNode && global.document.body.contains(node)))
+				) {
 					return node;
 				}
 				requestedDomNodes.add(`${widgetId}-${key}`);
@@ -751,6 +903,7 @@ export const diffProperty = factory(({ id }) => {
 			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
+				diff({}, widgetMeta.properties);
 				propertyDiffMap.set(propertyName, diff);
 				widgetMeta.customDiffProperties.add(propertyName);
 			}
@@ -829,7 +982,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _insertBeforeMap: undefined | WeakMap<DNodeWrapper, Node> = new WeakMap<DNodeWrapper, Node>();
 	let _nodeToWrapperMap = new WeakMap<VNode | WNode<any>, WNodeWrapper>();
 	let _renderScheduled: number | undefined;
-	let _idleCallbacks: Function[] = [];
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
 	let _allMergedNodes: Node[] = [];
@@ -1185,7 +1337,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function runDeferredRenderCallbacks() {
+	function _runDeferredRenderCallbacks() {
 		const { sync } = _mountOptions;
 		const callbacks = _deferredRenderCallbacks;
 		_deferredRenderCallbacks = [];
@@ -1200,29 +1352,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				run();
 			} else {
 				global.requestAnimationFrame(run);
-			}
-		}
-	}
-
-	function runAfterRenderCallbacks() {
-		const { sync } = _mountOptions;
-		const callbacks = _idleCallbacks;
-		_idleCallbacks = [];
-		if (callbacks.length) {
-			const run = () => {
-				let callback: Function | undefined;
-				while ((callback = callbacks.shift())) {
-					callback();
-				}
-			};
-			if (sync) {
-				run();
-			} else {
-				if (global.requestIdleCallback) {
-					global.requestIdleCallback(run);
-				} else {
-					setTimeout(run);
-				}
 			}
 		}
 	}
@@ -1257,7 +1386,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
-		const renderResult = wrapNodes(renderer)({});
+		const renderResult = wrapNodes(renderer)({}, []);
 		const nextWrapper = {
 			id: `${wrapperId++}`,
 			node: renderResult,
@@ -1286,7 +1415,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_insertBeforeMap = undefined;
-		_runCallbacks();
+		_runDeferredRenderCallbacks();
+		if (!_renderScheduled) {
+			setRendering(false);
+		}
 	}
 
 	function invalidate() {
@@ -1298,6 +1430,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (sync) {
 			_runInvalidationQueue();
 		} else if (!_renderScheduled) {
+			setRendering(true);
 			_renderScheduled = global.requestAnimationFrame(() => {
 				_runInvalidationQueue();
 			});
@@ -1368,7 +1501,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
-		_runCallbacks();
+		_runDeferredRenderCallbacks();
+		if (!_renderScheduled) {
+			setRendering(false);
+		}
 	}
 
 	function _cleanUpMergedNodes() {
@@ -1480,11 +1616,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function _runCallbacks() {
-		runAfterRenderCallbacks();
-		runDeferredRenderCallbacks();
-	}
-
 	function _processMergeNodes(next: DNodeWrapper, mergeNodes: Node[]) {
 		const { merge } = _mountOptions;
 		if (merge && mergeNodes.length) {
@@ -1511,11 +1642,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function registerDistinguishableCallback(childNodes: DNodeWrapper[], index: number) {
-		_idleCallbacks.push(() => {
-			const parentWNodeWrapper = getWNodeWrapper(childNodes[index].owningId);
-			checkDistinguishable(childNodes, index, parentWNodeWrapper);
-		});
+	function distinguishableCheck(childNodes: DNodeWrapper[], index: number) {
+		const parentWNodeWrapper = getWNodeWrapper(childNodes[index].owningId);
+		checkDistinguishable(childNodes, index, parentWNodeWrapper);
 	}
 
 	function createKeyMap(wrappers: DNodeWrapper[]): (string | number)[] | false {
@@ -1576,16 +1705,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 					instructions.push({ current: currentWrapper, next: nextWrapper });
 				} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-					has('dojo-debug') && current.length && registerDistinguishableCallback(next, newIndex);
+					has('dojo-debug') && current.length && distinguishableCheck(next, newIndex);
 					instructions.push({ current: undefined, next: nextWrapper });
 					newIndex++;
 				} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
-					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					has('dojo-debug') && distinguishableCheck(current, oldIndex);
 					instructions.push({ current: currentWrapper, next: undefined });
 					oldIndex++;
 				} else {
-					has('dojo-debug') && registerDistinguishableCallback(next, newIndex);
-					has('dojo-debug') && registerDistinguishableCallback(current, oldIndex);
+					has('dojo-debug') && distinguishableCheck(next, newIndex);
+					has('dojo-debug') && distinguishableCheck(current, oldIndex);
 					instructions.push({ current: currentWrapper, next: undefined });
 					instructions.push({ current: undefined, next: nextWrapper });
 					oldIndex++;
@@ -1597,7 +1726,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			if (currentLength > oldIndex && newIndex >= nextLength) {
 				for (let i = oldIndex; i < currentLength; i++) {
-					has('dojo-debug') && registerDistinguishableCallback(current, i);
+					has('dojo-debug') && distinguishableCheck(current, i);
 					instructions.push({ current: current[i], next: undefined });
 				}
 			}
@@ -1649,38 +1778,52 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return {};
 	}
 
-	function resolveMiddleware(middlewares: any, id: string): any {
+	function createWidgetOptions(id: string, widgetId: string, middleware?: any) {
+		return {
+			id,
+			properties: () => {
+				const widgetMeta = widgetMetaMap.get(widgetId);
+				if (widgetMeta) {
+					return { ...widgetMeta.properties };
+				}
+				return {};
+			},
+			children: () => {
+				const widgetMeta = widgetMetaMap.get(widgetId);
+				if (widgetMeta) {
+					return widgetMeta.children;
+				}
+				return [];
+			},
+			middleware
+		};
+	}
+
+	function resolveMiddleware(
+		middlewares: any,
+		id: string,
+		middlewareIds: string[] = []
+	): { middlewares: any; ids: string[] } {
 		const keys = Object.keys(middlewares);
 		const results: any = {};
 		const uniqueId = `${id}-${metaId++}`;
 		for (let i = 0; i < keys.length; i++) {
 			const middleware = middlewares[keys[i]]();
-			const payload: any = {
-				id: uniqueId,
-				properties: () => {
-					const widgetMeta = widgetMetaMap.get(id);
-					if (widgetMeta) {
-						return { ...widgetMeta.properties };
-					}
-					return {};
-				},
-				children: () => {
-					const widgetMeta = widgetMetaMap.get(id);
-					if (widgetMeta) {
-						return widgetMeta.children;
-					}
-					return [];
-				}
-			};
+			const payload = createWidgetOptions(uniqueId, id);
 			if (middleware.middlewares) {
-				const resolvedMiddleware = resolveMiddleware(middleware.middlewares, id);
+				const { middlewares: resolvedMiddleware } = resolveMiddleware(
+					middleware.middlewares,
+					id,
+					middlewareIds
+				);
 				payload.middleware = resolvedMiddleware;
 				results[keys[i]] = middleware.callback(payload);
 			} else {
 				results[keys[i]] = middleware.callback(payload);
 			}
 		}
-		return results;
+		middlewareIds.push(uniqueId);
+		return { middlewares: results, ids: middlewareIds };
 	}
 
 	function _createWidget({ next }: CreateWidgetInstruction): ProcessResult | false {
@@ -1718,29 +1861,29 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				};
 
 				widgetMeta = {
+					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
 					properties: next.node.properties,
 					children: next.node.children,
 					deferRefs: 0,
 					rendering: true,
+					middleware: {},
+					middlewareIds: [],
 					registry: _mountOptions.registry
 				};
 
 				widgetMetaMap.set(next.id, widgetMeta);
-				widgetMeta.middleware = (Constructor as any).middlewares
-					? resolveMiddleware((Constructor as any).middlewares, id)
-					: {};
+				if ((Constructor as any).middlewares) {
+					const { middlewares, ids } = resolveMiddleware((Constructor as any).middlewares, id);
+					widgetMeta.middleware = middlewares;
+					widgetMeta.middlewareIds = ids;
+				}
 			} else {
 				invalidate = widgetMeta.invalidator;
 			}
 
-			rendered = Constructor({
-				id,
-				properties: () => next.node.properties,
-				children: () => next.node.children,
-				middleware: widgetMeta.middleware
-			});
+			rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
 			widgetMeta.rendering = false;
 			if (widgetMeta.deferRefs > 0) {
 				return false;
@@ -1790,7 +1933,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _updateWidget({ current, next }: UpdateWidgetInstruction): ProcessResult {
 		current = getWNodeWrapper(current.id) || current;
-		const { instance, domNode, hasAnimations } = current;
+		const { instance, domNode, hasAnimations, id } = current;
 		let {
 			node: { widgetConstructor }
 		} = next;
@@ -1804,7 +1947,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let didRender = false;
 		let currentChildren = _idToChildrenWrappers.get(current.id);
 		next.hasAnimations = hasAnimations;
-		next.id = current.id;
+		next.id = id;
 		next.childDomWrapperId = current.childDomWrapperId;
 		next.properties = next.node.properties;
 		_wrapperSiblingMap.delete(current);
@@ -1813,9 +1956,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 
 		if (!isWidgetBaseConstructor(Constructor)) {
-			const widgetMeta = widgetMetaMap.get(next.id);
+			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
 				widgetMeta.properties = next.properties;
+				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, next.properties);
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
@@ -1832,15 +1976,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					);
 				}
 				if (widgetMeta.dirty) {
-					_idToChildrenWrappers.delete(next.id);
+					_idToChildrenWrappers.delete(id);
 					didRender = true;
 					widgetMeta.dirty = false;
-					rendered = Constructor({
-						id: next.id,
-						properties: () => next.node.properties,
-						children: () => next.node.children,
-						middleware: widgetMeta.middleware
-					});
+					rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}
@@ -1855,19 +1994,19 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			instance!.__setChildren__(next.node.children);
 			if (instanceData.dirty) {
 				didRender = true;
-				_idToChildrenWrappers.delete(next.id);
+				_idToChildrenWrappers.delete(id);
 				rendered = instance!.__render__();
 			}
 			instanceData.rendering = false;
 		}
 		_idToWrapperMap.set(next.id, next);
-		processResult.widget = { type: 'attach', instance, id: next.id, attached: false };
+		processResult.widget = { type: 'attach', instance, id, attached: false };
 
 		let children: DNodeWrapper[] | undefined;
 		if (rendered) {
 			rendered = Array.isArray(rendered) ? rendered : [rendered];
 			children = renderedToWrapper(rendered, next, current);
-			_idToChildrenWrappers.set(next.id, children);
+			_idToChildrenWrappers.set(id, children);
 		}
 
 		if (didRender) {
@@ -1895,7 +2034,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		};
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
-			meta.destroyMap && destroyHandles(meta.destroyMap);
+			destroyHandles(meta);
 			widgetMetaMap.delete(current.id);
 		} else {
 			processResult.widget = { type: 'detach', current, instance: current.instance };
@@ -2061,7 +2200,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 							const meta = widgetMetaMap.get(wrapper.id);
 							if (meta) {
 								meta.registryHandler && meta.registryHandler.destroy();
-								meta.destroyMap && destroyHandles(meta.destroyMap);
+								destroyHandles(meta);
 								widgetMetaMap.delete(wrapper.id);
 							}
 						}

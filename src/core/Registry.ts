@@ -14,12 +14,16 @@ import {
 	Callback,
 	WNodeFactory,
 	RenderResult,
-	WidgetBaseTypes
+	WidgetBaseTypes,
+	DefaultChildrenWNodeFactory,
+	OptionalWNodeFactory
 } from './interfaces';
 
 export type RegistryItem =
 	| WidgetBaseConstructor
 	| WNodeFactory<any>
+	| DefaultChildrenWNodeFactory<any>
+	| OptionalWNodeFactory<any>
 	| Promise<WidgetBaseConstructor | WNodeFactory<any>>
 	| WidgetBaseConstructorFunction
 	| ESMDefaultWidgetBaseFunction;
@@ -31,7 +35,12 @@ export const WIDGET_BASE_TYPE = '__widget_base_type';
 
 export interface RegistryEventObject extends EventObject<RegistryLabel> {
 	action: string;
-	item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem;
+	item:
+		| WNodeFactory<any>
+		| DefaultChildrenWNodeFactory<any>
+		| OptionalWNodeFactory<any>
+		| WidgetBaseConstructor
+		| InjectorItem;
 }
 /**
  * Widget Registry Interface
@@ -51,9 +60,9 @@ export interface RegistryInterface {
 	 * @param widgetLabel The label of the widget to return
 	 * @returns The RegistryItem for the widgetLabel, `null` if no entry exists
 	 */
-	get(label: RegistryLabel): WNodeFactory<any> | Callback<any, any, RenderResult> | Constructor<any> | null;
+	get(label: RegistryLabel): WNodeFactory<any> | Callback<any, any, any, RenderResult> | Constructor<any> | null;
 	get<T extends WNodeFactory<any>>(label: RegistryLabel): T | null;
-	get<T extends Callback<any, any, RenderResult>>(label: RegistryLabel): T | null;
+	get<T extends Callback<any, any, any, RenderResult>>(label: RegistryLabel): T | null;
 	get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel): Constructor<T> | null;
 
 	/**
@@ -99,7 +108,7 @@ export function isWidgetBaseConstructor<T extends WidgetBaseInterface = any>(ite
 	return Boolean(item && item._type === WIDGET_BASE_TYPE);
 }
 
-export function isWidgetFunction(item: any): item is Callback<any, any, RenderResult> {
+export function isWidgetFunction(item: any): item is Callback<any, any, any, RenderResult> {
 	return Boolean(item && item.isWidget);
 }
 
@@ -112,7 +121,7 @@ export function isWNodeFactory<W extends WidgetBaseTypes>(node: any): node is WN
 
 export function isWidget<T extends WidgetBaseInterface = any>(
 	item: any
-): item is Constructor<T> | Callback<any, any, RenderResult> {
+): item is Constructor<T> | Callback<any, any, any, RenderResult> {
 	return isWidgetBaseConstructor(item) || isWidgetFunction(item);
 }
 
@@ -143,7 +152,12 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 	 */
 	private emitLoadedEvent(
 		widgetLabel: RegistryLabel,
-		item: WNodeFactory<any> | WidgetBaseConstructor | InjectorItem
+		item:
+			| DefaultChildrenWNodeFactory<any>
+			| OptionalWNodeFactory<any>
+			| WNodeFactory<any>
+			| WidgetBaseConstructor
+			| InjectorItem
 	): void {
 		this.emit({
 			type: widgetLabel,
@@ -199,13 +213,15 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		this.emitLoadedEvent(label, injectorItem);
 	}
 
-	public get(label: RegistryLabel): WNodeFactory<any> | Callback<any, any, RenderResult> | Constructor<any> | null;
+	public get(
+		label: RegistryLabel
+	): WNodeFactory<any> | Callback<any, any, any, RenderResult> | Constructor<any> | null;
 	public get<T extends WNodeFactory<any>>(label: RegistryLabel): T | null;
-	public get<T extends Callback<any, any, RenderResult>>(label: RegistryLabel): T | null;
+	public get<T extends Callback<any, any, any, RenderResult>>(label: RegistryLabel): T | null;
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(label: RegistryLabel): Constructor<T> | null;
 	public get<T extends WidgetBaseInterface = WidgetBaseInterface>(
 		label: RegistryLabel
-	): WNodeFactory<T> | Callback<any, any, RenderResult> | Constructor<T> | null {
+	): WNodeFactory<T> | Callback<any, any, any, RenderResult> | Constructor<T> | null {
 		if (!this._widgetRegistry || !this.has(label)) {
 			return null;
 		}
@@ -213,7 +229,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		const item = this._widgetRegistry.get(label);
 
 		if (isWidget<T>(item) || isWNodeFactory(item)) {
-			return item;
+			return item as any;
 		}
 
 		if (item instanceof Promise) {
@@ -224,7 +240,7 @@ export class Registry extends Evented<{}, RegistryLabel, RegistryEventObject> im
 		this._widgetRegistry.set(label, promise);
 
 		promise.then(
-			(widgetCtor) => {
+			(widgetCtor: any) => {
 				if (isWidgetConstructorDefaultExport<T>(widgetCtor)) {
 					widgetCtor = widgetCtor.default;
 				}

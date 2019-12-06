@@ -16,7 +16,7 @@ export function decorateNodes(dNode: DNode | DNode[]): DecoratorResult<DNode | D
 export function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
 	let hasDeferredProperties = false;
 	function addParent(parent: WNode | VNode): void {
-		(parent.children || []).forEach((child) => {
+		(parent.children || []).forEach((child: any) => {
 			if (isVNode(child) || isWNode(child)) {
 				(child as any).parent = parent;
 			}

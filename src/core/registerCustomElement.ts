@@ -1,10 +1,8 @@
 import Registry from './Registry';
-import { WidgetBase } from './WidgetBase';
-import { renderer, w, dom, isTextNode } from './vdom';
+import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
-import { registerThemeInjector } from './mixins/Themed';
-import { alwaysRender } from './decorators/alwaysRender';
+import Injector from './Injector';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -22,30 +20,35 @@ function isDojoChild(item: any): boolean {
 	return isElement(item) && item.tagName.indexOf('-') > -1;
 }
 
+const factory = vdomCreate({ diffProperty, invalidator }).properties<any>();
+
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
-	@alwaysRender()
-	class DomToWidgetWrapper extends WidgetBase<any> {
-		protected render() {
-			const properties = Object.keys(this.properties).reduce(
-				(props, key: string) => {
-					const value = this.properties[key];
-					if (key.indexOf('on') === 0 || RESERVED_PROPS.indexOf(key) !== -1) {
-						key = `__${key}`;
-					}
-					props[key] = value;
-					return props;
-				},
-				{} as any
-			);
-			return dom({ node: domNode, props: properties, diffType: 'dom' });
-		}
+	const wrapper = factory(function DomToWidgetWrapper({ properties, middleware: { invalidator, diffProperty } }) {
+		diffProperty('', invalidator);
+		const props = Object.keys(properties()).reduce(
+			(props, key: string) => {
+				const value = properties()[key];
+				if (key.indexOf('on') === 0 || RESERVED_PROPS.indexOf(key) !== -1) {
+					key = `__${key}`;
+				}
+				props[key] = value;
+				return props;
+			},
+			{} as any
+		);
+		return dom({ node: domNode, props, diffType: 'dom' });
+	});
+	(wrapper as any).domNode = domNode;
+	return wrapper;
+}
 
-		static get domNode() {
-			return domNode;
-		}
-	}
-
-	return DomToWidgetWrapper;
+function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
+	const themeInjector = new Injector(theme);
+	themeRegistry.defineInjector('__theme_injector', (invalidator) => {
+		themeInjector.setInvalidator(invalidator);
+		return () => themeInjector;
+	});
+	return themeInjector;
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
@@ -187,11 +190,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			const widgetProperties = this._properties;
 			const renderChildren = () => this.__children__();
-			const Wrapper = class extends WidgetBase {
-				render() {
-					return w(WidgetConstructor, widgetProperties, renderChildren());
-				}
-			};
+			const Wrapper = factory(() => w(WidgetConstructor, widgetProperties, renderChildren()));
 			const registry = registryFactory();
 			const themeContext = registerThemeInjector(this._getTheme(), registry);
 			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));

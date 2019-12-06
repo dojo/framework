@@ -1,10 +1,8 @@
-import { ProjectorMixin } from '../../../../src/core/mixins/Projector';
+import { renderer, w } from '../../../../src/core/vdom';
 
 import App from './App';
 
 const root = document.getElementById('main') || undefined;
 
-const Projector = ProjectorMixin(App);
-const projector = new Projector();
-
-projector.append(root);
+const r = renderer(() => w(App, {}));
+r.mount({ domNode: root });

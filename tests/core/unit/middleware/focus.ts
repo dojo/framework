@@ -15,6 +15,7 @@ const nodeStub = {
 	get: sb.stub()
 };
 const invalidatorStub = sb.stub();
+const icacheInvalidatorStub = sb.stub();
 
 function cacheFactory() {
 	return cacheMiddleware().callback({
@@ -30,7 +31,7 @@ function icacheFactory() {
 		id: 'test-cache',
 		properties: () => ({}),
 		children: () => [],
-		middleware: { cache: cacheFactory(), invalidator: sb.stub() }
+		middleware: { cache: cacheFactory(), invalidator: icacheInvalidatorStub }
 	});
 }
 
@@ -45,7 +46,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -55,8 +55,19 @@ describe('focus middleware', () => {
 			children: () => []
 		});
 		assert.isFalse(focus.shouldFocus());
+		assert.isTrue(icacheInvalidatorStub.notCalled);
 		focus.focus();
+		assert.isTrue(icacheInvalidatorStub.calledTwice);
 		assert.isTrue(focus.shouldFocus());
+		assert.isTrue(icacheInvalidatorStub.calledTwice);
+		assert.isFalse(focus.shouldFocus());
+		assert.isTrue(icacheInvalidatorStub.calledTwice);
+		focus.focus();
+		assert.isTrue(icacheInvalidatorStub.calledThrice);
+		assert.isTrue(focus.shouldFocus());
+		assert.isTrue(icacheInvalidatorStub.calledThrice);
+		assert.isFalse(focus.shouldFocus());
+		assert.isTrue(icacheInvalidatorStub.calledThrice);
 	});
 
 	it('`shouldFocus` returns true when focus property returns true', () => {
@@ -65,7 +76,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -84,7 +94,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -103,7 +112,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,
@@ -121,7 +129,6 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				cache: cacheFactory(),
 				icache: icacheFactory(),
 				destroy: destroyStub,
 				node: nodeStub,

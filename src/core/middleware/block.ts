@@ -1,4 +1,4 @@
-import { create, defer } from '../vdom';
+import { create, defer, decrementBlockCount, incrementBlockCount } from '../vdom';
 import cache from './cache';
 import icache from './icache';
 
@@ -12,9 +12,11 @@ export const block = blockFactory(({ middleware: { cache, icache, defer } }) => 
 			const moduleId = cache.get(module) || id++;
 			cache.set(module, moduleId);
 			const cachedValue = icache.getOrSet(`${moduleId}-${argsString}`, async () => {
+				incrementBlockCount();
 				const run = module(...args);
 				defer.pause();
 				const result = await run;
+				decrementBlockCount();
 				defer.resume();
 				return result;
 			});
