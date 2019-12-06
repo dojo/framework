@@ -336,7 +336,7 @@ The following example shows an i18n-aware widget that renders two buttons that a
 
 ```ts
 import { create, tsx } from '@dojo/framework/core/vdom';
-import i18n from '@dojo/framework/core/middleware/I18n';
+import i18n from '@dojo/framework/core/middleware/i18n';
 
 import nlsBundle from '../nls/main';
 
@@ -539,7 +539,7 @@ The `guestInfo` message can be rendered directly via `format`:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import i18n from '@dojo/framework/core/middleware/I18n';
+import i18n from '@dojo/framework/core/middleware/i18n';
 
 import nlsBundle from '../nls/main';
 
@@ -642,7 +642,7 @@ The ICU-formatted `guestInfo` message can then be rendered as:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import i18n from '@dojo/framework/core/middleware/I18n';
+import i18n from '@dojo/framework/core/middleware/i18n';
 
 import nlsBundle from '../nls/main';
 

@@ -96,7 +96,7 @@ export default {
 ```ts
 export default {
 	locales: {
-		fr: () => import('./fr/MyI18nWidget.ts')
+		fr: () => import('../fr/MyI18nWidget')
 	},
 	messages: {
 		title: 'Hello',
@@ -161,7 +161,7 @@ r.mount({ registry });
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import i18n from '@dojo/framework/core/middleware/I18n';
+import i18n from '@dojo/framework/core/middleware/i18n';
 
 const factory = create({ i18n });
 
