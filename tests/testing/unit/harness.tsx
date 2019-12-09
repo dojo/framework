@@ -47,17 +47,6 @@ class MyWidget extends WidgetBase {
 	}
 }
 
-class MyWidgetWithRenderProp extends WidgetBase {
-	protected render() {
-		return v('div', {
-			key: 'root',
-			renderProp: () => {
-				return v('div', { id: 'not-going-to-match' });
-			}
-		});
-	}
-}
-
 class MyDeferredWidget extends WidgetBase {
 	// prettier-ignore
 	protected render() {
@@ -383,17 +372,15 @@ describe('harness', () => {
 			);
 		});
 
-		it('custom compare for VNode returned from render prop', () => {
-			const h = harness(() => w(MyWidgetWithRenderProp, {}), [
+		it('custom compare used when actual render function passed to expect', () => {
+			const h = harness(() => w(WidgetBase, {}), [
 				{
 					selector: '*',
 					property: 'id',
 					comparator: (property: any) => typeof property === 'string'
 				}
 			]);
-			const renderResult = h.trigger('@root', 'renderProp');
-
-			h.expect(() => <div id="" />, () => renderResult);
+			h.expect(() => <div id="" />, () => <div id="foo" />);
 		});
 
 		it('custom compare for constructor WNode', () => {
