@@ -372,6 +372,17 @@ describe('harness', () => {
 			);
 		});
 
+		it('custom compare used when actual render function passed to expect', () => {
+			const h = harness(() => w(WidgetBase, {}), [
+				{
+					selector: '*',
+					property: 'id',
+					comparator: (property: any) => typeof property === 'string'
+				}
+			]);
+			h.expect(() => <div id="" />, () => <div id="foo" />);
+		});
+
 		it('custom compare for constructor WNode', () => {
 			const h = harness(() => w(MyWidget, {}), [
 				{
