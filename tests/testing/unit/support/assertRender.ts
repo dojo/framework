@@ -148,4 +148,13 @@ describe('support/assertRender', () => {
 			assertRender(renderResult, w(ChildWidget, { bar, foo }));
 		});
 	});
+
+	it('Should ignore non-nodes', () => {
+		assert.doesNotThrow(() => {
+			assertRender(
+				v('div', { key: 'one' }, [{ something: 'else' } as any, v('div', ['hello'])]),
+				v('div', { key: 'one' }, [{ something: 'else' } as any, v('div', ['hello'])])
+			);
+		});
+	});
 });

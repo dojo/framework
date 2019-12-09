@@ -91,6 +91,10 @@ function getWidgetName(widgetConstructor: any): string {
 }
 
 function formatNode(node: WNode | VNode, tabs: any): string {
+	if (!isVNode(node) && !isWNode(node)) {
+		return '';
+	}
+
 	const propertyKeyCount = Object.keys(node.properties).length;
 	let properties = propertyKeyCount > 0 ? formatProperties(node.properties, tabs) : '{}';
 	if (isWNode(node)) {
