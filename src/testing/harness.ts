@@ -223,6 +223,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			renderResult = _getRender();
 		} else {
 			renderResult = actualRenderFunc();
+			_runCompares(renderResult);
 		}
 
 		const { nodes: expectedRenderResult } = decorateNodes(expectedRenderFunc());

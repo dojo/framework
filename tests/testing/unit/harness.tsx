@@ -47,6 +47,17 @@ class MyWidget extends WidgetBase {
 	}
 }
 
+class MyWidgetWithRenderProp extends WidgetBase {
+	protected render() {
+		return v('div', {
+			key: 'root',
+			renderProp: () => {
+				return v('div', { id: 'not-going-to-match' });
+			}
+		});
+	}
+}
+
 class MyDeferredWidget extends WidgetBase {
 	// prettier-ignore
 	protected render() {
@@ -370,6 +381,19 @@ describe('harness', () => {
 					w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
 				])
 			);
+		});
+
+		it('custom compare for VNode returned from render prop', () => {
+			const h = harness(() => w(MyWidgetWithRenderProp, {}), [
+				{
+					selector: '*',
+					property: 'id',
+					comparator: (property: any) => typeof property === 'string'
+				}
+			]);
+			const renderResult = h.trigger('@root', 'renderProp');
+
+			h.expect(() => <div id="" />, () => renderResult);
 		});
 
 		it('custom compare for constructor WNode', () => {
