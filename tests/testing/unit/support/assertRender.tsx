@@ -4,7 +4,8 @@ const { assert } = intern.getPlugin('chai');
 import Set from '../../../../src/shim/Set';
 import Map from '../../../../src/shim/Map';
 import assertRender from '../../../../src/testing/support/assertRender';
-import { v, w } from '../../../../src/core/vdom';
+import { v, w, create, tsx } from '../../../../src/core/vdom';
+import { RenderResult } from '../../../../src/core/interfaces';
 import WidgetBase from '../../../../src/core/WidgetBase';
 
 class MockWidget extends WidgetBase {
@@ -36,6 +37,16 @@ class WidgetWithMap extends WidgetBase {
 		return w(ChildWidget, { foo, bar });
 	}
 }
+
+interface ObjectChildren {
+	a: () => RenderResult;
+	b: () => RenderResult;
+}
+
+const WidgetWithObjectChildren = create().children<ObjectChildren>()(function widgetWithObjectChildren({ children }) {
+	const { a, b } = children()[0];
+	return <div>{`${a()} ${b()}`}</div>;
+});
 
 function getExpectedError() {
 	const widgetName = (MockWidget as any).name || 'Widget-5';
@@ -146,6 +157,15 @@ describe('support/assertRender', () => {
 		const renderResult = widget.__render__();
 		assert.throws(() => {
 			assertRender(renderResult, w(ChildWidget, { bar, foo }));
+		});
+	});
+
+	it('Should ignore non-nodes passed as children', () => {
+		assert.doesNotThrow(() => {
+			assertRender(
+				<WidgetWithObjectChildren>{{ a: () => null, b: () => null }}</WidgetWithObjectChildren>,
+				<WidgetWithObjectChildren>{{ a: () => null, b: () => null }}</WidgetWithObjectChildren>
+			);
 		});
 	});
 });
