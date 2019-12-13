@@ -15,6 +15,12 @@ export const cache = factory(({ middleware: { destroy } }) => {
 		set<T = any>(key: any, value: T): void {
 			cacheMap.set(key, value);
 		},
+		has(key: any): boolean {
+			return cacheMap.has(key);
+		},
+		delete(key: any): void {
+			cacheMap.delete(key);
+		},
 		clear(): void {
 			cacheMap.clear();
 		}

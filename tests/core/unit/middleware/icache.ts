@@ -113,6 +113,52 @@ describe('icache middleware', () => {
 		});
 	});
 
+	it('should return true if the key exists', () => {
+		const cache = cacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => []
+		});
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				cache,
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		icache.set('test', 'value');
+		assert.isTrue(icache.has('test'));
+	});
+
+	it('should remove value for the specified key from the cache', () => {
+		const cache = cacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => []
+		});
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				cache,
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		assert.isUndefined(icache.get('test'));
+		icache.set('test', 'value');
+		icache.set('test-two', 'value');
+		assert.strictEqual(icache.get('test'), 'value');
+		assert.strictEqual(icache.get('test-two'), 'value');
+		icache.delete('test');
+		assert.isUndefined(icache.get('test'));
+		assert.strictEqual(icache.get('test-two'), 'value');
+	});
+
 	it('should be able to clear the cache', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',

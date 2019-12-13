@@ -198,6 +198,10 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   Retrieves the cached value for the given `key`, or `undefined` if either no value has been set, or if the value is still pending resolution.
 -   `icache.set(key: any, value: any)`
     -   Sets the provided `value` for the given `key`. If `value` is a function, it will be invoked in order to obtain the actual value to cache. If the function returns a promise, a 'pending' value will be cached until the final value is fully resolved. In all scenarios, once a value is available and has been stored in the cache, the widget will be marked as invalid so it can be re-rendered with the final value available.
+-   `icache.has(key: any): boolean`
+    -   Returns `true` or `false` based in whether the key is set in the cache.
+-   `icache.delete(key: any): void`
+    -   Remove the item from the cache.
 -   `clear()`
     -   Clears all values currently stored in the widget's local cache.
 
