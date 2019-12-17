@@ -2,7 +2,7 @@ const { it, describe, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
-import iCacheMiddleware from '../../../../src/core/middleware/icache';
+import iCacheMiddleware, { createICacheMiddleware } from '../../../../src/core/middleware/icache';
 import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
@@ -113,6 +113,36 @@ describe('icache middleware', () => {
 		});
 	});
 
+	it('should support passing a promise factory to set and invalidate once resolved', async () => {
+		const cache = cacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => []
+		});
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				cache,
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		let resolverOne: any;
+		const promiseOne = new Promise<string>((resolve) => {
+			resolverOne = resolve;
+		});
+		icache.set('test', () => promiseOne);
+		assert.isUndefined(icache.get('test'));
+		invalidatorStub.notCalled;
+		resolverOne('value');
+		await promiseOne;
+
+		assert.isTrue(invalidatorStub.calledOnce);
+		assert.strictEqual(icache.get('test'), 'value');
+	});
+
 	it('should return true if the key exists', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
@@ -180,5 +210,49 @@ describe('icache middleware', () => {
 		assert.strictEqual(icache.get('test'), 'value');
 		icache.clear();
 		assert.isUndefined(icache.get('test'));
+	});
+
+	describe('icache factory', () => {
+		interface CacheContents {
+			foo: string;
+			bar: number;
+		}
+
+		it('should support setting the cache with a value, function or promise factory', async () => {
+			const typedICache = createICacheMiddleware<CacheContents>();
+			const cache = cacheMiddleware().callback({
+				id: 'cache-test',
+				middleware: { destroy: sb.stub() },
+				properties: () => ({}),
+				children: () => []
+			});
+			const icache = typedICache().callback({
+				id: 'test',
+				middleware: {
+					cache,
+					invalidator: invalidatorStub
+				},
+				properties: () => ({}),
+				children: () => []
+			});
+
+			let resolver: any;
+			const promise = new Promise<number>((resolve) => {
+				resolver = resolve;
+			});
+
+			// type error for the icache key
+			// assert.isUndefined(icache.get('other'));
+			assert.isUndefined(icache.get('foo'));
+			icache.set('foo', () => 'hello, typed world!');
+			icache.set('bar', () => promise);
+			// type error for returning an invalid type
+			// icache.set('foo', () => 1);
+			// icache.set('bar', () => new Promise((resolve) => resolve('')));
+			resolver(34);
+			await promise;
+			assert.strictEqual(icache.get('foo'), 'hello, typed world!');
+			assert.strictEqual(icache.get('bar'), 34);
+		});
 	});
 });

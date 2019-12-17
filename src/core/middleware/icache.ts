@@ -27,10 +27,20 @@ export interface ICacheResult<S = void> {
 	get<T extends void extends S ? any : keyof S>(
 		key: void extends S ? any : T
 	): void extends S ? T | undefined : S[T] | undefined;
-	set<T extends void extends S ? any : keyof S>(
-		key: void extends S ? any : T,
-		value: void extends S ? T : S[T]
-	): void;
+	set: {
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+		): void;
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? () => T : () => S[T]
+		): void;
+		<T extends void extends S ? any : keyof S>(
+			key: void extends S ? any : T,
+			value: void extends S ? T : S[T]
+		): void;
+	};
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
 	delete<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): void;
 	clear(): void;
