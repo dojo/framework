@@ -4,7 +4,7 @@ import { stub } from 'sinon';
 
 import { harness } from '../../../src/testing/harness';
 import { WidgetBase } from '../../../src/core/WidgetBase';
-import { v, w, tsx } from '../../../src/core/vdom';
+import { v, w, tsx, create } from '../../../src/core/vdom';
 import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
@@ -187,6 +187,38 @@ describe('assertionTemplate', () => {
 	it('can set a child with a factory function', () => {
 		const h = harness(() => w(MyWidget, { replaceChild: true }));
 		const childAssertion = baseAssertion.setChildren('~header', () => ['replace']);
+		h.expect(childAssertion);
+	});
+
+	it('children set should be immutable', () => {
+		const factory = create();
+		const Widget = factory(function Widget() {
+			return (
+				<div key="parent" classes={['root']}>
+					<div key="child">hello</div>
+				</div>
+			);
+		});
+
+		const WidgetWithProps = factory(function Widget() {
+			return (
+				<div key="parent" classes={['root']}>
+					<div disabled={true} key="child">
+						hello
+					</div>
+				</div>
+			);
+		});
+
+		const baseAssertion = assertionTemplate(() => v('div', { key: 'parent', classes: ['root'] }, []));
+
+		const childAssertion = baseAssertion.setChildren('@parent', () => [<div key="child">hello</div>]);
+
+		const h = harness(() => w(Widget, {}));
+		const h1 = harness(() => w(WidgetWithProps, {}));
+		h.expect(childAssertion);
+		const propertyAssertion = childAssertion.setProperty('@child', 'disabled', true);
+		h1.expect(propertyAssertion);
 		h.expect(childAssertion);
 	});
 

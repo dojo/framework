@@ -121,18 +121,19 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 			const render = renderFunc();
 			const node = findOne(render, selector);
 			node.children = node.children || [];
-			if (typeof children === 'function') {
-				children = children();
+			let childrenResult = children;
+			if (typeof childrenResult === 'function') {
+				childrenResult = childrenResult();
 			}
 			switch (type) {
 				case 'prepend':
-					node.children = [...children, ...node.children];
+					node.children = [...childrenResult, ...node.children];
 					break;
 				case 'append':
-					node.children = [...node.children, ...children];
+					node.children = [...node.children, ...childrenResult];
 					break;
 				case 'replace':
-					node.children = [...children];
+					node.children = [...childrenResult];
 					break;
 			}
 			return render;
@@ -156,7 +157,7 @@ export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 		}
 		return assertionTemplate(() => {
 			const render = renderFunc();
-			const insertedChildren = typeof children === 'function' ? (children = children()) : children;
+			const insertedChildren = typeof children === 'function' ? children() : children;
 			return replaceChildren(selector, render, (index, children) => {
 				if (type === 'after') {
 					children.splice(index + 1, 0, ...insertedChildren);
