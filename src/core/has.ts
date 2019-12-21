@@ -473,6 +473,8 @@ add('dom-resize-observer', () => has('host-browser') && global.ResizeObserver !=
 
 add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== undefined, true);
 
+add('dom-inert', () => has('host-browser') && Element.prototype.hasOwnProperty('inert'), true);
+
 add('build-elide', false);
 
 add('test', false);
