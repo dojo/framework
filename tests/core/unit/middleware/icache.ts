@@ -113,6 +113,28 @@ describe('icache middleware', () => {
 		});
 	});
 
+	it('should not invalidate on set when invalidate option is set to false', () => {
+		const cache = cacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: sb.stub() },
+			properties: () => ({}),
+			children: () => []
+		});
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				cache,
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+
+		icache.set('test', 'value');
+		assert.strictEqual(icache.get('test'), 'value');
+		assert.isTrue(invalidatorStub.calledOnce);
+	});
+
 	it('should support passing a promise factory to set and invalidate once resolved', async () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
