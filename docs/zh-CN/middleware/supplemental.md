@@ -170,23 +170,6 @@ r.mount();
 
 Dojo 提供了多种可选的中间件，当部件需要实现特定需求时，可以包含这些中间件。
 
-## `cache`
-
-提供了一个简单的、部件内的缓存，可以在部件的多次渲染间保留少量数据。
-
-**API:**
-
-```ts
-import cache from '@dojo/framework/core/middleware/cache';
-```
-
--   `cache.get<T = any>(key: any): T | null`
-    -   根据指定的 `key` 获取当前缓存值，如果缓存未命中则返回 `null`。
--   `cache.set<T = any>(key: any, value: T)`
-    -   将提供的 `value` 存储在缓存中，并与指定的 `key` 关联。
--   `cache.clear()`
-    -   清除当前在部件本地缓存中存储的所有值。
-
 ## `icache`
 
 组合了 [`cache`](/learn/middleware/可用的中间件#cache) 和 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件功能，以提供一个缓存，支持延迟值的解析，并在值可用时自动让部件失效。
@@ -197,11 +180,11 @@ import cache from '@dojo/framework/core/middleware/cache';
 import icache from '@dojo/framework/core/middleware/icache';
 ```
 
--   `icache.getOrSet<T = any>(key: any, value: any): T | undefined`
+-   `icache.getOrSet<T = any>(key: any, value: any, invalidate: boolean = true): T | undefined`
     -   如果存在的话，则返回根据 `key` 获取的值，否则就将 `key` 值设置为 `value`。在这两种情况下，如果缓存值尚未解析，则返回 `undefined`。
 -   `icache.get<T = any>(key: any): T | undefined`
     -   根据 `key` 获取缓存值，如果未设置值或者该值处在挂起状态，则返回 `undefined`。
--   `icache.set(key: any, value: any)`
+-   `icache.set(key: any, value: any, invalidate: boolean = true)`
     -   将提供的 `value` 设置给指定的 `key`。如果 `value` 是一个函数，则将调用它以获取要缓存的实际值。如果函数返回的是 promise，则会先缓存一个“pending”值，直到解析出最终的值。在所有场景中，一旦一个值可用并存储到缓存中，该部件将被标记为无效，这样就可以使用最终的值重新渲染。
 -   `clear()`
     -   清除当前在部件本地缓存中存储的所有值。
