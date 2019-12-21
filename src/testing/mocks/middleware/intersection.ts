@@ -1,6 +1,6 @@
 import global from '../../../shim/global';
 import { create, destroy, invalidator } from '../../../core/vdom';
-import cache from '../../../core/middleware/cache';
+import icache from '../../../core/middleware/icache';
 import intersection from '../../../core/middleware/intersection';
 import { ExtendedIntersectionObserverEntry, IntersectionResult } from '../../../core/meta/Intersection';
 import { DefaultMiddlewareResult } from '../../../core/interfaces';
@@ -15,7 +15,7 @@ export function createIntersectionMock() {
 	};
 	let invalidate: () => void | undefined;
 
-	const factory = create({ destroy, cache, invalidator });
+	const factory = create({ destroy, icache, invalidator });
 
 	const mockIntersectionFactory = factory(({ id, middleware, properties, children }) => {
 		const { callback } = intersection();

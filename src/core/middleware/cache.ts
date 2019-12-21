@@ -1,28 +1,24 @@
-import { create, destroy } from '../vdom';
-import Map from '../../shim/Map';
+import { create } from '../vdom';
+import icache from './icache';
 
-const factory = create({ destroy });
+const factory = create({ icache });
 
-export const cache = factory(({ middleware: { destroy } }) => {
-	const cacheMap = new Map<string, any>();
-	destroy(() => {
-		cacheMap.clear();
-	});
+export const cache = factory(({ middleware: { icache } }) => {
 	return {
 		get<T = any>(key: any): T | undefined {
-			return cacheMap.get(key);
+			return icache.get(key);
 		},
 		set<T = any>(key: any, value: T): void {
-			cacheMap.set(key, value);
+			icache.set(key, value, false);
 		},
 		has(key: any): boolean {
-			return cacheMap.has(key);
+			return icache.has(key);
 		},
 		delete(key: any): void {
-			cacheMap.delete(key);
+			icache.delete(key);
 		},
 		clear(): void {
-			cacheMap.clear();
+			icache.clear();
 		}
 	};
 });

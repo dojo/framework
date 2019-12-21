@@ -1,17 +1,16 @@
-import { create, invalidator } from '../../../core/vdom';
+import { create, invalidator, destroy } from '../../../core/vdom';
 import { DefaultMiddlewareResult } from '../../../core/interfaces';
-import { cache } from '../../../core/middleware/cache';
 import { icache } from '../../../core/middleware/icache';
 import Map from '../../../shim/Map';
 
 export function createICacheMock() {
 	const map = new Map<string, any>();
-	const factory = create({ cache, invalidator });
+	const factory = create({ destroy, invalidator });
 	const mockICacheFactory = factory(({ id, middleware, properties, children }) => {
 		const { callback } = icache();
 		const icacheMiddleware = callback({
 			id,
-			middleware: { invalidator: middleware.invalidator, cache: middleware.cache },
+			middleware: { invalidator: middleware.invalidator, destroy: middleware.destroy },
 			properties,
 			children
 		});

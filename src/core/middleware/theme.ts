@@ -1,6 +1,6 @@
 import { Theme, Classes, ClassNames } from './../interfaces';
 import { create, invalidator, diffProperty, getRegistry } from '../vdom';
-import cache from './cache';
+import icache from './icache';
 import injector from './injector';
 import Injector from '../Injector';
 import Set from '../../shim/Set';
@@ -27,14 +27,14 @@ function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
 	return themeInjector;
 }
 
-const factory = create({ invalidator, cache, diffProperty, injector, getRegistry }).properties<ThemeProperties>();
+const factory = create({ invalidator, icache, diffProperty, injector, getRegistry }).properties<ThemeProperties>();
 
 export const theme = factory(
-	({ middleware: { invalidator, cache, diffProperty, injector, getRegistry }, properties }) => {
+	({ middleware: { invalidator, icache, diffProperty, injector, getRegistry }, properties }) => {
 		let themeKeys = new Set();
 		diffProperty('theme', (current: ThemeProperties, next: ThemeProperties) => {
 			if (current.theme !== next.theme) {
-				cache.clear();
+				icache.clear();
 				invalidator();
 			}
 		});
@@ -53,7 +53,7 @@ export const theme = factory(
 				}
 			}
 			if (result) {
-				cache.clear();
+				icache.clear();
 				invalidator();
 			}
 		});
@@ -66,12 +66,12 @@ export const theme = factory(
 			}
 		}
 		injector.subscribe(INJECTED_THEME_KEY, () => {
-			cache.clear();
+			icache.clear();
 			invalidator();
 		});
 		return {
 			classes<T extends ClassNames>(css: T): T {
-				let theme = cache.get(css);
+				let theme = icache.get<T>(css);
 				if (theme) {
 					return theme;
 				}
@@ -95,7 +95,7 @@ export const theme = factory(
 						}
 					}
 				}
-				cache.set(css, theme);
+				icache.set(css, theme, false);
 				return theme;
 			},
 			set(css: Theme): void {

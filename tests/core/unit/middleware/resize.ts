@@ -5,7 +5,6 @@ import { sandbox, SinonStub } from 'sinon';
 
 import resizeMiddleware from '../../../../src/core/middleware/resize';
 import icacheMiddleware from '../../../../src/core/middleware/icache';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
 let resizeObserver: any;
@@ -50,17 +49,11 @@ describe('resize middleware', () => {
 	});
 
 	it('Should observe node with with resize and invalidate when the resize callback is called ', () => {
-		const cache = cacheMiddleware().callback({
-			properties: () => ({}),
-			children: () => [],
-			id: 'test-cache',
-			middleware: { destroy: destroyStub }
-		});
 		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { invalidator: invalidatorStub, cache }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const { callback } = resizeMiddleware();
 		const resize = callback({
@@ -96,17 +89,11 @@ describe('resize middleware', () => {
 	});
 
 	it('Should register disconnect with destroy', () => {
-		const cache = cacheMiddleware().callback({
-			properties: () => ({}),
-			children: () => [],
-			id: 'test-cache',
-			middleware: { destroy: sb.stub() }
-		});
 		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { invalidator: invalidatorStub, cache }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const { callback } = resizeMiddleware();
 		const resize = callback({

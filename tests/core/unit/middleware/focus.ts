@@ -5,7 +5,6 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import focusMiddleware from '../../../../src/core/middleware/focus';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
 import icacheMiddleware from '../../../../src/core/middleware/icache';
 
 const sb = sandbox.create();
@@ -17,21 +16,12 @@ const nodeStub = {
 const invalidatorStub = sb.stub();
 const icacheInvalidatorStub = sb.stub();
 
-function cacheFactory() {
-	return cacheMiddleware().callback({
-		id: 'test-cache',
-		properties: () => ({}),
-		children: () => [],
-		middleware: { destroy: sb.stub() }
-	});
-}
-
 function icacheFactory() {
 	return icacheMiddleware().callback({
 		id: 'test-cache',
 		properties: () => ({}),
 		children: () => [],
-		middleware: { cache: cacheFactory(), invalidator: icacheInvalidatorStub }
+		middleware: { destroy: sb.stub(), invalidator: icacheInvalidatorStub }
 	});
 }
 

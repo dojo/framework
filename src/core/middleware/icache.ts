@@ -1,8 +1,8 @@
 /* tslint:disable:interface-name */
-import { create, invalidator } from '../vdom';
-import cache from './cache';
+import Map from '../../shim/Map';
+import { create, invalidator, destroy } from '../vdom';
 
-const factory = create({ cache, invalidator });
+const factory = create({ invalidator, destroy });
 
 interface CacheWrapper {
 	status: 'pending' | 'resolved';
@@ -54,21 +54,25 @@ export interface ICacheResult<S = void> {
 
 export function createICacheMiddleware<S = void>() {
 	const icache = factory(
-		({ middleware: { invalidator, cache } }): ICacheResult<S> => {
+		({ middleware: { invalidator, destroy } }): ICacheResult<S> => {
+			const cacheMap = new Map<string, CacheWrapper>();
+			destroy(() => {
+				cacheMap.clear();
+			});
 			return {
 				getOrSet(key: any, value: any, invalidate = true): any | undefined {
-					let cachedValue = cache.get<CacheWrapper>(key);
+					let cachedValue = cacheMap.get(key);
 					if (!cachedValue) {
 						this.set(key, value, invalidate);
 					}
-					cachedValue = cache.get<CacheWrapper>(key);
+					cachedValue = cacheMap.get(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
 						return undefined;
 					}
 					return cachedValue.value;
 				},
 				get(key: any): any {
-					const cachedValue = cache.get<CacheWrapper>(key);
+					const cachedValue = cacheMap.get(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
 						return undefined;
 					}
@@ -78,14 +82,14 @@ export function createICacheMiddleware<S = void>() {
 					if (typeof value === 'function') {
 						value = value();
 						if (value && typeof value.then === 'function') {
-							cache.set(key, {
+							cacheMap.set(key, {
 								status: 'pending',
 								value
 							});
 							value.then((result: any) => {
-								const cachedValue = cache.get<CacheWrapper>(key);
+								const cachedValue = cacheMap.get(key);
 								if (cachedValue && cachedValue.value === value) {
-									cache.set(key, {
+									cacheMap.set(key, {
 										status: 'resolved',
 										value: result
 									});
@@ -95,20 +99,20 @@ export function createICacheMiddleware<S = void>() {
 							return;
 						}
 					}
-					cache.set(key, {
+					cacheMap.set(key, {
 						status: 'resolved',
 						value
 					});
 					invalidate && invalidator();
 				},
 				has(key: any) {
-					return cache.has(key);
+					return cacheMap.has(key);
 				},
 				delete(key: any) {
-					cache.delete(key);
+					cacheMap.delete(key);
 				},
 				clear(): void {
-					cache.clear();
+					cacheMap.clear();
 				}
 			};
 		}

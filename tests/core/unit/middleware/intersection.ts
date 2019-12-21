@@ -3,7 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { sandbox, SinonStub, SinonSpy, stub } from 'sinon';
 import global from '../../../../src/shim/global';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 import intersectionMiddleware from '../../../../src/core/middleware/intersection';
 
 const sb = sandbox.create();
@@ -51,17 +51,17 @@ describe('intersection middleware', () => {
 	});
 
 	it('no intersection', () => {
-		const cache = cacheMiddleware().callback({
+		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { destroy: destroyStub }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const intersection = intersectionMiddleware().callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
+				icache,
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
@@ -77,17 +77,17 @@ describe('intersection middleware', () => {
 	});
 
 	it('no intersection with options', () => {
-		const cache = cacheMiddleware().callback({
+		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { destroy: destroyStub }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const intersection = intersectionMiddleware().callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
+				icache,
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
@@ -103,17 +103,17 @@ describe('intersection middleware', () => {
 	});
 
 	it('Should return the registered intersection', () => {
-		const cache = cacheMiddleware().callback({
+		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { destroy: destroyStub }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const intersection = intersectionMiddleware().callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
+				icache,
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
@@ -147,17 +147,17 @@ describe('intersection middleware', () => {
 	});
 
 	it('intersections calls waits for root node before invalidating', () => {
-		const cache = cacheMiddleware().callback({
+		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { destroy: destroyStub }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const intersection = intersectionMiddleware().callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
+				icache,
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
@@ -212,17 +212,17 @@ describe('intersection middleware', () => {
 	});
 
 	it('Should register disconnect with destroy', () => {
-		const cache = cacheMiddleware().callback({
+		const icache = icacheMiddleware().callback({
 			properties: () => ({}),
 			children: () => [],
 			id: 'test-cache',
-			middleware: { destroy: sb.stub() }
+			middleware: { invalidator: invalidatorStub, destroy: sb.stub() }
 		});
 		const intersection = intersectionMiddleware().callback({
 			id: 'test',
 			middleware: {
 				destroy: destroyStub,
-				cache,
+				icache,
 				invalidator: invalidatorStub,
 				node: nodeStub
 			},
