@@ -13,15 +13,18 @@ export interface ICacheResult<S = void> {
 	getOrSet: {
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>,
+			invalidate?: boolean
 		): void extends S ? undefined | T : undefined | S[T];
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => T : () => S[T]
+			value: void extends S ? () => T : () => S[T],
+			invalidate?: boolean
 		): void extends S ? T : S[T];
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? T : S[T]
+			value: void extends S ? T : S[T],
+			invalidate?: boolean
 		): void extends S ? T : S[T];
 	};
 	get<T extends void extends S ? any : keyof S>(
@@ -30,15 +33,18 @@ export interface ICacheResult<S = void> {
 	set: {
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>,
+			invalidate?: boolean
 		): void;
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => T : () => S[T]
+			value: void extends S ? () => T : () => S[T],
+			invalidate?: boolean
 		): void;
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? T : S[T]
+			value: void extends S ? T : S[T],
+			invalidate?: boolean
 		): void;
 	};
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
@@ -50,10 +56,10 @@ export function createICacheMiddleware<S = void>() {
 	const icache = factory(
 		({ middleware: { invalidator, cache } }): ICacheResult<S> => {
 			return {
-				getOrSet(key: any, value: any): any | undefined {
+				getOrSet(key: any, value: any, invalidate = true): any | undefined {
 					let cachedValue = cache.get<CacheWrapper>(key);
 					if (!cachedValue) {
-						this.set(key, value);
+						this.set(key, value, invalidate);
 					}
 					cachedValue = cache.get<CacheWrapper>(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
@@ -68,7 +74,7 @@ export function createICacheMiddleware<S = void>() {
 					}
 					return cachedValue.value;
 				},
-				set(key: any, value: any): void {
+				set(key: any, value: any, invalidate = true): void {
 					if (typeof value === 'function') {
 						value = value();
 						if (value && typeof value.then === 'function') {
@@ -83,7 +89,7 @@ export function createICacheMiddleware<S = void>() {
 										status: 'resolved',
 										value: result
 									});
-									invalidator();
+									invalidate && invalidator();
 								}
 							});
 							return;
@@ -93,7 +99,7 @@ export function createICacheMiddleware<S = void>() {
 						status: 'resolved',
 						value
 					});
-					invalidator();
+					invalidate && invalidator();
 				},
 				has(key: any) {
 					return cache.has(key);
