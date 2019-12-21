@@ -105,9 +105,9 @@ describe('icache middleware', () => {
 			children: () => []
 		});
 
-		icache.set('test', 'value');
+		icache.set('test', 'value', false);
 		assert.strictEqual(icache.get('test'), 'value');
-		assert.isTrue(invalidatorStub.calledOnce);
+		assert.isTrue(invalidatorStub.notCalled);
 	});
 
 	it('should support passing a promise factory to set and invalidate once resolved', async () => {
