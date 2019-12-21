@@ -165,26 +165,9 @@ r.mount();
 
 Dojo provides a variety of optional middleware that widgets can include when needing to implement specific requirements.
 
-## `cache`
-
-Provides a simple widget-scoped cache that can persist small amounts of data between widget renders.
-
-**API:**
-
-```ts
-import cache from '@dojo/framework/core/middleware/cache';
-```
-
--   `cache.get<T = any>(key: any): T | null`
-    -   Retrieves the currently cached value for the specified `key`, or `null` on a cache miss.
--   `cache.set<T = any>(key: any, value: T)`
-    -   Stores the provided `value` in the cache against the specified `key`.
--   `cache.clear()`
-    -   Clears all values currently stored in the widget's local cache.
-
 ## `icache`
 
-Composes [`cache`](/learn/middleware/available-middleware#cache) and [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available.
+A middleware that uses the [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware functionality to provide a cache that supports lazy value resolution and automatic widget invalidation once a value becomes available. By default the cache will invalidate when a value is set in the cache, however there is an optional third argument on the set APIs that can be used to skip the invalidation when required.
 
 **API:**
 
@@ -192,11 +175,11 @@ Composes [`cache`](/learn/middleware/available-middleware#cache) and [`invalidat
 import icache from '@dojo/framework/core/middleware/icache';
 ```
 
--   `icache.getOrSet<T = any>(key: any, value: any): T | undefined`
+-   `icache.getOrSet<T = any>(key: any, value: any, invalidate: boolean = true): T | undefined`
     -   Retrieves the cached value for the given `key`, if one exists, otherwise `value` is set. In both instances, `undefined` is returned if the cached value has not yet been resolved.
 -   `icache.get<T = any>(key: any): T | undefined`
     -   Retrieves the cached value for the given `key`, or `undefined` if either no value has been set, or if the value is still pending resolution.
--   `icache.set(key: any, value: any)`
+-   `icache.set(key: any, value: any, invalidate: boolean = true)`
     -   Sets the provided `value` for the given `key`. If `value` is a function, it will be invoked in order to obtain the actual value to cache. If the function returns a promise, a 'pending' value will be cached until the final value is fully resolved. In all scenarios, once a value is available and has been stored in the cache, the widget will be marked as invalid so it can be re-rendered with the final value available.
 -   `icache.has(key: any): boolean`
     -   Returns `true` or `false` based in whether the key is set in the cache.
