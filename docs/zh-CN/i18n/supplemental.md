@@ -795,7 +795,6 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 
 导入[默认语言包](/learn/i18n/working-with-message-bundles#default-language-module)后，将消息包传给 `i18n` 函数就可访问所有特定区域的消息。
 
-For example:
 例如：
 
 ```ts
