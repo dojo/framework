@@ -22,6 +22,7 @@ export interface Route {
 	fullQueryParams: string[];
 	defaultParams: Params;
 	score: number;
+	title?: string;
 }
 
 /**
@@ -33,6 +34,7 @@ export interface RouteConfig {
 	children?: RouteConfig[];
 	defaultParams?: Params;
 	defaultRoute?: boolean;
+	title?: string;
 }
 
 /**
@@ -160,6 +162,20 @@ export interface OnChangeFunction {
 }
 
 /**
+ * Document title option
+ */
+export interface DocumentTitleOptions {
+	title?: string;
+	outlet: string;
+	params: Params;
+	queryParams: Params;
+}
+
+export interface SetDocumentTitle {
+	(options: DocumentTitleOptions): string | undefined;
+}
+
+/**
  * Options for a history provider
  */
 export interface HistoryOptions {
@@ -200,4 +216,5 @@ export interface RouterOptions {
 	window?: Window;
 	base?: string;
 	HistoryManager?: HistoryConstructor;
+	setDocumentTitle?: SetDocumentTitle;
 }

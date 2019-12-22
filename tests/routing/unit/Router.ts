@@ -1,6 +1,8 @@
-const { describe, it } = intern.getInterface('bdd');
+const { it } = intern.getInterface('bdd');
+const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
+import global from '../../../src/shim/global';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
 
@@ -156,7 +158,7 @@ const config = [
 	}
 ];
 
-describe('Router', () => {
+jsdomDescribe('Router', () => {
 	it('Navigates to current route if matches against a registered outlet', () => {
 		const router = new Router(routeConfig, { HistoryManager });
 		const context = router.getOutlet('home');
@@ -542,5 +544,24 @@ describe('Router', () => {
 		router.start();
 		assert.strictEqual(historyManagerCount, 1);
 		assert.isTrue(initialNavEvent);
+	});
+
+	it('should set the title as defined in the routing config', () => {
+		const router = new Router([{ outlet: 'foo', path: 'foo/{id}?{query}', title: 'foo' }], {
+			HistoryManager
+		});
+		router.setPath('/foo/id-value?query=queryValue');
+		assert.strictEqual(global.document.title, 'foo');
+	});
+
+	it('should set the title as using the set document title callback', () => {
+		const router = new Router([{ outlet: 'foo', path: 'foo/{id}?{query}', title: 'foo' }], {
+			HistoryManager,
+			setDocumentTitle({ title, params, queryParams, outlet }) {
+				return `${title}-${outlet}-${params.id}-${queryParams.query}`;
+			}
+		});
+		router.setPath('/foo/id-value?query=queryValue');
+		assert.strictEqual(global.document.title, 'foo-foo-id-value-queryValue');
 	});
 });

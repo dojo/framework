@@ -1,5 +1,15 @@
+import global from '../shim/global';
 import Evented from '../core/Evented';
-import { RouteConfig, History, OutletContext, Params, RouterInterface, Route, RouterOptions } from './interfaces';
+import {
+	RouteConfig,
+	History,
+	OutletContext,
+	Params,
+	RouterInterface,
+	Route,
+	RouterOptions,
+	MatchType
+} from './interfaces';
 import { HashHistory } from './history/HashHistory';
 import { EventObject } from '../core/Evented';
 
@@ -11,7 +21,7 @@ interface RouteWrapper {
 	route: Route;
 	segments: string[];
 	parent?: RouteWrapper;
-	type?: string;
+	type: MatchType;
 	params: Params;
 }
 
@@ -155,7 +165,7 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 	private _register(config: RouteConfig[], routes?: Route[], parentRoute?: Route): void {
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
-			let { path, outlet, children, defaultRoute = false, defaultParams = {} } = config[i];
+			let { path, outlet, children, defaultRoute = false, defaultParams = {}, title } = config[i];
 			let [parsedPath, queryParamString] = path.split('?');
 			let queryParams: string[] = [];
 			parsedPath = this._stripLeadingSlash(parsedPath);
@@ -166,6 +176,7 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 				outlet,
 				path: parsedPath,
 				segments,
+				title,
 				defaultParams: parentRoute ? { ...parentRoute.defaultParams, ...defaultParams } : defaultParams,
 				children: [],
 				fullPath: parentRoute ? `${parentRoute.fullPath}/${parsedPath}` : parsedPath,
@@ -236,14 +247,15 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 			route,
 			segments: [...segments],
 			parent: undefined,
-			params: {}
+			params: {},
+			type: 'index'
 		}));
 		let routeConfig: RouteWrapper | undefined;
 		let matchedRoutes: RouteWrapper[] = [];
 		while ((routeConfig = routeConfigs.pop())) {
 			const { route, parent, segments, params } = routeConfig;
 			let segmentIndex = 0;
-			let type = 'index';
+			let type: MatchType = 'index';
 			let paramIndex = 0;
 			let routeMatch = true;
 			if (segments.length < route.segments.length) {
@@ -285,7 +297,7 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 		}
 
 		let matchedOutletName: string | undefined = undefined;
-		let matchedRoute: any = matchedRoutes.reduce((match: any, matchedRoute: any) => {
+		let matchedRoute: RouteWrapper | undefined = matchedRoutes.reduce((match: any, matchedRoute: any) => {
 			if (!match) {
 				return matchedRoute;
 			}
@@ -300,8 +312,19 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 				matchedRoute.type = 'error';
 			}
 			matchedOutletName = matchedRoute.route.outlet;
+			const title = this._options.setDocumentTitle
+				? this._options.setDocumentTitle({
+						outlet: matchedOutletName,
+						title: matchedRoute.route.title,
+						params: matchedRoute.params,
+						queryParams: this._currentQueryParams
+				  })
+				: matchedRoute.route.title;
+			if (title) {
+				global.document.title = title;
+			}
 			while (matchedRoute) {
-				let { type, params, parent, route } = matchedRoute;
+				let { type, params, route } = matchedRoute;
 				const matchedOutlet = {
 					id: route.outlet,
 					queryParams: this._currentQueryParams,
@@ -315,7 +338,7 @@ export class Router extends Evented<{ nav: NavEvent; outlet: OutletEvent }> impl
 				if (!previousMatchedOutlet || !matchingParams(previousMatchedOutlet, matchedOutlet)) {
 					this.emit({ type: 'outlet', outlet: matchedOutlet, action: 'enter' });
 				}
-				matchedRoute = parent;
+				matchedRoute = matchedRoute.parent;
 			}
 		} else {
 			this._matchedOutlets.errorOutlet = {
