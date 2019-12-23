@@ -379,7 +379,8 @@ registerSuite('has', {
 				'raf',
 				'setimmediate',
 				'abort-controller',
-				'abort-signal'
+				'abort-signal',
+				'dom-inert'
 			].forEach((feature) => assert.isTrue(hasExists(feature)));
 		}
 	}
