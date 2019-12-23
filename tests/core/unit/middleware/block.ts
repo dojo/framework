@@ -3,7 +3,6 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox, SinonStub } from 'sinon';
 
 import blockMiddleware from '../../../../src/core/middleware/block';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
 import icacheMiddleware from '../../../../src/core/middleware/icache';
 
 const sb = sandbox.create();
@@ -13,7 +12,6 @@ const deferStub = {
 	resume: sb.stub()
 };
 const { callback } = blockMiddleware();
-let cache: any;
 let icache: any;
 
 function waitForCall(calls = 1, stub: SinonStub) {
@@ -22,15 +20,9 @@ function waitForCall(calls = 1, stub: SinonStub) {
 
 describe('block middleware', () => {
 	beforeEach(() => {
-		cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		icache = icacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { cache, invalidator: invalidatorStub },
+			id: 'icache-test',
+			middleware: { destroy: sb.stub(), invalidator: invalidatorStub },
 			properties: () => ({}),
 			children: () => []
 		});
@@ -43,7 +35,6 @@ describe('block middleware', () => {
 		const block = callback({
 			id: 'test',
 			middleware: {
-				cache,
 				icache,
 				defer: deferStub
 			},

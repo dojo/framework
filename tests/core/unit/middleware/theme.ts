@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import themeMiddleware from '../../../../src/core/middleware/theme';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 import Injector from '../../../../src/core/Injector';
 
 const sb = sandbox.create();
@@ -28,8 +28,8 @@ describe('theme middleware', () => {
 	});
 
 	it('Should register injector and allow theme to be set', () => {
-		const cache = cacheMiddleware().callback({
-			middleware: { destroy: sb.stub() },
+		const icache = icacheMiddleware().callback({
+			middleware: { destroy: sb.stub(), invalidator: sb.stub() },
 			properties: () => ({}),
 			children: () => [],
 			id: 'blah'
@@ -42,7 +42,7 @@ describe('theme middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator,
-				cache,
+				icache,
 				diffProperty,
 				injector,
 				getRegistry
@@ -81,8 +81,8 @@ describe('theme middleware', () => {
 	});
 
 	it('Should give precedence to theme from properties over an injected theme', () => {
-		const cache = cacheMiddleware().callback({
-			middleware: { destroy: sb.stub() },
+		const icache = icacheMiddleware().callback({
+			middleware: { destroy: sb.stub(), invalidator: sb.stub() },
 			properties: () => ({}),
 			children: () => [],
 			id: 'blah'
@@ -100,7 +100,7 @@ describe('theme middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator,
-				cache,
+				icache,
 				diffProperty,
 				injector,
 				getRegistry
@@ -139,8 +139,8 @@ describe('theme middleware', () => {
 	});
 
 	it('Should support classes property for adding additional classes', () => {
-		const cache = cacheMiddleware().callback({
-			middleware: { destroy: sb.stub() },
+		const icache = icacheMiddleware().callback({
+			middleware: { destroy: sb.stub(), invalidator: sb.stub() },
 			properties: () => ({}),
 			children: () => [],
 			id: 'blah'
@@ -153,7 +153,7 @@ describe('theme middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator,
-				cache,
+				icache,
 				diffProperty,
 				injector,
 				getRegistry

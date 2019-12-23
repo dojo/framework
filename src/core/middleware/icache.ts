@@ -1,8 +1,8 @@
 /* tslint:disable:interface-name */
-import { create, invalidator } from '../vdom';
-import cache from './cache';
+import Map from '../../shim/Map';
+import { create, invalidator, destroy } from '../vdom';
 
-const factory = create({ cache, invalidator });
+const factory = create({ invalidator, destroy });
 
 interface CacheWrapper {
 	status: 'pending' | 'resolved';
@@ -13,15 +13,18 @@ export interface ICacheResult<S = void> {
 	getOrSet: {
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>,
+			invalidate?: boolean
 		): void extends S ? undefined | T : undefined | S[T];
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => T : () => S[T]
+			value: void extends S ? () => T : () => S[T],
+			invalidate?: boolean
 		): void extends S ? T : S[T];
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? T : S[T]
+			value: void extends S ? T : S[T],
+			invalidate?: boolean
 		): void extends S ? T : S[T];
 	};
 	get<T extends void extends S ? any : keyof S>(
@@ -30,15 +33,18 @@ export interface ICacheResult<S = void> {
 	set: {
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => Promise<T> : () => Promise<S[T]>
+			value: void extends S ? () => Promise<T> : () => Promise<S[T]>,
+			invalidate?: boolean
 		): void;
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => T : () => S[T]
+			value: void extends S ? () => T : () => S[T],
+			invalidate?: boolean
 		): void;
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? T : S[T]
+			value: void extends S ? T : S[T],
+			invalidate?: boolean
 		): void;
 	};
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
@@ -48,61 +54,65 @@ export interface ICacheResult<S = void> {
 
 export function createICacheMiddleware<S = void>() {
 	const icache = factory(
-		({ middleware: { invalidator, cache } }): ICacheResult<S> => {
+		({ middleware: { invalidator, destroy } }): ICacheResult<S> => {
+			const cacheMap = new Map<string, CacheWrapper>();
+			destroy(() => {
+				cacheMap.clear();
+			});
 			return {
-				getOrSet(key: any, value: any): any | undefined {
-					let cachedValue = cache.get<CacheWrapper>(key);
+				getOrSet(key: any, value: any, invalidate = true): any | undefined {
+					let cachedValue = cacheMap.get(key);
 					if (!cachedValue) {
-						this.set(key, value);
+						this.set(key, value, invalidate);
 					}
-					cachedValue = cache.get<CacheWrapper>(key);
+					cachedValue = cacheMap.get(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
 						return undefined;
 					}
 					return cachedValue.value;
 				},
 				get(key: any): any {
-					const cachedValue = cache.get<CacheWrapper>(key);
+					const cachedValue = cacheMap.get(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
 						return undefined;
 					}
 					return cachedValue.value;
 				},
-				set(key: any, value: any): void {
+				set(key: any, value: any, invalidate = true): void {
 					if (typeof value === 'function') {
 						value = value();
 						if (value && typeof value.then === 'function') {
-							cache.set(key, {
+							cacheMap.set(key, {
 								status: 'pending',
 								value
 							});
 							value.then((result: any) => {
-								const cachedValue = cache.get<CacheWrapper>(key);
+								const cachedValue = cacheMap.get(key);
 								if (cachedValue && cachedValue.value === value) {
-									cache.set(key, {
+									cacheMap.set(key, {
 										status: 'resolved',
 										value: result
 									});
-									invalidator();
+									invalidate && invalidator();
 								}
 							});
 							return;
 						}
 					}
-					cache.set(key, {
+					cacheMap.set(key, {
 						status: 'resolved',
 						value
 					});
-					invalidator();
+					invalidate && invalidator();
 				},
 				has(key: any) {
-					return cache.has(key);
+					return cacheMap.has(key);
 				},
 				delete(key: any) {
-					cache.delete(key);
+					cacheMap.delete(key);
 				},
 				clear(): void {
-					cache.clear();
+					cacheMap.clear();
 				}
 			};
 		}

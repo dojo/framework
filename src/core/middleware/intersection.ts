@@ -1,7 +1,7 @@
 import WeakMap from '../../shim/WeakMap';
 import IntersectionObserver from '../../shim/IntersectionObserver';
 import { create, node, invalidator, destroy } from '../vdom';
-import cache from './cache';
+import icache from './icache';
 import {
 	IntersectionResult,
 	IntersectionGetOptions,
@@ -14,9 +14,9 @@ const defaultIntersection: IntersectionResult = Object.freeze({
 	isIntersecting: false
 });
 
-const factory = create({ cache, node, invalidator, destroy });
+const factory = create({ icache, node, invalidator, destroy });
 
-export const intersection = factory(({ middleware: { cache, node, invalidator, destroy } }) => {
+export const intersection = factory(({ middleware: { icache, node, invalidator, destroy } }) => {
 	const handles: Function[] = [];
 	destroy(() => {
 		let handle: any;
@@ -32,13 +32,13 @@ export const intersection = factory(({ middleware: { cache, node, invalidator, d
 			root: rootNode
 		});
 		const details = { observer, entries, ...options };
-		cache.set(JSON.stringify(options), details);
+		icache.set(JSON.stringify(options), details, false);
 		handles.push(() => observer.disconnect());
 		return details;
 	}
 
 	function _getDetails(options: IntersectionGetOptions = {}): IntersectionDetail | undefined {
-		return cache.get(JSON.stringify(options));
+		return icache.get(JSON.stringify(options));
 	}
 
 	function _onIntersect(detailEntries: WeakMap<Element, IntersectionResult>) {

@@ -3,6 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
 import cacheMiddleware from '../../../../src/core/middleware/cache';
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 
 const destroyStub = stub();
 
@@ -12,11 +13,17 @@ describe('cache middleware', () => {
 	});
 
 	it('should be able to store and retrieve values from the cache', () => {
+		const icache = icacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: stub(), invalidator: stub() },
+			properties: () => ({}),
+			children: () => []
+		});
 		const { callback } = cacheMiddleware();
 		const cache = callback({
 			id: 'test',
 			middleware: {
-				destroy: destroyStub
+				icache
 			},
 			properties: () => ({}),
 			children: () => []
@@ -26,26 +33,16 @@ describe('cache middleware', () => {
 		assert.strictEqual(cache.get('test'), 'value');
 	});
 
-	it('should register destroy to clear the map', () => {
-		const { callback } = cacheMiddleware();
-		const cache = callback({
-			id: 'test',
-			middleware: {
-				destroy: destroyStub
-			},
+	it('should return true if the key exists', () => {
+		const icache = icacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: stub(), invalidator: stub() },
 			properties: () => ({}),
 			children: () => []
 		});
-		cache.set('test', 'value');
-		assert.isTrue(destroyStub.calledOnce);
-		destroyStub.getCall(0).callArg(0);
-		assert.isUndefined(cache.get('test'));
-	});
-
-	it('should return true if the key exists', () => {
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
-			middleware: { destroy: destroyStub },
+			middleware: { icache },
 			properties: () => ({}),
 			children: () => []
 		});
@@ -54,9 +51,15 @@ describe('cache middleware', () => {
 	});
 
 	it('should remove value for the specified key from the cache', () => {
+		const icache = icacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: stub(), invalidator: stub() },
+			properties: () => ({}),
+			children: () => []
+		});
 		const cache = cacheMiddleware().callback({
 			id: 'cache-test',
-			middleware: { destroy: destroyStub },
+			middleware: { icache },
 			properties: () => ({}),
 			children: () => []
 		});
@@ -71,11 +74,17 @@ describe('cache middleware', () => {
 	});
 
 	it('should be able to clear the cache', () => {
+		const icache = icacheMiddleware().callback({
+			id: 'cache-test',
+			middleware: { destroy: stub(), invalidator: stub() },
+			properties: () => ({}),
+			children: () => []
+		});
 		const { callback } = cacheMiddleware();
 		const cache = callback({
 			id: 'test',
 			middleware: {
-				destroy: destroyStub
+				icache
 			},
 			properties: () => ({}),
 			children: () => []

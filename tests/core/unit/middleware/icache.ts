@@ -3,7 +3,6 @@ const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
 import iCacheMiddleware, { createICacheMiddleware } from '../../../../src/core/middleware/icache';
-import cacheMiddleware from '../../../../src/core/middleware/cache';
 
 const sb = sandbox.create();
 const invalidatorStub = sb.stub();
@@ -15,16 +14,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should invalidate when value is set to the cache', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -38,16 +31,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should invalidate when cache value is resolved and set resolved value as result', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -75,16 +62,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should invalidate allow cache value to replaced when calling set directly', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -113,17 +94,27 @@ describe('icache middleware', () => {
 		});
 	});
 
-	it('should support passing a promise factory to set and invalidate once resolved', async () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
+	it('should not invalidate on set when invalidate option is set to false', () => {
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+
+		icache.set('test', 'value', false);
+		assert.strictEqual(icache.get('test'), 'value');
+		assert.isTrue(invalidatorStub.notCalled);
+	});
+
+	it('should support passing a promise factory to set and invalidate once resolved', async () => {
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -144,16 +135,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should return true if the key exists', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -164,16 +149,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should remove value for the specified key from the cache', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -190,16 +169,10 @@ describe('icache middleware', () => {
 	});
 
 	it('should be able to clear the cache', () => {
-		const cache = cacheMiddleware().callback({
-			id: 'cache-test',
-			middleware: { destroy: sb.stub() },
-			properties: () => ({}),
-			children: () => []
-		});
 		const icache = callback({
 			id: 'test',
 			middleware: {
-				cache,
+				destroy: sb.stub(),
 				invalidator: invalidatorStub
 			},
 			properties: () => ({}),
@@ -220,16 +193,10 @@ describe('icache middleware', () => {
 
 		it('should support setting the cache with a value, function or promise factory', async () => {
 			const typedICache = createICacheMiddleware<CacheContents>();
-			const cache = cacheMiddleware().callback({
-				id: 'cache-test',
-				middleware: { destroy: sb.stub() },
-				properties: () => ({}),
-				children: () => []
-			});
 			const icache = typedICache().callback({
 				id: 'test',
 				middleware: {
-					cache,
+					destroy: sb.stub(),
 					invalidator: invalidatorStub
 				},
 				properties: () => ({}),
