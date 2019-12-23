@@ -57,6 +57,17 @@ intern.registerPlugin('jsdom', async () => {
 			return true;
 		};
 
+		global.MutationObserver = function MutationObserver() {
+			return {
+				observe: function() {
+					return [];
+				},
+				takeRecords: function() {
+					return [];
+				}
+			};
+		};
+
 		global.cancelAnimationFrame = () => {};
 		global.IntersectionObserver = () => {};
 

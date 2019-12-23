@@ -5,6 +5,7 @@ import './dimensions';
 import './i18n';
 import './focus';
 import './icache';
+import './inert';
 import './injector';
 import './intersection';
 import './resize';
