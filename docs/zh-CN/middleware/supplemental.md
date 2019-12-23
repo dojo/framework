@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/middleware/supplemental.md
-commit a53cb2224f75e05acf3d61507137cb44f2581618
+commit 49968a31324a1a6f461b02cb34339dfc0a5f91f3
 -->
 
 Dojo 提供了渲染中间件的概念，以帮助衔接响应式、函数部件与底层的命令式 DOM 结构。
@@ -172,7 +172,7 @@ Dojo 提供了多种可选的中间件，当部件需要实现特定需求时，
 
 ## `icache`
 
-组合了 [`cache`](/learn/middleware/可用的中间件#cache) 和 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件功能，以提供一个缓存，支持延迟值的解析，并在值可用时自动让部件失效。
+该中间件在 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件功能的基础上提供了缓存功能，支持值的延迟解析，并在值可用时自动让部件失效。默认情况下，往缓存中设置一个值时，缓存就会失效；但是使用 set API 上的第三个可选参数，在需要时可让缓存不失效。
 
 **API:**
 
@@ -186,6 +186,10 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   根据 `key` 获取缓存值，如果未设置值或者该值处在挂起状态，则返回 `undefined`。
 -   `icache.set(key: any, value: any, invalidate: boolean = true)`
     -   将提供的 `value` 设置给指定的 `key`。如果 `value` 是一个函数，则将调用它以获取要缓存的实际值。如果函数返回的是 promise，则会先缓存一个“pending”值，直到解析出最终的值。在所有场景中，一旦一个值可用并存储到缓存中，该部件将被标记为无效，这样就可以使用最终的值重新渲染。
+-   `icache.has(key: any): boolean`
+    -   根据 key 是否已在缓存中设置，来返回 `true` 或 `false`。
+-   `icache.delete(key: any): void`
+    -   从缓存中移除对应的项。
 -   `clear()`
     -   清除当前在部件本地缓存中存储的所有值。
 
