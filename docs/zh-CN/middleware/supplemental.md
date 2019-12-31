@@ -172,7 +172,7 @@ Dojo 提供了多种可选的中间件，当部件需要实现特定需求时，
 
 ## `icache`
 
-该中间件在 [`invalidator`](/learn/middleware/core-render-middleware#invalidator) 中间件功能的基础上提供了缓存功能，支持值的延迟解析，并在值可用时自动让部件失效。默认情况下，往缓存中设置一个值时，缓存就会失效；但是使用 set API 上的第三个可选参数，在需要时可让缓存不失效。
+该中间件在 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件功能的基础上提供了缓存功能，支持值的延迟解析，并在值可用时自动让部件失效。默认情况下，往缓存中设置一个值时，缓存就会失效；但是使用 set API 上的第三个可选参数，在需要时可让缓存不失效。
 
 **API:**
 
