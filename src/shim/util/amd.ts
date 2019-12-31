@@ -44,6 +44,12 @@ function shimAmdDependencies(config: any) {
 		location: 'node_modules/@dojo'
 	});
 
+	addIfNotPresent(packages, {
+		name: 'wicg-inert',
+		location: 'node_modules/wicg-inert/dist',
+		main: 'inert.min'
+	});
+
 	config.packages = packages;
 
 	return config;
