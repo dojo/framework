@@ -531,7 +531,7 @@ For large applications, state management can be one of the most challenging aspe
 
 ## Basic: self-encapsulated widget state
 
-Widgets can maintain their own internal state in a variety of ways. Function-based widgets can use the [`cache`](/learn/middleware/available-middleware#cache) or [`icache`](/learn/middleware/available-middleware#icache) middleware to store widget-local state, and class-based widgets can use internal class fields.
+Widgets can maintain their own internal state in a variety of ways. Function-based widgets can use the [`icache`](/learn/middleware/available-middleware#icache) middleware to store widget-local state, and class-based widgets can use internal class fields.
 
 Internal state data may directly affect the widget's render output, or may be passed as properties to any child widgets where they in turn directly affect the children's render output. Widgets may also allow their internal state to be changed, for example in response to a user interaction event.
 
@@ -543,21 +543,21 @@ The following example illustrates these patterns:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import cache from '@dojo/framework/core/middleware/cache';
+import icache from '@dojo/framework/core/middleware/icache';
 
-const factory = create({ cache });
+const factory = create({ icache });
 
-export default factory(function MyEncapsulatedStateWidget({ middleware: { cache } }) {
+export default factory(function MyEncapsulatedStateWidget({ middleware: { icache } }) {
 	return (
 		<div>
-			Current widget state: {cache.get<string>('myState') || 'Hello from a stateful widget!'}
+			Current widget state: {icache.get<string>('myState') || 'Hello from a stateful widget!'}
 			<br />
 			<button
 				onclick={() => {
-					let counter = cache.get<number>('counter') || 0;
+					let counter = icache.get<number>('counter') || 0;
 					let myState = 'State change iteration #' + ++counter;
-					cache.set('myState', myState);
-					cache.set('counter', counter);
+					icache.set('myState', myState);
+					icache.set('counter', counter);
 				}}
 			>
 				Change State
