@@ -177,15 +177,19 @@ registerSuite('i18n', {
 			},
 
 			'assert unsupported locale added with `setLocaleMessages`'() {
-				const messages = { hello: 'Oy' };
-				setLocaleMessages(bundle, messages, 'en-GB');
+				try {
+					const messages = { hello: 'Oy' };
+					setLocaleMessages(bundle, messages, 'en-GB');
 
-				const cached = getCachedMessages(bundle, 'en-GB');
-				assert.deepEqual(
-					cached,
-					{ ...bundle.messages, ...messages },
-					'Messages added with `setLocaleMessages` are returned.'
-				);
+					const cached = getCachedMessages(bundle, 'en-GB');
+					assert.deepEqual(
+						cached,
+						{ ...bundle.messages, ...messages },
+						'Messages added with `setLocaleMessages` are returned.'
+					);
+				} finally {
+					setLocaleMessages(bundle, {}, 'en-GB');
+				}
 			},
 
 			async 'assert most specific supported locale returned'() {
@@ -258,7 +262,7 @@ registerSuite('i18n', {
 
 					async 'assert unsupported locale'() {
 						await i18n(bundle, 'en-GB');
-						const formatter = getMessageFormatter(bundle, 'hello');
+						const formatter = getMessageFormatter(bundle, 'hello', 'en-GB');
 						assert.strictEqual(formatter(), 'Hello');
 					},
 
@@ -446,32 +450,36 @@ registerSuite('i18n', {
 		},
 
 		setLocaleMessages() {
-			sinon.stub(Globalize, 'loadMessages');
-			const french = { hello: 'Bonjour', goodbye: 'Au revoir' };
-			const czech = { hello: 'Ahoj', goodbye: 'Ahoj' };
+			try {
+				sinon.stub(Globalize, 'loadMessages');
+				const french = { hello: 'Bonjour', goodbye: 'Au revoir' };
+				const czech = { hello: 'Ahoj', goodbye: 'Ahoj' };
 
-			setLocaleMessages(bundle, french, 'fr');
-			setLocaleMessages(bundle, czech, 'cz');
+				setLocaleMessages(bundle, french, 'fr');
+				setLocaleMessages(bundle, czech, 'cz');
 
-			const path = '..-_build-tests-support-mocks-common-main';
-			const first = (<any>Globalize).loadMessages.args[0][0].fr[path];
-			const second = (<any>Globalize).loadMessages.args[1][0].cz[path];
+				const path = '..-_build-tests-support-mocks-common-main';
+				const first = (<any>Globalize).loadMessages.args[0][0].fr[path];
+				const second = (<any>Globalize).loadMessages.args[1][0].cz[path];
 
-			assert.isFrozen(first, 'locale messages should be frozen');
-			assert.isFrozen(second, 'locale messages should be frozen');
+				assert.isFrozen(first, 'locale messages should be frozen');
+				assert.isFrozen(second, 'locale messages should be frozen');
 
-			assert.deepEqual(
-				getCachedMessages(bundle, 'fr'),
-				{ ...french, helloReply: 'Hello' },
-				'Default messages should be included where not overridden'
-			);
-			assert.deepEqual(
-				getCachedMessages(bundle, 'cz'),
-				{ ...czech, helloReply: 'Hello' },
-				'Default messages should be included where not overridden'
-			);
-
-			(<any>Globalize).loadMessages.restore();
+				assert.deepEqual(
+					getCachedMessages(bundle, 'fr'),
+					{ ...french, helloReply: 'Hello' },
+					'Default messages should be included where not overridden'
+				);
+				assert.deepEqual(
+					getCachedMessages(bundle, 'cz'),
+					{ ...czech, helloReply: 'Hello' },
+					'Default messages should be included where not overridden'
+				);
+			} finally {
+				setLocaleMessages(bundle, {}, 'fr');
+				setLocaleMessages(bundle, {}, 'cz');
+				(<any>Globalize).loadMessages.restore();
+			}
 		},
 
 		switchLocale: {
