@@ -1,4 +1,4 @@
-import { SupportedClassName } from './../interfaces';
+import { SupportedClassName } from '../interfaces';
 
 let browserSpecificTransitionEndEventName = '';
 let browserSpecificAnimationEndEventName = '';
@@ -43,15 +43,17 @@ function runAndCleanUp(element: HTMLElement, startAnimation: () => void, finishA
 }
 
 function exit(node: HTMLElement, exitAnimation: string, active?: SupportedClassName) {
-	const activeClass = active && active !== true ? active : `${exitAnimation}-active`;
+	const exitAnimationClasses = exitAnimation.split(' ');
+	const activeClasses =
+		active && active !== true ? active.split(' ') : exitAnimationClasses.map((className) => `${className}-active`);
 
 	runAndCleanUp(
 		node,
 		() => {
-			node.classList.add(exitAnimation);
+			exitAnimationClasses.forEach((className) => node.classList.add(className));
 
 			requestAnimationFrame(function() {
-				node.classList.add(activeClass);
+				activeClasses.forEach((className) => node.classList.add(className));
 			});
 		},
 		() => {
@@ -61,20 +63,22 @@ function exit(node: HTMLElement, exitAnimation: string, active?: SupportedClassN
 }
 
 function enter(node: HTMLElement, enterAnimation: string, active?: SupportedClassName) {
-	const activeClass = active && active !== true ? active : `${enterAnimation}-active`;
+	const enterAnimationClasses = enterAnimation.split(' ');
+	const activeClasses =
+		active && active !== true ? active.split(' ') : enterAnimationClasses.map((className) => `${className}-active`);
 
 	runAndCleanUp(
 		node,
 		() => {
-			node.classList.add(enterAnimation);
+			enterAnimationClasses.forEach((className) => node.classList.add(className));
 
 			requestAnimationFrame(function() {
-				node.classList.add(activeClass);
+				activeClasses.forEach((className) => node.classList.add(className));
 			});
 		},
 		() => {
-			node.classList.remove(enterAnimation);
-			node.classList.remove(activeClass);
+			enterAnimationClasses.forEach((className) => node.classList.remove(className));
+			activeClasses.forEach((className) => node.classList.remove(className));
 		}
 	);
 }
