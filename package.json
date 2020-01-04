@@ -51,6 +51,7 @@
     "globalize": "1.4.0",
     "immutable": "3.8.2",
     "intersection-observer": "0.4.2",
+    "messageformat": "2.3.0",
     "pepjs": "0.4.2",
     "resize-observer-polyfill": "1.5.0",
     "tslib": "1.9.3",

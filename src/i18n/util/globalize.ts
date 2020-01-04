@@ -1,5 +1,18 @@
 import * as Globalize from 'globalize/dist/globalize';
-import i18n from '../i18n';
+import { isLoaded } from '../cldr/load';
+import i18n, { observeLocale } from '../i18n';
+
+// Globalize.js needs to be notified when the system locale is changed
+observeLocale((locale) => {
+	if (isLoaded('supplemental', 'likelySubtags')) {
+		Globalize.load({
+			main: {
+				[locale]: {}
+			}
+		});
+		Globalize.locale(locale);
+	}
+});
 
 /**
  * @private

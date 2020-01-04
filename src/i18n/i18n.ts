@@ -1,14 +1,13 @@
 /* tslint:disable:interface-name */
-import global from '../shim/global';
-import { isArrayLike, isIterable } from '../shim/iterator';
-import Map from '../shim/Map';
+import * as MessageFormat from 'messageformat';
+import { Handle } from '../core/Destroyable';
 import Evented, { EventObject } from '../core/Evented';
 import has from '../core/has';
 import { uuid } from '../core/util';
-import * as Globalize from 'globalize/dist/globalize/message';
-import { isLoaded } from './cldr/load';
+import global from '../shim/global';
+import { isArrayLike, isIterable } from '../shim/iterator';
+import Map from '../shim/Map';
 import { generateLocales, normalizeLocale } from './util/main';
-import { Handle } from '../core/Destroyable';
 
 export function useDefault(modules: any[]): any[];
 export function useDefault(module: any): any;
@@ -102,9 +101,8 @@ export interface I18nEventObject extends EventObject<string> {
 	target: any;
 }
 
-const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const bundleMap = new Map<string, Map<string, Messages>>();
-const formatterMap = new Map<string, MessageFormatter>();
+const formatterMap = new Map<string, MessageFormat.Msg>();
 const localeProducer = new Evented<{}, string, I18nEventObject>();
 let rootLocale: string;
 
@@ -124,52 +122,6 @@ function getBundleId<T extends Messages>(bundle: Bundle<T>): string {
 		value: id
 	});
 	return id;
-}
-
-/**
- * @private
- * Return a function that formats an ICU-style message, and takes an optional value for token replacement.
- *
- * Usage:
- * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
- * const message = formatter({
- *   host: 'Miles',
- *   gender: 'male',
- *   guest: 'Oscar',
- *   guestCount: '15'
- * });
- *
- * @param id
- * The message's bundle id.
- *
- * @param key
- * The message's key.
- *
- * @param locale
- * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
- * default locale is used.
- *
- * @return
- * The message formatter.
- */
-function getIcuMessageFormatter(id: string, key: string, locale?: string): MessageFormatter {
-	locale = normalizeLocale(locale || getRootLocale());
-	const formatterKey = `${locale}:${id}:${key}`;
-	let formatter = formatterMap.get(formatterKey);
-
-	if (formatter) {
-		return formatter;
-	}
-
-	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
-	formatter = globalize.messageFormatter(`${id}/${key}`);
-
-	const cached = bundleMap.get(id);
-	if (cached && cached.get(locale)) {
-		formatterMap.set(formatterKey, formatter);
-	}
-
-	return formatter;
 }
 
 /**
@@ -209,7 +161,7 @@ function getSupportedLocales(locale: string, supported: string[] = []): string[]
 
 /**
  * @private
- * Inject messages for the specified locale into the i18n system.
+ * Register locale-specific messages with the specified bundle ID.
  *
  * @param id
  * The bundle's unique identifier
@@ -230,18 +182,10 @@ function loadMessages<T extends Messages>(id: string, messages: T, locale: strin
 	}
 
 	cached.set(locale, messages);
-	Globalize.loadMessages({
-		[locale]: {
-			[id]: messages
-		}
-	});
 }
 
 /**
- * Return a formatted message.
- *
- * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
- * the ICU message format is supported. Otherwise, a simple token-replacement mechanism is used.
+ * Return a formatted ICU message.
  *
  * Usage:
  * formatMessage(bundle, 'guestInfo', {
@@ -310,11 +254,7 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 }
 
 /**
- * Return a function that formats a specific message, and takes an optional value for token replacement.
- *
- * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
- * the returned function will have ICU message format support. Otherwise, the returned function will perform a simple
- * token replacement on the message string.
+ * Return a function that formats a specific ICU message, and takes an optional value for token replacement.
  *
  * Usage:
  * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
@@ -349,28 +289,23 @@ export function getMessageFormatter<T extends Messages>(
 	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
 	const bundleLocale = supportedLocales[supportedLocales.length - 1];
 
-	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
-		return getIcuMessageFormatter(id, key, bundleLocale);
-	}
+	locale = bundleLocale ? normalizeLocale(bundleLocale) : getRootLocale();
 
 	const cached = bundleMap.get(id);
-	const messages = cached ? cached.get(bundleLocale) || cached.get('root') : null;
+	const messages = cached ? cached.get(locale) || cached.get('root') : null;
 
 	if (!messages) {
 		throw new Error(`The bundle has not been registered.`);
 	}
 
-	return function(options: FormatOptions = Object.create(null)) {
-		return messages[key].replace(TOKEN_PATTERN, (token: string, property: string) => {
-			const value = options[property];
+	const message = messages[key];
+	let formatter = formatterMap.get(message);
+	if (!formatter) {
+		formatter = new MessageFormat(locale).compile(message);
+		formatterMap.set(message, formatter);
+	}
 
-			if (typeof value === 'undefined') {
-				throw new Error(`Missing property ${property}`);
-			}
-
-			return value;
-		});
-	};
+	return (options: FormatOptions = Object.create(null)) => formatter!(options);
 }
 
 /**
@@ -445,7 +380,7 @@ export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
  * @return
  * A handle object that can be used to unsubscribe from updates.
  */
-export const observeLocale = function(callback: (locale: string) => {}): Handle {
+export const observeLocale = function(callback: (locale: string) => any): Handle {
 	return localeProducer.on('change', (event: any) => {
 		callback(event.target);
 	});
@@ -483,15 +418,6 @@ export function switchLocale(locale: string): void {
 	rootLocale = locale ? normalizeLocale(locale) : '';
 
 	if (previous !== rootLocale) {
-		if (isLoaded('supplemental', 'likelySubtags')) {
-			Globalize.load({
-				main: {
-					[rootLocale]: {}
-				}
-			});
-			Globalize.locale(rootLocale);
-		}
-
 		localeProducer.emit({ type: 'change', target: rootLocale });
 	}
 }

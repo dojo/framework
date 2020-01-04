@@ -1,11 +1,8 @@
 import has from '../../../src/core/has';
 import global from '../../../src/shim/global';
-import * as Globalize from 'globalize';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import * as sinon from 'sinon';
-import { fetchCldrData } from '../support/util';
-import * as cldrLoad from '../../../src/i18n/cldr/load';
 import i18n, {
 	formatMessage,
 	getCachedMessages,
@@ -21,19 +18,7 @@ import bundle from '../support/mocks/common/main';
 import partyBundle from '../support/mocks/common/party';
 
 registerSuite('i18n', {
-	before() {
-		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData(['en', 'fr']).then(() => {
-			switchLocale('en');
-		});
-	},
-
 	afterEach() {
-		const loadCldrData = cldrLoad.default as any;
-		if (typeof loadCldrData.restore === 'function') {
-			loadCldrData.restore();
-		}
-
 		invalidate();
 		switchLocale(systemLocale);
 	},
@@ -53,103 +38,79 @@ registerSuite('i18n', {
 		},
 
 		formatMessage: {
-			'without CLDR data': {
-				before() {
-					cldrLoad.reset();
-				},
-
-				after() {
-					return fetchCldrData(['en', 'fr']);
-				},
-
-				tests: {
-					'assert without loaded messages'() {
-						assert.throws(
-							() => {
-								formatMessage({ messages: {} }, 'messageKey');
-							},
-							Error,
-							'The bundle has not been registered.'
-						);
+			'assert without loaded messages'() {
+				assert.throws(
+					() => {
+						formatMessage({ messages: {} }, 'messageKey');
 					},
-
-					async 'assert tokens replaced'() {
-						await i18n(partyBundle);
-						const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
-							host: 'Nita',
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
-
-						assert.throws(
-							() => {
-								formatMessage(partyBundle, 'simpleGuestInfo', {
-									host: 'Nita'
-								});
-							},
-							Error,
-							'Missing property guest'
-						);
-					},
-
-					async 'assert message without tokens'() {
-						await i18n(bundle);
-						const formatted = formatMessage(bundle, 'hello');
-						assert.strictEqual(formatted, 'Hello');
-					},
-
-					async 'assert default locale used'() {
-						switchLocale('ar');
-						await i18n(bundle, 'ar');
-						const formatted = formatMessage(bundle, 'hello');
-						assert.strictEqual(formatted, 'السلام عليكم');
-					}
-				}
+					Error,
+					'The bundle has not been registered.'
+				);
 			},
 
-			'with CLDR data': {
-				async 'assert without a locale'() {
-					await i18n(partyBundle);
-					let formatted = formatMessage(partyBundle, 'guestInfo', {
-						host: 'Nita',
-						guestCount: 0
-					});
-					assert.strictEqual(formatted, 'Nita does not host a party.');
+			async 'assert tokens replaced'() {
+				await i18n(partyBundle);
+				const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
+					host: 'Nita',
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+			},
 
-					formatted = formatMessage(partyBundle, 'guestInfo', {
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 1,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+			async 'assert message without tokens'() {
+				await i18n(bundle);
+				const formatted = formatMessage(bundle, 'hello');
+				assert.strictEqual(formatted, 'Hello');
+			},
 
-					formatted = formatMessage(partyBundle, 'guestInfo', {
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 2,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+			async 'assert default locale used'() {
+				switchLocale('ar');
+				await i18n(bundle, 'ar');
+				const formatted = formatMessage(bundle, 'hello');
+				assert.strictEqual(formatted, 'السلام عليكم');
+			},
 
-					formatted = formatMessage(partyBundle, 'guestInfo', {
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 42,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
-				},
+			async 'assert without a locale'() {
+				await i18n(partyBundle);
+				let formatted = formatMessage(partyBundle, 'guestInfo', {
+					host: 'Nita',
+					guestCount: 0
+				});
+				assert.strictEqual(formatted, 'Nita does not host a party.');
 
-				async 'assert supported locale'() {
-					await i18n(bundle, 'ar');
-					assert.strictEqual(formatMessage(bundle, 'hello', {}, 'ar'), 'السلام عليكم');
-				},
+				formatted = formatMessage(partyBundle, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 1,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
 
-				async 'assert unsupported locale'() {
-					await i18n(bundle, 'fr');
-					assert.strictEqual(formatMessage(bundle, 'hello', {}, 'fr'), 'Hello');
-				}
+				formatted = formatMessage(partyBundle, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 2,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+
+				formatted = formatMessage(partyBundle, 'guestInfo', {
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 42,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+			},
+
+			async 'assert supported locale'() {
+				await i18n(bundle, 'ar');
+				assert.strictEqual(formatMessage(bundle, 'hello', {}, 'ar'), 'السلام عليكم');
+			},
+
+			async 'assert unsupported locale'() {
+				await i18n(bundle, 'fr');
+				assert.strictEqual(formatMessage(bundle, 'hello', {}, 'fr'), 'Hello');
 			}
 		},
 
@@ -214,118 +175,82 @@ registerSuite('i18n', {
 		},
 
 		getMessageFormatter: {
-			'without CLDR data': {
-				before() {
-					cldrLoad.reset();
-				},
-
-				after() {
-					return fetchCldrData(['en', 'fr']);
-				},
-
-				tests: {
-					'assert without loaded messages'() {
-						assert.throws(
-							() => {
-								getMessageFormatter({ messages: {} }, 'messageKey')();
-							},
-							Error,
-							'The bundle has not been registered.'
-						);
+			'assert without loaded messages'() {
+				assert.throws(
+					() => {
+						getMessageFormatter({ messages: {} }, 'messageKey')();
 					},
-
-					async 'assert tokens replaced'() {
-						await i18n(partyBundle);
-						const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
-						const formatted = formatter({
-							host: 'Nita',
-							guest: 'Bryan'
-						});
-						assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
-
-						assert.throws(
-							() => {
-								formatter({
-									host: 'Nita'
-								});
-							},
-							Error,
-							'Missing property guest'
-						);
-					},
-
-					async 'assert message without tokens'() {
-						await i18n(bundle);
-						const formatter = getMessageFormatter(bundle, 'hello');
-						assert.strictEqual(formatter(), 'Hello');
-					},
-
-					async 'assert unsupported locale'() {
-						await i18n(bundle, 'en-GB');
-						const formatter = getMessageFormatter(bundle, 'hello', 'en-GB');
-						assert.strictEqual(formatter(), 'Hello');
-					},
-
-					async 'assert partially-supported locale'() {
-						await i18n(bundle, 'ar-IR');
-						const formatter = getMessageFormatter(bundle, 'hello', 'ar-IR');
-						assert.strictEqual(formatter(), 'السلام عليكم');
-					}
-				}
+					Error,
+					'The bundle has not been registered.'
+				);
 			},
 
-			'with CLDR data': {
-				async 'assert without a locale'() {
-					await i18n(partyBundle);
-					const formatter = getMessageFormatter(partyBundle, 'guestInfo');
-					let formatted = formatter({
-						host: 'Nita',
-						guestCount: 0
-					});
-					assert.strictEqual(formatted, 'Nita does not host a party.');
+			async 'assert tokens replaced'() {
+				await i18n(partyBundle);
+				const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
+				const formatted = formatter({
+					host: 'Nita',
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+			},
 
-					formatted = formatter({
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 1,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
+			async 'assert message without tokens'() {
+				await i18n(bundle);
+				const formatter = getMessageFormatter(bundle, 'hello');
+				assert.strictEqual(formatter(), 'Hello');
+			},
 
-					formatted = formatter({
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 2,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
+			async 'assert without a locale'() {
+				await i18n(partyBundle);
+				const formatter = getMessageFormatter(partyBundle, 'guestInfo');
+				let formatted = formatter({
+					host: 'Nita',
+					guestCount: 0
+				});
+				assert.strictEqual(formatted, 'Nita does not host a party.');
 
-					formatted = formatter({
-						host: 'Nita',
-						gender: 'female',
-						guestCount: 42,
-						guest: 'Bryan'
-					});
-					assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
-				},
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 1,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to her party.');
 
-				async 'assert supported locale'() {
-					await i18n(bundle, 'ar');
-					const formatter = getMessageFormatter(bundle, 'hello', 'ar');
-					assert.strictEqual(formatter(), 'السلام عليكم');
-				},
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 2,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and one other person to her party.');
 
-				async 'assert unsupported locale'() {
-					await i18n(bundle, 'fr');
-					const formatter = getMessageFormatter(bundle, 'hello', 'fr');
-					assert.strictEqual(formatter(), 'Hello');
-				},
+				formatted = formatter({
+					host: 'Nita',
+					gender: 'female',
+					guestCount: 42,
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan and 41 other people to her party.');
+			},
 
-				async 'assert partially-supported locale'() {
-					await i18n(bundle, 'ar-IR');
-					const formatter = getMessageFormatter(bundle, 'hello', 'ar-IR');
-					assert.strictEqual(formatter(), 'السلام عليكم');
-				}
+			async 'assert supported locale'() {
+				await i18n(bundle, 'ar');
+				const formatter = getMessageFormatter(bundle, 'hello', 'ar');
+				assert.strictEqual(formatter(), 'السلام عليكم');
+			},
+
+			async 'assert unsupported locale'() {
+				await i18n(bundle, 'fr');
+				const formatter = getMessageFormatter(bundle, 'hello', 'fr');
+				assert.strictEqual(formatter(), 'Hello');
+			},
+
+			async 'assert partially-supported locale'() {
+				await i18n(bundle, 'ar-IR');
+				const formatter = getMessageFormatter(bundle, 'hello', 'ar-IR');
+				assert.strictEqual(formatter(), 'السلام عليكم');
 			}
 		},
 
@@ -451,34 +376,30 @@ registerSuite('i18n', {
 
 		setLocaleMessages() {
 			try {
-				sinon.stub(Globalize, 'loadMessages');
 				const french = { hello: 'Bonjour', goodbye: 'Au revoir' };
 				const czech = { hello: 'Ahoj', goodbye: 'Ahoj' };
 
 				setLocaleMessages(bundle, french, 'fr');
 				setLocaleMessages(bundle, czech, 'cz');
 
-				const path = '..-_build-tests-support-mocks-common-main';
-				const first = (<any>Globalize).loadMessages.args[0][0].fr[path];
-				const second = (<any>Globalize).loadMessages.args[1][0].cz[path];
-
-				assert.isFrozen(first, 'locale messages should be frozen');
-				assert.isFrozen(second, 'locale messages should be frozen');
+				const cachedFrench = getCachedMessages(bundle, 'fr');
+				const cachedCzech = getCachedMessages(bundle, 'cz');
+				assert.isFrozen(cachedFrench, 'locale messages should be frozen');
+				assert.isFrozen(cachedCzech, 'locale messages should be frozen');
 
 				assert.deepEqual(
-					getCachedMessages(bundle, 'fr'),
+					cachedFrench,
 					{ ...french, helloReply: 'Hello' },
 					'Default messages should be included where not overridden'
 				);
 				assert.deepEqual(
-					getCachedMessages(bundle, 'cz'),
+					cachedCzech,
 					{ ...czech, helloReply: 'Hello' },
 					'Default messages should be included where not overridden'
 				);
 			} finally {
 				setLocaleMessages(bundle, {}, 'fr');
 				setLocaleMessages(bundle, {}, 'cz');
-				(<any>Globalize).loadMessages.restore();
 			}
 		},
 
@@ -498,33 +419,6 @@ registerSuite('i18n', {
 				switchLocale('ar');
 
 				assert.isFalse(next.calledTwice);
-			},
-
-			'assert new locale passed to Globalize'() {
-				sinon.spy(Globalize, 'locale');
-
-				return fetchCldrData(['fr']).then(
-					() => {
-						switchLocale('fr');
-						assert.isTrue(
-							(<any>Globalize).locale.calledWith('fr'),
-							'Locale should be passed to Globalize.'
-						);
-
-						cldrLoad.reset();
-						switchLocale('en');
-						assert.strictEqual(
-							(<any>Globalize).locale.callCount,
-							1,
-							'Locale should not be passed to Globalize.'
-						);
-						(<any>Globalize).locale.restore();
-					},
-					(error: Error) => {
-						(<any>Globalize).locale.restore();
-						throw error;
-					}
-				);
 			}
 		},
 
