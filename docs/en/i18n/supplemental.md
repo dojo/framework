@@ -472,11 +472,6 @@ loadCldrData({
 
 Dojo's `i18n` module requires the following CLDR data for each particular formatting feature:
 
-For [ICU message formatting](#icu-message-formatting):
-
--   `supplemental/likelySubtags`
--   `supplemental/plurals`
-
 For [date/time formatting](#date-and-number-formatting):
 
 -   `main/{locale}/ca-gregorian`
@@ -513,7 +508,7 @@ For [unit formatting](#date-and-number-formatting):
 
 ### Basic token replacement
 
-Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formatting), but this requires CLDR data to be available and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` CLDR data are not loaded in the application, then Dojo's various message formatting methods will perform simple token replacement.
+Dojo's `i18n` framework supports both simple token replacement in localized messages as well as the more robust [ICU message format](#icu-message-formatting).
 
 The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with a `guestInfo` message as follows:
 
@@ -567,14 +562,14 @@ The `i18n` module exposes two methods that handle message formatting:
 -   `formatMessage`, which directly returns a formatted message based on its inputs
 -   `getMessageFormatter`, which returns a method dedicated to formatting a single message.
 
-Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](#accessing-locale-message-bundles).
+While both of these methods will default to the [current locale](#determining-the-current-locale), the widget's `properties.locale` should be passed as an argument. The `format` function returned by `localizeBundle` is a convenience wrapper around `formatMessage` that handles locale injection for you, so it is recommended that you use `format` whenever possible.
 
 ```ts
 import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
-i18n(bundle, 'en').then(() => {
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
+i18n(bundle, 'en').then((messages) => {
+	const formatter = getMessageFormatter(messages.guestInfo, 'en');
 	let message = formatter({
 		host: 'Margaret Mead',
 		guest: 'Laura Nader'
@@ -583,8 +578,7 @@ i18n(bundle, 'en').then(() => {
 
 	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
 	message = formatMessage(
-		bundle,
-		'guestInfo',
+		messages.guestInfo,
 		{
 			host: 'Marshall Sahlins',
 			gender: 'male',
@@ -600,7 +594,7 @@ i18n(bundle, 'en').then(() => {
 
 **Note**: This feature requires appropriate [CLDR data](#loading-cldr-data) to have been loaded into the application.
 
-`@dojo/framework/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/framework/i18n`.
+`@dojo/framework/i18n` relies on [MessageFormat.js](https://messageformat.github.io/messageformat/) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), which ships with its own up-to-date copy of the necessary CLDR data. As such, no additional CLDR data are required to use ICU message formatting in Dojo.
 
 The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with an updated `guestInfo` message as follows:
 
@@ -671,17 +665,16 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 
 The ICU-formatted `guestInfo` message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be called several times with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
 
-Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/framework/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
+As noted above, both of these methods will default to the [current locale](#determining-the-current-locale), but the widget's `properties.locale` should be passed as an argument. The `format` function returned by `localizeBundle` is a convenience wrapper around `formatMessage` that handles locale injection for you, so it is recommended that you use `format` whenever possible.
 
 ```ts
 import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
-i18n(bundle, 'en').then(() => {
+i18n(bundle, 'en').then((messages) => {
 	const message = formatMessage(
-		bundle,
-		'guestInfo',
+		messages.guestInfo,
 		{
 			host: 'Margaret Mead',
 			gender: 'female',
@@ -692,7 +685,7 @@ i18n(bundle, 'en').then(() => {
 	);
 	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
+	const formatter = getMessageFormatter(messages.guestInfo, 'en');
 	console.log(
 		formatter({
 			host: 'Margaret Mead',
