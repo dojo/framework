@@ -1,6 +1,7 @@
 import 'globalize/dist/globalize/number';
 import 'globalize/dist/globalize/date';
 import 'globalize/dist/globalize/relative-time';
+import has from '../core/has';
 import { NumberFormatter } from './number';
 import { globalizeDelegator } from './util/globalize';
 
@@ -70,6 +71,10 @@ export type RelativeTimeFormatterOptions = {
 export function formatDate(value: Date, options?: DateFormatterOptions, locale?: string): string;
 export function formatDate(value: Date, locale?: string): string;
 export function formatDate(value: Date, optionsOrLocale?: DateFormatterOptions | string, locale?: string): string {
+	if (has('dojo-debug')) {
+		console.warn('formatDate has been deprecated. Please use Globalize.formatDate or Intl.DateTimeFormat.');
+	}
+
 	return globalizeDelegator<Date, DateFormatterOptions, string>('formatDate', {
 		locale,
 		optionsOrLocale,
@@ -107,6 +112,12 @@ export function formatRelativeTime(
 	optionsOrLocale?: RelativeTimeFormatterOptions | string,
 	locale?: string
 ): string {
+	if (has('dojo-debug')) {
+		console.warn(
+			'formatRelativeTime has been deprecated. Please use Globalize.formatRelativeTime or Intl.RelativeTimeFormat.'
+		);
+	}
+
 	return globalizeDelegator<number, RelativeTimeFormatterOptions, string>('formatRelativeTime', {
 		locale,
 		optionsOrLocale,
@@ -131,6 +142,10 @@ export function formatRelativeTime(
 export function getDateFormatter(options?: DateFormatterOptions, locale?: string): DateFormatter;
 export function getDateFormatter(locale?: string): DateFormatter;
 export function getDateFormatter(optionsOrLocale?: DateFormatterOptions | string, locale?: string): DateFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getDateFormatter has been deprecated. Please use Globalize.dateFormatter.');
+	}
+
 	return globalizeDelegator<DateFormatterOptions, DateFormatter>('dateFormatter', {
 		locale,
 		optionsOrLocale
@@ -152,6 +167,10 @@ export function getDateFormatter(optionsOrLocale?: DateFormatterOptions | string
 export function getDateParser(options?: DateFormatterOptions, locale?: string): DateParser;
 export function getDateParser(locale?: string): DateParser;
 export function getDateParser(optionsOrLocale?: DateFormatterOptions | string, locale?: string): DateParser {
+	if (has('dojo-debug')) {
+		console.warn('getDateParser has been deprecated. Please use Globalize.dateParser.');
+	}
+
 	return globalizeDelegator<DateFormatterOptions, DateParser>('dateParser', {
 		locale,
 		optionsOrLocale
@@ -186,6 +205,10 @@ export function getRelativeTimeFormatter(
 	optionsOrLocale?: RelativeTimeFormatterOptions | string,
 	locale?: string
 ): NumberFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getRelativeTimeFormatter has been deprecated. Please use Globalize.relativeTimeFormatter.');
+	}
+
 	return globalizeDelegator<string, RelativeTimeFormatterOptions, NumberFormatter>('relativeTimeFormatter', {
 		locale,
 		optionsOrLocale,
@@ -211,6 +234,10 @@ export function getRelativeTimeFormatter(
 export function parseDate(value: string, options?: DateFormatterOptions, locale?: string): Date;
 export function parseDate(value: string, locale?: string): Date;
 export function parseDate(value: string, optionsOrLocale?: DateFormatterOptions | string, locale?: string): Date {
+	if (has('dojo-debug')) {
+		console.warn('parseDate has been deprecated. Please use Globalize.parseDate.');
+	}
+
 	return globalizeDelegator<string, DateFormatterOptions, Date>('parseDate', {
 		locale,
 		optionsOrLocale,

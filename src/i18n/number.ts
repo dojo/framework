@@ -1,6 +1,7 @@
 import 'globalize/dist/globalize/number';
 import 'globalize/dist/globalize/plural';
 import 'globalize/dist/globalize/currency';
+import has from '../core/has';
 import { globalizeDelegator } from './util/globalize';
 
 export type CurrencyStyleOption = 'accounting' | 'code' | 'name' | 'symbol';
@@ -134,6 +135,10 @@ export function formatCurrency(
 	optionsOrLocale?: CurrencyFormatterOptions | string,
 	locale?: string
 ): string {
+	if (has('dojo-debug')) {
+		console.warn('formatCurrency has been deprecated. Please use Globalize.formatCurrency or Intl.NumberFormat.');
+	}
+
 	return globalizeDelegator<number, CurrencyFormatterOptions, string>('formatCurrency', {
 		locale,
 		optionsOrLocale,
@@ -164,6 +169,10 @@ export function formatNumber(
 	optionsOrLocale?: NumberFormatterOptions | string,
 	locale?: string
 ): string {
+	if (has('dojo-debug')) {
+		console.warn('formatNumber has been deprecated. Please use Globalize.formatNumber or Intl.NumberFormat.');
+	}
+
 	return globalizeDelegator<number, NumberFormatterOptions, string>('formatNumber', {
 		locale,
 		optionsOrLocale,
@@ -198,6 +207,10 @@ export function getCurrencyFormatter(
 	optionsOrLocale?: CurrencyFormatterOptions | string,
 	locale?: string
 ): NumberFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getCurrencyFormatter has been deprecated. Please use Globalize.currencyFormatter.');
+	}
+
 	return globalizeDelegator<string, CurrencyFormatterOptions, NumberFormatter>('currencyFormatter', {
 		locale,
 		optionsOrLocale,
@@ -223,6 +236,10 @@ export function getNumberFormatter(
 	optionsOrLocale?: NumberFormatterOptions | string,
 	locale?: string
 ): NumberFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getNumberFormatter has been deprecated. Please use Globalize.numberFormatter.');
+	}
+
 	return globalizeDelegator<NumberFormatterOptions, NumberFormatter>('numberFormatter', {
 		locale,
 		optionsOrLocale
@@ -244,6 +261,10 @@ export function getNumberFormatter(
 export function getNumberParser(options?: NumberFormatterOptions, locale?: string): NumberParser;
 export function getNumberParser(locale?: string): NumberParser;
 export function getNumberParser(optionsOrLocale?: NumberFormatterOptions | string, locale?: string): NumberParser {
+	if (has('dojo-debug')) {
+		console.warn('getNumberParser has been deprecated. Please use Globalize.numberParser.');
+	}
+
 	return globalizeDelegator<NumberFormatterOptions, NumberParser>('numberParser', {
 		locale,
 		optionsOrLocale
@@ -269,6 +290,10 @@ export function getPluralGenerator(
 	optionsOrLocale?: PluralGeneratorOptions | string,
 	locale?: string
 ): NumberFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getPluralGenerator has been deprecated. Please use Globalize.pluralGenerator.');
+	}
+
 	return globalizeDelegator<PluralGeneratorOptions, NumberFormatter>('pluralGenerator', {
 		locale,
 		optionsOrLocale
@@ -293,6 +318,10 @@ export function getPluralGenerator(
 export function parseNumber(value: string, options?: NumberFormatterOptions, locale?: string): number;
 export function parseNumber(value: string, locale?: string): number;
 export function parseNumber(value: string, optionsOrLocale?: NumberFormatterOptions | string, locale?: string): number {
+	if (has('dojo-debug')) {
+		console.warn('parseNumber has been deprecated. Please use Globalize.parseNumber.');
+	}
+
 	return globalizeDelegator<string, NumberFormatterOptions, number>('parseNumber', {
 		locale,
 		optionsOrLocale,
@@ -319,6 +348,10 @@ export function parseNumber(value: string, optionsOrLocale?: NumberFormatterOpti
 export function pluralize(value: number, options?: PluralGeneratorOptions, locale?: string): string;
 export function pluralize(value: number, locale?: string): string;
 export function pluralize(value: number, optionsOrLocale?: PluralGeneratorOptions | string, locale?: string): string {
+	if (has('dojo-debug')) {
+		console.warn('plural has been deprecated. Please use Globalize.plural.');
+	}
+
 	return globalizeDelegator<number, PluralGeneratorOptions, string>('plural', {
 		locale,
 		optionsOrLocale,

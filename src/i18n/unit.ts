@@ -1,6 +1,7 @@
 import 'globalize/dist/globalize/number';
 import 'globalize/dist/globalize/plural';
 import 'globalize/dist/globalize/unit';
+import has from '../core/has';
 import { NumberFormatter } from './number';
 import { globalizeDelegator } from './util/globalize';
 
@@ -44,6 +45,10 @@ export function formatUnit(
 	optionsOrLocale?: UnitFormatterOptions | string,
 	locale?: string
 ): string {
+	if (has('dojo-debug')) {
+		console.warn('formatUnit has been deprecated. Please use Globalize.formatUnit.');
+	}
+
 	return globalizeDelegator<number, UnitFormatterOptions, string>('formatUnit', {
 		locale,
 		optionsOrLocale,
@@ -74,6 +79,10 @@ export function getUnitFormatter(
 	optionsOrLocale?: UnitFormatterOptions | string,
 	locale?: string
 ): NumberFormatter {
+	if (has('dojo-debug')) {
+		console.warn('getUnitFormatter has been deprecated. Please use Globalize.unitFormatter.');
+	}
+
 	return globalizeDelegator<string, UnitFormatterOptions, NumberFormatter>('unitFormatter', {
 		locale,
 		optionsOrLocale,

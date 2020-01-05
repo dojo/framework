@@ -705,7 +705,9 @@ i18n(bundle, 'en').then((messages) => {
 });
 ```
 
-## Date and number formatting.
+## Date, number, and unit formatting. (Deprecated)
+
+**Note**: This feature has been deprecated in favor of using [`Intl`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl) or the relevant [`Globalize.js`](https://github.com/globalizejs/globalize) methods directly.
 
 **Note**: This feature requires appropriate [CLDR data](#loading-cldr-data) to have been loaded into the application.
 
