@@ -38,19 +38,17 @@ registerSuite('i18n', {
 		},
 
 		formatMessage: {
-			'assert without loaded messages'() {
-				assert.throws(
-					() => {
-						formatMessage({ messages: {} }, 'messageKey');
-					},
-					Error,
-					'The bundle has not been registered.'
-				);
-			},
-
 			async 'assert tokens replaced'() {
 				await i18n(partyBundle);
 				const formatted = formatMessage(partyBundle, 'simpleGuestInfo', {
+					host: 'Nita',
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+			},
+
+			async 'assert tokens replaced with message argument'() {
+				const formatted = formatMessage('{host} invites {guest} to a party.', {
 					host: 'Nita',
 					guest: 'Bryan'
 				});
@@ -175,19 +173,18 @@ registerSuite('i18n', {
 		},
 
 		getMessageFormatter: {
-			'assert without loaded messages'() {
-				assert.throws(
-					() => {
-						getMessageFormatter({ messages: {} }, 'messageKey')();
-					},
-					Error,
-					'The bundle has not been registered.'
-				);
-			},
-
 			async 'assert tokens replaced'() {
 				await i18n(partyBundle);
 				const formatter = getMessageFormatter(partyBundle, 'simpleGuestInfo');
+				const formatted = formatter({
+					host: 'Nita',
+					guest: 'Bryan'
+				});
+				assert.strictEqual(formatted, 'Nita invites Bryan to a party.');
+			},
+
+			async 'assert tokens replaced with message argument'() {
+				const formatter = getMessageFormatter('{host} invites {guest} to a party.');
 				const formatted = formatter({
 					host: 'Nita',
 					guest: 'Bryan'

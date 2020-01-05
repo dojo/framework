@@ -126,6 +126,23 @@ function getBundleId<T extends Messages>(bundle: Bundle<T>): string {
 
 /**
  * @private
+ * Get the locale-specific message from the specified bundle.
+ */
+function getMessageFromBundle<T extends Messages>(bundle: Bundle<T>, key: string, locale: string) {
+	const messages = getCachedMessages(bundle, locale) || bundle.messages;
+	return messages[key];
+}
+
+/**
+ * @private
+ * Determine whether the specified value is a bundle
+ */
+function isBundle<T extends Messages>(value: any): value is Bundle<T> {
+	return value && typeof value.messages === 'object';
+}
+
+/**
+ * @private
  * Load the specified locale-specific bundles, mapping the default exports to simple `Messages` objects.
  */
 function loadLocaleBundles<T extends Messages>(locales: LocaleLoaders<T>, supported: string[]): Promise<T[]> {
@@ -185,7 +202,7 @@ function loadMessages<T extends Messages>(id: string, messages: T, locale: strin
 }
 
 /**
- * Return a formatted ICU message.
+ * Return a formatted ICU message matching the specified bundle and key.
  *
  * Usage:
  * formatMessage(bundle, 'guestInfo', {
@@ -214,8 +231,41 @@ export function formatMessage<T extends Messages>(
 	key: string,
 	options?: FormatOptions,
 	locale?: string
+): string;
+
+/**
+ * Format the specified ICU message.
+ *
+ * Usage:
+ * formatMessage('{host} invites {guest} to a party.', {
+ *   host: 'Bill',
+ *   guest: 'John'
+ * }, 'en');
+ *
+ * @param message
+ * The message string to format
+ *
+ * @param options
+ * An optional value used by the formatter to replace tokens with values.
+ *
+ * @param locale
+ * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
+ * default locale is used.
+ *
+ * @return
+ * The formatted message.
+ */
+export function formatMessage(message: string, options?: FormatOptions, locale?: string): string;
+
+export function formatMessage<T extends Messages>(
+	bundleOrMessage: Bundle<T> | string,
+	keyOrOptions?: string | FormatOptions,
+	optionsOrLocale?: FormatOptions | string,
+	locale?: string
 ): string {
-	return getMessageFormatter(bundle, key, locale)(options);
+	return isBundle<T>(bundleOrMessage)
+		? getMessageFormatter(bundleOrMessage, keyOrOptions as string, locale)(optionsOrLocale as FormatOptions)
+		: getMessageFormatter(bundleOrMessage, optionsOrLocale as string)(keyOrOptions as FormatOptions);
 }
 
 /**
@@ -254,7 +304,8 @@ export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale:
 }
 
 /**
- * Return a function that formats a specific ICU message, and takes an optional value for token replacement.
+ * Return a function that formats an ICU message for the specified bundle, and takes an optional value
+ * for token replacement.
  *
  * Usage:
  * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
@@ -282,23 +333,43 @@ export function getMessageFormatter<T extends Messages>(
 	bundle: Bundle<T>,
 	key: string,
 	locale?: string
+): MessageFormatter;
+
+/**
+ * Return a function that formats the specified ICU message, and takes an optional value for token replacement.
+ *
+ * Usage:
+ * const formatter = getMessageFormatter('{host} invites {guest} to a party.', 'en');
+ * const message = formatter({
+ *   host: 'Miles',
+ *   gender: 'male',
+ *   guest: 'Oscar',
+ *   guestCount: '15'
+ * });
+ *
+ * @param message
+ * The message used to generate the formatter function.
+ *
+ * @param locale
+ * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
+ * default locale is used.
+ *
+ * @return
+ * The message formatter.
+ */
+export function getMessageFormatter(message: string, locale?: string): MessageFormatter;
+
+export function getMessageFormatter<T extends Messages>(
+	bundleOrMessage: Bundle<T> | string,
+	keyOrLocale?: string,
+	locale?: string
 ): MessageFormatter {
-	const { id = getBundleId(bundle), locales } = bundle;
+	const suppliedLocale = isBundle<T>(bundleOrMessage) ? locale : keyOrLocale;
+	locale = suppliedLocale ? normalizeLocale(suppliedLocale) : getRootLocale();
+	const message = isBundle<T>(bundleOrMessage)
+		? getMessageFromBundle<T>(bundleOrMessage, keyOrLocale as string, locale)
+		: bundleOrMessage;
 
-	locale = locale || getRootLocale();
-	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
-	const bundleLocale = supportedLocales[supportedLocales.length - 1];
-
-	locale = bundleLocale ? normalizeLocale(bundleLocale) : getRootLocale();
-
-	const cached = bundleMap.get(id);
-	const messages = cached ? cached.get(locale) || cached.get('root') : null;
-
-	if (!messages) {
-		throw new Error(`The bundle has not been registered.`);
-	}
-
-	const message = messages[key];
 	let formatter = formatterMap.get(message);
 	if (!formatter) {
 		formatter = new MessageFormat(locale).compile(message);
