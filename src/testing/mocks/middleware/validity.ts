@@ -15,8 +15,7 @@ export function createValidityMock() {
 	const mockValidityFactory = factory(({ middleware: { invalidator } }) => {
 		invalidate = invalidator;
 		return {
-			get(key: string | number, value: string) {
-				value;
+			get(key: string | number, _value: string) {
 				return values[key] || { valid: undefined, message: '' };
 			}
 		};
