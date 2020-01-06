@@ -1,2 +1,2 @@
 `!has('build-elide')`;
-import 'wicg-inert';
+require('wicg-inert/dist/inert');
