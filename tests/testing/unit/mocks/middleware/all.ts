@@ -1,3 +1,4 @@
+import './focus';
 import './intersection';
 import './node';
 import './resize';

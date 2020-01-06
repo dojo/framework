@@ -1,0 +1,41 @@
+import { create, invalidator, diffProperty, destroy, node } from '../../../core/vdom';
+import focus from '../../../core/middleware/focus';
+import icache from '../../../core/middleware/icache';
+import { DefaultMiddlewareResult } from '../../../core/interfaces';
+
+export function createFocusMock() {
+	const focusNodes: { [key: string]: boolean } = {};
+	let invalidate: () => void | undefined;
+
+	const factory = create({ invalidator, destroy, icache, diffProperty, node });
+
+	const mockFocusFactory = factory(({ id, middleware, properties, children }) => {
+		invalidate = middleware.invalidator;
+		const { callback } = focus();
+		const focusMiddleware = callback({
+			id,
+			middleware,
+			properties,
+			children
+		});
+
+		focusMiddleware.isFocused = (key: string | number) => !!focusNodes[key];
+
+		return focusMiddleware;
+	});
+
+	function mockFocus(): DefaultMiddlewareResult;
+	function mockFocus(key: string | number, value: boolean): void;
+	function mockFocus(key?: string | number, value?: boolean): void | DefaultMiddlewareResult {
+		if (key && value) {
+			focusNodes[key] = value;
+			invalidate && invalidate();
+		} else {
+			return mockFocusFactory();
+		}
+	}
+
+	return mockFocus;
+}
+
+export default createFocusMock;
