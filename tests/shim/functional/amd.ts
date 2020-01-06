@@ -26,8 +26,9 @@ registerSuite('AMD Util', {
 				undefined
 			)
 			.then((config: any) => {
-				assert.lengthOf(config.packages, 7);
+				assert.lengthOf(config.packages, 8);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'pepjs'), 1);
+				assert.lengthOf(config.packages.filter((p: any) => p.name === 'wicg-inert'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'tslib'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'intersection-observer'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === '@dojo'), 1);
