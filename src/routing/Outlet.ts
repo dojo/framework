@@ -1,6 +1,6 @@
 import { create, diffProperty, invalidator } from '../core/vdom';
 import injector from '../core/middleware/injector';
-import cache from '../core/middleware/cache';
+import icache from '../core/middleware/icache';
 import { DNode } from '../core/interfaces';
 import { MatchDetails } from './interfaces';
 import Router from './Router';
@@ -11,31 +11,31 @@ export interface OutletProperties {
 	routerKey?: string;
 }
 
-const factory = create({ cache, injector, diffProperty, invalidator }).properties<OutletProperties>();
+const factory = create({ icache, injector, diffProperty, invalidator }).properties<OutletProperties>();
 
 export const Outlet = factory(function Outlet({
-	middleware: { cache, injector, diffProperty, invalidator },
+	middleware: { icache, injector, diffProperty, invalidator },
 	properties
 }) {
 	const { renderer, id, routerKey = 'router' } = properties();
-	const currentHandle = cache.get<Function>('handle');
+	const currentHandle = icache.get<Function>('handle');
 	if (!currentHandle) {
 		const handle = injector.subscribe(routerKey);
 		if (handle) {
-			cache.set('handle', handle);
+			icache.set('handle', () => handle);
 		}
 	}
 	diffProperty('routerKey', (current: OutletProperties, next: OutletProperties) => {
 		const { routerKey: currentRouterKey = 'router' } = current;
 		const { routerKey = 'router' } = next;
 		if (routerKey !== currentRouterKey) {
-			const currentHandle = cache.get<Function>('handle');
+			const currentHandle = icache.get<Function>('handle');
 			if (currentHandle) {
 				currentHandle();
 			}
 			const handle = injector.subscribe(routerKey);
 			if (handle) {
-				cache.set('handle', handle);
+				icache.set('handle', () => handle);
 			}
 		}
 		invalidator();

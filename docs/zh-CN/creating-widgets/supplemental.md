@@ -536,7 +536,7 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 ## 基础：自封装的部件状态
 
-部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`cache`](/learn/middleware/可用的中间件#cache) 或 [`icache`](/learn/middleware/可用的中间件#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
+部件可以通过多种方式维护其内部状态。基于函数的部件可以使用 [`icache`](/learn/middleware/可用的中间件#icache) 中间件来存储部件的本地状态，而基于类的部件可以使用内部的类字段。
 
 内部状态数据可能直接影响部件的渲染输出，也可能作为属性传递给子部件，而它们继而又直接影响了子部件的渲染输出。部件还可能允许更改其内部状态，例如响应用户交互事件。
 
@@ -548,21 +548,21 @@ export default class FocusableWidget extends Focus(WidgetBase) {
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import cache from '@dojo/framework/core/middleware/cache';
+import icache from '@dojo/framework/core/middleware/icache';
 
-const factory = create({ cache });
+const factory = create({ icache });
 
-export default factory(function MyEncapsulatedStateWidget({ middleware: { cache } }) {
+export default factory(function MyEncapsulatedStateWidget({ middleware: { icache } }) {
 	return (
 		<div>
-			Current widget state: {cache.get<string>('myState') || 'Hello from a stateful widget!'}
+			Current widget state: {icache.get<string>('myState') || 'Hello from a stateful widget!'}
 			<br />
 			<button
 				onclick={() => {
-					let counter = cache.get<number>('counter') || 0;
+					let counter = icache.get<number>('counter') || 0;
 					let myState = 'State change iteration #' + ++counter;
-					cache.set('myState', myState);
-					cache.set('counter', counter);
+					icache.set('myState', myState);
+					icache.set('counter', counter);
 				}}
 			>
 				Change State

@@ -79,14 +79,14 @@ export default MiddlewareConsumerWidget;
 > src/middleware/ValueCachingMiddleware.ts
 
 ```ts
-import { create, defer, invalidator } from '@dojo/framework/core/vdom';
-import { cache } from '@dojo/framework/core/middleware/cache';
+import { create, defer } from '@dojo/framework/core/vdom';
+import { icache } from '@dojo/framework/core/middleware/icache';
 
-const factory = create({ defer, cache });
+const factory = create({ defer, icache });
 
-export const ValueCachingMiddleware = factory(({ middleware: { defer, cache, invalidator }}) => {
+export const ValueCachingMiddleware = factory(({ middleware: { defer, icache }}) => {
 	get(key: string) {
-		const cachedValue = cache.get(key);
+		const cachedValue = icache.get(key);
 		if (cachedValue) {
 			return cachedValue;
 		}
@@ -96,11 +96,9 @@ export const ValueCachingMiddleware = factory(({ middleware: { defer, cache, inv
 		defer.pause();
 		promise.then((result) => {
 			// Cache the value for subsequent renderings
-			cache.set(key, result);
+			icache.set(key, result);
 			// Resume widget rendering once the value is available
 			defer.resume();
-			// Invalidate the widget for a re-render
-			invalidator();
 		});
 		return null;
 	}
