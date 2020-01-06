@@ -6,7 +6,7 @@ import '../../shim/inert';
 const factory = create({ node, destroy });
 
 export const inert = factory(({ middleware: { node, destroy } }) => {
-	const inertInvertedNodeMap = new Map<string, any[]>();
+	const inertInvertedNodeMap = new Map<string | number, any[]>();
 	destroy(() => {
 		inertInvertedNodeMap.forEach((nodes) => {
 			nodes.forEach((node) => {
@@ -16,7 +16,7 @@ export const inert = factory(({ middleware: { node, destroy } }) => {
 		inertInvertedNodeMap.clear();
 	});
 	return {
-		set(key: string, enable: boolean, invert: boolean = false): void {
+		set(key: string | number, enable: boolean, invert: boolean = false): void {
 			const domNode = node.get(key) as any;
 			if (!domNode) {
 				return;

@@ -394,6 +394,52 @@ const myCustomBreakpoint = createBreakpointMiddleware({ Narrow: 0, Wide: 500 });
 export default myCustomBreakpoint;
 ```
 
+## `inert`
+
+Enables setting the [`inert`](https://html.spec.whatwg.org/multipage/interaction.html#inert) property on a node by `key`. This will ensure that the node in question does not respond to actions such as focus, mouse event etc. For scenarios such as a dialog that is attached to the `document.body`, `inert` can be inverted onto all the siblings of the `key`s node.
+
+**API:**
+
+```ts
+import inert from '@dojo/framework/core/middleware/inert';
+```
+
+-   `inert.set(key: string | number, enable: boolean, invert: boolean = false): void;`
+    -   Sets inert to the requested value for the node. When `invert` is passed the value will be set on all node's siblings.
+
+> src/widgets/Dialog.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import inert from '@dojo/framework/core/middleware/inert';
+import icache from '@dojo/framework/core/middleware/icache';
+
+const factory = create({ inert, icache }).properties<{ open: boolean; onRequestClose: () => void }>();
+
+export default factory(function Dialog({ children, properties, middleware: { inert, icache } }) {
+	const { open } = properties();
+	if (!open) {
+		return null;
+	}
+	inert.set('dialog', true, true);
+	return (
+		<body>
+			<div key="dialog">
+				<button
+					onclick={() => {
+						inert.set('dialog', false, true);
+						properties().onRequestClose();
+					}}
+				>
+					Close
+				</button>
+				{children()}
+			</div>
+		</body>
+	);
+});
+```
+
 ## `store`
 
 Provides widgets access to their externalized state when using the Dojo stores component.
