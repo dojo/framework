@@ -1222,7 +1222,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				let domNode = nextSibling.domNode;
 				if ((isWNodeWrapper(nextSibling) || isVirtualWrapper(nextSibling)) && nextSibling.childDomWrapperId) {
 					const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
-					if (childWrapper) {
+					if (childWrapper && !isBodyWrapper(childWrapper)) {
 						domNode = childWrapper.domNode;
 					}
 				}
