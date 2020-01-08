@@ -680,7 +680,7 @@ export type LocalizedMessages<T extends Messages> = {
 	 * @return
 	 * The formatted string.
 	 */
-	format(key: string, options?: any): string;
+	format(key: keyof T, options?: any): string;
 
 	/**
 	 * The localized messages if available, or either the default messages or a blank bundle depending on the
