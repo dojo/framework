@@ -4035,6 +4035,55 @@ jsdomDescribe('vdom', () => {
 			assert.isNull(root.querySelector('#my-body-node-2'));
 		});
 
+		it('can attach body and have widgets inserted nodes that are positioned after the body', () => {
+			const factory = create({ icache });
+			const Button = factory(function Button({ children }) {
+				return (
+					<div>
+						<button>{children()}</button>
+					</div>
+				);
+			});
+			const Body = factory(function Button({ children }) {
+				return (
+					<body>
+						<div id="body-node">{children()}</div>
+					</body>
+				);
+			});
+			const App = factory(function App({ middleware }) {
+				const open = middleware.icache.getOrSet('open', false);
+				return (
+					<div>
+						<div>first</div>
+						{open && <Button>Close</Button>}
+						{open && <Body>Body</Body>}
+						<div>
+							<button
+								onclick={() => {
+									middleware.icache.set('open', !middleware.icache.getOrSet('open', false));
+								}}
+							>
+								Click Me
+							</button>
+						</div>
+					</div>
+				);
+			});
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			(root as any).children[0].children[1].children[0].click();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><div>first</div><div><button>Close</button></div><div><button>Click Me</button></div></div>'
+			);
+			const bodyNode = document.getElementById('body-node');
+			assert.isNotNull(bodyNode);
+			assert.strictEqual(bodyNode!.outerHTML, '<div id="body-node">Body</div>');
+		});
+
 		it('should detach nested body nodes from dom', () => {
 			let doShow: any;
 
