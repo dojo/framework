@@ -1499,6 +1499,61 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(div.outerHTML, '<div><div><foobar></foobar><baz></baz><qux></qux></div></div>');
 		});
 
+		it('should insert widgets in the correct position when the nested widgets domNode is not initially rendered', () => {
+			const root = document.createElement('div');
+
+			let invalidateApp: any[] = [];
+			let renderA = false;
+			let renderB = false;
+
+			class VirtualFoo extends WidgetBase<{ render: boolean }> {
+				constructor() {
+					super();
+					invalidateApp.push(() => {
+						this.invalidate();
+					});
+				}
+
+				render() {
+					return w(Foo, {
+						key: this.properties.key,
+						render: this.properties.key === 'a' ? renderA : renderB
+					});
+				}
+			}
+
+			class Foo extends WidgetBase<{ render: boolean }> {
+				render() {
+					if (this.properties.render) {
+						return v('div', [`${this.properties.key}`]);
+					}
+					return null;
+				}
+			}
+
+			class App extends WidgetBase {
+				render() {
+					return v('div', [
+						w(VirtualFoo, { key: 'a', render: renderA }),
+						w(VirtualFoo, { key: 'b', render: renderB })
+					]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			resolvers.resolve();
+			assert.strictEqual(root.innerHTML, '<div></div>');
+			renderB = true;
+			invalidateApp[1]();
+			resolvers.resolve();
+			assert.strictEqual(root.innerHTML, '<div><div>b</div></div>');
+			renderA = true;
+			invalidateApp[0]();
+			resolvers.resolve();
+			assert.strictEqual(root.innerHTML, '<div><div>a</div><div>b</div></div>');
+		});
+
 		it('Should insert result from widget in correct position', () => {
 			class Menu extends WidgetBase {
 				render() {
