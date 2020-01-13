@@ -3930,6 +3930,61 @@ jsdomDescribe('vdom', () => {
 						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
 						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
 					});
+
+					it('Should inject property value when returned from diffProperty middleware', () => {
+						const createWidget = create({ diffProperty, invalidator }).properties<{ foo?: number }>();
+						let counter = 0;
+						const App = createWidget(({ middleware, properties }) => {
+							middleware.diffProperty('foo', properties, () => {
+								return counter;
+							});
+							const { foo } = properties();
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										counter++;
+										middleware.invalidator();
+									}
+								}),
+								v('div', [`${foo}`])
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>0</div></div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.outerHTML, '<div><div><button></button><div>1</div></div></div>');
+					});
+
+					it('Should warn if properties are accessed before registering a diff property', () => {
+						const createWidget = create({ diffProperty, invalidator }).properties<{ foo?: number }>();
+						let counter = 0;
+						const App = createWidget(({ middleware, properties }) => {
+							const { foo } = properties();
+							middleware.diffProperty('foo', properties, () => {
+								return counter;
+							});
+							return v('div', [
+								v('button', {
+									onclick: () => {
+										counter++;
+										middleware.invalidator();
+									}
+								}),
+								v('div', [`${foo}`])
+							]);
+						});
+						const r = renderer(() => App({}));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.isTrue(consoleWarnStub.calledOnce);
+						assert.strictEqual(
+							consoleWarnStub.firstCall.args[0],
+							'Calling `propertyDiff` middleware after accessing properties, can result in referencing stale properties.'
+						);
+					});
 				});
 			});
 		});
