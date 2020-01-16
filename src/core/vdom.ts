@@ -1080,10 +1080,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const nextSibling = _wrapperSiblingMap.get(searchNode);
 			if (nextSibling) {
 				let domNode = nextSibling.domNode;
-				if ((isWNodeWrapper(nextSibling) || isVirtualWrapper(nextSibling)) && nextSibling.childDomWrapperId) {
-					const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
-					if (childWrapper) {
-						domNode = childWrapper.domNode;
+				if (isWNodeWrapper(nextSibling) || isVirtualWrapper(nextSibling)) {
+					if (!nextSibling.childDomWrapperId) {
+						nextSibling.childDomWrapperId = findDomNodeOnParentWrapper(nextSibling);
+					}
+					if (nextSibling.childDomWrapperId) {
+						const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
+						if (childWrapper && !isBodyWrapper(childWrapper)) {
+							domNode = childWrapper.domNode;
+						}
 					}
 				}
 				if (domNode && domNode.parentNode) {
@@ -1896,22 +1901,27 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return processResult;
 	}
 
-	function setDomNodeOnParentWrapper(id: string) {
-		let wrapper = _idToWrapperMap.get(id)!;
-		let children = [...(_idToChildrenWrappers.get(id) || [])];
+	function findDomNodeOnParentWrapper(wrapper: DNodeWrapper): string | undefined {
+		let children = [...(_idToChildrenWrappers.get(wrapper.id) || [])];
 		let child: DNodeWrapper | undefined;
 		while (children.length && !wrapper.domNode) {
 			child = children.shift();
 			if (child) {
 				if (child.domNode) {
-					wrapper.childDomWrapperId = child.id;
-					break;
+					return child.id;
 				}
 				let nextChildren = _idToChildrenWrappers.get(child.id);
 				if (nextChildren) {
 					children = [...nextChildren, ...children];
 				}
 			}
+		}
+	}
+
+	function setDomNodeOnParentWrapper(id: string) {
+		let wrapper = _idToWrapperMap.get(id);
+		if (wrapper) {
+			wrapper.childDomWrapperId = findDomNodeOnParentWrapper(wrapper);
 		}
 	}
 
