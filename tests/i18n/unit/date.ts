@@ -345,7 +345,6 @@ registerSuite('date', {
 
 		formatRelativeTime: {
 			'assert without a locale'() {
-				debugger;
 				assert.strictEqual(formatRelativeTime(-1, 'week'), 'last week');
 				assert.strictEqual(formatRelativeTime(-3, 'week'), '3 weeks ago');
 				assert.strictEqual(formatRelativeTime(1, 'week'), 'next week');
