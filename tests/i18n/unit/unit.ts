@@ -1,20 +1,15 @@
+import global from '../../../src/shim/global';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { fetchCldrData } from '../support/util';
 import { getNumberFormatter } from '../../../src/i18n/number';
 import { getUnitFormatter, formatUnit } from '../../../src/i18n/unit';
-import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
+import '../support/cldr';
 
 registerSuite('number units', {
-	before() {
-		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData(['en', 'fr']).then(() => {
-			switchLocale('en');
-		});
-	},
-
-	after() {
-		return switchLocale(systemLocale);
+	before: () => {
+		global.__dojoLocales = {
+			userLocale: 'en'
+		};
 	},
 
 	tests: {

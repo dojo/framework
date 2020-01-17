@@ -50,6 +50,17 @@ function shimAmdDependencies(config: any) {
 		main: 'inert.min'
 	});
 
+	addIfNotPresent(packages, {
+		name: 'text',
+		location: 'node_modules/requirejs-text',
+		main: 'text'
+	});
+
+	addIfNotPresent(packages, {
+		name: 'cldr-core',
+		location: 'node_modules/cldr-core'
+	});
+
 	config.packages = packages;
 
 	return config;

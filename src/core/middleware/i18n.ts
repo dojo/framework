@@ -1,8 +1,7 @@
-/* tslint:disable:interface-name */
-import i18nCore, { Bundle, formatMessage, getCachedMessages, Messages } from '../../i18n/i18n';
+import global from '../../shim/global';
+import { localizeBundle, Bundle, Messages } from '../../i18n/i18n';
 import { create, invalidator, getRegistry } from '../vdom';
 import injector from './injector';
-import Map from '../../shim/Map';
 import Injector from '../Injector';
 import Registry from '../Registry';
 import { I18nProperties, LocalizedMessages, LocaleData } from '../interfaces';
@@ -31,78 +30,34 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 	}
 	injector.subscribe(INJECTOR_KEY);
 
-	function getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
-		let { locale } = properties();
-		if (!locale) {
-			const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
-			if (injectedLocale) {
-				locale = injectedLocale.get().locale;
-			}
-		}
-		locale = locale || i18nCore.locale;
-		const localeMessages = getCachedMessages(bundle, locale);
-
-		if (localeMessages) {
-			return localeMessages;
-		}
-
-		i18nCore(bundle, locale).then(() => {
-			invalidator();
-		});
-	}
-
-	function resolveBundle<T extends Messages>(bundle: Bundle<T>): Bundle<T> {
-		let { i18nBundle } = properties();
-		if (i18nBundle) {
-			if (i18nBundle instanceof Map) {
-				i18nBundle = i18nBundle.get(bundle);
-
-				if (!i18nBundle) {
-					return bundle;
-				}
-			}
-
-			return i18nBundle as Bundle<T>;
-		}
-		return bundle;
-	}
-
-	function getBlankMessages<T extends Messages>(bundle: Bundle<T>): T {
-		const blank = {} as Messages;
-		return Object.keys(bundle.messages).reduce((blank, key) => {
-			blank[key] = '';
-			return blank;
-		}, blank) as T;
-	}
-
 	return {
-		localize<T extends Messages>(bundle: Bundle<T>, useDefaults = false): LocalizedMessages<T> {
-			let { locale } = properties();
-			bundle = resolveBundle(bundle);
-			const messages = getLocaleMessages(bundle);
-			const isPlaceholder = !messages;
+		localize<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
+			let locale = properties().locale;
 			if (!locale) {
-				const injectedLocale = injector.get<Injector<LocaleData>>(INJECTOR_KEY);
-				if (injectedLocale) {
-					locale = injectedLocale.get().locale;
+				const localeInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+				if (localeInjector) {
+					const injectedLocale = localeInjector.get();
+					if (injectedLocale && injectedLocale.locale) {
+						locale = injectedLocale.locale;
+					}
 				}
 			}
-
-			const format =
-				isPlaceholder && !useDefaults
-					? () => ''
-					: (key: keyof T, options?: any) => formatMessage(bundle, key as string, options, locale);
-
-			return Object.create({
-				format,
-				isPlaceholder,
-				messages: messages || (useDefaults ? bundle.messages : getBlankMessages(bundle))
-			});
+			return localizeBundle(bundle, { locale, invalidator });
 		},
 		set(localeData?: LocaleData) {
 			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
 			if (currentLocale) {
-				currentLocale.set(localeData);
+				if (localeData && localeData.locale) {
+					const localLoader = global.__dojoLocales[localeData.locale];
+					if (!localLoader) {
+						throw new Error('Blah blah');
+					}
+					localLoader().then(() => {
+						currentLocale.set(localeData);
+					});
+				} else {
+					currentLocale.set(localeData);
+				}
 			}
 		},
 		get() {

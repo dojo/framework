@@ -1,3 +1,4 @@
+import global from '../../../src/shim/global';
 import { padStart } from '../../../src/shim/string';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -9,8 +10,7 @@ import {
 	getRelativeTimeFormatter,
 	parseDate
 } from '../../../src/i18n/date';
-import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
-import { fetchCldrData } from '../support/util';
+import '../support/cldr';
 
 function getOffsets(date: Date) {
 	const offset = date.getTimezoneOffset();
@@ -133,17 +133,11 @@ function getKeys<T extends DateOptionsKeys>(
 }
 
 registerSuite('date', {
-	before() {
-		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData(['en', 'fr']).then(() => {
-			switchLocale('en');
-		});
+	before: () => {
+		global.__dojoLocales = {
+			userLocale: 'en'
+		};
 	},
-
-	after() {
-		switchLocale(systemLocale);
-	},
-
 	tests: {
 		getDateFormatter: {
 			'assert without a locale'() {
@@ -351,6 +345,7 @@ registerSuite('date', {
 
 		formatRelativeTime: {
 			'assert without a locale'() {
+				debugger;
 				assert.strictEqual(formatRelativeTime(-1, 'week'), 'last week');
 				assert.strictEqual(formatRelativeTime(-3, 'week'), '3 weeks ago');
 				assert.strictEqual(formatRelativeTime(1, 'week'), 'next week');
