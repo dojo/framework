@@ -28,7 +28,7 @@ function createAyncMessageLoader(): {
 
 let localeLoader = Promise.resolve();
 
-describe('i18n middleware', () => {
+describe('i18n Mixin', () => {
 	beforeEach(() => {
 		resolvers.stub();
 		global.__dojoLocales = {
