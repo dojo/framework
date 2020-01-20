@@ -355,7 +355,7 @@ Dojo provides a blocks system which can execute code in Node.js as part of the b
 
 For example, a Dojo Block module could read a group of markdown files, transform them into VNodes, and make them available to render in the application, all at build time. The result of this Dojo Block module is then cached into the application bundle for use at runtime in the browser.
 
-A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify and run a block module there are three requirements that must be meet:
+A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify and run a block module there are three requirements that must be met:
 
 1.  The module must have `.block` suffix, for example `src/blocks/read-file.block.ts`.
 1.  Block must only have a single default export
