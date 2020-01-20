@@ -357,9 +357,9 @@ For example, a Dojo Block module could read a group of markdown files, transform
 
 A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify and run a block module there are three requirements that must be meet:
 
--   The module must have `.block` suffix, for example `src/blocks/read-file.block.ts`.
--   Block must only have a single default export
--   Return values from blocks (from a promise resolution or as an immediate return) must be serializable to json
+1.  The module must have `.block` suffix, for example `src/blocks/read-file.block.ts`.
+1.  Block must only have a single default export
+1.  Return values from blocks (from a promise resolution or as an immediate return) must be serializable to json
 
 Other than these requirements there is no configuration or alternative authoring pattern required.
 
