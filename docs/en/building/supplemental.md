@@ -357,7 +357,7 @@ For example, a Dojo Block module could read a group of markdown files, transform
 
 A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify and run a block module there are three requirements that must be met:
 
-1.  The module must have a `.block` suffix, for example `src/blocks/read-file.block.ts`.
+1.  The module must have a `.block` suffix, for example `src/readFile.block.ts`.
 1.  The Block must only have a single default export
 1.  Return values from blocks (from a promise resolution or as an immediate return) must be serializable to json
 
@@ -365,7 +365,7 @@ Other than these requirements there is no configuration or alternative authoring
 
 For example, a block module could read a text file and return the content to the application.
 
-> src/blocks/read-file.block.ts
+> src/readFile.block.ts
 
 ```ts
 import * as fs from 'fs';
@@ -393,7 +393,7 @@ export default factory(function MyBlockWidget({ middleware: { block } }) {
 });
 ```
 
-This widget runs the `src/blocks/read-file.block.ts` module at build time to read the contents of the given file to be used in the widget's render output.
+This widget runs the `src/readFile.block.ts` module at build time to read the contents of the given file to be used in the widget's render output.
 
 # Conditional code
 
