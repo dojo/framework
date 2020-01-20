@@ -383,7 +383,7 @@ export default (path: string) => {
 import { create, tsx } from '@dojo/framework/core/vdom';
 import block from '@dojo/framework/core/middleware/block';
 
-import readFile from '../blocks/read-file.block';
+import readFile from '../readFile.block';
 
 const factory = create({ block });
 
