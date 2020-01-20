@@ -315,11 +315,17 @@ Dojo provides a blocks system which can execute code in Node.js as part of the b
 
 For example, a Dojo Block module could read a group of markdown files, transform them into VNodes, and make them available to render in the application, all at build time. The result of this Dojo Block module is then cached into the application bundle for use at runtime in the browser.
 
-A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify a block module a special `.block` extension is required, for example `src/blocks/read-file.block.ts`. Other than the file extension there are no extensive configurations or alternative authoring patterns required.
+A Dojo Block module gets used like any middleware or meta in a Dojo widget. For the Dojo build system to be able to identify and run a block module there are three requirements that must be met:
+
+1.  The module must have a `.block` suffix, for example `src/readFile.block.ts`.
+1.  The Block must only have a single default export
+1.  Return values from blocks (from a promise resolution or as an immediate return) must be serializable to json
+
+Other than these requirements there is no configuration or alternative authoring pattern required.
 
 For example, a block module could read a text file and return the content to the application.
 
-> src/blocks/read-file.block.ts
+> src/readFile.block.ts
 
 ```ts
 import * as fs from 'fs';
@@ -337,7 +343,7 @@ export default (path: string) => {
 import { create, tsx } from '@dojo/framework/core/vdom';
 import block from '@dojo/framework/core/middleware/block';
 
-import readFile from '../blocks/read-file.block';
+import readFile from '../readFile.block';
 
 const factory = create({ block });
 
@@ -347,7 +353,7 @@ export default factory(function MyBlockWidget({ middleware: { block } }) {
 });
 ```
 
-This widget runs the `src/blocks/read-file.block.ts` module at build time to read the contents of the given file to be used in the widget's render output.
+This widget runs the `src/readFile.block.ts` module at build time to read the contents of the given file to be used in the widget's render output.
 
 # Conditional code
 
