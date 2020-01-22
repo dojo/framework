@@ -3961,7 +3961,7 @@ jsdomDescribe('vdom', () => {
 					it('Should warn if properties are accessed before registering a diff property', () => {
 						const createWidget = create({ diffProperty, invalidator }).properties<{ foo?: number }>();
 						let counter = 0;
-						const App = createWidget(function App({ middleware, properties }) {
+						const App = createWidget(function unknown({ middleware, properties }) {
 							const { foo } = properties();
 							middleware.diffProperty('foo', properties, () => {
 								return counter;
@@ -3980,9 +3980,9 @@ jsdomDescribe('vdom', () => {
 						const root = document.createElement('div');
 						r.mount({ domNode: root });
 						assert.isTrue(consoleWarnStub.calledOnce);
-						assert.strictEqual(
+						assert.include(
 							consoleWarnStub.firstCall.args[0],
-							'Calling "propertyDiff" middleware after accessing properties in "App", can result in referencing stale properties.'
+							'Calling "propertyDiff" middleware after accessing properties in "unknown", can result in referencing stale properties.'
 						);
 					});
 				});
