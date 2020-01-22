@@ -915,21 +915,21 @@ export const diffProperty = factory(({ id }) => {
 			diff = propertiesOrDiff;
 		}
 		if (widgetMeta) {
-			if (has('dojo-debug')) {
-				if (widgetMeta.propertiesCalled) {
-					console.warn(
-						`Calling "propertyDiff" middleware after accessing properties in ${
-							widgetMeta.widgetName
-						}, can result in referencing stale properties.`
-					);
-				}
-			}
 			widgetMeta.customDiffMap = widgetMeta.customDiffMap || new Map();
 			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
 				const result = diff({}, widgetMeta.properties);
 				if (result !== undefined) {
+					if (has('dojo-debug')) {
+						if (widgetMeta.propertiesCalled) {
+							console.warn(
+								`Calling "propertyDiff" middleware after accessing properties in "${
+									widgetMeta.widgetName
+								}", can result in referencing stale properties.`
+							);
+						}
+					}
 					widgetMeta.properties = { ...widgetMeta.properties, [propertyName]: result };
 				}
 				propertyDiffMap.set(propertyName, diff);

@@ -3982,7 +3982,7 @@ jsdomDescribe('vdom', () => {
 						assert.isTrue(consoleWarnStub.calledOnce);
 						assert.strictEqual(
 							consoleWarnStub.firstCall.args[0],
-							'Calling `propertyDiff` middleware after accessing properties, can result in referencing stale properties.'
+							'Calling "propertyDiff" middleware after accessing properties in "App", can result in referencing stale properties.'
 						);
 					});
 				});
