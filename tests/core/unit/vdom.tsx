@@ -3936,6 +3936,19 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('create', () => {
+		it('should default to document body if null is passed as the mount domNode', () => {
+			const r = renderer(() => v('div', { id: 'my-div' }, ['hello, world!']));
+			r.mount({ domNode: document.getElementById('unknown-id') });
+			const div = document.getElementById('my-div');
+			assert.isOk(div);
+			assert.strictEqual(div!.parentNode, document.body);
+			assert.isTrue(consoleWarnStub.calledOnce);
+			assert.strictEqual(
+				consoleWarnStub.firstCall.args[0],
+				'Unable to find node to mount the application, defaulting to the document body.'
+			);
+		});
+
 		it('should support rendering vnodes only', () => {
 			const r = renderer(() => v('div', ['hello, world!']));
 			const div = document.createElement('div');

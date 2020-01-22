@@ -115,7 +115,7 @@ export interface MountOptions {
 	sync: boolean;
 	merge: boolean;
 	transition?: TransitionStrategy;
-	domNode: HTMLElement;
+	domNode: HTMLElement | null;
 	registry: Registry;
 }
 
@@ -964,7 +964,7 @@ export const defer = factory(({ id }) => {
 });
 
 export function renderer(renderer: () => RenderResult): Renderer {
-	let _mountOptions: MountOptions = {
+	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
 		sync: false,
 		merge: true,
 		transition: undefined,
@@ -1389,8 +1389,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function mount(mountOptions: Partial<MountOptions> = {}) {
-		_mountOptions = { ..._mountOptions, ...mountOptions };
-		const { domNode } = _mountOptions;
+		let domNode = mountOptions.domNode;
+		if (!domNode) {
+			if (has('dojo-debug') && domNode === null) {
+				console.warn('Unable to find node to mount the application, defaulting to the document body.');
+			}
+			domNode = global.document.body as HTMLElement;
+		}
+		_mountOptions = { ..._mountOptions, ...mountOptions, domNode };
 		const renderResult = wrapNodes(renderer)({}, []);
 		const nextWrapper = {
 			id: `${wrapperId++}`,
