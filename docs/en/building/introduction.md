@@ -31,12 +31,12 @@ This build will use the `dist` mode to create an application bundle and output t
 
 ## Serving and watching
 
-A web server can be started with the `--serve` flag while running in `dev` or `dist` modes. By default the application is served on port 9999. This can be cahnged with the `--port` flag. Dojo's build tool can also watch the application for changes and automatically rebuild with the `--watch` flag.
+A web server can be started with the `--serve` flag while running in `dev` or `dist` modes. By default the application is served on port 9999. This can be changed with the `--port` flag. Dojo's build tool can also watch the application for changes and automatically rebuild with the `--watch` flag.
 
 The generated `package.json` includes the `dev` script which uses these flags to serve a built version of the application and automatically rebuild it when files change on disk.
 
 ```bash
-> dojo build --mode dev --watch file --serve
+> dojo build --mode dev --watch --serve
 ```
 
 The application will also have source maps available. This allows the debugger to map the built JavaScript code back to the original TypeScript code that lives in the `src/` directory.
