@@ -677,6 +677,8 @@ Allows widgets fine-grained control over difference detection by registering the
 
 Writing custom diff functions is typically coupled with use of the [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware to flag the current widget as invalid when a difference in property values requires the widget's DOM nodes to be updated.
 
+An additional use for `diffProperty` is to be able to return a value that will be available from the widget properties. A value that is returned from the `callback` is used to replace the corresponding value on the widget's properties.
+
 **Note:** Only a single diff function can be registered for a given property during the lifetime of a composing widget or middleware, after which subsequent calls will be ignored. By default the rendering engine uses an algorithm that shallowly diffs objects and arrays, ignores functions, and equality checks all other property types. Setting a custom diff function overrides Dojo's default difference detection strategy for the property.
 
 **API:**
@@ -685,8 +687,26 @@ Writing custom diff functions is typically coupled with use of the [`invalidator
 import diffProperty from '@dojo/framework/core/vdom';
 ```
 
--   `diffProperty(propertyName: string, diff: (current: any, next: any) => void)`
-    -   Registers the specified `diff` function that is called to determine if any differences exist between the `current` and `next` values of the widget's `propertyName` property.
+-   `diffProperty(propertyName: string, properties: () => WidgetProperties (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
+    -   Registers the specified `diff` function that is called to determine if any differences exist between the `current` and `next` values of the widget's `propertyName` property. The function uses the `properties` function to determine the available properties and the typings of the callback, both the parameters and the return value.
+
+**Example:**
+
+> src/customMiddleware.tsx
+
+````tsx
+import { create, diffProperty } from '@dojo/framework/core/vdom';
+
+const factory = create({ diffProperty }).properties<{ foo?: string }>;
+
+export const customMiddleware = factory(({ properties, middleware: { diffProperty } }) => {
+	diffProperty('foo', properties, (current, next) => {
+		if (!next.foo) {
+			return 'default foo';
+		}
+	});
+	// The rest of the custom middleware that defines the API
+});
 
 ## `destroy`
 
@@ -698,7 +718,7 @@ Assigns a function that is called on widget destruction, allowing any required r
 
 ```ts
 import destroy from '@dojo/framework/core/vdom';
-```
+````
 
 -   `destroy(destroyFunction: () => void)`
     -   Sets the `destroyFunction` that will be called when the current widget is destroyed. Setting a function will override any destroy function previously set for the widget.
