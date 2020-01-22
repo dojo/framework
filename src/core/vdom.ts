@@ -74,6 +74,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 }
 
 export interface WidgetMeta {
+	widgetName: string;
 	mountNode: HTMLElement;
 	dirty: boolean;
 	invalidator: () => void;
@@ -917,7 +918,9 @@ export const diffProperty = factory(({ id }) => {
 			if (has('dojo-debug')) {
 				if (widgetMeta.propertiesCalled) {
 					console.warn(
-						'Calling `propertyDiff` middleware after accessing properties, can result in referencing stale properties.'
+						`Calling "propertyDiff" middleware after accessing properties in ${
+							widgetMeta.widgetName
+						}, can result in referencing stale properties.`
 					);
 				}
 			}
@@ -1894,6 +1897,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				};
 
 				widgetMeta = {
+					widgetName: Constructor.name || 'unknown',
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,

@@ -3961,7 +3961,7 @@ jsdomDescribe('vdom', () => {
 					it('Should warn if properties are accessed before registering a diff property', () => {
 						const createWidget = create({ diffProperty, invalidator }).properties<{ foo?: number }>();
 						let counter = 0;
-						const App = createWidget(({ middleware, properties }) => {
+						const App = createWidget(function App({ middleware, properties }) {
 							const { foo } = properties();
 							middleware.diffProperty('foo', properties, () => {
 								return counter;
