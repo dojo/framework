@@ -101,7 +101,7 @@ export function setCldrLoaders(loaders: CldrLoaders) {
 
 export function setLocale(systemLocale = global.navigator.language || global.navigator.userLanguage, local = false) {
 	let partialSystemLocale = systemLocale.replace(/^([a-z]{2}).*/i, '$1');
-	const locales = [defaultLocale, ...supportedLocales];
+	const locales = supportedLocales;
 	let userLocale = defaultLocale;
 
 	let hasMatch = false;
