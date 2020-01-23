@@ -14,10 +14,20 @@ export interface MessageLoader {
 	(): Promise<{ default: Messages }>;
 }
 
+export interface CldrLoader {
+	(): Promise<{ default: any }>;
+}
+
+export interface LocaleLoaders {
+	[index: string]: Messages | MessageLoader;
+}
+
+export interface CldrLoaders {
+	[index: string]: CldrLoader | true;
+}
+
 export interface Bundle<T extends Messages> {
-	readonly locales?: {
-		[index: string]: Messages | MessageLoader;
-	};
+	readonly locales?: LocaleLoaders;
 	readonly messages: T;
 }
 
@@ -33,20 +43,10 @@ export interface LocalizeResult<T extends Bundle<any>> {
 	format: (key: keyof T['messages'], options: any) => string;
 }
 
-function markBundleAsLoaded(locale: string, bundleId: string) {
-	Globalize.loadMessages({
-		[locale]: {
-			lookup: {
-				[bundleId]: {
-					locale: undefined,
-					id: undefined,
-					loading: undefined
-				}
-			}
-		}
-	});
-}
-
+/**
+ * Ensure that the raw bundle is not mutated when
+ * the resolved bundles are set
+ */
 let cldrResolved = Cldr._resolved;
 
 Object.defineProperty(Cldr, '_resolved', {
@@ -64,26 +64,108 @@ const idToBundleLoaderMap = new Map<string, MessageLoader>();
 const globalizeInstanceMap = new Map<string, Globalize>();
 const MESSAGE_BUNDLE_PATH = 'globalize-messages/{bundle}';
 
+let supportedLocales: string[] = [];
+let defaultLocale = '';
+let computedLocale = '';
+let cldrLoaders: CldrLoaders = {};
+
+function markBundleAsLoaded(locale: string, bundleId: string) {
+	Globalize.loadMessages({
+		[locale]: {
+			lookup: {
+				[bundleId]: {
+					locale: undefined,
+					id: undefined,
+					loading: undefined
+				}
+			}
+		}
+	});
+}
+
+export function setSupportedLocales(locales: string[]) {
+	supportedLocales = locales;
+}
+
+export function setDefaultLocale(locale: string) {
+	defaultLocale = locale;
+}
+
+export function getComputedLocale() {
+	return computedLocale;
+}
+
+export function setCldrLoaders(loaders: CldrLoaders) {
+	cldrLoaders = { ...loaders };
+}
+
+export async function setLocale(
+	systemLocale = global.navigator.language || global.navigator.userLanguage,
+	local = false
+) {
+	let partialSystemLocale = systemLocale.replace(/^([a-z]{2}).*/i, '$1');
+	const locales = [defaultLocale, ...supportedLocales];
+	let userLocale = defaultLocale;
+
+	let hasMatch = false;
+
+	for (let i = 0; i < locales.length; i++) {
+		const locale = locales[i];
+		if (systemLocale === locale) {
+			userLocale = systemLocale;
+			hasMatch = true;
+			break;
+		}
+
+		if (partialSystemLocale === locale) {
+			userLocale = partialSystemLocale;
+			hasMatch = true;
+		}
+	}
+
+	computedLocale = hasMatch ? systemLocale : defaultLocale;
+
+	const loaderPromises: Promise<any>[] = [];
+	const localCldrLoader = cldrLoaders[userLocale];
+	const supplementalLoader = cldrLoaders.supplemental;
+	if (supplementalLoader !== true) {
+		loaderPromises.push(supplementalLoader());
+	}
+	if (localCldrLoader !== true) {
+		loaderPromises.push(localCldrLoader());
+	}
+
+	const data = await Promise.all(loaderPromises);
+	cldrLoaders[userLocale] = true;
+	cldrLoaders.supplemental = true;
+	data.forEach((results) => {
+		results.forEach((result: any) => {
+			Globalize.load(result.default);
+		});
+	});
+	!local && Globalize.locale(computedLocale);
+	return computedLocale;
+}
+
 export function localizeBundle<T extends Messages>(
 	bundle: Bundle<T>,
 	options: LocalizeOptions
 ): LocalizeResult<Bundle<T>> {
-	const { locale = global.__dojoLocales.userLocale, invalidator } = options;
+	const { locale = computedLocale, invalidator } = options;
 	const { locales: localeBundleLoaders = {} } = bundle;
 	const locales = Object.keys(localeBundleLoaders);
-	const defaultLocale = global.__dojoLocales.defaultLocale;
 	let bundleId: string | undefined = bundleIdMap.get(bundle);
 	if (!bundleId) {
 		bundleId = uuid();
 		bundleIdMap.set(bundle, bundleId);
 		const lookupBundles = locales.reduce(
-			(lookupBundles, locale) => {
+			(lookup, locale) => {
 				const bundleLoader = localeBundleLoaders[locale];
 				if (typeof bundleLoader === 'function') {
 					const id = uuid();
 					bundleLoaderMap.set(bundleLoader, id);
 					idToBundleLoaderMap.set(id, bundleLoader);
-					lookupBundles[locale] = {
+					lookup[locale] = {
 						lookup: {
 							[bundleId as any]: {
 								locale,
@@ -92,11 +174,11 @@ export function localizeBundle<T extends Messages>(
 						}
 					};
 				} else {
-					lookupBundles[locale] = {
+					lookup[locale] = {
 						[bundleId as any]: bundleLoader
 					};
 				}
-				return lookupBundles;
+				return lookup;
 			},
 			{} as any
 		);

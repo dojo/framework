@@ -1,5 +1,5 @@
-import global from '../../shim/global';
 import * as Globalize from 'globalize/dist/globalize';
+import { getComputedLocale } from '../i18n';
 
 /**
  * @private
@@ -52,7 +52,7 @@ export function globalizeDelegator<T, O, R>(
 	method: string,
 	args: DelegatorOptions<O> | FormatterDelegatorOptions<T, O>
 ): R {
-	const { locale = global.__dojoLocales.userLocale, options, value, unit } = normalizeFormatterArguments<T, O>(args);
+	const { locale = getComputedLocale(), options, value, unit } = normalizeFormatterArguments<T, O>(args);
 	const methodArgs: any[] = typeof value !== 'undefined' ? [value] : [];
 
 	if (typeof unit !== 'undefined') {
