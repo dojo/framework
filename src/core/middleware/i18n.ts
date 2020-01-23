@@ -1,6 +1,5 @@
-import global from '../../shim/global';
-import { localizeBundle, Bundle, Messages } from '../../i18n/i18n';
-import { create, invalidator, getRegistry } from '../vdom';
+import { localizeBundle, Bundle, Messages, setLocale, getComputedLocale } from '../../i18n/i18n';
+import { create, invalidator, getRegistry, diffProperty } from '../vdom';
 import injector from './injector';
 import Injector from '../Injector';
 import Registry from '../Registry';
@@ -18,9 +17,10 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 	return injector;
 }
 
-const factory = create({ invalidator, injector, getRegistry }).properties<I18nProperties>();
+const factory = create({ invalidator, injector, getRegistry, diffProperty }).properties<I18nProperties>();
 
-export const i18n = factory(({ properties, middleware: { invalidator, injector, getRegistry } }) => {
+export const i18n = factory(({ properties, middleware: { invalidator, injector, getRegistry, diffProperty } }) => {
+	let fallbackLocale: string | undefined;
 	const i18nInjector = injector.get(INJECTOR_KEY);
 	if (!i18nInjector) {
 		const registry = getRegistry();
@@ -28,6 +28,26 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			registerI18nInjector({}, registry.base);
 		}
 	}
+
+	diffProperty('locale', (current, next) => {
+		if (next.locale && current.locale !== next.locale) {
+			const localeInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			if (current.locale) {
+				fallbackLocale = current.locale;
+			} else if (localeInjector) {
+				const currentLocale = localeInjector.get();
+				fallbackLocale = currentLocale ? currentLocale.locale || getComputedLocale() : getComputedLocale();
+			} else {
+				fallbackLocale = getComputedLocale();
+			}
+
+			setLocale(next.locale, true).then(() => {
+				fallbackLocale = undefined;
+				invalidator();
+			});
+		}
+	});
+
 	injector.subscribe(INJECTOR_KEY);
 
 	return {
@@ -42,19 +62,17 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 					}
 				}
 			}
-			return localizeBundle(bundle, { locale, invalidator });
+			return localizeBundle(bundle, { locale: fallbackLocale || locale, invalidator });
 		},
 		set(localeData?: LocaleData) {
 			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
 			if (currentLocale) {
 				if (localeData && localeData.locale) {
-					const localLoader = global.__dojoLocales[localeData.locale];
-					if (!localLoader) {
-						throw new Error('Blah blah');
+					if (currentLocale) {
+						setLocale(localeData.locale).then(() => {
+							currentLocale.set(localeData);
+						});
 					}
-					localLoader().then(() => {
-						currentLocale.set(localeData);
-					});
 				} else {
 					currentLocale.set(localeData);
 				}

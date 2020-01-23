@@ -1,4 +1,3 @@
-import global from '../../../src/shim/global';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import {
@@ -12,12 +11,13 @@ import {
 	pluralize
 } from '../../../src/i18n/number';
 import '../support/cldr';
+import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 registerSuite('i18n/number', {
 	before: () => {
-		global.__dojoLocales = {
-			userLocale: 'en'
-		};
+		setDefaultLocale('en');
+		setSupportedLocales(['en']);
+		return setLocale('en');
 	},
 
 	tests: {

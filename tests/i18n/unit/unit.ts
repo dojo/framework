@@ -1,15 +1,15 @@
-import global from '../../../src/shim/global';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { getNumberFormatter } from '../../../src/i18n/number';
 import { getUnitFormatter, formatUnit } from '../../../src/i18n/unit';
 import '../support/cldr';
+import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 registerSuite('number units', {
 	before: () => {
-		global.__dojoLocales = {
-			userLocale: 'en'
-		};
+		setDefaultLocale('en');
+		setSupportedLocales(['en']);
+		return setLocale('en');
 	},
 
 	tests: {

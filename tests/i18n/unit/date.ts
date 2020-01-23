@@ -1,4 +1,3 @@
-import global from '../../../src/shim/global';
 import { padStart } from '../../../src/shim/string';
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -11,6 +10,7 @@ import {
 	parseDate
 } from '../../../src/i18n/date';
 import '../support/cldr';
+import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 function getOffsets(date: Date) {
 	const offset = date.getTimezoneOffset();
@@ -134,9 +134,9 @@ function getKeys<T extends DateOptionsKeys>(
 
 registerSuite('date', {
 	before: () => {
-		global.__dojoLocales = {
-			userLocale: 'en'
-		};
+		setDefaultLocale('en');
+		setSupportedLocales(['en', 'es']);
+		return setLocale('en');
 	},
 	tests: {
 		getDateFormatter: {

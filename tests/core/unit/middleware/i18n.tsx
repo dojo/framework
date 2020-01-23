@@ -5,6 +5,7 @@ const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { renderer, tsx, create } from '../../../../src/core/vdom';
 import i18n from '../../../../src/core/middleware/i18n';
+import { setCldrLoaders, setDefaultLocale, setLocale, setSupportedLocales } from '../../../../src/i18n/i18n';
 import { createResolvers } from './../../support/util';
 
 const resolvers = createResolvers();
@@ -24,21 +25,20 @@ function createAyncMessageLoader(): {
 	return loaderHelper;
 }
 
-let localeLoader = Promise.resolve();
+let localeLoader = Promise.resolve<any>([]);
 
 describe('i18n middleware', () => {
 	beforeEach(() => {
 		resolvers.stub();
-		global.__dojoLocales = {
-			defaultLocale: 'en',
-			userLocale: 'en',
-			es: () => localeLoader
-		};
+		setDefaultLocale('en');
+		setSupportedLocales(['en', 'es']);
+		setCldrLoaders({ es: () => localeLoader });
+		return setLocale('en');
 	});
 
 	afterEach(() => {
 		resolvers.restore();
-		localeLoader = Promise.resolve();
+		localeLoader = Promise.resolve<any>([]);
 	});
 
 	it('Should return the base locale', () => {

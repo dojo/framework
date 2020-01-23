@@ -126,12 +126,12 @@ export async function setLocale(
 	computedLocale = hasMatch ? systemLocale : defaultLocale;
 
 	const loaderPromises: Promise<any>[] = [];
-	const localCldrLoader = cldrLoaders[userLocale];
 	const supplementalLoader = cldrLoaders.supplemental;
-	if (supplementalLoader !== true) {
+	if (supplementalLoader && supplementalLoader !== true) {
 		loaderPromises.push(supplementalLoader());
 	}
-	if (localCldrLoader !== true) {
+	const localCldrLoader = cldrLoaders[userLocale];
+	if (localCldrLoader && localCldrLoader !== true) {
 		loaderPromises.push(localCldrLoader());
 	}
 

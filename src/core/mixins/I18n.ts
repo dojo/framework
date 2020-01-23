@@ -1,6 +1,5 @@
 /* tslint:disable:interface-name */
-import global from '../../shim/global';
-import { localizeBundle, Bundle, Messages } from '../../i18n/i18n';
+import { localizeBundle, Bundle, Messages, setLocale } from '../../i18n/i18n';
 import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
 import { inject } from './../decorators/inject';
@@ -47,11 +46,7 @@ interface I18nVNodeProperties extends VNodeProperties {
 class I18nInjector extends Injector {
 	set(localeData: LocaleData) {
 		if (localeData.locale) {
-			const localLoader = global.__dojoLocales[localeData.locale];
-			if (!localLoader) {
-				throw new Error('Blah blah');
-			}
-			localLoader().then(() => {
+			setLocale(localeData.locale).then(() => {
 				super.set(localeData);
 			});
 		} else {

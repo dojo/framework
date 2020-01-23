@@ -1,4 +1,3 @@
-import global from '../../../../src/shim/global';
 import * as Globalize from 'globalize';
 import 'globalize/dist/globalize/date';
 import 'globalize/dist/globalize/relative-time';
@@ -8,13 +7,13 @@ const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
 import { DateFormatter, DateFormatterOptions, RelativeTimeFormatterOptions } from '../../../../src/i18n/date';
 import { globalizeDelegator } from '../../../../src/i18n/util/globalize';
+import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../../src/i18n/i18n';
 
 registerSuite('util/globalize', {
 	before: () => {
-		global.__dojoLocales = {
-			userLocale: 'en'
-		};
-		Globalize.locale('en');
+		setDefaultLocale('en');
+		setSupportedLocales(['en']);
+		return setLocale('en');
 	},
 
 	tests: {

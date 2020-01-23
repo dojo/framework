@@ -8,6 +8,7 @@ import WidgetBase from '../../../../src/core/WidgetBase';
 import I18nMixin, { registerI18nInjector } from '../../../../src/core/mixins/I18n';
 import { createResolvers } from './../../support/util';
 import Registry from '../../../../src/core/Registry';
+import { setDefaultLocale, setSupportedLocales, setCldrLoaders, setLocale } from '../../../../src/i18n/i18n';
 
 const resolvers = createResolvers();
 
@@ -26,21 +27,20 @@ function createAyncMessageLoader(): {
 	return loaderHelper;
 }
 
-let localeLoader = Promise.resolve();
+let localeLoader = Promise.resolve<any>([]);
 
 describe('i18n Mixin', () => {
 	beforeEach(() => {
 		resolvers.stub();
-		global.__dojoLocales = {
-			defaultLocale: 'en',
-			userLocale: 'en',
-			es: () => localeLoader
-		};
+		setDefaultLocale('en');
+		setSupportedLocales(['en', 'es']);
+		setCldrLoaders({ es: () => localeLoader });
+		return setLocale('en');
 	});
 
 	afterEach(() => {
 		resolvers.restore();
-		localeLoader = Promise.resolve();
+		localeLoader = Promise.resolve<any>([]);
 	});
 
 	it('Should return the base locale', () => {

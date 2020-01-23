@@ -1,15 +1,20 @@
 const { it, describe, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub, spy, SinonSpy } from 'sinon';
-import global from '../../../src/shim/global';
-import { localizeBundle } from '../../../src/i18n/i18n';
+import {
+	localizeBundle,
+	setDefaultLocale,
+	setSupportedLocales,
+	setLocale,
+	setCldrLoaders
+} from '../../../src/i18n/i18n';
 
 describe('i18n', () => {
 	before(() => {
-		global.__dojoLocales = {
-			userLocale: 'fr',
-			defaultLocale: 'fr'
-		};
+		setDefaultLocale('fr');
+		setSupportedLocales(['fr']);
+		setCldrLoaders({});
+		return setLocale('fr');
 	});
 
 	it('Resolve sync message bundles', () => {
@@ -46,10 +51,10 @@ describe('i18n', () => {
 
 	it('Resolves async messages bundles', async () => {
 		const invalidator = stub();
-		global.__dojoLocales = {
-			userLocale: 'fr',
-			defaultLocale: 'fr'
-		};
+		setDefaultLocale('fr');
+		setSupportedLocales(['fr']);
+		setCldrLoaders({});
+		await setLocale('fr');
 
 		function createAyncMessageLoader(): {
 			promise: Promise<any>;
