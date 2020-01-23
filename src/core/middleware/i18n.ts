@@ -4,6 +4,7 @@ import injector from './injector';
 import Injector from '../Injector';
 import Registry from '../Registry';
 import { I18nProperties, LocalizedMessages, LocaleData } from '../interfaces';
+import { isThenable } from '../../shim/Promise';
 export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 
 export const INJECTOR_KEY = '__i18n_injector';
@@ -41,10 +42,13 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 				fallbackLocale = getComputedLocale();
 			}
 
-			setLocale(next.locale, true).then(() => {
-				fallbackLocale = undefined;
-				invalidator();
-			});
+			const result = setLocale(next.locale, true);
+			if (isThenable(result)) {
+				result.then(() => {
+					fallbackLocale = undefined;
+					invalidator();
+				});
+			}
 		}
 	});
 
@@ -68,14 +72,15 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
 			if (currentLocale) {
 				if (localeData && localeData.locale) {
-					if (currentLocale) {
-						setLocale(localeData.locale).then(() => {
+					const result = setLocale(localeData.locale);
+					if (isThenable(result)) {
+						result.then(() => {
 							currentLocale.set(localeData);
 						});
+						return;
 					}
-				} else {
-					currentLocale.set(localeData);
 				}
+				currentLocale.set(localeData);
 			}
 		},
 		get() {

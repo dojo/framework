@@ -10,10 +10,10 @@ import { globalizeDelegator } from '../../../../src/i18n/util/globalize';
 import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../../src/i18n/i18n';
 
 registerSuite('util/globalize', {
-	before: () => {
+	before: async () => {
 		setDefaultLocale('en');
 		setSupportedLocales(['en']);
-		return setLocale('en');
+		await setLocale('en');
 	},
 
 	tests: {

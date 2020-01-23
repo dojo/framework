@@ -14,10 +14,10 @@ import '../support/cldr';
 import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 registerSuite('i18n/number', {
-	before: () => {
+	before: async () => {
 		setDefaultLocale('en');
 		setSupportedLocales(['en']);
-		return setLocale('en');
+		await setLocale('en');
 	},
 
 	tests: {

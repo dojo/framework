@@ -8,6 +8,7 @@ import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 import { decorate } from '../util';
+import { isThenable } from '../../shim/Promise';
 
 export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 
@@ -46,10 +47,13 @@ interface I18nVNodeProperties extends VNodeProperties {
 class I18nInjector extends Injector {
 	set(localeData: LocaleData) {
 		if (localeData.locale) {
-			setLocale(localeData.locale).then(() => {
-				super.set(localeData);
-			});
-		} else {
+			const result = setLocale(localeData.locale);
+			if (isThenable(result)) {
+				result.then(() => {
+					super.set(localeData);
+				});
+				return;
+			}
 			super.set(localeData);
 		}
 	}

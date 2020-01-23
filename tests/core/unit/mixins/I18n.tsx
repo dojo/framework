@@ -30,12 +30,12 @@ function createAyncMessageLoader(): {
 let localeLoader = Promise.resolve<any>([]);
 
 describe('i18n Mixin', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		resolvers.stub();
 		setDefaultLocale('en');
 		setSupportedLocales(['en', 'es']);
 		setCldrLoaders({ es: () => localeLoader });
-		return setLocale('en');
+		await setLocale('en');
 	});
 
 	afterEach(() => {

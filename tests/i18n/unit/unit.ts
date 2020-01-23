@@ -6,10 +6,10 @@ import '../support/cldr';
 import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 registerSuite('number units', {
-	before: () => {
+	before: async () => {
 		setDefaultLocale('en');
 		setSupportedLocales(['en']);
-		return setLocale('en');
+		await setLocale('en');
 	},
 
 	tests: {

@@ -28,12 +28,12 @@ function createAyncMessageLoader(): {
 let localeLoader = Promise.resolve<any>([]);
 
 describe('i18n middleware', () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		resolvers.stub();
 		setDefaultLocale('en');
 		setSupportedLocales(['en', 'es']);
-		setCldrLoaders({ es: () => localeLoader });
-		return setLocale('en');
+		setCldrLoaders({});
+		await setLocale('en');
 	});
 
 	afterEach(() => {

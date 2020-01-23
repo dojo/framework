@@ -15,7 +15,7 @@ export interface MessageLoader {
 }
 
 export interface CldrLoader {
-	(): Promise<{ default: any }>;
+	(): Promise<{ default: any }[]>;
 }
 
 export interface LocaleLoaders {
@@ -99,10 +99,7 @@ export function setCldrLoaders(loaders: CldrLoaders) {
 	cldrLoaders = { ...loaders };
 }
 
-export async function setLocale(
-	systemLocale = global.navigator.language || global.navigator.userLanguage,
-	local = false
-) {
+export function setLocale(systemLocale = global.navigator.language || global.navigator.userLanguage, local = false) {
 	let partialSystemLocale = systemLocale.replace(/^([a-z]{2}).*/i, '$1');
 	const locales = [defaultLocale, ...supportedLocales];
 	let userLocale = defaultLocale;
@@ -135,14 +132,19 @@ export async function setLocale(
 		loaderPromises.push(localCldrLoader());
 	}
 
-	const data = await Promise.all(loaderPromises);
-	cldrLoaders[userLocale] = true;
-	cldrLoaders.supplemental = true;
-	data.forEach((results) => {
-		results.forEach((result: any) => {
-			Globalize.load(result.default);
+	if (loaderPromises.length) {
+		return Promise.all(loaderPromises).then((data) => {
+			cldrLoaders[userLocale] = true;
+			cldrLoaders.supplemental = true;
+			data.forEach((results) => {
+				results.forEach((result: any) => {
+					Globalize.load(result.default);
+				});
+			});
+			!local && Globalize.locale(computedLocale);
+			return computedLocale;
 		});
-	});
+	}
 	!local && Globalize.locale(computedLocale);
 	return computedLocale;
 }
