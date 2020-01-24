@@ -30,26 +30,25 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 		}
 	}
 
-	diffProperty('locale', (current, next) => {
-		if (next.locale && current.locale !== next.locale) {
-			const localeInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
-			if (current.locale) {
-				fallbackLocale = current.locale;
-			} else if (localeInjector) {
-				const currentLocale = localeInjector.get();
-				fallbackLocale = currentLocale ? currentLocale.locale || getComputedLocale() : getComputedLocale();
-			} else {
-				fallbackLocale = getComputedLocale();
+	diffProperty('locale', properties, (current, next) => {
+		const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+		let injectedLocale: string | undefined;
+		if (localeDataInjector) {
+			const injectLocaleData = localeDataInjector.get();
+			if (injectLocaleData) {
+				injectedLocale = injectLocaleData.locale;
 			}
-
+		}
+		if (next.locale && current.locale !== next.locale) {
 			const result = setLocale(next.locale, true);
 			if (isThenable(result)) {
 				result.then(() => {
-					fallbackLocale = undefined;
 					invalidator();
 				});
+				return current.locale || injectedLocale || getComputedLocale();
 			}
 		}
+		return next.locale || injectedLocale || getComputedLocale();
 	});
 
 	injector.subscribe(INJECTOR_KEY);
@@ -58,35 +57,35 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 		localize<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
 			let locale = properties().locale;
 			if (!locale) {
-				const localeInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
-				if (localeInjector) {
-					const injectedLocale = localeInjector.get();
-					if (injectedLocale && injectedLocale.locale) {
-						locale = injectedLocale.locale;
+				const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+				if (localeDataInjector) {
+					const injectedLocaleData = localeDataInjector.get();
+					if (injectedLocaleData && injectedLocaleData.locale) {
+						locale = injectedLocaleData.locale;
 					}
 				}
 			}
 			return localizeBundle(bundle, { locale: fallbackLocale || locale, invalidator });
 		},
 		set(localeData?: LocaleData) {
-			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
-			if (currentLocale) {
+			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			if (localeDataInjector) {
 				if (localeData && localeData.locale) {
 					const result = setLocale(localeData.locale);
 					if (isThenable(result)) {
 						result.then(() => {
-							currentLocale.set(localeData);
+							localeDataInjector.set(localeData);
 						});
 						return;
 					}
 				}
-				currentLocale.set(localeData);
+				localeDataInjector.set(localeData);
 			}
 		},
 		get() {
-			const currentLocale = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
-			if (currentLocale) {
-				return currentLocale.get();
+			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			if (localeDataInjector) {
+				return localeDataInjector.get();
 			}
 		}
 	};
