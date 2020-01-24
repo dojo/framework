@@ -1997,10 +1997,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (!isWidgetBaseConstructor(Constructor)) {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
-				widgetMeta.properties = next.properties;
+				widgetMeta.properties = { ...next.properties };
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
-				runDiffs(widgetMeta, current.properties, next.properties);
+				runDiffs(widgetMeta, current.properties, widgetMeta.properties);
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
 				}
