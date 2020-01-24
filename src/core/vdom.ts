@@ -74,6 +74,7 @@ export interface WNodeWrapper extends BaseNodeWrapper {
 }
 
 export interface WidgetMeta {
+	widgetName: string;
 	mountNode: HTMLElement;
 	dirty: boolean;
 	invalidator: () => void;
@@ -88,7 +89,8 @@ export interface WidgetMeta {
 	destroyMap?: Map<string, () => void>;
 	deferRefs: number;
 	customDiffProperties?: Set<string>;
-	customDiffMap?: Map<string, Map<string, (current: any, next: any) => void>>;
+	customDiffMap?: Map<string, Map<string, (current: any, next: any) => any>>;
+	propertiesCalled: boolean;
 }
 
 export interface WidgetData {
@@ -856,7 +858,12 @@ function runDiffs(meta: WidgetMeta, current: any, next: any) {
 	meta.customDiffMap = meta.customDiffMap || new Map();
 	if (meta.customDiffMap.size) {
 		meta.customDiffMap.forEach((diffMap) => {
-			diffMap.forEach((diff) => diff({ ...current }, { ...next }));
+			diffMap.forEach((diff, propertyName) => {
+				const result = diff({ ...current }, { ...next });
+				if (result) {
+					next[propertyName] = result;
+				}
+			});
 		});
 	}
 }
@@ -895,21 +902,44 @@ export const node = factory(({ id }) => {
 });
 
 export const diffProperty = factory(({ id }) => {
-	return (propertyName: string, diff: (current: any, next: any) => void) => {
+	function callback<T extends (...args: any) => any, K extends keyof ReturnType<T>>(
+		property: K,
+		properties: T,
+		diff: (current: ReturnType<T>, next: ReturnType<T>) => void | ReturnType<T>[K]
+	): void;
+	function callback(propertyName: string, diff: (current: any, next: any) => void): void;
+	function callback(propertyName: string, propertiesOrDiff: any, diff?: any) {
 		const [widgetId] = id.split('-');
 		const widgetMeta = widgetMetaMap.get(widgetId);
+		if (!diff) {
+			diff = propertiesOrDiff;
+		}
 		if (widgetMeta) {
 			widgetMeta.customDiffMap = widgetMeta.customDiffMap || new Map();
 			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
-				diff({}, widgetMeta.properties);
+				const result = diff({}, widgetMeta.properties);
+				if (result !== undefined) {
+					if (has('dojo-debug')) {
+						if (widgetMeta.propertiesCalled) {
+							console.warn(
+								`Calling "propertyDiff" middleware after accessing properties in "${
+									widgetMeta.widgetName
+								}", can result in referencing stale properties.`
+							);
+						}
+					}
+					widgetMeta.properties = { ...widgetMeta.properties, [propertyName]: result };
+				}
 				propertyDiffMap.set(propertyName, diff);
 				widgetMeta.customDiffProperties.add(propertyName);
 			}
 			widgetMeta.customDiffMap.set(id, propertyDiffMap);
 		}
-	};
+	}
+
+	return callback;
 });
 
 export const destroy = factory(({ id }) => {
@@ -1795,6 +1825,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			properties: () => {
 				const widgetMeta = widgetMetaMap.get(widgetId);
 				if (widgetMeta) {
+					widgetMeta.propertiesCalled = true;
 					return { ...widgetMeta.properties };
 				}
 				return {};
@@ -1872,6 +1903,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				};
 
 				widgetMeta = {
+					widgetName: Constructor.name || 'unknown',
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
@@ -1881,7 +1913,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					rendering: true,
 					middleware: {},
 					middlewareIds: [],
-					registry: _mountOptions.registry
+					registry: _mountOptions.registry,
+					propertiesCalled: false
 				};
 
 				widgetMetaMap.set(next.id, widgetMeta);
@@ -1896,6 +1929,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 			rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
 			widgetMeta.rendering = false;
+			widgetMeta.propertiesCalled = false;
 			if (widgetMeta.deferRefs > 0) {
 				return false;
 			}
@@ -1969,10 +2003,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (!isWidgetBaseConstructor(Constructor)) {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
-				widgetMeta.properties = next.properties;
+				widgetMeta.properties = { ...next.properties };
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
-				runDiffs(widgetMeta, current.properties, next.properties);
+				runDiffs(widgetMeta, current.properties, widgetMeta.properties);
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
 				}
@@ -1996,6 +2030,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 				}
 				widgetMeta.rendering = false;
+				widgetMeta.propertiesCalled = false;
 			}
 		} else {
 			const instanceData = widgetInstanceMap.get(instance!)!;
