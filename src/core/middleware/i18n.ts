@@ -48,6 +48,9 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 				return current.locale || injectedLocale || getComputedLocale();
 			}
 		}
+		if (current.locale !== next.locale) {
+			invalidator();
+		}
 		return next.locale || injectedLocale || getComputedLocale();
 	});
 

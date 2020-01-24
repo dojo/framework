@@ -1,9 +1,8 @@
 import global from '../shim/global';
 import WeakMap from '../shim/WeakMap';
-import { uuid } from '../core/util';
 import * as Globalize from 'globalize/dist/globalize/message';
 const Cldr = require('cldrjs/dist/cldr');
-`!has('include-cldr')`;
+`!has('cldr-elide')`;
 import './util/cldr';
 
 export interface Messages {
@@ -68,6 +67,11 @@ let supportedLocales: string[] = [];
 let defaultLocale = '';
 let computedLocale = '';
 let cldrLoaders: CldrLoaders = {};
+let bundleId = 0;
+
+function getBundleId() {
+	return `id-${++bundleId}`;
+}
 
 function markBundleAsLoaded(locale: string, bundleId: string) {
 	Globalize.loadMessages({
@@ -120,7 +124,7 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 		}
 	}
 
-	computedLocale = hasMatch ? systemLocale : defaultLocale;
+	const calculatedLocale = hasMatch ? systemLocale : defaultLocale;
 
 	const loaderPromises: Promise<any>[] = [];
 	const supplementalLoader = cldrLoaders.supplemental;
@@ -141,11 +145,17 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 					Globalize.load(result.default);
 				});
 			});
-			!local && Globalize.locale(computedLocale);
+			if (!local) {
+				Globalize.locale(computedLocale);
+				computedLocale = calculatedLocale;
+			}
 			return computedLocale;
 		});
 	}
-	!local && Globalize.locale(computedLocale);
+	if (!local) {
+		Globalize.locale(computedLocale);
+		computedLocale = calculatedLocale;
+	}
 	return computedLocale;
 }
 
@@ -158,13 +168,13 @@ export function localizeBundle<T extends Messages>(
 	const locales = Object.keys(localeBundleLoaders);
 	let bundleId: string | undefined = bundleIdMap.get(bundle);
 	if (!bundleId) {
-		bundleId = uuid();
+		bundleId = getBundleId();
 		bundleIdMap.set(bundle, bundleId);
 		const lookupBundles = locales.reduce(
 			(lookup, locale) => {
 				const bundleLoader = localeBundleLoaders[locale];
 				if (typeof bundleLoader === 'function') {
-					const id = uuid();
+					const id = getBundleId();
 					bundleLoaderMap.set(bundleLoader, id);
 					idToBundleLoaderMap.set(id, bundleLoader);
 					lookup[locale] = {
