@@ -5,7 +5,6 @@ import Injector from '../Injector';
 import Registry from '../Registry';
 import { I18nProperties, LocalizedMessages, LocaleData } from '../interfaces';
 import { isThenable } from '../../shim/Promise';
-export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 
 export const INJECTOR_KEY = '__i18n_injector';
 
@@ -21,7 +20,6 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 const factory = create({ invalidator, injector, getRegistry, diffProperty }).properties<I18nProperties>();
 
 export const i18n = factory(({ properties, middleware: { invalidator, injector, getRegistry, diffProperty } }) => {
-	let fallbackLocale: string | undefined;
 	const i18nInjector = injector.get(INJECTOR_KEY);
 	if (!i18nInjector) {
 		const registry = getRegistry();
@@ -75,7 +73,7 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 					}
 				}
 			}
-			return localizeBundle(bundle, { locale: fallbackLocale || locale, invalidator });
+			return localizeBundle(bundle, { locale: locale, invalidator });
 		},
 		set(localeData?: LocaleData) {
 			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
