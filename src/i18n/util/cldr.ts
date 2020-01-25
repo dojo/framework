@@ -2,8 +2,8 @@
 	if (typeof define === 'function' && define.amd) {
 		define([
 			'exports',
-			'globalize/dist/globalize/message',
 			'cldrjs/dist/cldr/unresolved',
+			'globalize/dist/globalize/message',
 			'text!cldr-core/supplemental/likelySubtags.json',
 			'text!cldr-core/supplemental/plurals.json',
 			'text!cldr-core/supplemental/parentLocales.json'
@@ -11,8 +11,8 @@
 	} else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
 		factory(
 			exports,
+			require('cldrjs/dist/cldr/unresolved'),
 			require('globalize/dist/globalize/message'),
-			'cldrjs/dist/cldr/unresolved',
 			require('cldr-core/supplemental/likelySubtags.json'),
 			require('cldr-core/supplemental/plurals.json'),
 			require('cldr-core/supplemental/parentLocales.json')
@@ -20,8 +20,8 @@
 	}
 })(typeof self !== 'undefined' ? self : this, function(
 	_: any,
-	Globalize: any,
 	__: any,
+	Globalize: any,
 	likelySubtags: any,
 	plurals: any,
 	parentLocales: any
