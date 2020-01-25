@@ -110,8 +110,16 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		public abstract properties: I18nProperties;
 
 		public localizeBundle<T extends Messages>(baseBundle: Bundle<T>): LocalizedMessages<T> {
+			let { locale, i18nBundle } = this.properties;
+			if (i18nBundle) {
+				if (i18nBundle instanceof Map) {
+					baseBundle = i18nBundle.get(baseBundle) || baseBundle;
+				} else {
+					baseBundle = i18nBundle as Bundle<T>;
+				}
+			}
 			return localizeBundle(baseBundle, {
-				locale: this.properties.locale,
+				locale,
 				invalidator: () => {
 					this.invalidate();
 				}

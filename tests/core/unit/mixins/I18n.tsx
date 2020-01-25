@@ -132,4 +132,126 @@ describe('i18n Mixin', () => {
 			'<div lang="es"><div>{"foo":"holla, {name}"}</div><div>holla, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
 		);
 	});
+
+	it('should resolve single override i18n bundle property', async () => {
+		const registry = new Registry();
+		const root = global.document.createElement('div');
+		const es = createAyncMessageLoader();
+		const overrideEs = createAyncMessageLoader();
+		const bundle = {
+			messages: { foo: 'hello, {name}' },
+			locales: {
+				es: es.loader
+			}
+		};
+		const overrideBundle = {
+			messages: { foo: 'Oi, {name}' },
+			locales: {
+				es: overrideEs.loader
+			}
+		};
+		const injector = registerI18nInjector({}, registry);
+		class App extends I18nMixin(WidgetBase) {
+			render() {
+				const { messages, format, isPlaceholder } = this.localizeBundle(bundle);
+				return (
+					<div>
+						<div>{JSON.stringify(messages)}</div>
+						<div>{format('foo', { name: 'John' })}</div>
+						<div>{`${isPlaceholder}`}</div>
+						<div>{JSON.stringify(injector.get())}</div>
+						<button
+							onclick={() => {
+								injector.set({ locale: 'es' });
+							}}
+						>
+							es
+						</button>
+					</div>
+				);
+			}
+		}
+		const r = renderer(() => <App i18nBundle={overrideBundle} />);
+		r.mount({ domNode: root, registry });
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="en"><div>{"foo":"Oi, {name}"}</div><div>Oi, John</div><div>false</div><div>{}</div><button>es</button></div>'
+		);
+		root.children[0].children[4].click();
+		await localeLoader;
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="es"><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button></div>'
+		);
+		overrideEs.resolver({ default: { foo: 'bonjour, {name}' } });
+		await overrideEs.promise;
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="es"><div>{"foo":"bonjour, {name}"}</div><div>bonjour, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
+		);
+	});
+
+	it('should resolve override i18n bundle map property', async () => {
+		const registry = new Registry();
+		const root = global.document.createElement('div');
+		const es = createAyncMessageLoader();
+		const overrideEs = createAyncMessageLoader();
+		const bundle = {
+			messages: { foo: 'hello, {name}' },
+			locales: {
+				es: es.loader
+			}
+		};
+		const overrideBundle = {
+			messages: { foo: 'Oi, {name}' },
+			locales: {
+				es: overrideEs.loader
+			}
+		};
+		const injector = registerI18nInjector({}, registry);
+		class App extends I18nMixin(WidgetBase) {
+			render() {
+				const { messages, format, isPlaceholder } = this.localizeBundle(bundle);
+				return (
+					<div>
+						<div>{JSON.stringify(messages)}</div>
+						<div>{format('foo', { name: 'John' })}</div>
+						<div>{`${isPlaceholder}`}</div>
+						<div>{JSON.stringify(injector.get())}</div>
+						<button
+							onclick={() => {
+								injector.set({ locale: 'es' });
+							}}
+						>
+							es
+						</button>
+					</div>
+				);
+			}
+		}
+		const i18nBundleMap = new Map();
+		i18nBundleMap.set(bundle, overrideBundle);
+		const r = renderer(() => <App i18nBundle={i18nBundleMap} />);
+		r.mount({ domNode: root, registry });
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="en"><div>{"foo":"Oi, {name}"}</div><div>Oi, John</div><div>false</div><div>{}</div><button>es</button></div>'
+		);
+		root.children[0].children[4].click();
+		await localeLoader;
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="es"><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button></div>'
+		);
+		overrideEs.resolver({ default: { foo: 'bonjour, {name}' } });
+		await overrideEs.promise;
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div lang="es"><div>{"foo":"bonjour, {name}"}</div><div>bonjour, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
+		);
+	});
 });
