@@ -58,7 +58,14 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 
 	return {
 		localize<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
-			let locale = properties().locale;
+			let { locale, i18nBundle } = properties();
+			if (i18nBundle) {
+				if (i18nBundle instanceof Map) {
+					bundle = i18nBundle.get(bundle) || bundle;
+				} else {
+					bundle = i18nBundle as Bundle<T>;
+				}
+			}
 			if (!locale) {
 				const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
 				if (localeDataInjector) {
