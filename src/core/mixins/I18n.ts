@@ -1,14 +1,15 @@
 /* tslint:disable:interface-name */
-import { localizeBundle, Bundle, Messages, setLocale } from '../../i18n/i18n';
+import { localizeBundle, Bundle, Messages, setLocale, getComputedLocale } from '../../i18n/i18n';
 import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
-import { inject } from './../decorators/inject';
+import { getInjector } from './../decorators/inject';
 import { Constructor, DNode, VNodeProperties, LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 import { decorate } from '../util';
 import { isThenable } from '../../shim/Promise';
+import beforeProperties from '../decorators/beforeProperties';
 
 export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 
@@ -68,13 +69,42 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 	return injector;
 }
 
+const previousLocaleMap: WeakMap<WidgetBase, string> = new WeakMap();
+
 export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
-	@inject({
-		name: INJECTOR_KEY,
-		getProperties: (localeData: Injector<LocaleData>, properties: I18nProperties) => {
-			const { locale = localeData.get().locale, rtl = localeData.get().rtl } = properties;
-			return { locale, rtl };
+	@beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
+		const injector = getInjector(this, INJECTOR_KEY);
+		let injectedLocale: string | undefined;
+		let injectedRtl: boolean | undefined;
+		if (injector) {
+			const injectLocaleData = injector() as Injector<LocaleData>;
+			if (injectLocaleData) {
+				const injectedLocaleData = injectLocaleData.get();
+				if (injectedLocaleData) {
+					injectedLocale = injectedLocaleData.locale;
+					injectedRtl = injectedLocaleData.rtl;
+				}
+			}
 		}
+		const previousLocale = previousLocaleMap.get(this);
+		previousLocaleMap.set(this, properties.locale);
+
+		if (properties.locale && previousLocale !== properties.locale) {
+			const result = setLocale(properties.locale, true);
+			if (isThenable(result)) {
+				result.then(() => {
+					this.invalidate();
+				});
+				return {
+					locale: previousLocale || injectedLocale || getComputedLocale(),
+					rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
+				};
+			}
+		}
+		return {
+			locale: properties.locale || injectedLocale || getComputedLocale(),
+			rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
+		};
 	})
 	abstract class I18n extends Base {
 		public abstract properties: I18nProperties;

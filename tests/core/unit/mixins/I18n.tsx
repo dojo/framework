@@ -76,7 +76,7 @@ describe('i18n Mixin', () => {
 		r.mount({ domNode: root, registry });
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
+			'<div lang="en"><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
 		);
 	});
 
@@ -115,7 +115,7 @@ describe('i18n Mixin', () => {
 		r.mount({ domNode: root, registry });
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
+			'<div lang="en"><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
 		);
 		root.children[0].children[4].click();
 		await localeLoader;

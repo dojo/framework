@@ -33,6 +33,26 @@ export interface InjectConfig {
 	getProperties: GetProperties;
 }
 
+export function getInjector(instance: WidgetBase & { own: Function }, name: RegistryLabel) {
+	const injectorItem = instance.registry.getInjector(name);
+	if (injectorItem) {
+		const { injector, invalidator } = injectorItem;
+		const registeredInjectors = registeredInjectorsMap.get(instance) || [];
+		if (registeredInjectors.length === 0) {
+			registeredInjectorsMap.set(instance, registeredInjectors);
+		}
+		if (registeredInjectors.indexOf(injectorItem) === -1) {
+			instance.own(
+				invalidator.on('invalidate', () => {
+					instance.invalidate();
+				})
+			);
+			registeredInjectors.push(injectorItem);
+		}
+		return injector;
+	}
+}
+
 /**
  * Decorator retrieves an injector from an available registry using the name and
  * calls the `getProperties` function with the payload from the injector
@@ -41,23 +61,10 @@ export interface InjectConfig {
  * @param InjectConfig the inject configuration
  */
 export function inject({ name, getProperties }: InjectConfig) {
-	return handleDecorator((target, propertyKey) => {
+	return handleDecorator((target) => {
 		beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
-			const injectorItem = this.registry.getInjector(name);
-			if (injectorItem) {
-				const { injector, invalidator } = injectorItem;
-				const registeredInjectors = registeredInjectorsMap.get(this) || [];
-				if (registeredInjectors.length === 0) {
-					registeredInjectorsMap.set(this, registeredInjectors);
-				}
-				if (registeredInjectors.indexOf(injectorItem) === -1) {
-					this.own(
-						invalidator.on('invalidate', () => {
-							this.invalidate();
-						})
-					);
-					registeredInjectors.push(injectorItem);
-				}
+			const injector = getInjector(this, name);
+			if (injector) {
 				return getProperties(injector(), properties);
 			}
 		})(target);
