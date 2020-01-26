@@ -1,5 +1,6 @@
 import * as Globalize from 'globalize/dist/globalize';
 import { getComputedLocale } from '../i18n';
+import has from '../../core/has';
 
 /**
  * @private
@@ -62,7 +63,21 @@ export function globalizeDelegator<T, O, R>(
 	if (typeof options !== 'undefined') {
 		methodArgs.push(options);
 	}
-
-	const globalize = new Globalize(locale!);
-	return (globalize as any)[method].apply(globalize, methodArgs);
+	let globalize: Globalize;
+	try {
+		globalize = new Globalize(locale);
+		try {
+			return (globalize as any)[method].apply(globalize, methodArgs);
+		} catch {
+			if (has('dojo-debug')) {
+				console.log(
+					`Unable to use i18n formatters for locale: '${locale}', please add to the supported locales in the '.dojorc'`
+				);
+			}
+			globalize = new Globalize(getComputedLocale());
+			return (globalize as any)[method].apply(globalize, methodArgs);
+		}
+	} catch {
+		return '' as any;
+	}
 }

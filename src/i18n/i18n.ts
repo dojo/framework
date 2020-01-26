@@ -4,6 +4,7 @@ import * as Globalize from 'globalize/dist/globalize/message';
 const Cldr = require('cldrjs/dist/cldr');
 `!has('cldr-elide')`;
 import './util/cldr';
+import has from '../core/has';
 
 export interface Messages {
 	[key: string]: string;
@@ -159,6 +160,20 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 	return computedLocale;
 }
 
+function getPlaceholderBundle<T extends Messages>(bundle: Bundle<T>) {
+	return {
+		messages: Object.keys(bundle.messages).reduce(
+			(messages, key) => {
+				messages[key] = '';
+				return messages;
+			},
+			{} as any
+		),
+		isPlaceholder: true,
+		format: () => ''
+	};
+}
+
 export function localizeBundle<T extends Messages>(
 	bundle: Bundle<T>,
 	options: LocalizeOptions
@@ -207,51 +222,62 @@ export function localizeBundle<T extends Messages>(
 		});
 	}
 
-	let globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
-	globalizeInstanceMap.set(locale, globalize);
+	try {
+		let globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
+		globalizeInstanceMap.set(locale, globalize);
 
-	let lookupId = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/id`);
-	let lookupLocale = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/locale`);
-	if (lookupId && lookupLocale) {
-		let bundleLoader = idToBundleLoaderMap.get(lookupId);
-		if (bundleLoader) {
-			Globalize.loadMessages({ [lookupLocale]: { lookup: { [bundleId]: { loading: true } } } });
-			const loaderPromise = bundleLoader();
-			loaderPromise.then((messages) => {
-				markBundleAsLoaded(lookupLocale, bundleId as string);
-				Globalize.loadMessages({ [lookupLocale]: { [bundleId as string]: messages.default } });
-				invalidator();
-			});
+		let lookupId = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/id`);
+		let lookupLocale = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/locale`);
+		if (lookupId && lookupLocale) {
+			let bundleLoader = idToBundleLoaderMap.get(lookupId);
+			if (bundleLoader) {
+				Globalize.loadMessages({ [lookupLocale]: { lookup: { [bundleId]: { loading: true } } } });
+				const loaderPromise = bundleLoader();
+				loaderPromise.then((messages) => {
+					markBundleAsLoaded(lookupLocale, bundleId as string);
+					Globalize.loadMessages({ [lookupLocale]: { [bundleId as string]: messages.default } });
+					invalidator();
+				});
+			}
 		}
-	}
-	const lookupLoading = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/loading`);
+		const lookupLoading = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/loading`);
 
-	if (lookupLoading) {
+		if (lookupLoading) {
+			return getPlaceholderBundle(bundle);
+		}
+
 		return {
 			messages: Object.keys(bundle.messages).reduce(
 				(messages, key) => {
-					messages[key] = '';
+					const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
+					messages[key] = message;
 					return messages;
 				},
 				{} as any
 			),
-			isPlaceholder: true,
-			format: () => ''
+			isPlaceholder: false,
+			format: (key: any, options: {}) => {
+				return globalize.formatMessage(`${bundleId}/${key}`, options);
+			}
 		};
-	}
-
-	return {
-		messages: Object.keys(bundle.messages).reduce(
-			(messages, key) => {
-				const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
-				messages[key] = message;
-				return messages;
-			},
-			{} as any
-		),
-		isPlaceholder: false,
-		format: (key: any, options: {}) => {
-			return globalize.formatMessage(`${bundleId}/${key}`, options);
+	} catch {
+		const fallback = cldrLoaders.fallback;
+		if (typeof fallback === 'function') {
+			if (has('dojo-debug')) {
+				console.warn(
+					`Loading fallback supplemental cldr bundle, please make sure that all supported locales are specified in the '.dojorc'.`
+				);
+			}
+			fallback().then((results) => {
+				results.forEach((result) => {
+					Globalize.load(result.default);
+				});
+				cldrLoaders.fallback = true;
+				invalidator();
+			});
+		} else if (fallback === undefined) {
+			throw new Error('Unable to load fallback supplemental cldr bundle.');
 		}
-	};
+		return getPlaceholderBundle(bundle);
+	}
 }
