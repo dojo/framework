@@ -3,11 +3,8 @@ declare const define: any;
 	if (typeof define === 'function' && define.amd) {
 		define([
 			'exports',
-			'globalize/dist/globalize',
 			'cldrjs/dist/cldr/unresolved',
-			'text!cldr-core/supplemental/likelySubtags.json',
-			'text!cldr-core/supplemental/plurals.json',
-			'text!cldr-core/supplemental/parentLocales.json',
+			'globalize/dist/globalize',
 			'text!cldr-core/supplemental/weekData.json',
 			'text!cldr-core/supplemental/timeData.json',
 			'text!cldr-core/supplemental/currencyData.json',
@@ -29,11 +26,8 @@ declare const define: any;
 	} else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
 		factory(
 			exports,
-			require('globalize/dist/globalize'),
 			require('cldrjs/dist/cldr/unresolved'),
-			require('cldr-core/supplemental/likelySubtags.json'),
-			require('cldr-core/supplemental/plurals.json'),
-			require('cldr-core/supplemental/parentLocales.json'),
+			require('globalize/dist/globalize'),
 			require('cldr-core/supplemental/weekData.json'),
 			require('cldr-core/supplemental/timeData.json'),
 			require('cldr-core/supplemental/currencyData.json'),
@@ -55,11 +49,8 @@ declare const define: any;
 	}
 })(typeof self !== 'undefined' ? self : this, function(
 	_: any,
+	__: any,
 	Globalize: any,
-	cldr: any,
-	likelySubtags: any,
-	plurals: any,
-	parentLocales: any,
 	weekData: any,
 	timeData: any,
 	currencyData: any,
@@ -84,9 +75,6 @@ declare const define: any;
 		}
 		Globalize.load(data);
 	}
-	loadData(likelySubtags);
-	loadData(plurals);
-	loadData(parentLocales);
 	loadData(weekData);
 	loadData(timeData);
 	loadData(currencyData);

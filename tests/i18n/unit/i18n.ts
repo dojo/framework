@@ -1,8 +1,8 @@
-const { it, describe, beforeEach } = intern.getInterface('bdd');
+const { it, describe, beforeEach, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const Cldr = require('cldrjs/dist/cldr');
 import global from '../../../src/shim/global';
-import { stub, spy, SinonSpy } from 'sinon';
+import { stub } from 'sinon';
 import {
 	localizeBundle,
 	setDefaultLocale,
@@ -11,11 +11,25 @@ import {
 	setCldrLoaders
 } from '../../../src/i18n/i18n';
 
+function createAyncMessageLoader(): {
+	promise: Promise<any>;
+	resolver: Function;
+	loader: () => any;
+} {
+	let loaderHelper: any = {};
+	loaderHelper.loader = () => {
+		loaderHelper.promise = new Promise((resolve) => {
+			loaderHelper.resolver = resolve;
+		});
+		return loaderHelper.promise;
+	};
+	return loaderHelper;
+}
+
 describe('i18n', () => {
 	beforeEach(async () => {
 		setDefaultLocale('fr');
 		setSupportedLocales(['fr']);
-		setCldrLoaders({});
 		await setLocale('fr');
 		if (!global.navigator) {
 			global.navigator = {
@@ -111,24 +125,6 @@ describe('i18n', () => {
 			setSupportedLocales(['fr']);
 			setCldrLoaders({});
 			await setLocale('fr');
-
-			function createAyncMessageLoader(): {
-				promise: Promise<any>;
-				resolver: Function;
-				loader: () => any;
-				loaderSpy: SinonSpy;
-			} {
-				let loaderHelper: any = {};
-				loaderHelper.loader = () => {
-					loaderHelper.promise = new Promise((resolve) => {
-						loaderHelper.resolver = resolve;
-					});
-					return loaderHelper.promise;
-				};
-				loaderHelper.loaderSpy = spy(loaderHelper.loader);
-				return loaderHelper;
-			}
-
 			const enGb = createAyncMessageLoader();
 			const en = createAyncMessageLoader();
 			const bundle = {
@@ -171,6 +167,63 @@ describe('i18n', () => {
 			assert.deepEqual(messages, { foo: 'Hello, {name}', fallback: 'en fallback' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), 'Hello, Steven');
 			assert.isFalse(isPlaceholder);
+		});
+
+		describe('fallback cldr supplemental', () => {
+			let originalLikelySubtags: any;
+
+			beforeEach(() => {
+				originalLikelySubtags = Cldr._raw.supplemental.likelySubtags;
+				delete Cldr._raw.supplemental.likelySubtags;
+			});
+
+			afterEach(() => {
+				Cldr._raw.supplemental.likelySubtags = originalLikelySubtags;
+			});
+
+			it('load fallback for localizeBundle', async () => {
+				const fallback = createAyncMessageLoader();
+
+				setCldrLoaders({
+					fallback: fallback.loader
+				});
+
+				const bundle = {
+					messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
+					locales: {
+						yue: { foo: 'hello, {name}' },
+						en: { foo: 'hey, {name}' }
+					}
+				};
+				const invalidator = stub();
+				let { messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'yue', invalidator });
+				assert.deepEqual(messages, { foo: '', fallback: '' });
+				assert.strictEqual(format('foo', { name: 'Steven' }), '');
+				assert.isTrue(isPlaceholder);
+				fallback.resolver([{ default: { supplemental: { likelySubtags: originalLikelySubtags } } }]);
+				await fallback.promise;
+				assert.isTrue(invalidator.calledOnce);
+				({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'yue', invalidator }));
+				assert.deepEqual(messages, { foo: 'hello, {name}', fallback: 'root/fr fallback' });
+				assert.strictEqual(format('foo', { name: 'Steven' }), 'hello, Steven');
+				assert.isFalse(isPlaceholder);
+			});
+
+			it('load fallback for setLocale', async () => {
+				const fallback = createAyncMessageLoader();
+
+				setCldrLoaders({
+					fallback: fallback.loader
+				});
+
+				assert.isUndefined(Cldr._raw.supplemental.likelySubtags);
+				const setLocalePromise = setLocale('ce');
+				fallback.resolver([{ default: { supplemental: { likelySubtags: originalLikelySubtags } } }]);
+				await fallback.promise;
+				await setLocalePromise;
+				const cldr = new Cldr('ce');
+				assert.deepEqual(cldr.get('supplemental/likelySubtags'), originalLikelySubtags);
+			});
 		});
 	});
 });

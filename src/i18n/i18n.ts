@@ -5,6 +5,7 @@ const Cldr = require('cldrjs/dist/cldr');
 `!has('cldr-elide')`;
 import './util/cldr';
 import has from '../core/has';
+import { isThenable } from '../shim/Promise';
 
 export interface Messages {
 	[key: string]: string;
@@ -104,8 +105,28 @@ export function setCldrLoaders(loaders: CldrLoaders) {
 	cldrLoaders = { ...loaders };
 }
 
-export function setLocale(systemLocale = global.navigator.language || global.navigator.userLanguage, local = false) {
-	let partialSystemLocale = systemLocale.replace(/^([a-z]{2}).*/i, '$1');
+function loadSupplementalFallback(invalidator?: Function) {
+	const fallback = cldrLoaders.fallback;
+	if (typeof fallback === 'function') {
+		if (has('dojo-debug')) {
+			console.warn(
+				`Loading fallback supplemental cldr bundle, please make sure that all supported locales are specified in the '.dojorc'.`
+			);
+		}
+		return fallback().then((results) => {
+			results.forEach((result) => {
+				Globalize.load(result.default);
+			});
+			cldrLoaders.fallback = true;
+			invalidator && invalidator();
+		});
+	} else if (fallback === undefined) {
+		throw new Error('Unable to load fallback supplemental cldr bundle.');
+	}
+}
+
+export function setLocale(requestedLocale = global.navigator.language || global.navigator.userLanguage, local = false) {
+	let partialSystemLocale = requestedLocale.replace(/^([a-z]{2}).*/i, '$1');
 	const locales = supportedLocales;
 	let userLocale = defaultLocale;
 
@@ -113,8 +134,8 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 
 	for (let i = 0; i < locales.length; i++) {
 		const locale = locales[i];
-		if (systemLocale === locale) {
-			userLocale = systemLocale;
+		if (requestedLocale === locale) {
+			userLocale = requestedLocale;
 			hasMatch = true;
 			break;
 		}
@@ -125,7 +146,7 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 		}
 	}
 
-	const calculatedLocale = hasMatch ? systemLocale : defaultLocale;
+	const calculatedLocale = hasMatch ? requestedLocale : defaultLocale;
 
 	const loaderPromises: Promise<any>[] = [];
 	const supplementalLoader = cldrLoaders.supplemental;
@@ -150,14 +171,25 @@ export function setLocale(systemLocale = global.navigator.language || global.nav
 				Globalize.locale(computedLocale);
 				computedLocale = calculatedLocale;
 			}
-			return computedLocale;
+			return calculatedLocale;
 		});
 	}
 	if (!local) {
-		Globalize.locale(computedLocale);
-		computedLocale = calculatedLocale;
+		try {
+			Globalize.locale(computedLocale);
+			computedLocale = calculatedLocale;
+		} catch {
+			const fallbackResult = loadSupplementalFallback();
+			if (isThenable(fallbackResult)) {
+				return fallbackResult.then(() => {
+					Globalize.locale(computedLocale);
+					computedLocale = calculatedLocale;
+					return calculatedLocale;
+				});
+			}
+		}
 	}
-	return computedLocale;
+	return calculatedLocale;
 }
 
 function getPlaceholderBundle<T extends Messages>(bundle: Bundle<T>) {
@@ -261,23 +293,7 @@ export function localizeBundle<T extends Messages>(
 			}
 		};
 	} catch {
-		const fallback = cldrLoaders.fallback;
-		if (typeof fallback === 'function') {
-			if (has('dojo-debug')) {
-				console.warn(
-					`Loading fallback supplemental cldr bundle, please make sure that all supported locales are specified in the '.dojorc'.`
-				);
-			}
-			fallback().then((results) => {
-				results.forEach((result) => {
-					Globalize.load(result.default);
-				});
-				cldrLoaders.fallback = true;
-				invalidator();
-			});
-		} else if (fallback === undefined) {
-			throw new Error('Unable to load fallback supplemental cldr bundle.');
-		}
+		loadSupplementalFallback(invalidator);
 		return getPlaceholderBundle(bundle);
 	}
 }
