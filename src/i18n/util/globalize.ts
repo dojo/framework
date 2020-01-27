@@ -70,7 +70,7 @@ export function globalizeDelegator<T, O, R>(
 			return (globalize as any)[method].apply(globalize, methodArgs);
 		} catch {
 			if (has('dojo-debug')) {
-				console.log(
+				console.warn(
 					`Unable to use i18n formatters for locale: '${locale}', please add to the supported locales in the '.dojorc'`
 				);
 			}
