@@ -34,7 +34,7 @@ describe('i18n Mixin', () => {
 		resolvers.stub();
 		setDefaultLocale('en');
 		setSupportedLocales(['en', 'es']);
-		setCldrLoaders({ es: () => localeLoader });
+		setCldrLoaders({ es: true });
 		await setLocale('en');
 	});
 
