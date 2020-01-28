@@ -1,5 +1,5 @@
 /* tslint:disable:interface-name */
-import { localizeBundle, Bundle, Messages, setLocale, getComputedLocale } from '../../i18n/i18n';
+import { localizeBundle, Bundle, Messages, setLocale, getCurrentLocale } from '../../i18n/i18n';
 import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
 import { getInjector } from './../decorators/inject';
@@ -48,7 +48,7 @@ interface I18nVNodeProperties extends VNodeProperties {
 class I18nInjector extends Injector {
 	set(localeData: LocaleData) {
 		if (localeData.locale) {
-			const result = setLocale(localeData.locale);
+			const result = setLocale({ locale: localeData.locale });
 			if (isThenable(result)) {
 				result.then(() => {
 					super.set(localeData);
@@ -90,19 +90,19 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 		previousLocaleMap.set(this, properties.locale);
 
 		if (properties.locale && previousLocale !== properties.locale) {
-			const result = setLocale(properties.locale, true);
+			const result = setLocale({ locale: properties.locale, local: true });
 			if (isThenable(result)) {
 				result.then(() => {
 					this.invalidate();
 				});
 				return {
-					locale: previousLocale || injectedLocale || getComputedLocale(),
+					locale: previousLocale || injectedLocale || getCurrentLocale(),
 					rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
 				};
 			}
 		}
 		return {
-			locale: properties.locale || injectedLocale || getComputedLocale(),
+			locale: properties.locale || injectedLocale || getCurrentLocale(),
 			rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
 		};
 	})

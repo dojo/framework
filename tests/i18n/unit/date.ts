@@ -135,8 +135,8 @@ function getKeys<T extends DateOptionsKeys>(
 registerSuite('date', {
 	before: async () => {
 		setDefaultLocale('en');
-		setSupportedLocales(['en', 'es']);
-		await setLocale('en');
+		setSupportedLocales(['en', 'fr']);
+		await setLocale({ locale: 'en', default: true });
 	},
 	tests: {
 		getDateFormatter: {

@@ -1,6 +1,5 @@
 import * as Globalize from 'globalize/dist/globalize';
-import { getComputedLocale } from '../i18n';
-import has from '../../core/has';
+import { getComputedLocale, getMatchedSupportedLocale } from '../i18n';
 
 /**
  * @private
@@ -53,7 +52,10 @@ export function globalizeDelegator<T, O, R>(
 	method: string,
 	args: DelegatorOptions<O> | FormatterDelegatorOptions<T, O>
 ): R {
-	const { locale = getComputedLocale(), options, value, unit } = normalizeFormatterArguments<T, O>(args);
+	const { locale: requestedLocale = getComputedLocale(), options, value, unit } = normalizeFormatterArguments<T, O>(
+		args
+	);
+	const locale = getMatchedSupportedLocale(requestedLocale) || getComputedLocale();
 	const methodArgs: any[] = typeof value !== 'undefined' ? [value] : [];
 
 	if (typeof unit !== 'undefined') {
@@ -63,21 +65,6 @@ export function globalizeDelegator<T, O, R>(
 	if (typeof options !== 'undefined') {
 		methodArgs.push(options);
 	}
-	let globalize: Globalize;
-	try {
-		globalize = new Globalize(locale);
-		try {
-			return (globalize as any)[method].apply(globalize, methodArgs);
-		} catch {
-			if (has('dojo-debug')) {
-				console.warn(
-					`Unable to use i18n formatters for locale: '${locale}', please add to the supported locales in the '.dojorc'`
-				);
-			}
-			globalize = new Globalize(getComputedLocale());
-			return (globalize as any)[method].apply(globalize, methodArgs);
-		}
-	} catch {
-		return '' as any;
-	}
+	const globalize = new Globalize(locale);
+	return (globalize as any)[method].apply(globalize, methodArgs);
 }

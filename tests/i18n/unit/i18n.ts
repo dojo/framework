@@ -11,7 +11,7 @@ import {
 	setCldrLoaders
 } from '../../../src/i18n/i18n';
 
-function createAyncMessageLoader(): {
+function createAsyncMessageLoader(): {
 	promise: Promise<any>;
 	resolver: Function;
 	loader: () => any;
@@ -30,12 +30,16 @@ describe('i18n', () => {
 	beforeEach(async () => {
 		setDefaultLocale('fr');
 		setSupportedLocales(['fr']);
-		await setLocale('fr');
+		await setLocale({ locale: 'fr', default: true });
 		if (!global.navigator) {
 			global.navigator = {
 				language: 'en-GB'
 			};
 		}
+	});
+
+	afterEach(() => {
+		setCldrLoaders({});
 	});
 
 	describe('setLocale', () => {
@@ -56,14 +60,14 @@ describe('i18n', () => {
 		it('Should compute the locale to the passed if supported by the locales', async () => {
 			setDefaultLocale('fr');
 			setSupportedLocales(['en', 'fr']);
-			const locale = await setLocale('en-GB');
+			const locale = await setLocale({ locale: 'en-GB' });
 			assert.strictEqual(locale, 'en-GB');
 		});
 
 		it('Should compute the locale to the default locale if not supported by the locales', async () => {
 			setDefaultLocale('fr');
 			setSupportedLocales(['en', 'fr']);
-			const locale = await setLocale('ja');
+			const locale = await setLocale({ locale: 'ja' });
 			assert.strictEqual(locale, 'fr');
 		});
 
@@ -78,7 +82,7 @@ describe('i18n', () => {
 				en: () => enPromise,
 				supplemental: () => supplementalPromise
 			});
-			const locale = await setLocale('en');
+			const locale = await setLocale({ locale: 'en' });
 			assert.strictEqual(locale, 'en');
 			const cldr = new Cldr('en');
 			assert.strictEqual(cldr.get('en/main/test'), 'loaded');
@@ -87,7 +91,11 @@ describe('i18n', () => {
 	});
 
 	describe('localizeBundle', () => {
-		it('Resolve sync message bundles', () => {
+		it('Resolve sync message bundles', async () => {
+			const fallback = createAsyncMessageLoader();
+			setCldrLoaders({
+				fallback: fallback.loader
+			});
 			const invalidator = stub();
 			const bundle = {
 				messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
@@ -101,6 +109,9 @@ describe('i18n', () => {
 			assert.deepEqual(messages, { foo: 'bonjour, {name}', fallback: 'root/fr fallback' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), 'bonjour, Steven');
 			assert.isFalse(isPlaceholder);
+			const localePromise = setLocale({ locale: 'ar' });
+			fallback.resolver([{ default: {} }]);
+			await localePromise;
 			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'ar', invalidator }));
 			assert.deepEqual(messages, { foo: 'bonjour, {name}', fallback: 'root/fr fallback' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), 'bonjour, Steven');
@@ -124,9 +135,9 @@ describe('i18n', () => {
 			setDefaultLocale('fr');
 			setSupportedLocales(['fr']);
 			setCldrLoaders({});
-			await setLocale('fr');
-			const enGb = createAyncMessageLoader();
-			const en = createAyncMessageLoader();
+			await setLocale({ locale: 'fr' });
+			const enGb = createAsyncMessageLoader();
+			const en = createAsyncMessageLoader();
 			const bundle = {
 				messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
 				locales: {
@@ -181,43 +192,15 @@ describe('i18n', () => {
 				Cldr._raw.supplemental.likelySubtags = originalLikelySubtags;
 			});
 
-			it('load fallback for localizeBundle', async () => {
-				const fallback = createAyncMessageLoader();
-
-				setCldrLoaders({
-					fallback: fallback.loader
-				});
-
-				const bundle = {
-					messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
-					locales: {
-						yue: { foo: 'hello, {name}' },
-						en: { foo: 'hey, {name}' }
-					}
-				};
-				const invalidator = stub();
-				let { messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'yue', invalidator });
-				assert.deepEqual(messages, { foo: '', fallback: '' });
-				assert.strictEqual(format('foo', { name: 'Steven' }), '');
-				assert.isTrue(isPlaceholder);
-				fallback.resolver([{ default: { supplemental: { likelySubtags: originalLikelySubtags } } }]);
-				await fallback.promise;
-				assert.isTrue(invalidator.calledOnce);
-				({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'yue', invalidator }));
-				assert.deepEqual(messages, { foo: 'hello, {name}', fallback: 'root/fr fallback' });
-				assert.strictEqual(format('foo', { name: 'Steven' }), 'hello, Steven');
-				assert.isFalse(isPlaceholder);
-			});
-
 			it('load fallback for setLocale', async () => {
-				const fallback = createAyncMessageLoader();
+				const fallback = createAsyncMessageLoader();
 
 				setCldrLoaders({
 					fallback: fallback.loader
 				});
 
 				assert.isUndefined(Cldr._raw.supplemental.likelySubtags);
-				const setLocalePromise = setLocale('ce');
+				const setLocalePromise = setLocale({ locale: 'ce' });
 				fallback.resolver([{ default: { supplemental: { likelySubtags: originalLikelySubtags } } }]);
 				await fallback.promise;
 				await setLocalePromise;

@@ -8,8 +8,8 @@ import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i
 registerSuite('number units', {
 	before: async () => {
 		setDefaultLocale('en');
-		setSupportedLocales(['en']);
-		await setLocale('en');
+		setSupportedLocales(['en', 'fr']);
+		await setLocale({ locale: 'en', default: true });
 	},
 
 	tests: {

@@ -33,7 +33,7 @@ describe('i18n middleware', () => {
 		setDefaultLocale('en');
 		setSupportedLocales(['en', 'es']);
 		setCldrLoaders({});
-		await setLocale('en');
+		await setLocale({ locale: 'en' });
 	});
 
 	afterEach(() => {

@@ -16,8 +16,8 @@ import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i
 registerSuite('i18n/number', {
 	before: async () => {
 		setDefaultLocale('en');
-		setSupportedLocales(['en']);
-		await setLocale('en');
+		setSupportedLocales(['en', 'fr']);
+		await setLocale({ locale: 'en', default: true });
 	},
 
 	tests: {

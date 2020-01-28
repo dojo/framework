@@ -4,8 +4,6 @@ import * as Globalize from 'globalize/dist/globalize/message';
 const Cldr = require('cldrjs/dist/cldr');
 `!has('cldr-elide')`;
 import './util/cldr';
-import has from '../core/has';
-import { isThenable } from '../shim/Promise';
 
 export interface Messages {
 	[key: string]: string;
@@ -68,21 +66,25 @@ const MESSAGE_BUNDLE_PATH = 'globalize-messages/{bundle}';
 let supportedLocales: string[] = [];
 let defaultLocale = '';
 let computedLocale = '';
+let currentLocale = '';
 let cldrLoaders: CldrLoaders = {};
 let bundleId = 0;
+const cldr = new Cldr('');
 
 function getBundleId() {
 	return `id-${++bundleId}`;
 }
 
 function markBundleAsLoaded(locale: string, bundleId: string) {
-	Globalize.loadMessages({
-		[locale]: {
-			lookup: {
-				[bundleId]: {
-					locale: undefined,
-					id: undefined,
-					loading: undefined
+	Cldr.load({
+		dojo: {
+			[locale]: {
+				lookup: {
+					[bundleId]: {
+						locale: undefined,
+						id: undefined,
+						loading: undefined
+					}
 				}
 			}
 		}
@@ -101,61 +103,66 @@ export function getComputedLocale() {
 	return computedLocale;
 }
 
+export function getCurrentLocale() {
+	return currentLocale;
+}
+
 export function setCldrLoaders(loaders: CldrLoaders) {
 	cldrLoaders = { ...loaders };
 }
 
-function loadSupplementalFallback(invalidator?: Function) {
-	const fallback = cldrLoaders.fallback;
-	if (typeof fallback === 'function') {
-		if (has('dojo-debug')) {
-			console.warn(
-				`Loading fallback supplemental cldr bundle, please make sure that all supported locales are specified in the '.dojorc'.`
-			);
-		}
-		return fallback().then((results) => {
-			results.forEach((result) => {
-				Globalize.load(result.default);
-			});
-			cldrLoaders.fallback = true;
-			invalidator && invalidator();
-		});
-	} else if (fallback === undefined) {
-		throw new Error('Unable to load fallback supplemental cldr bundle.');
-	}
-}
-
-export function setLocale(requestedLocale = global.navigator.language || global.navigator.userLanguage, local = false) {
-	let partialSystemLocale = requestedLocale.replace(/^([a-z]{2}).*/i, '$1');
-	const locales = supportedLocales;
-	let userLocale = defaultLocale;
-
-	let hasMatch = false;
-
-	for (let i = 0; i < locales.length; i++) {
-		const locale = locales[i];
-		if (requestedLocale === locale) {
-			userLocale = requestedLocale;
-			hasMatch = true;
+export function getMatchedSupportedLocale(locale: string) {
+	let partialLocale = locale.replace(/^([a-z]{2}).*/i, '$1');
+	let matchedLocale;
+	for (let i = 0; i < supportedLocales.length; i++) {
+		const supportedLocale = supportedLocales[i];
+		if (locale === supportedLocale) {
+			matchedLocale = locale;
 			break;
 		}
-
-		if (partialSystemLocale === locale) {
-			userLocale = partialSystemLocale;
-			hasMatch = true;
+		if (partialLocale === supportedLocale) {
+			matchedLocale = partialLocale;
 		}
 	}
+	return matchedLocale;
+}
 
-	const calculatedLocale = hasMatch ? requestedLocale : defaultLocale;
+function setComputedLocale(locale: string) {
+	Globalize.locale(locale);
+	computedLocale = locale;
+	currentLocale = locale;
+}
+
+interface SetLocaleOptions {
+	locale?: string;
+	default?: boolean;
+	local?: boolean;
+}
+
+export function setLocale(options: SetLocaleOptions = {}) {
+	const {
+		local,
+		default: isDefaultLocale,
+		locale: requestedLocale = global.navigator.language || global.navigator.userLanguage
+	} = options;
+	const matchedLocale = getMatchedSupportedLocale(requestedLocale);
+	const userLocale = matchedLocale || defaultLocale;
+	const calculatedLocale = matchedLocale ? requestedLocale : defaultLocale;
 
 	const loaderPromises: Promise<any>[] = [];
 	const supplementalLoader = cldrLoaders.supplemental;
+	const fallbackLoader = cldrLoaders.fallback;
+
 	if (supplementalLoader && supplementalLoader !== true) {
 		loaderPromises.push(supplementalLoader());
 	}
 	const localCldrLoader = cldrLoaders[userLocale];
 	if (localCldrLoader && localCldrLoader !== true) {
 		loaderPromises.push(localCldrLoader());
+	}
+	const loadFallback = !getMatchedSupportedLocale(requestedLocale) && fallbackLoader && fallbackLoader !== true;
+	if (loadFallback && fallbackLoader && fallbackLoader !== true) {
+		loaderPromises.push(fallbackLoader());
 	}
 
 	if (loaderPromises.length) {
@@ -167,27 +174,36 @@ export function setLocale(requestedLocale = global.navigator.language || global.
 					Globalize.load(result.default);
 				});
 			});
-			if (!local) {
-				Globalize.locale(computedLocale);
-				computedLocale = calculatedLocale;
+
+			if (loadFallback) {
+				cldrLoaders.fallback = true;
+				const data = cldr.get('dojo');
+				const locales = Object.keys(data);
+				for (let i = 0; i < locales.length; i++) {
+					const locale = locales[i];
+					if (data[locale].bundles) {
+						Globalize.loadMessages({ [locale]: data[locale].bundles });
+					}
+				}
+				if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+					Globalize.loadMessages({ [requestedLocale]: {} });
+				}
+			}
+
+			if (isDefaultLocale) {
+				setComputedLocale(calculatedLocale);
+			} else if (!local) {
+				currentLocale = calculatedLocale;
 			}
 			return calculatedLocale;
 		});
+	} else if (!matchedLocale) {
+		Globalize.loadMessages({ [requestedLocale]: {} });
 	}
-	if (!local) {
-		try {
-			Globalize.locale(computedLocale);
-			computedLocale = calculatedLocale;
-		} catch {
-			const fallbackResult = loadSupplementalFallback();
-			if (isThenable(fallbackResult)) {
-				return fallbackResult.then(() => {
-					Globalize.locale(computedLocale);
-					computedLocale = calculatedLocale;
-					return calculatedLocale;
-				});
-			}
-		}
+	if (isDefaultLocale) {
+		setComputedLocale(calculatedLocale);
+	} else if (!local) {
+		currentLocale = calculatedLocale;
 	}
 	return calculatedLocale;
 }
@@ -217,83 +233,83 @@ export function localizeBundle<T extends Messages>(
 	if (!bundleId) {
 		bundleId = getBundleId();
 		bundleIdMap.set(bundle, bundleId);
-		const lookupBundles = locales.reduce(
-			(lookup, locale) => {
-				const bundleLoader = localeBundleLoaders[locale];
-				if (typeof bundleLoader === 'function') {
-					const id = getBundleId();
-					bundleLoaderMap.set(bundleLoader, id);
-					idToBundleLoaderMap.set(id, bundleLoader);
-					lookup[locale] = {
-						lookup: {
-							[bundleId as any]: {
-								locale,
-								id
-							}
-						}
-					};
+		const messageBundles: { [index: string]: any } = {};
+		const lookup: { [index: string]: any } = {};
+
+		for (let i = 0; i < locales.length; i++) {
+			const locale = locales[i];
+			const isSupportedLocale = !!getMatchedSupportedLocale(locale);
+			const bundleLoader = localeBundleLoaders[locale];
+			let messages = {};
+			if (typeof bundleLoader === 'function') {
+				const id = getBundleId();
+				bundleLoaderMap.set(bundleLoader, id);
+				idToBundleLoaderMap.set(id, bundleLoader);
+				lookup[locale] = { lookup: { [bundleId]: { locale, id } } };
+			} else {
+				messages = bundleLoader;
+			}
+			if (isSupportedLocale) {
+				messageBundles[locale] = messages;
+			} else {
+				if (lookup[locale]) {
+					lookup[locale].bundles = { [bundleId]: messages };
 				} else {
 					lookup[locale] = {
-						[bundleId as any]: bundleLoader
+						bundles: { [bundleId]: messages }
 					};
 				}
-				return lookup;
-			},
-			{} as any
-		);
+			}
+		}
 		Globalize.loadMessages({
 			root: { [bundleId]: bundle.messages },
-			[defaultLocale]: { [bundleId]: bundle.messages },
-			...lookupBundles
+			[computedLocale]: { [bundleId]: bundle.messages },
+			...messageBundles
+		});
+		Cldr.load({
+			dojo: lookup
 		});
 	}
 
-	if (locales.indexOf(locale) === -1) {
-		Globalize.loadMessages({
-			[locale]: { [bundleId]: bundle.messages }
-		});
+	let globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
+	globalizeInstanceMap.set(locale, globalize);
+
+	let lookupId = globalize.cldr.get(`dojo/{bundle}/lookup/${bundleId}/id`);
+	let lookupLocale = globalize.cldr.get(`dojo/{bundle}/lookup/${bundleId}/locale`);
+	if (lookupId && lookupLocale) {
+		let bundleLoader = idToBundleLoaderMap.get(lookupId);
+		if (bundleLoader) {
+			Cldr.load({
+				dojo: {
+					[lookupLocale]: { lookup: { [bundleId]: { loading: true } } }
+				}
+			});
+			const loaderPromise = bundleLoader();
+			loaderPromise.then((messages) => {
+				markBundleAsLoaded(lookupLocale, bundleId as string);
+				Globalize.loadMessages({ [lookupLocale]: { [bundleId as string]: messages.default } });
+				invalidator();
+			});
+		}
 	}
+	const lookupLoading = globalize.cldr.get(`dojo/{bundle}/lookup/${bundleId}/loading`);
 
-	try {
-		let globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
-		globalizeInstanceMap.set(locale, globalize);
-
-		let lookupId = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/id`);
-		let lookupLocale = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/locale`);
-		if (lookupId && lookupLocale) {
-			let bundleLoader = idToBundleLoaderMap.get(lookupId);
-			if (bundleLoader) {
-				Globalize.loadMessages({ [lookupLocale]: { lookup: { [bundleId]: { loading: true } } } });
-				const loaderPromise = bundleLoader();
-				loaderPromise.then((messages) => {
-					markBundleAsLoaded(lookupLocale, bundleId as string);
-					Globalize.loadMessages({ [lookupLocale]: { [bundleId as string]: messages.default } });
-					invalidator();
-				});
-			}
-		}
-		const lookupLoading = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/lookup/${bundleId}/loading`);
-
-		if (lookupLoading) {
-			return getPlaceholderBundle(bundle);
-		}
-
-		return {
-			messages: Object.keys(bundle.messages).reduce(
-				(messages, key) => {
-					const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
-					messages[key] = message;
-					return messages;
-				},
-				{} as any
-			),
-			isPlaceholder: false,
-			format: (key: any, options: {}) => {
-				return globalize.formatMessage(`${bundleId}/${key}`, options);
-			}
-		};
-	} catch {
-		loadSupplementalFallback(invalidator);
+	if (lookupLoading) {
 		return getPlaceholderBundle(bundle);
 	}
+
+	return {
+		messages: Object.keys(bundle.messages).reduce(
+			(messages, key) => {
+				const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
+				messages[key] = message;
+				return messages;
+			},
+			{} as any
+		),
+		isPlaceholder: false,
+		format: (key: any, options: {}) => {
+			return globalize.formatMessage(`${bundleId}/${key}`, options);
+		}
+	};
 }

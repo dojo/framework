@@ -1,4 +1,4 @@
-import { localizeBundle, Bundle, Messages, setLocale, getComputedLocale } from '../../i18n/i18n';
+import { localizeBundle, Bundle, Messages, setLocale, getCurrentLocale } from '../../i18n/i18n';
 import { create, invalidator, getRegistry, diffProperty } from '../vdom';
 import injector from './injector';
 import Injector from '../Injector';
@@ -38,18 +38,18 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			}
 		}
 		if (next.locale && current.locale !== next.locale) {
-			const result = setLocale(next.locale, true);
+			const result = setLocale({ locale: next.locale, local: true });
 			if (isThenable(result)) {
 				result.then(() => {
 					invalidator();
 				});
-				return current.locale || injectedLocale || getComputedLocale();
+				return current.locale || injectedLocale || getCurrentLocale();
 			}
 		}
 		if (current.locale !== next.locale) {
 			invalidator();
 		}
-		return next.locale || injectedLocale || getComputedLocale();
+		return next.locale || injectedLocale || getCurrentLocale();
 	});
 
 	injector.subscribe(INJECTOR_KEY);
@@ -79,7 +79,7 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
 			if (localeDataInjector) {
 				if (localeData && localeData.locale) {
-					const result = setLocale(localeData.locale);
+					const result = setLocale({ locale: localeData.locale });
 					if (isThenable(result)) {
 						result.then(() => {
 							localeDataInjector.set(localeData);
