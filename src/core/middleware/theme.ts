@@ -4,7 +4,7 @@ import icache from './icache';
 import injector from './injector';
 import Injector from '../Injector';
 import Set from '../../shim/Set';
-import { shallow } from '../diff';
+import { shallow, auto } from '../diff';
 import Registry from '../Registry';
 
 export { Theme, Classes, ClassNames } from './../interfaces';
@@ -32,10 +32,16 @@ const factory = create({ invalidator, icache, diffProperty, injector, getRegistr
 export const theme = factory(
 	({ middleware: { invalidator, icache, diffProperty, injector, getRegistry }, properties }) => {
 		let themeKeys = new Set();
-		diffProperty('theme', (current: ThemeProperties, next: ThemeProperties) => {
-			if (current.theme !== next.theme) {
+
+		diffProperty('theme', properties, (current, next) => {
+			const themeInjector = injector.get<Injector<Theme | undefined>>(INJECTED_THEME_KEY);
+			const diffResult = auto(current.theme, next.theme);
+			if (diffResult.changed) {
 				icache.clear();
 				invalidator();
+			}
+			if (!next.theme && themeInjector) {
+				return themeInjector.get();
 			}
 		});
 		diffProperty('classes', (current: ThemeProperties, next: ThemeProperties) => {
@@ -79,10 +85,6 @@ export const theme = factory(
 				themeKeys.add(key);
 				theme = classes as T;
 				let { theme: currentTheme, classes: currentClasses } = properties();
-				if (!currentTheme) {
-					const injectedTheme = injector.get<Injector<Theme>>(INJECTED_THEME_KEY);
-					currentTheme = injectedTheme ? injectedTheme.get() : undefined;
-				}
 				if (currentTheme && currentTheme[key]) {
 					theme = { ...theme, ...currentTheme[key] };
 				}
