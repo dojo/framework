@@ -411,6 +411,7 @@ export interface Callback<Props, Children, Middleware, ReturnValue> {
 			children: () => Children extends any[] ? Children : [Children];
 		}
 	): ReturnValue;
+	middlewares?: any;
 }
 
 export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {

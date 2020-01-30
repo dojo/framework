@@ -66,6 +66,7 @@ export interface BaseNodeWrapper {
 
 export interface WNodeWrapper extends BaseNodeWrapper {
 	node: WNode<any>;
+	keys?: string[];
 	instance?: any;
 	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
@@ -598,6 +599,18 @@ function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNo
 	}
 }
 
+function sameKeys(widgetConstructor: any, props1: any, props2: any) {
+	if (widgetConstructor && Array.isArray(widgetConstructor.keys)) {
+		const { keys } = widgetConstructor;
+		for (let i = 0; i < keys.length; i++) {
+			if (props1[keys[i]] !== props2[keys[i]]) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 	if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
 		if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
@@ -615,13 +628,22 @@ function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 	} else if (isWNodeWrapper(dnode1) && isWNodeWrapper(dnode2)) {
 		const widgetConstructor1 = dnode1.registryItem || dnode1.node.widgetConstructor;
 		const widgetConstructor2 = dnode2.registryItem || dnode2.node.widgetConstructor;
+		const {
+			node: { properties: props1 }
+		} = dnode1;
+		const {
+			node: { properties: props2 }
+		} = dnode2;
 		if (dnode1.instance === undefined && typeof widgetConstructor2 === 'string') {
 			return false;
 		}
 		if (widgetConstructor1 !== widgetConstructor2) {
 			return false;
 		}
-		if (dnode1.node.properties.key !== dnode2.node.properties.key) {
+		if (props1.key !== props2.key) {
+			return false;
+		}
+		if (!sameKeys(widgetConstructor1, props1, props2)) {
 			return false;
 		}
 		return true;
@@ -669,7 +691,7 @@ function arrayFrom(arr: any) {
 	return Array.prototype.slice.call(arr);
 }
 
-function createFactory(callback: any, middlewares: any): any {
+function createFactory(callback: any, middlewares: any, key?: any): any {
 	const factory = (properties: any, children?: any) => {
 		if (properties) {
 			const result = w(callback, properties, children);
@@ -682,9 +704,21 @@ function createFactory(callback: any, middlewares: any): any {
 			callback
 		};
 	};
+	let keys = key ? [key] : [];
+	const names = Object.keys(middlewares);
+	for (let i = 0; i < names.length; i++) {
+		if (middlewares[names[i]].keys) {
+			keys = [...keys, ...middlewares[names[i]].keys];
+		}
+	}
+
+	callback.keys = keys;
+	factory.keys = keys;
 	factory.isFactory = true;
 	return factory;
 }
+
+type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
 
 export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[keyof T]>['properties']>(
 	middlewares: T = {} as T
@@ -704,6 +738,30 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 					ReturnValue
 			  > {
 			return createFactory(callback, middlewares);
+		}
+
+		function key(key: KeysMatching<Props, string | number>) {
+			function returns<ReturnValue>(
+				callback: Callback<
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					DNode[],
+					T,
+					ReturnValue
+				>
+			): ReturnValue extends RenderResult
+				? DefaultChildrenWNodeFactory<{
+						properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+						children: DNode[];
+				  }>
+				: MiddlewareResultFactory<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						DNode[],
+						T,
+						ReturnValue
+				  > {
+				return createFactory(callback, middlewares, key);
+			}
+			return returns;
 		}
 
 		function children<Children>() {
@@ -732,9 +790,40 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 				  > {
 				return createFactory(callback, middlewares);
 			}
+
+			function key(key: KeysMatching<Props, string | number>) {
+				function returns<ReturnValue>(
+					callback: Callback<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+					>
+				): ReturnValue extends RenderResult
+					? UnionToIntersection<Children> extends undefined
+						? OptionalWNodeFactory<{
+								properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+								children: NonNullable<Children>;
+						  }>
+						: WNodeFactory<{
+								properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+								children: Children;
+						  }>
+					: MiddlewareResultFactory<
+							WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+							Children,
+							T,
+							ReturnValue
+					  > {
+					return createFactory(callback, middlewares, key);
+				}
+				return returns;
+			}
+			returns.key = key;
 			return returns;
 		}
 		returns.children = children;
+		returns.key = key;
 		return returns;
 	}
 
@@ -765,6 +854,35 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 				  > {
 				return createFactory(callback, middlewares);
 			}
+			function key(key: KeysMatching<Props, string | number>) {
+				function returns<ReturnValue>(
+					callback: Callback<
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						Children,
+						T,
+						ReturnValue
+					>
+				): ReturnValue extends RenderResult
+					? UnionToIntersection<Children> extends undefined
+						? OptionalWNodeFactory<{
+								properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+								children: NonNullable<Children>;
+						  }>
+						: WNodeFactory<{
+								properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
+								children: Children;
+						  }>
+					: MiddlewareResultFactory<
+							WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+							Children,
+							T,
+							ReturnValue
+					  > {
+					return createFactory(callback, middlewares, key);
+				}
+				return returns;
+			}
+			returns.key = key;
 			return returns;
 		}
 
@@ -1918,7 +2036,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				};
 
 				widgetMetaMap.set(next.id, widgetMeta);
-				if ((Constructor as any).middlewares) {
+				if ((Constructor as any).middlewares && Object.keys((Constructor as any).middlewares).length) {
 					const { middlewares, ids } = resolveMiddleware((Constructor as any).middlewares, id);
 					widgetMeta.middleware = middlewares;
 					widgetMeta.middlewareIds = ids;
