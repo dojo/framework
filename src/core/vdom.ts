@@ -599,18 +599,6 @@ function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNo
 	}
 }
 
-function sameKeys(widgetConstructor: any, props1: any, props2: any) {
-	if (widgetConstructor && Array.isArray(widgetConstructor.keys)) {
-		const { keys } = widgetConstructor;
-		for (let i = 0; i < keys.length; i++) {
-			if (props1[keys[i]] !== props2[keys[i]]) {
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
 function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 	if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
 		if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
@@ -643,7 +631,7 @@ function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
 		if (props1.key !== props2.key) {
 			return false;
 		}
-		if (!sameKeys(widgetConstructor1, props1, props2)) {
+		if (!((widgetConstructor1 as any).keys || []).every((key: string) => props1[key] === props2[key])) {
 			return false;
 		}
 		return true;
@@ -704,13 +692,13 @@ function createFactory(callback: any, middlewares: any, key?: any): any {
 			callback
 		};
 	};
-	let keys = key ? [key] : [];
-	const names = Object.keys(middlewares);
-	for (let i = 0; i < names.length; i++) {
-		if (middlewares[names[i]].keys) {
-			keys = [...keys, ...middlewares[names[i]].keys];
+	const keys = Object.keys(middlewares).reduce((keys: string[], middlewareName: any) => {
+		const middleware = middlewares[middlewareName];
+		if (middleware.keys) {
+			keys = [...keys, ...middleware.keys];
 		}
-	}
+		return keys;
+	}, key ? [key] : []);
 
 	callback.keys = keys;
 	factory.keys = keys;
