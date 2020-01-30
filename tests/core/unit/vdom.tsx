@@ -3604,6 +3604,131 @@ jsdomDescribe('vdom', () => {
 				);
 			});
 
+			it('should use key as widget key', () => {
+				const middlewareFactory = create({ icache })
+					.properties<{ bar: string | number }>()
+					.key('bar');
+
+				const mid = middlewareFactory(({ middleware: { icache } }) => {
+					return () => {
+						let result = icache.getOrSet('num', 1);
+						icache.set('num', result + 1);
+						return result;
+					};
+				});
+
+				const factory = create({ mid, icache })
+					.properties<{ foo: string | number }>()
+					.key('foo');
+
+				const AutomaticKey = factory(function AutomaticKey({ properties, middleware: { icache, mid } }) {
+					let result = icache.getOrSet('num', 1);
+					icache.set('num', result + 1);
+					return (
+						<div>
+							{properties().key}
+							{properties().foo}
+							{properties().bar}
+							{`widget-state-${result}`}
+							{`middleware-state-${mid()}`}
+						</div>
+					);
+				});
+				const AutomaticCompositeKey = factory(function AutomaticKey({
+					properties,
+					middleware: { icache, mid }
+				}) {
+					let result = icache.getOrSet('num', 1);
+					icache.set('num', result + 1);
+					return (
+						<div>
+							{properties().key}
+							{properties().foo}
+							{properties().bar}
+							{`widget-state-${result}`}
+							{`middleware-state-${mid()}`}
+						</div>
+					);
+				});
+				const AutomaticNumberKey = factory(function AutomaticKey({ properties, middleware: { icache, mid } }) {
+					let result = icache.getOrSet('num', 1);
+					icache.set('num', result + 1);
+					return (
+						<div>
+							{properties().key}
+							{`${properties().foo}`}
+							{`${properties().bar}`}
+							{`widget-state-${result}`}
+							{`middleware-state-${mid()}`}
+						</div>
+					);
+				});
+				const AutomaticCompositeNumberKey = factory(function AutomaticKey({
+					properties,
+					middleware: { icache, mid }
+				}) {
+					let result = icache.getOrSet('num', 1);
+					icache.set('num', result + 1);
+					return (
+						<div>
+							{`${properties().key}`}
+							{`${properties().foo}`}
+							{`${properties().bar}`}
+							{`widget-state-${result}`}
+							{`middleware-state-${mid()}`}
+						</div>
+					);
+				});
+				const AutomaticKeyMiddlewareOnly = create({ mid, icache })(function AutomaticKeyMiddlewareOnly({
+					properties,
+					middleware: { icache, mid }
+				}) {
+					let result = icache.getOrSet('num', 1);
+					icache.set('num', result + 1);
+					return (
+						<div>
+							{properties().key}
+							{`${properties().bar}`}
+							{`widget-state-${result}`}
+							{`middleware-state-${mid()}`}
+						</div>
+					);
+				});
+
+				const App = create({ icache })(function App({ middleware: { icache } }) {
+					const stringKey = icache.getOrSet('string-key', 'property-foo');
+					const numKey = icache.getOrSet('number-key', 4321);
+					return (
+						<div>
+							<AutomaticKey foo={stringKey} bar="property-bar" />
+							<AutomaticCompositeKey key="user-key" foo={stringKey} bar="property-bar" />
+							<AutomaticNumberKey foo={9999} bar={numKey} />
+							<AutomaticCompositeNumberKey foo={9999} key={1234} bar={numKey} />
+							<AutomaticKeyMiddlewareOnly bar={stringKey} />
+							<button
+								onclick={() => {
+									icache.set('string-key', 'property-new-foo');
+									icache.set('number-key', 43214321);
+								}}
+							/>
+						</div>
+					);
+				});
+				const root = document.createElement('root');
+				const r = renderer(() => <App />);
+				r.mount({ domNode: root });
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><div>property-fooproperty-barwidget-state-1middleware-state-1</div><div>user-keyproperty-fooproperty-barwidget-state-1middleware-state-1</div><div>99994321widget-state-1middleware-state-1</div><div>123499994321widget-state-1middleware-state-1</div><div>property-foowidget-state-1middleware-state-1</div><button></button></div></root>'
+				);
+				(root.children[0].children[5] as HTMLButtonElement).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><div>property-new-fooproperty-barwidget-state-1middleware-state-1</div><div>user-keyproperty-new-fooproperty-barwidget-state-1middleware-state-1</div><div>999943214321widget-state-1middleware-state-1</div><div>1234999943214321widget-state-1middleware-state-1</div><div>property-new-foowidget-state-1middleware-state-1</div><button></button></div></root>'
+				);
+			});
+
 			describe('core middleware', () => {
 				describe('node', () => {
 					it('should invalidate widget once node is available', () => {
