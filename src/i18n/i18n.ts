@@ -78,27 +78,51 @@ let cldrLoaders: CldrLoaders = {};
 let bundleId = 0;
 const cldr = new Cldr('');
 
+/**
+ * Sets the array of supported locales for the application
+ */
 export function setSupportedLocales(locales: string[]) {
 	supportedLocales = locales;
 }
 
+/**
+ * Sets the default locale of the application.
+ */
 export function setDefaultLocale(locale: string) {
 	defaultLocale = locale;
 }
 
+/**
+ * Returns the users locale computed by using the system locale
+ * of the environment and the default locale.
+ *
+ * The users system local if supported by the application (i.e resolves
+ * to one of the set supported locales) otherwise the registered default
+ * locale
+ */
 export function getComputedLocale() {
 	return computedLocale;
 }
 
+/**
+ * Returns the applications current locale
+ */
 export function getCurrentLocale() {
 	return currentLocale;
 }
 
+/**
+ * Sets the available cldr loaders for the i18n module
+ */
 export function setCldrLoaders(loaders: CldrLoaders) {
 	cldrLoaders = { ...loaders };
 }
 
-export function getMatchedSupportedLocale(locale: string) {
+/**
+ * Returns the matching supported locale for the passed locale. If there
+ * is no matching locale then undefined is returned
+ */
+export function getMatchedSupportedLocale(locale: string): string | undefined {
 	let partialLocale = locale.replace(/^([a-z]{2}).*/i, '$1');
 	let matchedLocale;
 	for (let i = 0; i < supportedLocales.length; i++) {
@@ -114,10 +138,18 @@ export function getMatchedSupportedLocale(locale: string) {
 	return matchedLocale;
 }
 
+/**
+ * Determines if the fallback CLDR data needs to be loaded
+ * for the locale
+ */
 function shouldLoadFallbackCldr(locale: string) {
 	return !getMatchedSupportedLocale(locale) && cldrLoaders.fallback && cldrLoaders.fallback !== true;
 }
 
+/**
+ * Sets the i18n modules locale state based on whether the locale
+ * is the default or local
+ */
 function setI18nLocales(locale: string, isDefault: boolean, local: boolean): void {
 	if (isDefault) {
 		Globalize.locale(locale);
@@ -128,7 +160,11 @@ function setI18nLocales(locale: string, isDefault: boolean, local: boolean): voi
 	}
 }
 
-function loadCldrData(
+/**
+ * Load required CLDR data based on the registered loaders and support
+ * for the requested locale
+ */
+async function loadCldrData(
 	loaderPromises: Promise<any>[],
 	userLocale: string,
 	requestedLocale: string,
@@ -136,36 +172,37 @@ function loadCldrData(
 	isDefault: boolean,
 	isLocal: boolean
 ): Promise<any> {
-	return Promise.all(loaderPromises).then((data) => {
-		cldrLoaders[userLocale] = true;
-		cldrLoaders.supplemental = true;
-		data.forEach((results) => {
-			results.forEach((result: any) => {
-				Globalize.load(result.default);
-			});
+	const loaderData = await Promise.all(loaderPromises);
+	cldrLoaders[userLocale] = true;
+	cldrLoaders.supplemental = true;
+	loaderData.forEach((results) => {
+		results.forEach((result: any) => {
+			Globalize.load(result.default);
 		});
-
-		if (shouldLoadFallbackCldr(requestedLocale)) {
-			cldrLoaders.fallback = true;
-			const data = cldr.get('dojo');
-			const locales = Object.keys(data);
-			for (let i = 0; i < locales.length; i++) {
-				const locale = locales[i];
-				if (data[locale].bundles) {
-					Globalize.loadMessages({ [locale]: data[locale].bundles });
-				}
-			}
-			if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
-				Globalize.loadMessages({ [requestedLocale]: {} });
+	});
+	if (shouldLoadFallbackCldr(requestedLocale)) {
+		cldrLoaders.fallback = true;
+		const data = cldr.get('dojo');
+		const locales = Object.keys(data);
+		for (let i = 0; i < locales.length; i++) {
+			const locale = locales[i];
+			if (data[locale].bundles) {
+				Globalize.loadMessages({ [locale]: data[locale].bundles });
 			}
 		}
-
-		setI18nLocales(calculatedLocale, isDefault, isLocal);
-		return calculatedLocale;
-	});
+		if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+			Globalize.loadMessages({ [requestedLocale]: {} });
+		}
+	}
+	setI18nLocales(calculatedLocale, isDefault, isLocal);
+	return calculatedLocale;
 }
 
-export function setLocale(options: SetLocaleOptions = {}) {
+/**
+ * Sets the i18n locale information for the application, loading any CLDR data or NLS
+ * messages required to support the change.
+ */
+export function setLocale(options: SetLocaleOptions = {}): Promise<string> | string {
 	const {
 		local: isLocal = false,
 		default: isDefault = false,
@@ -235,6 +272,9 @@ function markBundleAsLoaded(locale: string, bundleId: string) {
 	});
 }
 
+/**
+ * Registers all locale loaders for the bundle
+ */
 function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 	const { locales: localeBundleLoaders = {} } = bundle;
 	const locales = Object.keys(localeBundleLoaders);
