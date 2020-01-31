@@ -115,12 +115,12 @@ describe('i18n middleware', () => {
 			root.innerHTML,
 			'<div><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button></div>'
 		);
-		es.resolver({ default: { foo: 'holla, {name}' } });
+		es.resolver({ default: { foo: 'hola, {name}' } });
 		await es.promise;
 		resolvers.resolveRAF();
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"holla, {name}"}</div><div>holla, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
+			'<div><div>{"foo":"hola, {name}"}</div><div>hola, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
 		);
 	});
 

@@ -219,9 +219,9 @@ export function setLocale(options: SetLocaleOptions = {}): Promise<string> | str
 	if (supplementalLoader && supplementalLoader !== true) {
 		loaderPromises.push(supplementalLoader());
 	}
-	const localCldrLoader = cldrLoaders[userLocale];
-	if (localCldrLoader && localCldrLoader !== true) {
-		loaderPromises.push(localCldrLoader());
+	const localeCldrLoader = cldrLoaders[userLocale];
+	if (localeCldrLoader && localeCldrLoader !== true) {
+		loaderPromises.push(localeCldrLoader());
 	}
 	const loadFallback = !matchedLocale && fallbackLoader && fallbackLoader !== true;
 	if (loadFallback && fallbackLoader && fallbackLoader !== true) {

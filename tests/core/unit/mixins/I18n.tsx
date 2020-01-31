@@ -124,12 +124,12 @@ describe('i18n Mixin', () => {
 			root.innerHTML,
 			'<div lang="es"><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button></div>'
 		);
-		es.resolver({ default: { foo: 'holla, {name}' } });
+		es.resolver({ default: { foo: 'hola, {name}' } });
 		await es.promise;
 		resolvers.resolveRAF();
 		assert.strictEqual(
 			root.innerHTML,
-			'<div lang="es"><div>{"foo":"holla, {name}"}</div><div>holla, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
+			'<div lang="es"><div>{"foo":"hola, {name}"}</div><div>hola, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
 		);
 	});
 
