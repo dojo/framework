@@ -343,6 +343,17 @@ Dojo uses a virtual node's key to uniquely identify a specific instance when re-
 
 > **Note:** Virtual node `keys` should be consistent across multiple render function invocations. Generating different keys for what should be the same output node within every render call [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development#the-virtual-dom), and should be avoided.
 
+## Controlling
+
+Changing the `key` property on a widget is an effective way to guarantee that during the next render Dojo's rendering engine will create a new widget "instance" **\*** all previous state and
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '';
+```
+
+the responsibility
+
 ## Configuring `VNode`s
 
 `VNodeProperties` contains many fields that act as the primary API to interact with concrete elements in the DOM. Many of these properties mirror those available on [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), including specifying various `oneventname` event handlers.
