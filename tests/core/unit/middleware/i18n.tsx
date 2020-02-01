@@ -10,7 +10,7 @@ import { createResolvers } from './../../support/util';
 
 const resolvers = createResolvers();
 
-function createAyncMessageLoader(): {
+function createAsyncMessageLoader(): {
 	promise: Promise<any>;
 	resolver: Function;
 	loader: () => any;
@@ -33,7 +33,7 @@ describe('i18n middleware', () => {
 		setDefaultLocale('en');
 		setSupportedLocales(['en', 'es']);
 		setCldrLoaders({});
-		await setLocale({ locale: 'en' });
+		await setLocale({ locale: 'en', default: true });
 	});
 
 	afterEach(() => {
@@ -77,7 +77,7 @@ describe('i18n middleware', () => {
 		const root = global.document.createElement('div');
 		const factory = create({ i18n });
 
-		const es = createAyncMessageLoader();
+		const es = createAsyncMessageLoader();
 		const bundle = {
 			messages: { foo: 'hello, {name}' },
 			locales: {
@@ -128,8 +128,8 @@ describe('i18n middleware', () => {
 		const root = global.document.createElement('div');
 		const factory = create({ i18n });
 
-		const es = createAyncMessageLoader();
-		const overrideEs = createAyncMessageLoader();
+		const es = createAsyncMessageLoader();
+		const overrideEs = createAsyncMessageLoader();
 		const bundle = {
 			messages: { foo: 'hello, {name}' },
 			locales: {
@@ -186,8 +186,8 @@ describe('i18n middleware', () => {
 		const root = global.document.createElement('div');
 		const factory = create({ i18n });
 
-		const es = createAyncMessageLoader();
-		const overrideEs = createAyncMessageLoader();
+		const es = createAsyncMessageLoader();
+		const overrideEs = createAsyncMessageLoader();
 		const bundle = {
 			messages: { foo: 'hello, {name}' },
 			locales: {

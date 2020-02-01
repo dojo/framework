@@ -43,20 +43,20 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 				result.then(() => {
 					invalidator();
 				});
-				return current.locale || injectedLocale || getCurrentLocale();
+				return current.locale || injectedLocale;
 			}
 		}
 		if (current.locale !== next.locale) {
 			invalidator();
 		}
-		return next.locale || injectedLocale || getCurrentLocale();
+		return next.locale || injectedLocale;
 	});
 
 	injector.subscribe(INJECTOR_KEY);
 
 	return {
 		localize<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
-			let { locale, i18nBundle } = properties();
+			let { locale = getCurrentLocale(), i18nBundle } = properties();
 			if (i18nBundle) {
 				if (i18nBundle instanceof Map) {
 					bundle = i18nBundle.get(bundle) || bundle;
@@ -64,16 +64,7 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 					bundle = i18nBundle as Bundle<T>;
 				}
 			}
-			if (!locale) {
-				const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
-				if (localeDataInjector) {
-					const injectedLocaleData = localeDataInjector.get();
-					if (injectedLocaleData && injectedLocaleData.locale) {
-						locale = injectedLocaleData.locale;
-					}
-				}
-			}
-			return localizeBundle(bundle, { locale: locale, invalidator });
+			return localizeBundle(bundle, { locale, invalidator });
 		},
 		set(localeData?: LocaleData) {
 			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);

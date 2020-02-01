@@ -71,6 +71,12 @@ intern.registerPlugin('jsdom', async () => {
 		global.cancelAnimationFrame = () => {};
 		global.IntersectionObserver = () => {};
 
+		if (!global.navigator) {
+			global.navigator = {
+				language: 'en-GB'
+			};
+		}
+
 		global.fakeActiveElement = () => {};
 		Object.defineProperty(doc, 'activeElement', {
 			get: () => {
