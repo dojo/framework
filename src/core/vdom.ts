@@ -26,8 +26,7 @@ import {
 	RegistryLabel,
 	DeferredVirtualProperties,
 	DomOptions,
-	DefaultChildrenWNodeFactory,
-	ProxyProperties
+	DefaultChildrenWNodeFactory
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -715,12 +714,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 ) {
 	function properties<Props>() {
 		function returns<ReturnValue>(
-			callback: Callback<
-				WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
-				DNode[],
-				T,
-				ReturnValue
-			>
+			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 		): ReturnValue extends RenderResult
 			? DefaultChildrenWNodeFactory<{
 					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
@@ -738,7 +732,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function key(key: KeysMatching<Props, string | number>) {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 					DNode[],
 					T,
 					ReturnValue
@@ -762,7 +756,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function children<Children>() {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 					Children,
 					T,
 					ReturnValue
@@ -789,9 +783,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 			function key(key: KeysMatching<Props, string | number>) {
 				function returns<ReturnValue>(
 					callback: Callback<
-						WidgetProperties &
-							ProxyProperties<Props> &
-							ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 						Children,
 						T,
 						ReturnValue
@@ -828,7 +820,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function properties<Props>() {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 					Children,
 					T,
 					ReturnValue
@@ -854,9 +846,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 			function key(key: KeysMatching<Props, string | number>) {
 				function returns<ReturnValue>(
 					callback: Callback<
-						WidgetProperties &
-							ProxyProperties<Props> &
-							ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
 						Children,
 						T,
 						ReturnValue
@@ -886,12 +876,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		}
 
 		function returns<ReturnValue>(
-			callback: Callback<
-				WidgetProperties & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
-				Children,
-				T,
-				ReturnValue
-			>
+			callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, Children, T, ReturnValue>
 		): ReturnValue extends RenderResult
 			? UnionToIntersection<Children> extends undefined
 				? OptionalWNodeFactory<{
@@ -915,12 +900,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 	}
 
 	function returns<ReturnValue>(
-		callback: Callback<
-			WidgetProperties & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
-			DNode[],
-			T,
-			ReturnValue
-		>
+		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
 	): ReturnValue extends RenderResult
 		? DefaultChildrenWNodeFactory<{
 				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;

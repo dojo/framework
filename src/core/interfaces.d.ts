@@ -402,21 +402,21 @@ export type MiddlewareApiMap<U extends MiddlewareMap<any>> = { [P in keyof U]: R
 
 export type MiddlewareApi<T extends MiddlewareResultFactory<any, any, any, any>> = ReturnType<ReturnType<T>['api']>;
 
+export type ProxyProperties<T> = {
+	[P in keyof T]: T[P] extends ((...args: any[]) => any) | undefined ? T[P] & { unwrap: () => T[P] } : T[P]
+};
+
 export interface Callback<Props, Children, Middleware, ReturnValue> {
 	(
 		options: {
 			id: string;
 			middleware: MiddlewareApiMap<Middleware>;
-			properties: () => Props;
+			properties: () => ProxyProperties<Readonly<Props>>;
 			children: () => Children extends any[] ? Children : [Children];
 		}
 	): ReturnValue;
 	middlewares?: any;
 }
-
-export type ProxyProperties<T> = {
-	[P in keyof T]: T[P] extends ((...args: any[]) => any) | undefined ? T[P] & { unwrap: () => string } : T[P]
-};
 
 export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {
 	api: ReturnValue;
