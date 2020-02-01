@@ -26,7 +26,8 @@ import {
 	RegistryLabel,
 	DeferredVirtualProperties,
 	DomOptions,
-	DefaultChildrenWNodeFactory
+	DefaultChildrenWNodeFactory,
+	ProxyProperties
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -84,6 +85,7 @@ export interface WidgetMeta {
 	registryHandler?: RegistryHandler;
 	registry: Registry;
 	properties: any;
+	originalProperties: any;
 	children?: DNode[];
 	rendering: boolean;
 	nodeMap?: Map<string | number, HTMLElement>;
@@ -713,7 +715,12 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 ) {
 	function properties<Props>() {
 		function returns<ReturnValue>(
-			callback: Callback<WidgetProperties & Props & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
+			callback: Callback<
+				WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+				DNode[],
+				T,
+				ReturnValue
+			>
 		): ReturnValue extends RenderResult
 			? DefaultChildrenWNodeFactory<{
 					properties: Props & WidgetProperties & UnionToIntersection<MiddlewareProps>;
@@ -731,7 +738,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function key(key: KeysMatching<Props, string | number>) {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
 					DNode[],
 					T,
 					ReturnValue
@@ -755,7 +762,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function children<Children>() {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
 					Children,
 					T,
 					ReturnValue
@@ -782,7 +789,9 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 			function key(key: KeysMatching<Props, string | number>) {
 				function returns<ReturnValue>(
 					callback: Callback<
-						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						WidgetProperties &
+							ProxyProperties<Props> &
+							ProxyProperties<UnionToIntersection<MiddlewareProps>>,
 						Children,
 						T,
 						ReturnValue
@@ -819,7 +828,7 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		function properties<Props>() {
 			function returns<ReturnValue>(
 				callback: Callback<
-					WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+					WidgetProperties & ProxyProperties<Props> & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
 					Children,
 					T,
 					ReturnValue
@@ -845,7 +854,9 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 			function key(key: KeysMatching<Props, string | number>) {
 				function returns<ReturnValue>(
 					callback: Callback<
-						WidgetProperties & Props & UnionToIntersection<MiddlewareProps>,
+						WidgetProperties &
+							ProxyProperties<Props> &
+							ProxyProperties<UnionToIntersection<MiddlewareProps>>,
 						Children,
 						T,
 						ReturnValue
@@ -875,7 +886,12 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 		}
 
 		function returns<ReturnValue>(
-			callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, Children, T, ReturnValue>
+			callback: Callback<
+				WidgetProperties & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+				Children,
+				T,
+				ReturnValue
+			>
 		): ReturnValue extends RenderResult
 			? UnionToIntersection<Children> extends undefined
 				? OptionalWNodeFactory<{
@@ -899,7 +915,12 @@ export function create<T extends MiddlewareMap, MiddlewareProps = ReturnType<T[k
 	}
 
 	function returns<ReturnValue>(
-		callback: Callback<WidgetProperties & UnionToIntersection<MiddlewareProps>, DNode[], T, ReturnValue>
+		callback: Callback<
+			WidgetProperties & ProxyProperties<UnionToIntersection<MiddlewareProps>>,
+			DNode[],
+			T,
+			ReturnValue
+		>
 	): ReturnValue extends RenderResult
 		? DefaultChildrenWNodeFactory<{
 				properties: WidgetProperties & UnionToIntersection<MiddlewareProps>;
@@ -1098,6 +1119,35 @@ export const defer = factory(({ id }) => {
 		}
 	};
 });
+
+function createProxyProperties(id: string, properties: any) {
+	const props: any = {};
+	const propertyNames = Object.keys(properties);
+	for (let i = 0; i < propertyNames.length; i++) {
+		const propertyName = propertyNames[i];
+		if (typeof properties[propertyName] === 'function' && !isWidgetBaseConstructor(properties[propertyName])) {
+			props[propertyName] = function PropertyProxy(...args: any[]) {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.originalProperties[propertyName](...args);
+				} else {
+					properties[propertyName](...args);
+				}
+			};
+			props[propertyName].unwrap = () => {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.originalProperties[propertyName];
+				} else {
+					properties[propertyName];
+				}
+			};
+		} else {
+			props[propertyName] = properties[propertyName];
+		}
+	}
+	return props;
+}
 
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
@@ -2013,7 +2063,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
-					properties: next.node.properties,
+					properties: createProxyProperties(id, next.node.properties),
+					originalProperties: { ...next.node.properties },
 					children: next.node.children,
 					deferRefs: 0,
 					rendering: true,
@@ -2109,7 +2160,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (!isWidgetBaseConstructor(Constructor)) {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
-				widgetMeta.properties = { ...next.properties };
+				widgetMeta.originalProperties = { ...next.properties };
+				widgetMeta.properties = createProxyProperties(id, widgetMeta.originalProperties);
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, widgetMeta.properties);

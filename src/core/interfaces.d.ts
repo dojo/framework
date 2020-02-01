@@ -414,6 +414,10 @@ export interface Callback<Props, Children, Middleware, ReturnValue> {
 	middlewares?: any;
 }
 
+export type ProxyProperties<T> = {
+	[P in keyof T]: T[P] extends ((...args: any[]) => any) | undefined ? T[P] & { unwrap: () => string } : T[P]
+};
+
 export interface MiddlewareResult<Props, Children, Middleware, ReturnValue> {
 	api: ReturnValue;
 	properties: Props;
