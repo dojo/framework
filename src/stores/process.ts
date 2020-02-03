@@ -242,7 +242,7 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 			const createHandler = (partialPath?: Path<T, any>) => ({
 				get(obj: any, prop: string): any {
 					const fullPath = partialPath ? path(partialPath, prop) : path(prop as keyof T);
-					const stringPath = fullPath.path;
+					const stringPath = Array.isArray(fullPath.path) ? fullPath.path.join('/') : String(fullPath.path);
 
 					if (typeof prop === 'symbol' && prop === valueSymbol) {
 						return proxied.get(stringPath);

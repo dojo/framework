@@ -30,12 +30,13 @@ export const createStoreMiddleware = <S = any>(initial?: (store: Store<S>) => vo
 		};
 		return {
 			get<U = any>(path: Path<S, U>): U {
-				if (registeredPaths.indexOf(path.path) === -1) {
+				const stringPath = Array.isArray(path.path) ? path.path.join('/') : String(path.path);
+				if (registeredPaths.indexOf(stringPath) === -1) {
 					const handle = store.onChange(path, () => {
 						invalidator();
 					});
 					handles.push(() => handle.remove());
-					registeredPaths.push(path.path);
+					registeredPaths.push(stringPath);
 				}
 				return store.get(path);
 			},

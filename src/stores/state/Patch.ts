@@ -44,9 +44,8 @@ export interface PatchResult<T = any, U = any> {
 }
 
 function add(pointerTarget: PointerTarget, value: any): any {
-	let index = parseInt(pointerTarget.segment, 10);
-	if (Array.isArray(pointerTarget.target) && !isNaN(index)) {
-		pointerTarget.target.splice(index, 0, value);
+	if (Array.isArray(pointerTarget.target) && typeof pointerTarget.segment === 'number') {
+		pointerTarget.target.splice(pointerTarget.segment, 0, value);
 	} else {
 		pointerTarget.target[pointerTarget.segment] = value;
 	}
@@ -54,9 +53,8 @@ function add(pointerTarget: PointerTarget, value: any): any {
 }
 
 function replace(pointerTarget: PointerTarget, value: any): any {
-	let index = parseInt(pointerTarget.segment, 10);
-	if (Array.isArray(pointerTarget.target) && !isNaN(index)) {
-		pointerTarget.target.splice(index, 1, value);
+	if (Array.isArray(pointerTarget.target) && typeof pointerTarget.segment === 'number') {
+		pointerTarget.target.splice(pointerTarget.segment, 1, value);
 	} else {
 		pointerTarget.target[pointerTarget.segment] = value;
 	}
@@ -64,8 +62,8 @@ function replace(pointerTarget: PointerTarget, value: any): any {
 }
 
 function remove(pointerTarget: PointerTarget): any {
-	if (Array.isArray(pointerTarget.target)) {
-		pointerTarget.target.splice(parseInt(pointerTarget.segment, 10), 1);
+	if (Array.isArray(pointerTarget.target) && typeof pointerTarget.segment === 'number') {
+		pointerTarget.target.splice(pointerTarget.segment, 1);
 	} else {
 		delete pointerTarget.target[pointerTarget.segment];
 	}

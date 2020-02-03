@@ -11,8 +11,9 @@ import { Map, List } from 'immutable';
 
 import { getFriendlyDifferenceMessage, isEqual } from './compare';
 
-function isString(segment?: string): segment is string {
-	return typeof segment === 'string';
+function isStringOrNumber(segment?: string | number): segment is string | number {
+	const type = typeof segment;
+	return type === 'string' || type === 'number';
 }
 
 function isList(value?: any): value is List<any> {
@@ -88,14 +89,17 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		};
 	};
 
-	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
-		if (typeof path === 'string') {
+	public path: State<T>['path'] = (
+		path: string | number | Path<T, any>,
+		...segments: (string | number | undefined)[]
+	) => {
+		if (typeof path === 'string' || typeof path === 'number') {
 			segments = [path, ...segments];
 		} else {
 			segments = [...new Pointer(path.path).segments, ...segments];
 		}
 
-		const stringSegments = segments.filter<string>(isString);
+		const stringSegments = segments.filter(isStringOrNumber);
 		const hasMultipleSegments = stringSegments.length > 1;
 		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
 		let value = this._state.getIn(pointer.segments);
@@ -157,7 +161,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		return undoOperations;
 	}
 
-	private setIn(segments: string[], value: any, state: Map<any, any>, add = false) {
+	private setIn(segments: (string | number)[], value: any, state: Map<any, any>, add = false) {
 		const updated = this.set(segments, value, state, add);
 		if (updated) {
 			return updated;
@@ -171,7 +175,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 				}
 				const value = state.getIn([...segments.slice(0, index), segment]);
 				if (!value || !(value instanceof List || value instanceof Map)) {
-					if (!isNaN(nextSegment) && !isNaN(parseInt(nextSegment, 0))) {
+					if (typeof nextSegment === 'number') {
 						map = map.setIn([...segments.slice(0, index), segment], List());
 					} else {
 						map = map.setIn([...segments.slice(0, index), segment], Map());
@@ -183,7 +187,7 @@ export class ImmutableState<T = any> implements MutableState<T> {
 		return this.set(segments, value, state, add) || state;
 	}
 
-	private set(segments: string[], value: any, state: Map<any, any>, add = false) {
+	private set(segments: (string | number)[], value: any, state: Map<any, any>, add = false) {
 		if (typeof value === 'object' && value != null) {
 			if (Array.isArray(value)) {
 				value = List(value);

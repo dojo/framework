@@ -9,7 +9,7 @@ import Map from '../shim/Map';
  *
  */
 export interface Path<M, T> {
-	path: string;
+	path: string | number | (string | number)[];
 	state: M;
 	value: T;
 }
@@ -24,7 +24,6 @@ export interface State<M> {
 	at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>;
 	path: StatePaths<M>;
 }
-
 export interface StatePaths<M> {
 	<T, P0 extends keyof Required<T>>(path: Path<M, T>, a: P0): Path<M, Required<T>[P0]>;
 	<T, P0 extends keyof T, P1 extends keyof Required<T>[P0]>(path: Path<M, T>, a: P0, b: P1): Path<
@@ -108,8 +107,9 @@ interface OnChangeValue {
 	previousValue: any;
 }
 
-function isString(segment?: string): segment is string {
-	return typeof segment === 'string';
+function isStringOrNumber(segment?: string | number): segment is string | number {
+	const type = typeof segment;
+	return type === 'string' || type === 'number';
 }
 
 export interface MutableState<T = any> extends State<T> {
@@ -153,14 +153,17 @@ export class DefaultState<T = any> implements MutableState<T> {
 		};
 	};
 
-	public path: State<T>['path'] = (path: string | Path<T, any>, ...segments: (string | undefined)[]) => {
-		if (typeof path === 'string') {
+	public path: State<T>['path'] = (
+		path: string | number | Path<T, any>,
+		...segments: (string | number | undefined)[]
+	) => {
+		if (typeof path === 'string' || typeof path === 'number') {
 			segments = [path, ...segments];
 		} else {
 			segments = [...new Pointer(path.path).segments, ...segments];
 		}
 
-		const stringSegments = segments.filter<string>(isString);
+		const stringSegments = segments.filter(isStringOrNumber);
 		const hasMultipleSegments = stringSegments.length > 1;
 		const pointer = new Pointer(hasMultipleSegments ? stringSegments : stringSegments[0] || '');
 
@@ -224,7 +227,9 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 		return {
 			remove: () => {
 				(paths as Path<T, U>[]).forEach((path) => {
-					const onChange = this._changePaths.get(path.path);
+					const onChange = this._changePaths.get(
+						Array.isArray(path.path) ? path.path.join('/') : String(path.path)
+					);
 					if (onChange) {
 						onChange.callbacks = onChange.callbacks.filter((callback) => {
 							return callback.callbackId !== callbackId;
@@ -236,12 +241,13 @@ export class Store<T = any> extends Evented implements MutableState<T> {
 	};
 
 	private _addOnChange = <U = any>(path: Path<T, U>, callback: () => void, callbackId: number): void => {
-		let changePaths = this._changePaths.get(path.path);
+		const stringPath = Array.isArray(path.path) ? path.path.join('/') : String(path.path);
+		let changePaths = this._changePaths.get(stringPath);
 		if (!changePaths) {
 			changePaths = { callbacks: [], previousValue: this.get(path) };
 		}
 		changePaths.callbacks.push({ callbackId, callback });
-		this._changePaths.set(path.path, changePaths);
+		this._changePaths.set(stringPath, changePaths);
 	};
 
 	private _runOnChanges() {

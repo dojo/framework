@@ -1,18 +1,23 @@
-export function decode(segment: string) {
-	return segment.replace(/~1/g, '/').replace(/~0/g, '~');
+export function decode(segment: string | number) {
+	return typeof segment === 'number' ? segment : segment.replace(/~1/g, '/').replace(/~0/g, '~');
 }
 
-function encode(segment: string) {
-	return segment.replace(/~/g, '~0').replace(/\//g, '~1');
+function encode(segment: string | number) {
+	return typeof segment === 'number' ? segment : segment.replace(/~/g, '~0').replace(/\//g, '~1');
 }
 
 export interface PointerTarget {
 	object: any;
 	target: any;
-	segment: string;
+	segment: string | number;
 }
 
-export function walk(segments: string[], object: any, clone = true, continueOnUndefined = true): PointerTarget {
+export function walk(
+	segments: (string | number)[],
+	object: any,
+	clone = true,
+	continueOnUndefined = true
+): PointerTarget {
 	if (clone) {
 		object = { ...object };
 	}
@@ -27,7 +32,7 @@ export function walk(segments: string[], object: any, clone = true, continueOnUn
 			return pointerTarget;
 		}
 		if (Array.isArray(pointerTarget.target) && segment === '-') {
-			segment = String(pointerTarget.target.length - 1);
+			segment = pointerTarget.target.length - 1;
 		}
 		if (index + 1 < segments.length) {
 			const nextSegment: any = segments[index + 1];
@@ -43,10 +48,10 @@ export function walk(segments: string[], object: any, clone = true, continueOnUn
 					target = [...target];
 				} else if (typeof target === 'object') {
 					target = { ...target };
-				} else if (isNaN(nextSegment) || isNaN(parseInt(nextSegment, 0))) {
-					target = {};
-				} else {
+				} else if (typeof nextSegment === 'number') {
 					target = [];
+				} else {
+					target = {};
 				}
 				pointerTarget.target[segment] = target;
 				pointerTarget.target = target;
@@ -61,22 +66,28 @@ export function walk(segments: string[], object: any, clone = true, continueOnUn
 }
 
 export class Pointer<T = any, U = any> {
-	private readonly _segments: string[];
+	private readonly _segments: (string | number)[];
 
-	constructor(segments: string | string[]) {
+	constructor(segments: number | string | (string | number)[]) {
 		if (Array.isArray(segments)) {
 			this._segments = segments;
 		} else {
-			this._segments = (segments[0] === '/' ? segments : `/${segments}`).split('/');
+			this._segments =
+				typeof segments === 'string'
+					? (segments[0] === '/' ? segments : `/${segments}`).split('/')
+					: [segments];
 			this._segments.shift();
 		}
-		if (segments.length === 0 || ((segments.length === 1 && segments[0] === '/') || segments[0] === '')) {
+		if (
+			typeof segments !== 'number' &&
+			(segments.length === 0 || ((segments.length === 1 && segments[0] === '/') || segments[0] === ''))
+		) {
 			throw new Error('Access to the root is not supported.');
 		}
 		this._segments = this._segments.map(decode);
 	}
 
-	public get segments(): string[] {
+	public get segments(): (string | number)[] {
 		return this._segments;
 	}
 
