@@ -318,6 +318,8 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 	return bundleId;
 }
 
+const cachedBundleMap = new WeakMap<Bundle<any>, Map<string, LocalizeResult<Bundle<any>>>>();
+
 export function localizeBundle<T extends Messages>(
 	bundle: Bundle<T>,
 	options: LocalizeOptions
@@ -350,18 +352,25 @@ export function localizeBundle<T extends Messages>(
 		return getPlaceholderBundle(bundle);
 	}
 
-	return {
-		messages: Object.keys(bundle.messages).reduce(
-			(messages, key) => {
-				const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
-				messages[key] = message;
-				return messages;
-			},
-			{} as any
-		),
-		isPlaceholder: false,
-		format: (key: any, options: {}) => {
-			return globalize.formatMessage(`${bundleId}/${key}`, options);
-		}
-	};
+	const cachedLocaleMessagesMap = cachedBundleMap.get(bundle) || new Map<string, LocalizeResult<Bundle<any>>>();
+	let localizedBundleMessages = cachedLocaleMessagesMap.get(locale);
+	if (!localizedBundleMessages) {
+		localizedBundleMessages = {
+			messages: Object.keys(bundle.messages).reduce(
+				(messages, key) => {
+					const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
+					messages[key] = message;
+					return messages;
+				},
+				{} as any
+			),
+			isPlaceholder: false,
+			format: (key: any, options: {}) => {
+				return globalize.formatMessage(`${bundleId}/${key}`, options);
+			}
+		};
+		cachedLocaleMessagesMap.set(locale, localizedBundleMessages);
+		cachedBundleMap.set(bundle, cachedLocaleMessagesMap);
+	}
+	return localizedBundleMessages;
 }
