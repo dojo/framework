@@ -41,11 +41,11 @@ describe('state/ImmutableState', () => {
 
 		it('value to array index path', () => {
 			const state = new ImmutableState();
-			const result = state.apply([ops.add({ path: '/test/0', state: null, value: null }, 'test')]);
+			const result = state.apply([ops.add({ path: ['test', 0], state: null, value: null }, 'test')]);
 			assert.deepEqual(state.path('/test').value, ['test']);
 			assert.deepEqual(result, [
-				{ op: OperationType.TEST, path: new Pointer('/test/0'), value: 'test' },
-				{ op: OperationType.REMOVE, path: new Pointer('/test/0') }
+				{ op: OperationType.TEST, path: new Pointer(['test', 0]), value: 'test' },
+				{ op: OperationType.REMOVE, path: new Pointer(['test', 0]) }
 			]);
 		});
 	});
@@ -171,12 +171,12 @@ describe('state/ImmutableState', () => {
 			state.apply([ops.add({ path: '/foo/0/bar/baz/0/qux', state: null, value: null }, true)]);
 			const result = state.apply([ops.test({ path: '/foo/0/bar/baz/0/qux', state: null, value: null }, true)]);
 			assert.deepEqual(result, []);
-			assert.deepEqual(state.path('/foo').value, [{ bar: { baz: [{ qux: true }] } }]);
+			assert.deepEqual(state.path('/foo').value, { 0: { bar: { baz: { 0: { qux: true } } } } });
 		});
 
 		it('complex value', () => {
 			const state = new ImmutableState();
-			state.apply([ops.add({ path: '/foo/0/bar/baz/0/qux', state: null, value: null }, true)]);
+			state.apply([ops.add({ path: ['foo', 0, 'bar', 'baz', 0, 'qux'], state: null, value: null }, true)]);
 			const result = state.apply([
 				ops.test({ path: '/foo', state: null, value: null }, [
 					{

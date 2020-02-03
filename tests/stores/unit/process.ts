@@ -175,6 +175,15 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 			assert.strictEqual(foobar, 'foo/bar');
 		});
 
+		it('handles array indices in `path`', () => {
+			const store = new Store<{ foo: { bar: string }[] }>();
+			store.apply([add(store.path('foo'), [{ bar: 'baz' }])]);
+			const foo = store.get(store.path('foo'));
+			const foobar = store.get(store.path('foo', 0, 'bar'));
+			assert.deepEqual(foo, [{ bar: 'baz' }]);
+			assert.strictEqual(foobar, 'baz');
+		});
+
 		it('should handle optional properties for updates', () => {
 			type StateType = { a?: { b?: string }; foo?: number; bar: string };
 			const createCommand = createCommandFactory<StateType>();
@@ -649,7 +658,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 					const paths = result.operations.map((operation) => operation.path.path);
 					const logs = result.get(store.path('logs')) || [];
 
-					result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+					result.apply([{ op: OperationType.ADD, path: new Pointer(['logs', logs.length]), value: paths }]);
 				}
 			});
 
@@ -682,7 +691,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 					store.apply([
 						{
 							op: OperationType.ADD,
-							path: new Pointer(`/initLogs/${initLog.length}`),
+							path: new Pointer(['initLogs', initLog.length]),
 							value: 'initial value'
 						}
 					]);
@@ -712,7 +721,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 					const paths = result.operations.map((operation) => operation.path.path);
 					const logs = result.get(store.path('logs')) || [];
 
-					result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+					result.apply([{ op: OperationType.ADD, path: new Pointer(['logs', logs.length]), value: paths }]);
 				}
 			});
 
@@ -764,7 +773,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 				const paths = result.operations.map((operation) => operation.path.path);
 				const logs = result.get(store.path('logs')) || [];
 
-				result.apply([{ op: OperationType.ADD, path: new Pointer(`/logs/${logs.length}`), value: paths }]);
+				result.apply([{ op: OperationType.ADD, path: new Pointer(['logs', logs.length]), value: paths }]);
 			};
 
 			const process = createProcess('test', [testCommandFactory('foo'), testCommandFactory('bar')], () => ({

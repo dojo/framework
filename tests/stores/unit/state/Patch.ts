@@ -154,13 +154,13 @@ describe('state/Patch', () => {
 		});
 
 		it('array index path', () => {
-			const patch = new Patch(ops.remove({ path: '/test/1', state: null, value: null }));
+			const patch = new Patch(ops.remove({ path: ['test', 1], state: null, value: null }));
 			const obj = { test: ['test', 'foo'] };
 			const result = patch.apply(obj);
 			assert.notStrictEqual(result.object, obj);
 			assert.deepEqual(result.object, { test: ['test'] });
 			assert.deepEqual(result.undoOperations, [
-				{ op: OperationType.ADD, path: new Pointer('/test/1'), value: 'foo' }
+				{ op: OperationType.ADD, path: new Pointer(['test', 1]), value: 'foo' }
 			]);
 		});
 	});
