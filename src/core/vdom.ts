@@ -1110,17 +1110,15 @@ function createProxyProperties(id: string, properties: any) {
 				const widgetMeta = widgetMetaMap.get(id);
 				if (widgetMeta) {
 					return widgetMeta.originalProperties[propertyName](...args);
-				} else {
-					properties[propertyName](...args);
 				}
+				return properties[propertyName](...args);
 			};
 			props[propertyName].unwrap = () => {
 				const widgetMeta = widgetMetaMap.get(id);
 				if (widgetMeta) {
 					return widgetMeta.originalProperties[propertyName];
-				} else {
-					properties[propertyName];
 				}
+				return properties[propertyName];
 			};
 		} else {
 			props[propertyName] = properties[propertyName];
