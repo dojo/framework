@@ -159,6 +159,69 @@ describe('Breakpoint', () => {
 });
 ```
 
+#### Mock `focus` middleware
+
+Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` offers tests manual control over when the `focus` middleware reports that a node with a specified key is focused.
+
+Consider the following widget:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+export interface FormWidgetProperties extends FocusProperties {}
+
+const factory = create({ focus }).properties<FormWidgetProperties>();
+
+export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
+	return (
+		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
+			<input type="text" key="text" value="focus me" />
+		</div>
+	);
+});
+```
+
+By calling `focusMock(key: string | number, value: boolean)` the result of the focus middleware's `isFocused` method can be controlled during a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import focus from '@dojo/framework/core/middleware/focus';
+import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+describe('Focus', () => {
+	it('adds a "focused" class to the wrapper when the input is focused', () => {
+		const focusMock = createFocusMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[focus, focusMock]]
+		});
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, null]}>
+				<input type="text" key="text" value="focus me" />
+			</div>
+		));
+
+		focusMock('text', true);
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, css.focused]}>
+				<input type="text" key="text" value="focus me" />
+			</div>
+		));
+	});
+});
+```
+
 #### Mock `iCache` middleware
 
 Using `createICacheMiddleware` from `@dojo/framework/testing/mocks/middleware/icache` allows tests to access cache items directly while the mock provides a sufficient icache experience for the widget under test. This is particularly useful when `icache` is used to asynchronously retrieve data. Direct cache access enables the test to `await` the same promise as the widget.
