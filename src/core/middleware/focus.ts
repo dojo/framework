@@ -1,7 +1,9 @@
 import global from '../../shim/global';
 import { create, diffProperty, node, destroy, invalidator } from '../vdom';
 import { createICacheMiddleware } from './icache';
-import { FocusProperties } from '../mixins/Focus';
+import { FocusProperties } from '../interfaces';
+
+export { FocusProperties } from '../interfaces';
 
 interface FocusState {
 	current: number;

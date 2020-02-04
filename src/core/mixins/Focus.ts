@@ -1,11 +1,9 @@
 import { Constructor } from './../interfaces';
 import { WidgetBase } from './../WidgetBase';
 import { diffProperty } from './../decorators/diffProperty';
+import { FocusProperties } from '../interfaces';
 
-export interface FocusProperties {
-	/** Function to determine if the widget should focus */
-	focus?: () => boolean;
-}
+export { FocusProperties } from '../interfaces';
 
 export interface FocusMixin {
 	focus: () => void;
