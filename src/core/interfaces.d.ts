@@ -653,6 +653,11 @@ export interface LocaleData {
 	rtl?: boolean;
 }
 
+export interface FocusProperties {
+	/** Function to determine if the widget should focus */
+	focus?: () => boolean;
+}
+
 export interface I18nProperties extends LocaleData {
 	/**
 	 * An optional override for the bundle passed to the `localizeBundle`. If the override contains a `messages` object,
