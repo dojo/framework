@@ -24,7 +24,7 @@ import {
 	incrementBlockCount,
 	decrementBlockCount
 } from '../../../src/core/vdom';
-import { VNode, DNode, DomVNode, RenderResult, WidgetBaseConstructor } from '../../../src/core/interfaces';
+import { VNode, DNode, DomVNode, RenderResult, WidgetBaseConstructor, Constructor } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
@@ -3729,19 +3729,22 @@ jsdomDescribe('vdom', () => {
 				);
 			});
 
-			it('should create live binding to the latest function property', () => {
+			it('should create live binding to the latest version of function properties', () => {
 				const factory = create({ icache }).properties<any>();
+				class MyClass {}
 
-				const FunctionChild = create({ icache }).properties<{ onChange: () => void }>()(function FunctionChild({
-					properties,
-					middleware: { icache }
-				}) {
+				const FunctionChild = create({ icache }).properties<{
+					Ctor: Constructor<MyClass>;
+					onChange: (value: number) => void;
+				}>()(function FunctionChild({ properties, middleware: { icache } }) {
 					const renderCount = icache.getOrSet('r', 1, false);
 					icache.set('r', renderCount + 1, false);
-					const { onChange } = properties();
+					const { onChange, Ctor } = properties();
+					const MyCtor = Ctor.unwrap();
+					new MyCtor();
 					return (
 						<div>
-							<button onclick={() => onChange()} />
+							<button onclick={() => onChange(1)} />
 							<div>{`Child Rendered: ${renderCount}`}</div>
 						</div>
 					);
@@ -3756,6 +3759,7 @@ jsdomDescribe('vdom', () => {
 						return (
 							<div>
 								<FunctionChild
+									Ctor={MyClass}
 									onChange={() => {
 										icache.set('n', result * multiplier);
 									}}
