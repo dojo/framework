@@ -1105,7 +1105,7 @@ function createProxyProperties(id: string, properties: any) {
 	const propertyNames = Object.keys(properties);
 	for (let i = 0; i < propertyNames.length; i++) {
 		const propertyName = propertyNames[i];
-		if (typeof properties[propertyName] === 'function' && !isWidgetBaseConstructor(properties[propertyName])) {
+		if (typeof properties[propertyName] === 'function') {
 			props[propertyName] = function PropertyProxy(...args: any[]) {
 				const widgetMeta = widgetMetaMap.get(id);
 				if (widgetMeta) {
