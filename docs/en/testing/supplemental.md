@@ -107,16 +107,16 @@ import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 const factory = create({ breakpoint });
 
 export default factory(function Breakpoint({ middleware: { breakpoint } }) {
-  const bp = breakpoint.get('root');
-  const isLarge = bp && bp.breakpoint === 'LG';
+	const bp = breakpoint.get('root');
+	const isLarge = bp && bp.breakpoint === 'LG';
 
-  return (
-    <div key="root">
-      <h1>Header</h1>
-      {isLarge && <h2>Subtitle</h2>}
-      <div>Longer description</div>
-    </div>
-  );
+	return (
+		<div key="root">
+			<h1>Header</h1>
+			{isLarge && <h2>Subtitle</h2>}
+			<div>Longer description</div>
+		</div>
+	);
 });
 ```
 
