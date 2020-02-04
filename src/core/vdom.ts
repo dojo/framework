@@ -1100,7 +1100,7 @@ export const defer = factory(({ id }) => {
 	};
 });
 
-function createProxyProperties(id: string, properties: any) {
+function wrapFunctionProperties(id: string, properties: any) {
 	const props: any = {};
 	const propertyNames = Object.keys(properties);
 	for (let i = 0; i < propertyNames.length; i++) {
@@ -2041,7 +2041,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
-					properties: createProxyProperties(id, next.node.properties),
+					properties: wrapFunctionProperties(id, next.node.properties),
 					originalProperties: { ...next.node.properties },
 					children: next.node.children,
 					deferRefs: 0,
@@ -2139,7 +2139,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
 				widgetMeta.originalProperties = { ...next.properties };
-				widgetMeta.properties = createProxyProperties(id, widgetMeta.originalProperties);
+				widgetMeta.properties = wrapFunctionProperties(id, widgetMeta.originalProperties);
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, widgetMeta.properties);
