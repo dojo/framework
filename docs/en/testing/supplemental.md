@@ -100,7 +100,7 @@ Consider the following widget which displays an additonal `h2` when the `LG` bre
 
 > src/Breakpoint.tsx
 
-```
+```tsx
 import { tsx, create } from '@dojo/framework/core/vdom';
 import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 
