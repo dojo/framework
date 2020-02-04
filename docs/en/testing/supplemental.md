@@ -501,6 +501,73 @@ describe('MyWidget', () => {
 });
 ```
 
+#### Mock `validity` middleware
+
+Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can be controlled in a test.
+
+Consider the following example:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import validity from '@dojo/framework/core/middleware/validity';
+import icache from '@dojo/framework/core/middleware/icache';
+import * as css from './FormWidget.m.css';
+
+const factory = create({ validity, icache });
+
+export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
+	const value = icache.getOrSet('value', '');
+	const { valid, message } = validity.get('input', value);
+
+	return (
+		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
+			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
+			{message ? <p key="validityMessage">{message}</p> : null}
+		</div>
+	);
+});
+```
+
+Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the validity mock's `get` method can be controlled in a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import validity from '@dojo/framework/core/middleware/validity';
+import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
+import * as css from './FormWidget.m.css';
+
+describe('Validity', () => {
+	it('adds a "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+		const validityMock = createValidityMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[validity, validityMock]]
+		});
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, null]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+			</div>
+		));
+
+		validityMock('input', { valid: false, message: 'invalid message' });
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, css.invalid]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+				<p key="validityMessage">invalid message</p>
+			</div>
+		));
+	});
+});
+```
+
 #### Custom middleware mocks
 
 Not all testing scenarios will be covered by the provided mocks. Custom middleware mocks can also be created. A middleware mock should provide an overloaded interface. The parameterless overload should return the middleware implementation; this is what will be injected into the widget under test. Other overloads are created as needed to provide an interface for the tests.
