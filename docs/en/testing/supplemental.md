@@ -185,7 +185,7 @@ export const FormWidget = factory(function FormWidget({ middleware: { focus } })
 });
 ```
 
-By calling `focusMock(key: string | number, value: boolean)` the result of the focus middleware's `isFocused` method can be controlled during a test.
+By calling `focusMock(key: string | number, value: boolean)` the result of the focus middleware's `isFocused` method can get controlled during a test.
 
 > tests/unit/FormWidget.tsx
 
