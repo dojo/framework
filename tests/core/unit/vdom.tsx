@@ -24,7 +24,7 @@ import {
 	incrementBlockCount,
 	decrementBlockCount
 } from '../../../src/core/vdom';
-import { VNode, DNode, DomVNode, RenderResult } from '../../../src/core/interfaces';
+import { VNode, DNode, DomVNode, RenderResult, WidgetBaseConstructor } from '../../../src/core/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import Registry from '../../../src/core/Registry';
 import { I18nMixin } from '../../../src/core/mixins/I18n';
@@ -3726,6 +3726,107 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual(
 					root.outerHTML,
 					'<root><div><div>property-new-fooproperty-barwidget-state-1middleware-state-1</div><div>user-keyproperty-new-fooproperty-barwidget-state-1middleware-state-1</div><div>999943214321widget-state-1middleware-state-1</div><div>1234999943214321widget-state-1middleware-state-1</div><div>property-new-foowidget-state-1middleware-state-1</div><button></button></div></root>'
+				);
+			});
+
+			it('should create live binding to the latest version of function properties', () => {
+				const factory = create({ icache }).properties<any>();
+
+				const FunctionChild = create({ icache }).properties<{
+					onChange: (value: number) => void;
+				}>()(function FunctionChild({ properties, middleware: { icache } }) {
+					const renderCount = icache.getOrSet('r', 1, false);
+					icache.set('r', renderCount + 1, false);
+					const { onChange } = properties();
+					return (
+						<div>
+							<button onclick={() => onChange(1)} />
+							<div>{`Child Rendered: ${renderCount}`}</div>
+						</div>
+					);
+				});
+
+				const FunctionBased = create({ icache }).properties<{ multiplier: number; A: WidgetBaseConstructor }>()(
+					function FunctionBased({ properties, middleware: { icache } }) {
+						const { multiplier, A } = properties();
+						const result = icache.getOrSet('n', 1);
+						const renderCount = icache.getOrSet('r', 1);
+						icache.set('r', renderCount + 1);
+						const PropertyWidget = A.unwrap();
+						return (
+							<div>
+								<FunctionChild
+									onChange={() => {
+										icache.set('n', result * multiplier);
+									}}
+								/>
+								<div>{`result: ${result}`}</div>
+								<div>{`Parent Rendered: ${renderCount}`}</div>
+								<PropertyWidget>Class</PropertyWidget>
+							</div>
+						);
+					}
+				);
+
+				class ClassBased extends WidgetBase {
+					private _counter = 0;
+					render() {
+						return (
+							<div>
+								{this.children}
+								{`${this._counter++}`}
+							</div>
+						);
+					}
+				}
+
+				const App = factory(function App({ middleware: { icache } }) {
+					const multiplier = icache.getOrSet('m', 2);
+					return (
+						<div>
+							<button
+								onclick={() => {
+									icache.set('m', multiplier + 1);
+								}}
+							>
+								Multiplier++
+							</button>
+							<div>{`Multiplier: ${multiplier}`}</div>
+							<FunctionBased multiplier={multiplier} A={ClassBased} />
+						</div>
+					);
+				});
+				const root = document.createElement('root');
+				const r = renderer(() => <App />);
+				r.mount({ domNode: root });
+
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><button>Multiplier++</button><div>Multiplier: 2</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 1</div><div>Parent Rendered: 1</div><div>Class0</div></div></div></root>'
+				);
+				(root.children[0].children[0] as HTMLButtonElement).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 1</div><div>Parent Rendered: 2</div><div>Class1</div></div></div></root>'
+				);
+				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 3</div><div>Parent Rendered: 3</div><div>Class2</div></div></div></root>'
+				);
+				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 9</div><div>Parent Rendered: 4</div><div>Class3</div></div></div></root>'
+				);
+				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.outerHTML,
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 27</div><div>Parent Rendered: 5</div><div>Class4</div></div></div></root>'
 				);
 			});
 

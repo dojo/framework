@@ -84,6 +84,7 @@ export interface WidgetMeta {
 	registryHandler?: RegistryHandler;
 	registry: Registry;
 	properties: any;
+	originalProperties: any;
 	children?: DNode[];
 	rendering: boolean;
 	nodeMap?: Map<string | number, HTMLElement>;
@@ -1099,6 +1100,33 @@ export const defer = factory(({ id }) => {
 	};
 });
 
+function wrapFunctionProperties(id: string, properties: any) {
+	const props: any = {};
+	const propertyNames = Object.keys(properties);
+	for (let i = 0; i < propertyNames.length; i++) {
+		const propertyName = propertyNames[i];
+		if (typeof properties[propertyName] === 'function') {
+			props[propertyName] = function WrappedProperty(...args: any[]) {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.originalProperties[propertyName](...args);
+				}
+				return properties[propertyName](...args);
+			};
+			props[propertyName].unwrap = () => {
+				const widgetMeta = widgetMetaMap.get(id);
+				if (widgetMeta) {
+					return widgetMeta.originalProperties[propertyName];
+				}
+				return properties[propertyName];
+			};
+		} else {
+			props[propertyName] = properties[propertyName];
+		}
+	}
+	return props;
+}
+
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
 		sync: false,
@@ -2013,7 +2041,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
-					properties: next.node.properties,
+					properties: wrapFunctionProperties(id, next.node.properties),
+					originalProperties: { ...next.node.properties },
 					children: next.node.children,
 					deferRefs: 0,
 					rendering: true,
@@ -2109,7 +2138,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (!isWidgetBaseConstructor(Constructor)) {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
-				widgetMeta.properties = { ...next.properties };
+				widgetMeta.originalProperties = { ...next.properties };
+				widgetMeta.properties = wrapFunctionProperties(id, widgetMeta.originalProperties);
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				runDiffs(widgetMeta, current.properties, widgetMeta.properties);
