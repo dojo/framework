@@ -625,7 +625,7 @@ The `ValidityState` object contains the following properties:
 
 | Property            | Type      | Description                                                                                                                       |
 | ------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `valid`             | `boolean` | The value of the node's `validity.valid` property, stating whether the value of the node meets all of the validation constraings. |
+| `valid`             | `boolean` | The value of the node's `validity.valid` property, stating whether the value of the node meets all of the validation constraints. |
 | `validationMessage` | `string`  | The value of the node's `validationMessage` property, a localized message describing the failing constraints of the node's value. |
 
 ## `injector`
