@@ -530,7 +530,7 @@ export const FormWidget = factory(function FormWidget({ middleware: { validity, 
 });
 ```
 
-Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the validity mock's `get` method can be controlled in a test.
+Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the validity mock's `get` method can get controlled in a test.
 
 > tests/unit/FormWidget.tsx
 
