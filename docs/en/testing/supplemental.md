@@ -100,23 +100,23 @@ Consider the following widget which displays an additonal `h2` when the `LG` bre
 
 > src/Breakpoint.tsx
 
-```
+```tsx
 import { tsx, create } from '@dojo/framework/core/vdom';
 import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 
 const factory = create({ breakpoint });
 
 export default factory(function Breakpoint({ middleware: { breakpoint } }) {
-  const bp = breakpoint.get('root');
-  const isLarge = bp && bp.breakpoint === 'LG';
+	const bp = breakpoint.get('root');
+	const isLarge = bp && bp.breakpoint === 'LG';
 
-  return (
-    <div key="root">
-      <h1>Header</h1>
-      {isLarge && <h2>Subtitle</h2>}
-      <div>Longer description</div>
-    </div>
-  );
+	return (
+		<div key="root">
+			<h1>Header</h1>
+			{isLarge && <h2>Subtitle</h2>}
+			<div>Longer description</div>
+		</div>
+	);
 });
 ```
 
@@ -153,6 +153,69 @@ describe('Breakpoint', () => {
 				<h1>Header</h1>
 				<h2>Subtitle</h2>
 				<div>Longer description</div>
+			</div>
+		));
+	});
+});
+```
+
+#### Mock `focus` middleware
+
+Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` provides tests with manual control over when the `focus` middleware reports that a node with a specified key gets focused.
+
+Consider the following widget:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+export interface FormWidgetProperties extends FocusProperties {}
+
+const factory = create({ focus }).properties<FormWidgetProperties>();
+
+export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
+	return (
+		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
+			<input type="text" key="text" value="focus me" />
+		</div>
+	);
+});
+```
+
+By calling `focusMock(key: string | number, value: boolean)` the result of the focus middleware's `isFocused` method can get controlled during a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import focus from '@dojo/framework/core/middleware/focus';
+import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+describe('Focus', () => {
+	it('adds a "focused" class to the wrapper when the input is focused', () => {
+		const focusMock = createFocusMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[focus, focusMock]]
+		});
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, null]}>
+				<input type="text" key="text" value="focus me" />
+			</div>
+		));
+
+		focusMock('text', true);
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, css.focused]}>
+				<input type="text" key="text" value="focus me" />
 			</div>
 		));
 	});
@@ -435,6 +498,73 @@ describe('MyWidget', () => {
          mockStore((path) => [replace(path('details', { id: 'other' })]);
          h.expect(/* assertion template for `ShowDetails`*/);
      });
+});
+```
+
+#### Mock `validity` middleware
+
+Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can get controlled in a test.
+
+Consider the following example:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import validity from '@dojo/framework/core/middleware/validity';
+import icache from '@dojo/framework/core/middleware/icache';
+import * as css from './FormWidget.m.css';
+
+const factory = create({ validity, icache });
+
+export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
+	const value = icache.getOrSet('value', '');
+	const { valid, message } = validity.get('input', value);
+
+	return (
+		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
+			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
+			{message ? <p key="validityMessage">{message}</p> : null}
+		</div>
+	);
+});
+```
+
+Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the validity mock's `get` method can get controlled in a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import validity from '@dojo/framework/core/middleware/validity';
+import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
+import * as css from './FormWidget.m.css';
+
+describe('Validity', () => {
+	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+		const validityMock = createValidityMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[validity, validityMock]]
+		});
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, null]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+			</div>
+		));
+
+		validityMock('input', { valid: false, message: 'invalid message' });
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, css.invalid]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+				<p key="validityMessage">invalid message</p>
+			</div>
+		));
+	});
 });
 ```
 

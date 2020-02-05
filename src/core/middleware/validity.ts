@@ -2,7 +2,7 @@ import { create, node, invalidator } from '../vdom';
 
 const factory = create({ node, invalidator });
 
-const validity = factory(function({ middleware: { node, invalidator } }) {
+export const validity = factory(function({ middleware: { node, invalidator } }) {
 	return {
 		get(key: string | number, value: string) {
 			const domNode = node.get(key) as HTMLFormElement | undefined;

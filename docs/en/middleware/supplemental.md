@@ -609,6 +609,25 @@ export default factory(function FocusableWidget({ middleware: { focus, icache } 
 });
 ```
 
+## `validity`
+
+Allows retrieving information specifically about a node's [validity state](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) which is useful for using the browser's built-in methods for validating form inputs and providing locale-based error messages.
+
+**API:**
+
+```ts
+import validity from '@dojo/framework/core/middleware/validity';
+```
+
+-   `validity.get(key: string, value: string)` - Return the validity state for the DOM element, identified by the node's `key` property. Returns `{ valid: undefined, message: '' }` if the specified DOM element does not exist for the current widget. Otherwise, it returns a `ValidityState` object.
+
+The `ValidityState` object contains the following properties:
+
+| Property            | Type      | Description                                                                                                                       |
+| ------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `valid`             | `boolean` | The value of the node's `validity.valid` property, stating whether the value of the node meets all of the validation constraints. |
+| `validationMessage` | `string`  | The value of the node's `validationMessage` property, a localized message describing the failing constraints of the node's value. |
+
 ## `injector`
 
 Allows retrieving injectors from the Dojo registry and assigning invalidation callback functions to then.
