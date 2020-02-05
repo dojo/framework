@@ -503,7 +503,7 @@ describe('MyWidget', () => {
 
 #### Mock `validity` middleware
 
-Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can be controlled in a test.
+Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can get controlled in a test.
 
 Consider the following example:
 
