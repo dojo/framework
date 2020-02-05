@@ -161,7 +161,7 @@ describe('Breakpoint', () => {
 
 #### Mock `focus` middleware
 
-Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` offers tests manual control over when the `focus` middleware reports that a node with a specified key is focused.
+Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` provides tests with manual control over when the `focus` middleware reports that a node with a specified key gets focused.
 
 Consider the following widget:
 
