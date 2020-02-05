@@ -543,7 +543,7 @@ import createValidityMock from '@dojo/framework/testing/mocks/middleware/validit
 import * as css from './FormWidget.m.css';
 
 describe('Validity', () => {
-	it('adds a "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
 		const validityMock = createValidityMock();
 
 		const h = harness(() => <FormWidget />, {
