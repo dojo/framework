@@ -343,6 +343,60 @@ Dojo uses a virtual node's key to uniquely identify a specific instance when re-
 
 > **Note:** Virtual node `keys` should be consistent across multiple render function invocations. Generating different keys for what should be the same output node within every render call [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development#the-virtual-dom), and should be avoided.
 
+## Defining widget `key`s
+
+Traditionally the widget's `key` property is used by the Dojo rendering engine to uniquely identify and track widgets across renders. However, updating the `key` property is also an effective way to guarantee that during the next render Dojo's rendering engine will recreate the widget instead of reusing the previous instance. When recreating the widget all previous state will get reset. This behavior is useful when working with widgets that manage logic based on the value of a widget property.
+
+Dojo provides a mechanism for widget authors to associate a widget property to the widget's identity by using the `.key()` chained method from the `create()` factory.
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+
+interface MyWidgetProperties {
+	id: string;
+}
+
+const factory = create()
+	.properties<MyWidgetProperties>()
+	.key('id');
+```
+
+Using this factory Dojo will recreate the widget instance if the `id` property changes. This powerful feature provides widget authors assurance their widget will get recreated when the defined property changes, therefore not having to deal with complicated logic to refresh data based on the property.
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
+
+interface MyWidgetProperties {
+	id: string;
+}
+
+const factory = create({ icache })
+	.properties<MyWidgetProperties>()
+	.key('id');
+
+const MyWidget = factory(function MyWidget({ properties, middleware: { icache } }) {
+	const { id } = properties();
+	const data = icache.getOrSet('data', async () => {
+		const response = await fetch(`https://my-api/items/${id}`);
+		const json = await response.json();
+		return json.data;
+	});
+
+	if (!data) {
+		return <div>Loading Data...</div>;
+	}
+
+	return (
+		<div>
+			<ul>{data.map((item) => <li>{item}</li>)}</ul>
+		</div>
+	);
+});
+```
+
+This example demonstrates fetching data based on the `id` property. Without using `.key('id)`, the widget would need to manage scenarios where the `id` property changes. This would include logic to determine if the property has actually changed, re-fetch the relevant data and also show the loading message. Using `.key('id')` guarantees that when the `id` property changes the widget will get recreated and the state reset, and the widget shows the "Loading Data..." message and fetches data based on the updated `id`.
+
 ## Configuring `VNode`s
 
 `VNodeProperties` contains many fields that act as the primary API to interact with concrete elements in the DOM. Many of these properties mirror those available on [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement), including specifying various `oneventname` event handlers.
