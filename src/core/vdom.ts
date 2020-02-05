@@ -1106,7 +1106,7 @@ function wrapFunctionProperties(id: string, properties: any) {
 	for (let i = 0; i < propertyNames.length; i++) {
 		const propertyName = propertyNames[i];
 		if (typeof properties[propertyName] === 'function') {
-			props[propertyName] = function PropertyProxy(...args: any[]) {
+			props[propertyName] = function WrappedProperty(...args: any[]) {
 				const widgetMeta = widgetMetaMap.get(id);
 				if (widgetMeta) {
 					return widgetMeta.originalProperties[propertyName](...args);
