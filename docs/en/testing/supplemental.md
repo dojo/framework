@@ -14,7 +14,7 @@ harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Ha
 harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
--   `renderFunction`: A function that returns a WNode for the widget under test
+-   `renderFunction`: A function that returns a `WNode` for the widget under test
 -   [`customComparators`](/learn/testing/dojo-test-harness#custom-comparators): Array of custom comparator descriptors. Each provides a comparator function to be used during the comparison for `properties` located using a `selector` and `property` name
 -   `options`: Expanded options for the harness which includes `customComparators` and an array of middleware/mocks tuples.
 
@@ -27,7 +27,7 @@ The harness returns a `Harness` object that provides a small API for interacting
 -   [`trigger`](/learn/testing/dojo-test-harness#harnesstrigger): Used to trigger a function from a node on the widget under test's API
 -   [`getRender`](/learn/testing/dojo-test-harness#harnessgetRender): Returns a render from the harness based on the index provided
 
-Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core`:
+Setting up a widget for testing is simple and familiar using the `w()` function from `@dojo/framework/core` or by returning TSX from the render function:
 
 > tests/unit/widgets/MyWidget.tsx
 
@@ -84,531 +84,11 @@ describe('MyWidget', () => {
 
 The harness automatically mocks a number of core middlewares that will be injected into any middleware that requires them:
 
--   invalidator
--   setProperty
--   destroy
-
-### Dojo mock middleware
-
-There are a number of mock middleware available to support testing widgets that use the corresponding Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
-
-#### Mock `breakpoint` middleware
-
-Using `createBreakpointMock` from `@dojo/framework/testing/mocks/middlware/breakpoint` offers tests manual control over resizing events to trigger breakpoint tests.
-
-Consider the following widget which displays an additonal `h2` when the `LG` breakpoint is activated:
-
-> src/Breakpoint.tsx
-
-```tsx
-import { tsx, create } from '@dojo/framework/core/vdom';
-import breakpoint from '@dojo/framework/core/middleware/breakpoint';
-
-const factory = create({ breakpoint });
-
-export default factory(function Breakpoint({ middleware: { breakpoint } }) {
-	const bp = breakpoint.get('root');
-	const isLarge = bp && bp.breakpoint === 'LG';
-
-	return (
-		<div key="root">
-			<h1>Header</h1>
-			{isLarge && <h2>Subtitle</h2>}
-			<div>Longer description</div>
-		</div>
-	);
-});
-```
-
-By using the `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` method on the breakpoint middleware mock, the test can explicitly trigger a given resize:
-
-> tests/unit/Breakpoint.tsx
-
-```tsx
-const { describe, it } = intern.getInterface('bdd');
-import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-import breakpoint from '@dojo/framework/core/middleware/breakpoint';
-import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
-import Breakpoint from '../../src/Breakpoint';
-
-describe('Breakpoint', () => {
-	it('resizes correctly', () => {
-		const mockBreakpoint = createBreakpointMock();
-
-		const h = harness(() => <Breakpoint />, {
-			middleware: [[breakpoint, mockBreakpoint]]
-		});
-		h.expect(() => (
-			<div key="root">
-				<h1>Header</h1>
-				<div>Longer description</div>
-			</div>
-		));
-
-		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
-
-		h.expect(() => (
-			<div key="root">
-				<h1>Header</h1>
-				<h2>Subtitle</h2>
-				<div>Longer description</div>
-			</div>
-		));
-	});
-});
-```
-
-#### Mock `focus` middleware
-
-Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` provides tests with manual control over when the `focus` middleware reports that a node with a specified key gets focused.
-
-Consider the following widget:
-
-> src/FormWidget.tsx
-
-```tsx
-import { tsx, create } from '@dojo/framework/core/vdom';
-import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
-import * as css from './FormWidget.m.css';
-
-export interface FormWidgetProperties extends FocusProperties {}
-
-const factory = create({ focus }).properties<FormWidgetProperties>();
-
-export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
-	return (
-		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
-			<input type="text" key="text" value="focus me" />
-		</div>
-	);
-});
-```
-
-By calling `focusMock(key: string | number, value: boolean)` the result of the focus middleware's `isFocused` method can get controlled during a test.
-
-> tests/unit/FormWidget.tsx
-
-```tsx
-const { describe, it } = intern.getInterface('bdd');
-import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-import focus from '@dojo/framework/core/middleware/focus';
-import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
-import * as css from './FormWidget.m.css';
-
-describe('Focus', () => {
-	it('adds a "focused" class to the wrapper when the input is focused', () => {
-		const focusMock = createFocusMock();
-
-		const h = harness(() => <FormWidget />, {
-			middleware: [[focus, focusMock]]
-		});
-
-		h.expect(() => (
-			<div key="wrapper" classes={[css.root, null]}>
-				<input type="text" key="text" value="focus me" />
-			</div>
-		));
-
-		focusMock('text', true);
-
-		h.expect(() => (
-			<div key="wrapper" classes={[css.root, css.focused]}>
-				<input type="text" key="text" value="focus me" />
-			</div>
-		));
-	});
-});
-```
-
-#### Mock `iCache` middleware
-
-Using `createICacheMiddleware` from `@dojo/framework/testing/mocks/middleware/icache` allows tests to access cache items directly while the mock provides a sufficient icache experience for the widget under test. This is particularly useful when `icache` is used to asynchronously retrieve data. Direct cache access enables the test to `await` the same promise as the widget.
-
-Consider the following widget which retrieves data from an API:
-
-> src/MyWidget.tsx
-
-```tsx
-import { tsx, create } from '@dojo/framework/core/vdom';
-import { icache } from '@dojo/framework/core/middleware/icache';
-import fetch from '@dojo/framework/shim/fetch';
-
-const factory = create({ icache });
-
-export default factory(function MyWidget({ middleware: { icache } }) {
-	const value = icache.getOrSet('users', async () => {
-		const response = await fetch('url');
-		return await response.json();
-	});
-
-	return value ? <div>{value}</div> : <div>Loading</div>;
-});
-```
-
-Testing the asynchrounous result using the mock icache middleware is simple:
-
-> tests/unit/MyWidget.tsx
-
-```tsx
-const { describe, it, afterEach } = intern.getInterface('bdd');
-import harness from '@dojo/framework/testing/harness';
-import { tsx } from '@dojo/framework/core/vdom';
-import * as sinon from 'sinon';
-import global from '@dojo/framework/shim/global';
-import icache from '@dojo/framework/core/middleware/icache';
-import createICacheMock from '@dojo/framework/testing/mocks/middleware/icache';
-import MyWidget from '../../src/MyWidget';
-
-describe('MyWidget', () => {
-	afterEach(() => {
-		sinon.restore();
-	});
-
-	it('test', async () => {
-		// stub the fetch call to return a known value
-		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
-
-		const mockICache = createICacheMock();
-		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
-		h.expect(() => <div>Loading</div>);
-
-		// await the async method passed to the mock cache
-		await mockICache('users');
-		h.expect(() => <pre>api data</pre>);
-	});
-});
-```
-
-#### Mock `intersection` middleware
-
-Using `createIntersectionMock` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the created mock intersection middleware with a `key` and expected intersection details.
-
-Consider the following widget:
-
-```tsx
-import { create, tsx } from '@dojo/framework/core/vdom';
-import intersection from '@dojo/framework/core/middleware/intersection';
-
-const factory = create({ intersection });
-
-const App = factory(({ middleware: { intersection } }) => {
-	const details = intersection.get('root');
-	return <div key="root">{JSON.stringify(details)}</div>;
-});
-```
-
-Using the mock intersection middleware:
-
-```tsx
-import { tsx } from '@dojo/framework/core/vdom';
-import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
-import intersection from '@dojo/framework/core/middleware/intersection';
-import harness from '@dojo/framework/testing/harness';
-
-import MyWidget from './MyWidget';
-
-describe('MyWidget', () => {
-	it('test', () => {
-		// create the intersection mock
-		const intersectionMock = createIntersectionMock();
-		// pass the intersection mock to the harness so it knows to
-		// replace the original middleware
-		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
-
-		// call harness.expect as usual, asserting the default response
-		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
-
-		// use the intersection mock to set the expected return
-		// of the intersection middleware by key
-		intersectionMock('root', { isIntersecting: true });
-
-		// assert again with the updated expectation
-		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
-	});
-});
-```
-
-#### Mock `node` middleware
-
-Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
-
-```ts
-import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
-
-// create the mock node middleware
-const mockNode = createNodeMock();
-
-// create a mock DOM node
-const domNode = {};
-
-// call the mock middleware with a key and the DOM
-// to return.
-mockNode('key', domNode);
-```
-
-#### Mock `resize` middleware
-
-Using `createResizeMock` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the created mock resize middleware with a `key` and expected content rects.
-
-```ts
-const mockResize = createResizeMock();
-mockResize('key', { width: 100 });
-```
-
-Consider the following widget:
-
-```tsx
-import { create, tsx } from '@dojo/framework/core/vdom'
-import resize from '@dojo/framework/core/middleware/resize'
-
-const factory = create({ resize });
-
-export const MyWidget = factory(function MyWidget({ middleware }) => {
-	const  { resize } = middleware;
-	const contentRects = resize.get('root');
-	return <div key="root">{JSON.stringify(contentRects)}</div>;
-});
-```
-
-Using the mock resize middleware:
-
-```tsx
-import { tsx } from '@dojo/framework/core/vdom';
-import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
-import resize from '@dojo/framework/core/middleware/resize';
-import harness from '@dojo/framework/testing/harness';
-
-import MyWidget from './MyWidget';
-
-describe('MyWidget', () => {
-	it('test', () => {
-		// create the resize mock
-		const resizeMock = createResizeMock();
-		// pass the resize mock to the harness so it knows to replace the original
-		// middleware
-		const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
-
-		// call harness.expect as usual
-		h.expect(() => <div key="root">null</div>);
-
-		// use the resize mock to set the expected return of the resize middleware
-		// by key
-		resizeMock('root', { width: 100 });
-
-		// assert again with the updated expectation
-		h.expect(() => <div key="root">{`{"width":100}`}</div>);
-	});
-});
-```
-
-#### Mock `Store` middleware
-
-Using `createMockStoreMiddleware` from `@dojo/framework/testing/mocks/middleware/store` creates a typed mock store middleware, which optionally supports mocking processes. To mock a store process pass a tuple of the original store process and the stub process. The middleware will swap out the call to the original process for the passed stub. If no stubs are passed, the middleware will simply no-op all process calls.
-
-To make changes to the mock store, call the `mockStore` with a function that returns an array of store operations. This is injected with the stores `path` function to create the pointer to the state that needs changing.
-
-```tsx
-mockStore((path) => [replace(path('details', { id: 'id' })]);
-```
-
-Consider the following widget:
-
-> src/MyWidget.tsx
-
-```tsx
-import { create, tsx } from '@dojo/framework/core/vdom'
-import { myProcess } from './processes';
-import MyState from './interfaces';
-// application store middleware typed with the state interface
-// Example: `const store = createStoreMiddleware<MyState>();`
-import store from './store';
-
-const factory = create({ store }).properties<{ id: string }>();
-
-export default factory(function MyWidget({ properties, middleware: store }) {
-	const { id } = properties();
-    const { path, get, executor } = store;
-    const details = get(path('details');
-    let isLoading = get(path('isLoading'));
-
-    if ((!details || details.id !== id) && !isLoading) {
-        executor(myProcess)({ id });
-        isLoading = true;
-    }
-
-    if (isLoading) {
-        return <Loading />;
-    }
-
-    return <ShowDetails {...details} />;
-});
-```
-
-Using the mock store middleware:
-
-> tests/unit/MyWidget.tsx
-
-```tsx
-import { tsx } from '@dojo/framework/core/vdom'
-import createMockStoreMiddleware from '@dojo/framework/testing/mocks/middleware/store';
-import harness from '@dojo/framework/testing/harness';
-
-import { myProcess } from './processes';
-import MyWidget from './MyWidget';
-import MyState from './interfaces';
-import store from './store';
-
-// import a stub/mock lib, doesn't have to be sinon
-import { stub } from 'sinon';
-
-describe('MyWidget', () => {
-     it('test', () => {
-          const properties = {
-               id: 'id'
-          };
-         const myProcessStub = stub();
-         // type safe mock store middleware
-         // pass through an array of tuples `[originalProcess, stub]` for mocked processes
-         // calls to processes not stubbed/mocked get ignored
-         const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
-         const h = harness(() => <MyWidget {...properties} />, {
-             middleware: [[store, mockStore]]
-         });
-         h.expect(/* assertion template for `Loading`*/);
-
-         // assert again the stubbed process
-         expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
-
-         mockStore((path) => [replace(path('isLoading', true)]);
-         h.expect(/* assertion template for `Loading`*/);
-         expect(myProcessStub.calledOnce()).toBeTruthy();
-
-         // use the mock store to apply operations to the store
-         mockStore((path) => [replace(path('details', { id: 'id' })]);
-         mockStore((path) => [replace(path('isLoading', true)]);
-
-         h.expect(/* assertion template for `ShowDetails`*/);
-
-         properties.id = 'other';
-         h.expect(/* assertion template for `Loading`*/);
-         expect(myProcessStub.calledTwice()).toBeTruthy();
-         expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
-         mockStore((path) => [replace(path('details', { id: 'other' })]);
-         h.expect(/* assertion template for `ShowDetails`*/);
-     });
-});
-```
-
-#### Mock `validity` middleware
-
-Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can get controlled in a test.
-
-Consider the following example:
-
-> src/FormWidget.tsx
-
-```tsx
-import { tsx, create } from '@dojo/framework/core/vdom';
-import validity from '@dojo/framework/core/middleware/validity';
-import icache from '@dojo/framework/core/middleware/icache';
-import * as css from './FormWidget.m.css';
-
-const factory = create({ validity, icache });
-
-export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
-	const value = icache.getOrSet('value', '');
-	const { valid, message } = validity.get('input', value);
-
-	return (
-		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
-			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
-			{message ? <p key="validityMessage">{message}</p> : null}
-		</div>
-	);
-});
-```
-
-Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the validity mock's `get` method can get controlled in a test.
-
-> tests/unit/FormWidget.tsx
-
-```tsx
-const { describe, it } = intern.getInterface('bdd');
-import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-import validity from '@dojo/framework/core/middleware/validity';
-import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
-import * as css from './FormWidget.m.css';
-
-describe('Validity', () => {
-	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
-		const validityMock = createValidityMock();
-
-		const h = harness(() => <FormWidget />, {
-			middleware: [[validity, validityMock]]
-		});
-
-		h.expect(() => (
-			<div key="root" classes={[css.root, null]}>
-				<input type="email" key="input" value="" onchange={() => {}} />
-			</div>
-		));
-
-		validityMock('input', { valid: false, message: 'invalid message' });
-
-		h.expect(() => (
-			<div key="root" classes={[css.root, css.invalid]}>
-				<input type="email" key="input" value="" onchange={() => {}} />
-				<p key="validityMessage">invalid message</p>
-			</div>
-		));
-	});
-});
-```
-
-#### Custom middleware mocks
-
-Not all testing scenarios will be covered by the provided mocks. Custom middleware mocks can also be created. A middleware mock should provide an overloaded interface. The parameterless overload should return the middleware implementation; this is what will be injected into the widget under test. Other overloads are created as needed to provide an interface for the tests.
-
-As an example, consider the framework's `icache` mock. The mock provides these overloads:
-
-```ts
-function mockCache(): MiddlewareResult<any, any, any>;
-function mockCache(key: string): Promise<any>;
-function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
-```
-
-The overload which accepts a `key` provides the test direct access to cache items. This abbreviated example demonstrates how the mock contains both the middleware implementation and the test interface; this enabled the mock to bridge the gap between the widget and the test.
-
-```ts
-export function createMockMiddleware() {
-	const sharedData = new Map<string, any>();
-
-	const mockFactory = factory(() => {
-		// actual middlware implementation; uses `sharedData` to bridge the gap
-		return {
-			get(id: string): any {},
-			set(id: string, value: any): void {}
-		};
-	});
-
-	function mockMiddleware(): MiddlewareResult<any, any, any>;
-	function mockMiddleware(id: string): any;
-	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
-		if (id) {
-			// expose access to `sharedData` directly to
-			return sharedData.get(id);
-		} else {
-			// provides the middleware implementation to the widget
-			return mockFactory();
-		}
-	}
-}
-```
-
-There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
+-   `invalidator`
+-   `setProperty`
+-   `destroy`
+
+Additionally, there are a number of mock middleware available to support widgets that use the corresponding provided Dojo middleware. See the [mocking](/learn/testing/mocking#provided-middleware-mocks) section for more information on provided mock middleware.
 
 ## Custom comparators
 
@@ -959,6 +439,529 @@ describe('Action', () => {
 In this case, a mock of the `fetchItems` method is provided to the Action widget that requires items to be fetched. The `@button` key is then targeted to trigger the button's `onClick`, after which an assertion is validated that the `fetchItems` mock was called only once.
 
 See the [Sinon] documentation for more details on mocking.
+
+## Provided middleware mocks
+
+There are a number of mock middleware available to support testing widgets that use the corresponding Dojo middleware. The mocks export a factory used to create the scoped mock middleware to be used in each test.
+
+### Mock `breakpoint` middleware
+
+Using `createBreakpointMock` from `@dojo/framework/testing/mocks/middlware/breakpoint` offers tests manual control over resizing events to trigger breakpoint tests.
+
+Consider the following widget which displays an additional `h2` when the `LG` breakpoint is activated:
+
+> src/Breakpoint.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
+
+const factory = create({ breakpoint });
+
+export default factory(function Breakpoint({ middleware: { breakpoint } }) {
+	const bp = breakpoint.get('root');
+	const isLarge = bp && bp.breakpoint === 'LG';
+
+	return (
+		<div key="root">
+			<h1>Header</h1>
+			{isLarge && <h2>Subtitle</h2>}
+			<div>Longer description</div>
+		</div>
+	);
+});
+```
+
+By using the `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` method on the `breakpoint` middleware mock, the test can explicitly trigger a given resize:
+
+> tests/unit/Breakpoint.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import breakpoint from '@dojo/framework/core/middleware/breakpoint';
+import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
+import Breakpoint from '../../src/Breakpoint';
+
+describe('Breakpoint', () => {
+	it('resizes correctly', () => {
+		const mockBreakpoint = createBreakpointMock();
+
+		const h = harness(() => <Breakpoint />, {
+			middleware: [[breakpoint, mockBreakpoint]]
+		});
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<div>Longer description</div>
+			</div>
+		));
+
+		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
+
+		h.expect(() => (
+			<div key="root">
+				<h1>Header</h1>
+				<h2>Subtitle</h2>
+				<div>Longer description</div>
+			</div>
+		));
+	});
+});
+```
+
+### Mock `focus` middleware
+
+Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` provides tests with manual control over when the `focus` middleware reports that a node with a specified key gets focused.
+
+Consider the following widget:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+export interface FormWidgetProperties extends FocusProperties {}
+
+const factory = create({ focus }).properties<FormWidgetProperties>();
+
+export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
+	return (
+		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
+			<input type="text" key="text" value="focus me" />
+		</div>
+	);
+});
+```
+
+By calling `focusMock(key: string | number, value: boolean)` the result of the `focus` middleware's `isFocused` method can get controlled during a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import focus from '@dojo/framework/core/middleware/focus';
+import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+describe('Focus', () => {
+	it('adds a "focused" class to the wrapper when the input is focused', () => {
+		const focusMock = createFocusMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[focus, focusMock]]
+		});
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, null]}>
+				<input type="text" key="text" value="focus me" />
+			</div>
+		));
+
+		focusMock('text', true);
+
+		h.expect(() => (
+			<div key="wrapper" classes={[css.root, css.focused]}>
+				<input type="text" key="text" value="focus me" />
+			</div>
+		));
+	});
+});
+```
+
+### Mock `icache` middleware
+
+Using `createICacheMiddleware` from `@dojo/framework/testing/mocks/middleware/icache` allows tests to access cache items directly while the mock provides a sufficient `icache` experience for the widget under test. This is particularly useful when `icache` is used to asynchronously retrieve data. Direct cache access enables the test to `await` the same promise as the widget.
+
+Consider the following widget which retrieves data from an API:
+
+> src/MyWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import { icache } from '@dojo/framework/core/middleware/icache';
+import fetch from '@dojo/framework/shim/fetch';
+
+const factory = create({ icache });
+
+export default factory(function MyWidget({ middleware: { icache } }) {
+	const value = icache.getOrSet('users', async () => {
+		const response = await fetch('url');
+		return await response.json();
+	});
+
+	return value ? <div>{value}</div> : <div>Loading</div>;
+});
+```
+
+Testing the asynchronous result using the mock `icache` middleware is simple:
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+const { describe, it, afterEach } = intern.getInterface('bdd');
+import harness from '@dojo/framework/testing/harness';
+import { tsx } from '@dojo/framework/core/vdom';
+import * as sinon from 'sinon';
+import global from '@dojo/framework/shim/global';
+import icache from '@dojo/framework/core/middleware/icache';
+import createICacheMock from '@dojo/framework/testing/mocks/middleware/icache';
+import MyWidget from '../../src/MyWidget';
+
+describe('MyWidget', () => {
+	afterEach(() => {
+		sinon.restore();
+	});
+
+	it('test', async () => {
+		// stub the fetch call to return a known value
+		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
+
+		const mockICache = createICacheMock();
+		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
+		h.expect(() => <div>Loading</div>);
+
+		// await the async method passed to the mock cache
+		await mockICache('users');
+		h.expect(() => <pre>api data</pre>);
+	});
+});
+```
+
+### Mock `intersection` middleware
+
+Using `createIntersectionMock` from `@dojo/framework/testing/mocks/middleware/intersection` creates a mock intersection middleware. To set the expected return from the intersection mock, call the created mock intersection middleware with a `key` and expected intersection details.
+
+Consider the following widget:
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import intersection from '@dojo/framework/core/middleware/intersection';
+
+const factory = create({ intersection });
+
+const App = factory(({ middleware: { intersection } }) => {
+	const details = intersection.get('root');
+	return <div key="root">{JSON.stringify(details)}</div>;
+});
+```
+
+Using the mock `intersection` middleware:
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
+import intersection from '@dojo/framework/core/middleware/intersection';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('test', () => {
+		// create the intersection mock
+		const intersectionMock = createIntersectionMock();
+		// pass the intersection mock to the harness so it knows to
+		// replace the original middleware
+		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+
+		// call harness.expect as usual, asserting the default response
+		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
+
+		// use the intersection mock to set the expected return
+		// of the intersection middleware by key
+		intersectionMock('root', { isIntersecting: true });
+
+		// assert again with the updated expectation
+		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
+	});
+});
+```
+
+### Mock `node` middleware
+
+Using `createNodeMock` from `@dojo/framework/testing/mocks/middleware/node` creates a mock for the node middleware. To set the expected return from the node mock, call the created mock node middleware with a `key` and expected DOM node.
+
+```ts
+import createNodeMock from '@dojo/framework/testing/mocks/middleware/node';
+
+// create the mock node middleware
+const mockNode = createNodeMock();
+
+// create a mock DOM node
+const domNode = {};
+
+// call the mock middleware with a key and the DOM
+// to return.
+mockNode('key', domNode);
+```
+
+### Mock `resize` middleware
+
+Using `createResizeMock` from `@dojo/framework/testing/mocks/middleware/resize` creates a mock resize middleware. To set the expected return from the resize mock, call the created mock resize middleware with a `key` and expected content rects.
+
+```ts
+const mockResize = createResizeMock();
+mockResize('key', { width: 100 });
+```
+
+Consider the following widget:
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom'
+import resize from '@dojo/framework/core/middleware/resize'
+
+const factory = create({ resize });
+
+export const MyWidget = factory(function MyWidget({ middleware }) => {
+	const  { resize } = middleware;
+	const contentRects = resize.get('root');
+	return <div key="root">{JSON.stringify(contentRects)}</div>;
+});
+```
+
+Using the mock `resize` middleware:
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
+import resize from '@dojo/framework/core/middleware/resize';
+import harness from '@dojo/framework/testing/harness';
+
+import MyWidget from './MyWidget';
+
+describe('MyWidget', () => {
+	it('test', () => {
+		// create the resize mock
+		const resizeMock = createResizeMock();
+		// pass the resize mock to the harness so it knows to replace the original
+		// middleware
+		const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
+
+		// call harness.expect as usual
+		h.expect(() => <div key="root">null</div>);
+
+		// use the resize mock to set the expected return of the resize middleware
+		// by key
+		resizeMock('root', { width: 100 });
+
+		// assert again with the updated expectation
+		h.expect(() => <div key="root">{`{"width":100}`}</div>);
+	});
+});
+```
+
+### Mock `store` middleware
+
+Using `createMockStoreMiddleware` from `@dojo/framework/testing/mocks/middleware/store` creates a typed mock store middleware, which optionally supports mocking processes. To mock a store process pass a tuple of the original store process and the stub process. The middleware will swap out the call to the original process for the passed stub. If no stubs are passed, the middleware will simply no-op all process calls.
+
+To make changes to the mock store, call the `mockStore` with a function that returns an array of store operations. This is injected with the stores `path` function to create the pointer to the state that needs changing.
+
+```tsx
+mockStore((path) => [replace(path('details', { id: 'id' })]);
+```
+
+Consider the following widget:
+
+> src/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom'
+import { myProcess } from './processes';
+import MyState from './interfaces';
+// application store middleware typed with the state interface
+// Example: `const store = createStoreMiddleware<MyState>();`
+import store from './store';
+
+const factory = create({ store }).properties<{ id: string }>();
+
+export default factory(function MyWidget({ properties, middleware: store }) {
+	const { id } = properties();
+    const { path, get, executor } = store;
+    const details = get(path('details');
+    let isLoading = get(path('isLoading'));
+
+    if ((!details || details.id !== id) && !isLoading) {
+        executor(myProcess)({ id });
+        isLoading = true;
+    }
+
+    if (isLoading) {
+        return <Loading />;
+    }
+
+    return <ShowDetails {...details} />;
+});
+```
+
+Using the mock `store` middleware:
+
+> tests/unit/MyWidget.tsx
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom'
+import createMockStoreMiddleware from '@dojo/framework/testing/mocks/middleware/store';
+import harness from '@dojo/framework/testing/harness';
+
+import { myProcess } from './processes';
+import MyWidget from './MyWidget';
+import MyState from './interfaces';
+import store from './store';
+
+// import a stub/mock lib, doesn't have to be sinon
+import { stub } from 'sinon';
+
+describe('MyWidget', () => {
+     it('test', () => {
+          const properties = {
+               id: 'id'
+          };
+         const myProcessStub = stub();
+         // type safe mock store middleware
+         // pass through an array of tuples `[originalProcess, stub]` for mocked processes
+         // calls to processes not stubbed/mocked get ignored
+         const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
+         const h = harness(() => <MyWidget {...properties} />, {
+             middleware: [[store, mockStore]]
+         });
+         h.expect(/* assertion template for `Loading`*/);
+
+         // assert again the stubbed process
+         expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
+
+         mockStore((path) => [replace(path('isLoading', true)]);
+         h.expect(/* assertion template for `Loading`*/);
+         expect(myProcessStub.calledOnce()).toBeTruthy();
+
+         // use the mock store to apply operations to the store
+         mockStore((path) => [replace(path('details', { id: 'id' })]);
+         mockStore((path) => [replace(path('isLoading', true)]);
+
+         h.expect(/* assertion template for `ShowDetails`*/);
+
+         properties.id = 'other';
+         h.expect(/* assertion template for `Loading`*/);
+         expect(myProcessStub.calledTwice()).toBeTruthy();
+         expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
+         mockStore((path) => [replace(path('details', { id: 'other' })]);
+         h.expect(/* assertion template for `ShowDetails`*/);
+     });
+});
+```
+
+### Mock `validity` middleware
+
+Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can get controlled in a test.
+
+Consider the following example:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import validity from '@dojo/framework/core/middleware/validity';
+import icache from '@dojo/framework/core/middleware/icache';
+import * as css from './FormWidget.m.css';
+
+const factory = create({ validity, icache });
+
+export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
+	const value = icache.getOrSet('value', '');
+	const { valid, message } = validity.get('input', value);
+
+	return (
+		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
+			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
+			{message ? <p key="validityMessage">{message}</p> : null}
+		</div>
+	);
+});
+```
+
+Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the `validity` mock's `get` method can get controlled in a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import harness from '@dojo/framework/testing/harness';
+import validity from '@dojo/framework/core/middleware/validity';
+import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
+import * as css from './FormWidget.m.css';
+
+describe('Validity', () => {
+	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+		const validityMock = createValidityMock();
+
+		const h = harness(() => <FormWidget />, {
+			middleware: [[validity, validityMock]]
+		});
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, null]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+			</div>
+		));
+
+		validityMock('input', { valid: false, message: 'invalid message' });
+
+		h.expect(() => (
+			<div key="root" classes={[css.root, css.invalid]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+				<p key="validityMessage">invalid message</p>
+			</div>
+		));
+	});
+});
+```
+
+### Custom middleware mocks
+
+Not all testing scenarios will be covered by the provided mocks. Custom middleware mocks can also be created. A middleware mock should provide an overloaded interface. The parameterless overload should return the middleware implementation; this is what will be injected into the widget under test. Other overloads are created as needed to provide an interface for the tests.
+
+As an example, consider the framework's `icache` mock. The mock provides these overloads:
+
+```ts
+function mockCache(): MiddlewareResult<any, any, any>;
+function mockCache(key: string): Promise<any>;
+function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
+```
+
+The overload which accepts a `key` provides the test direct access to cache items. This abbreviated example demonstrates how the mock contains both the middleware implementation and the test interface; this enabled the mock to bridge the gap between the widget and the test.
+
+```ts
+export function createMockMiddleware() {
+	const sharedData = new Map<string, any>();
+
+	const mockFactory = factory(() => {
+		// actual middlware implementation; uses `sharedData` to bridge the gap
+		return {
+			get(id: string): any {},
+			set(id: string, value: any): void {}
+		};
+	});
+
+	function mockMiddleware(): MiddlewareResult<any, any, any>;
+	function mockMiddleware(id: string): any;
+	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
+		if (id) {
+			// expose access to `sharedData` directly to
+			return sharedData.get(id);
+		} else {
+			// provides the middleware implementation to the widget
+			return mockFactory();
+		}
+	}
+}
+```
+
+There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
+
 
 # Functional tests
 
