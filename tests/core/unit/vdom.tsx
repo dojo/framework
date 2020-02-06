@@ -2828,6 +2828,26 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.innerHTML, 'hello');
 		});
 
+		it('tsx supports a mixture of array and non array children', () => {
+			class App extends WidgetBase {
+				render() {
+					return <div>{this.children}</div>;
+				}
+			}
+			const domNode = document.createElement('div');
+			const r = renderer(() => (
+				<App>
+					{[<div>first</div>, <div>second</div>]}
+					{<div>third</div>}
+				</App>
+			));
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.outerHTML,
+				'<div><div><div>first</div><div>second</div><div>third</div></div></div>'
+			);
+		});
+
 		describe('supports merging with a widget returned a the top level', () => {
 			it('Supports merging DNodes onto existing HTML', () => {
 				const iframe = document.createElement('iframe');
@@ -3194,7 +3214,7 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 
-		describe('functional', () => {
+		describe('function based', () => {
 			it('children', () => {
 				const createWidget = create({ invalidator });
 
