@@ -1,31 +1,39 @@
 import { create, invalidator } from '../vdom';
 
+type Invalidator = () => void;
+
 export interface ResourceOptions {
 	pageNumber: number;
 	query: string;
 	pageSize: number;
 }
 
-interface Resource {
+export interface Resource {
 	getOrRead: (options: ResourceOptions) => any;
-	registerInvalidator: (invalidator: any) => void;
+	registerInvalidator: (invalidator: Invalidator) => void;
 }
 
-interface ResourceWrapper {
+interface OptionsWrapper {
+	readonly options: ResourceOptions;
+	setOptions(newOptions: ResourceOptions): void;
+	registerInvalidator(invalidator: Invalidator): void;
+}
+
+export interface ResourceWrapper {
 	resource: Resource;
-	createOptions: any;
+	createOptionsWrapper(): OptionsWrapper;
 }
 
-interface DataProperties<T = void> {
-	resource: Resource | ResourceWrapper;
-	transform: (item: any) => T;
-}
-
-interface Basic {
+interface DataProperties {
 	resource: Resource | ResourceWrapper;
 }
 
-interface DataOptions {
+interface DataTransformProperties<T = void> {
+	transform(item: any): T;
+	resource: Resource | ResourceWrapper;
+}
+
+interface DataInitialiserOptions {
 	reset?: boolean;
 	resource?: Resource | ResourceWrapper;
 	key?: string;
@@ -35,114 +43,119 @@ function isResource(resourceWrapperOrResource: ResourceWrapper | Resource): reso
 	return !(resourceWrapperOrResource as any).resource;
 }
 
-function isDataProperties<T>(value: any): value is DataProperties<T> {
-	return !!value.transform;
+function isDataTransformProperties<T>(
+	properties: DataTransformProperties | DataProperties
+): properties is DataTransformProperties<T> {
+	return !!(properties as any).transform;
 }
 
-function createOptions() {
+function createOptionsWrapper(): OptionsWrapper {
 	let options: ResourceOptions = {
 		pageNumber: 1,
-		pageSize: 5,
+		pageSize: 10,
 		query: ''
 	};
 
-	let invalidators = new Set();
-
-	function setOptions(newOptions: ResourceOptions) {
-		if (newOptions !== options) {
-			options = newOptions;
-			invalidate();
-		}
-	}
+	const invalidators = new Set<Invalidator>();
 
 	function invalidate() {
-		[...invalidators].forEach((invalidator: any) => {
+		[...invalidators].forEach((invalidator) => {
 			invalidator();
 		});
 	}
 
-	function getOptions() {
-		return options;
-	}
-
 	return {
-		setOptions,
-		getOptions,
-		registerInvalidator: (invalidator: () => void) => {
+		setOptions(newOptions: ResourceOptions) {
+			if (newOptions !== options) {
+				options = newOptions;
+				invalidate();
+			}
+		},
+		get options() {
+			return options;
+		},
+		registerInvalidator: (invalidator: Invalidator) => {
 			invalidators.add(invalidator);
 		}
 	};
 }
 
-function createResourceWrapper(resource: Resource, options?: any): ResourceWrapper {
+function createResourceWrapper(resource: Resource, options?: OptionsWrapper): ResourceWrapper {
 	return {
 		resource,
-		createOptions: options ? () => options : createOptions
+		createOptionsWrapper: options ? () => options : createOptionsWrapper
 	};
 }
 
 export function createDataMiddleware<T = void>() {
-	const factory = create({ invalidator }).properties<T extends void ? Basic : DataProperties<T>>();
+	const factory = create({ invalidator }).properties<T extends void ? DataProperties : DataTransformProperties<T>>();
 
 	const data = factory(({ middleware: { invalidator }, properties }) => {
-		const optionsMap = new WeakMap<Resource, Map<string, Resource>>();
+		const optionsWrapperMap = new WeakMap<Resource, Map<string, OptionsWrapper>>();
 
-		return (dataOptions: DataOptions = {}) => {
+		return (dataOptions: DataInitialiserOptions = {}) => {
 			let resourceWrapperOrResource = dataOptions.resource || properties().resource;
 			let resourceWrapper: ResourceWrapper;
+
+			// Get or create the resource wrapper
 			if (isResource(resourceWrapperOrResource)) {
 				resourceWrapper = createResourceWrapper(resourceWrapperOrResource);
 			} else {
-				resourceWrapper = resourceWrapperOrResource;
+				resourceWrapper = resourceWrapperOrResource as ResourceWrapper;
 			}
+
+			// Create a new wrapper if reset is set to true
 			if (dataOptions.reset) {
 				resourceWrapper = createResourceWrapper(resourceWrapper.resource);
 			}
-			let options: any;
+
 			const { resource } = resourceWrapper;
 			const { key = '' } = dataOptions;
 
-			let keyedCachedOptions = optionsMap.get(resource);
+			// Get or create an options wrapper
+			let keyedCachedOptions = optionsWrapperMap.get(resource);
 			if (!keyedCachedOptions) {
-				keyedCachedOptions = new Map<string, Resource>();
+				keyedCachedOptions = new Map<string, OptionsWrapper>();
 			}
 
 			let cachedOptions = keyedCachedOptions.get(key);
+			let optionsWrapper: OptionsWrapper;
 
 			if (!cachedOptions) {
-				const newOptions = resourceWrapper.createOptions();
-				keyedCachedOptions.set(key, newOptions);
-				optionsMap.set(resource, keyedCachedOptions);
-				options = newOptions;
+				const newOptionsWrapper = resourceWrapper.createOptionsWrapper();
+				keyedCachedOptions.set(key, newOptionsWrapper);
+				optionsWrapperMap.set(resource, keyedCachedOptions);
+				optionsWrapper = newOptionsWrapper;
 			} else {
-				options = cachedOptions;
+				optionsWrapper = cachedOptions;
 			}
 
+			// Return the data API
 			return {
 				getOrRead(options: ResourceOptions) {
 					resource.registerInvalidator(invalidator);
 					const data = resource.getOrRead(options);
 					const props = properties();
 
-					if (data && data.length && isDataProperties(props)) {
+					if (data && data.length && isDataTransformProperties(props)) {
 						return data.map(props.transform);
 					}
 
 					return data;
 				},
 				setOptions(newOptions: ResourceOptions) {
-					options.registerInvalidator(invalidator);
-					options.setOptions(newOptions);
+					optionsWrapper.registerInvalidator(invalidator);
+					optionsWrapper.setOptions(newOptions);
 				},
 				getOptions() {
-					options.registerInvalidator(invalidator);
-					return options.getOptions();
+					optionsWrapper.registerInvalidator(invalidator);
+					return optionsWrapper.options;
 				},
 				get resource() {
 					return resourceWrapper;
 				},
 				shared() {
-					return createResourceWrapper(resource, options);
+					return createResourceWrapper(resource, optionsWrapper);
 				}
 			};
 		};
