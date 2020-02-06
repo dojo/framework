@@ -272,7 +272,7 @@ export const login = createProcess('login', [ fetchUser, loadUserData ]);
 
 #### `payload` type
 
-The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explictly define the `payload` type.
+The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explicitly define the `payload` type.
 
 ```ts
 const createCommand = createCommandFactory<State>();

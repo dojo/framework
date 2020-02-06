@@ -962,7 +962,6 @@ export function createMockMiddleware() {
 
 There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
 
-
 # Functional tests
 
 Unlike unit tests that load and execute code, functional tests load a page in the browser and test how users interact with the running application.

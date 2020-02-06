@@ -29,7 +29,7 @@ The StoreProvider accepts three properties
 
 ### Invalidation
 
-The `StoreProvider` has two main ways to trigger invalidation and cause a rerender.
+The `StoreProvider` has two main ways to trigger invalidation and cause a re-render.
 
 1.  The recommended approach is to register `path`s by passing the `paths` property to the provider to ensure invalidation only occurs when relevant state changes.
 2.  A catch-all when no `path`s are defined for the container, it will invalidate when _any_ data changes in the store.
@@ -253,7 +253,7 @@ const store = new Store({ state: myStateImpl });
 
 ### `MutableState` API
 
-Any `State` implemention must provide four methods to properly apply operations to the state.
+Any `State` implementation must provide four methods to properly apply operations to the state.
 
 -   `get<S>(path: Path<M, S>): S` takes a `Path` object and returns the value in the current state at the provided path
 -   `at<S extends Path<M, Array<any>>>(path: S, index: number): Path<M, S['value'][0]>` returns a `Path` object that points to the provided `index` in the array at the provided path
