@@ -93,7 +93,7 @@ export class WidgetBase<P = WidgetProperties, C extends DNode = DNode> implement
 	 * property specifically for typing when using tsx
 	 */
 	/* tslint:disable-next-line:variable-name */
-	public __properties__!: this['properties'] & WidgetProperties & { __children__?: DNode[] | DNode };
+	public __properties__!: this['properties'] & WidgetProperties & { __children__?: DNode | (DNode | DNode[])[] };
 
 	/**
 	 * children array
