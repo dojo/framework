@@ -12,8 +12,7 @@ const sb = sandbox.create();
 const invalidatorStub = sb.stub();
 
 let resourceStub = {
-	getOrRead: sb.stub(),
-	registerInvalidator: sb.stub()
+	getOrRead: sb.stub()
 };
 
 jsdomDescribe('data middleware', () => {
@@ -42,27 +41,6 @@ jsdomDescribe('data middleware', () => {
 		const { getOrRead, getOptions } = data();
 		const result = getOrRead(getOptions());
 		assert.equal(result, 'test');
-		assert.isTrue(resourceStub.registerInvalidator.called);
-	});
-
-	it('should return options with default values', () => {
-		const { callback } = dataMiddleware();
-		const data = callback({
-			id: 'test',
-			middleware: {
-				invalidator: invalidatorStub
-			},
-			properties: () => ({
-				resource: resourceStub
-			}),
-			children: () => []
-		});
-
-		const { getOptions } = data();
-		const options = getOptions();
-		assert.equal(options.pageNumber, 1);
-		assert.equal(options.pageSize, 10);
-		assert.equal(options.query, '');
 	});
 
 	it('should invalidate when new options are set', () => {
@@ -153,12 +131,17 @@ jsdomDescribe('data middleware', () => {
 			setOptions({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'test'
+				query: 'testA'
 			});
 			return <div>{JSON.stringify(getOptions())}</div>;
 		});
 		const WidgetB = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
-			const { getOptions } = dataMiddleware({ reset: true });
+			const { getOptions, setOptions } = dataMiddleware({ reset: true });
+			setOptions({
+				pageNumber: 10,
+				pageSize: 10,
+				query: 'testB'
+			});
 			return <div>{JSON.stringify(getOptions())}</div>;
 		});
 		const App = create({ dataMiddleware })(function App({ middleware: { dataMiddleware } }) {
@@ -179,11 +162,11 @@ jsdomDescribe('data middleware', () => {
 			`<div>${JSON.stringify({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'test'
+				query: 'testA'
 			})}</div><div>${JSON.stringify({
-				pageNumber: 1,
+				pageNumber: 10,
 				pageSize: 10,
-				query: ''
+				query: 'testB'
 			})}</div>`
 		);
 	});

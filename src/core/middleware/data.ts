@@ -3,20 +3,18 @@ import { create, invalidator } from '../vdom';
 type Invalidator = () => void;
 
 export interface ResourceOptions {
-	pageNumber: number;
-	query: string;
-	pageSize: number;
+	pageNumber?: number;
+	query?: string;
+	pageSize?: number;
 }
 
 export interface Resource {
-	getOrRead: (options: ResourceOptions) => any;
-	registerInvalidator: (invalidator: Invalidator) => void;
+	getOrRead: (options: ResourceOptions, invalidator: Invalidator) => any;
 }
 
 interface OptionsWrapper {
-	readonly options: ResourceOptions;
-	setOptions(newOptions: ResourceOptions): void;
-	registerInvalidator(invalidator: Invalidator): void;
+	getOptions(invalidator: Invalidator): ResourceOptions;
+	setOptions(newOptions: ResourceOptions, invalidator: Invalidator): void;
 }
 
 export interface ResourceWrapper {
@@ -50,11 +48,7 @@ function isDataTransformProperties<T>(
 }
 
 function createOptionsWrapper(): OptionsWrapper {
-	let options: ResourceOptions = {
-		pageNumber: 1,
-		pageSize: 10,
-		query: ''
-	};
+	let options: ResourceOptions = {};
 
 	const invalidators = new Set<Invalidator>();
 
@@ -65,17 +59,16 @@ function createOptionsWrapper(): OptionsWrapper {
 	}
 
 	return {
-		setOptions(newOptions: ResourceOptions) {
+		setOptions(newOptions: ResourceOptions, invalidator: Invalidator) {
+			invalidators.add(invalidator);
 			if (newOptions !== options) {
 				options = newOptions;
 				invalidate();
 			}
 		},
-		get options() {
-			return options;
-		},
-		registerInvalidator: (invalidator: Invalidator) => {
+		getOptions(invalidator: Invalidator) {
 			invalidators.add(invalidator);
+			return options;
 		}
 	};
 }
@@ -121,20 +114,18 @@ export function createDataMiddleware<T = void>() {
 			let cachedOptions = keyedCachedOptions.get(key);
 			let optionsWrapper: OptionsWrapper;
 
-			if (!cachedOptions) {
+			if (cachedOptions) {
+				optionsWrapper = cachedOptions;
+			} else {
 				const newOptionsWrapper = resourceWrapper.createOptionsWrapper();
 				keyedCachedOptions.set(key, newOptionsWrapper);
 				optionsWrapperMap.set(resource, keyedCachedOptions);
 				optionsWrapper = newOptionsWrapper;
-			} else {
-				optionsWrapper = cachedOptions;
 			}
 
-			// Return the data API
 			return {
 				getOrRead(options: ResourceOptions) {
-					resource.registerInvalidator(invalidator);
-					const data = resource.getOrRead(options);
+					const data = resource.getOrRead(options, invalidator);
 					const props = properties();
 
 					if (data && data.length && isDataTransformProperties(props)) {
@@ -144,12 +135,10 @@ export function createDataMiddleware<T = void>() {
 					return data;
 				},
 				setOptions(newOptions: ResourceOptions) {
-					optionsWrapper.registerInvalidator(invalidator);
-					optionsWrapper.setOptions(newOptions);
+					optionsWrapper.setOptions(newOptions, invalidator);
 				},
 				getOptions() {
-					optionsWrapper.registerInvalidator(invalidator);
-					return optionsWrapper.options;
+					return optionsWrapper.getOptions(invalidator);
 				},
 				get resource() {
 					return resourceWrapper;
