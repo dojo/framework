@@ -175,7 +175,7 @@ jsdomDescribe('data middleware', () => {
 	it('can have a resource passed via a different property', () => {
 		const otherResource = {
 			getOrRead: sb.stub(),
-			registerInvalidator: sb.stub()
+			getTotal: sb.stub()
 		};
 		otherResource.getOrRead.returns(['apple', 'pear']);
 		const Widget = create({ dataMiddleware }).properties<{ otherResource: Resource }>()(function Widget({
