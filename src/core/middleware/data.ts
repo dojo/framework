@@ -10,6 +10,7 @@ export interface ResourceOptions {
 
 export interface Resource {
 	getOrRead: (options: ResourceOptions, invalidator: Invalidator) => any;
+	getTotal: (options: ResourceOptions, invalidator: Invalidator) => number | undefined;
 }
 
 interface OptionsWrapper {
@@ -22,22 +23,24 @@ export interface ResourceWrapper {
 	createOptionsWrapper(): OptionsWrapper;
 }
 
+export type ResourceOrResourceWrapper = Resource | ResourceWrapper;
+
 interface DataProperties {
-	resource: Resource | ResourceWrapper;
+	resource: ResourceOrResourceWrapper;
 }
 
 interface DataTransformProperties<T = void> {
 	transform(item: any): T;
-	resource: Resource | ResourceWrapper;
+	resource: ResourceOrResourceWrapper;
 }
 
 interface DataInitialiserOptions {
 	reset?: boolean;
-	resource?: Resource | ResourceWrapper;
+	resource?: ResourceOrResourceWrapper;
 	key?: string;
 }
 
-function isResource(resourceWrapperOrResource: ResourceWrapper | Resource): resourceWrapperOrResource is Resource {
+function isResource(resourceWrapperOrResource: ResourceOrResourceWrapper): resourceWrapperOrResource is Resource {
 	return !(resourceWrapperOrResource as any).resource;
 }
 
@@ -133,6 +136,9 @@ export function createDataMiddleware<T = void>() {
 					}
 
 					return data;
+				},
+				getTotal(options: ResourceOptions) {
+					return resource.getTotal(options, invalidator);
 				},
 				setOptions(newOptions: ResourceOptions) {
 					optionsWrapper.setOptions(newOptions, invalidator);
