@@ -12,7 +12,8 @@ const sb = sandbox.create();
 const invalidatorStub = sb.stub();
 
 let resourceStub = {
-	getOrRead: sb.stub()
+	getOrRead: sb.stub(),
+	getTotal: sb.stub()
 };
 
 jsdomDescribe('data middleware', () => {
