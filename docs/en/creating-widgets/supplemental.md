@@ -888,7 +888,7 @@ When working with Dojo widgets, a few important principles should be kept in min
 -   Widgets should avoid deriving further render state from their properties, and instead rely on their complete render state being provided to them.
     -   Deriving render state can cause similar divergences between the widget and the framework as modifying received properties; the framework is not aware of the derived state, so cannot properly determine when a widget has been updated and requires invalidation and re-rendering.
 -   Internal or private state can be fully encapsulated within a widget, if required.
-    -   It is a valid and often desireable pattern to implement 'pure' widgets that incur no side effects and receive their entire state as properties, but this is not the only pattern in Dojo widget development.
+    -   It is a valid and often desirable pattern to implement 'pure' widgets that incur no side effects and receive their entire state as properties, but this is not the only pattern in Dojo widget development.
 
 ## Using class-based widgets
 

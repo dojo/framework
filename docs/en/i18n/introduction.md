@@ -155,7 +155,7 @@ r.mount({ registry });
 
 -   Using the [i18n middleware](/learn/middleware/available-middleware#i18n) to allow users to to choose between supported locales, and enact a locale change via the middleware's `.set` API.
 
-**Reminder:** When using both class-based and function-based widgets, this middleware should be used together with [registeri18nInjector](/learn/i18n/internationalizing-a-dojo-application/#providing-locale-data-to-i18n-aware-widgets) to reactively propagate locale changes to all i18n-aware widgets.
+**Reminder:** When using both class-based and function-based widgets, this middleware should be used together with [`registeri18nInjector`](/learn/i18n/internationalizing-a-dojo-application/#providing-locale-data-to-i18n-aware-widgets) to reactively propagate locale changes to all i18n-aware widgets.
 
 > src/widgets/LocaleChanger.tsx
 
