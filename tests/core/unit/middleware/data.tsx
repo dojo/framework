@@ -2,18 +2,21 @@ const { it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
-import { renderer, tsx, create } from '../../../../src/core/vdom';
-import dataMiddleware, { createDataMiddleware, Resource, ResourceWrapper } from '../../../../src/core/middleware/data';
+import { renderer, tsx, create, invalidator } from '../../../../src/core/vdom';
+import dataMiddleware, { createDataMiddleware, ResourceWrapper } from '../../../../src/core/middleware/data';
 import { createResolvers } from '../../support/util';
+import { Resource } from '../../../../src/core/interfaces';
 
 const resolvers = createResolvers();
 
 const sb = sandbox.create();
 const invalidatorStub = sb.stub();
+const destroyStub = sb.stub();
 
 let resourceStub = {
 	getOrRead: sb.stub(),
-	getTotal: sb.stub()
+	getTotal: sb.stub(),
+	disconnect: sb.stub()
 };
 
 jsdomDescribe('data middleware', () => {
@@ -30,7 +33,8 @@ jsdomDescribe('data middleware', () => {
 		const data = callback({
 			id: 'test',
 			middleware: {
-				invalidator: invalidatorStub
+				invalidator: invalidatorStub,
+				destroy: destroyStub
 			},
 			properties: () => ({
 				resource: resourceStub
@@ -49,7 +53,8 @@ jsdomDescribe('data middleware', () => {
 		const data = callback({
 			id: 'test',
 			middleware: {
-				invalidator: invalidatorStub
+				invalidator: invalidatorStub,
+				destroy: destroyStub
 			},
 			properties: () => ({
 				resource: resourceStub
@@ -175,7 +180,8 @@ jsdomDescribe('data middleware', () => {
 	it('can have a resource passed via a different property', () => {
 		const otherResource = {
 			getOrRead: sb.stub(),
-			getTotal: sb.stub()
+			getTotal: sb.stub(),
+			disconnect: sb.stub()
 		};
 		otherResource.getOrRead.returns(['apple', 'pear']);
 		const Widget = create({ dataMiddleware }).properties<{ otherResource: Resource }>()(function Widget({
@@ -234,5 +240,30 @@ jsdomDescribe('data middleware', () => {
 				query: 'two-query'
 			})}</div>`
 		);
+	});
+
+	it('disconnects from the resource when widget is destroyed', () => {
+		let show = true;
+		let invalidate: any;
+		const Widget = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
+			const { getOrRead } = dataMiddleware();
+			getOrRead({ pageNumber: 1, pageSize: 2, query: 'test' });
+			return <div>testing</div>;
+		});
+		const App = create({ dataMiddleware, invalidator })(function App({
+			middleware: { dataMiddleware, invalidator }
+		}) {
+			const { resource } = dataMiddleware();
+			invalidate = invalidator;
+			return show && <Widget resource={resource} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} />);
+		r.mount({ domNode: root });
+		resolvers.resolveRAF();
+		show = false;
+		invalidate();
+		resolvers.resolveRAF();
+		assert.isTrue(resourceStub.disconnect.called);
 	});
 });

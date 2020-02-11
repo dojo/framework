@@ -1,18 +1,5 @@
 import { create, invalidator, destroy } from '../vdom';
-
-type Invalidator = () => void;
-
-export interface ResourceOptions {
-	pageNumber?: number;
-	query?: string;
-	pageSize?: number;
-}
-
-export interface Resource {
-	getOrRead(options: ResourceOptions, invalidator: Invalidator): any;
-	getTotal(options: ResourceOptions, invalidator: Invalidator): number | undefined;
-	disconnect(invalidator: Invalidator): void;
-}
+import { ResourceOptions, Invalidator, Resource } from '../interfaces';
 
 interface OptionsWrapper {
 	getOptions(invalidator: Invalidator): ResourceOptions;

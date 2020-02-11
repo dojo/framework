@@ -700,3 +700,17 @@ export type LocalizedMessages<T extends Messages> = {
 	 */
 	readonly messages: T;
 };
+
+export type Invalidator = () => void;
+
+export interface ResourceOptions {
+	pageNumber?: number;
+	query?: string;
+	pageSize?: number;
+}
+
+export interface Resource {
+	getOrRead(options: ResourceOptions, invalidator: Invalidator): any;
+	getTotal(options: ResourceOptions, invalidator: Invalidator): number | undefined;
+	disconnect(invalidator: Invalidator): void;
+}
