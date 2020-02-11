@@ -26,7 +26,7 @@ registerSuite('AMD Util', {
 				undefined
 			)
 			.then((config: any) => {
-				assert.lengthOf(config.packages, 8);
+				assert.lengthOf(config.packages, 10);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'pepjs'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'wicg-inert'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'tslib'), 1);
@@ -35,6 +35,8 @@ registerSuite('AMD Util', {
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'existingPackage'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'web-animations-js'), 1);
 				assert.lengthOf(config.packages.filter((p: any) => p.name === 'resize-observer-polyfill'), 1);
+				assert.lengthOf(config.packages.filter((p: any) => p.name === 'cldr-core'), 1);
+				assert.lengthOf(config.packages.filter((p: any) => p.name === 'text'), 1);
 			});
 	},
 	async 'Utility does not inject dependency if it already exists'(test) {

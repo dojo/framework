@@ -1,6 +1,5 @@
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
-import { fetchCldrData } from '../support/util';
 import {
 	formatCurrency,
 	formatNumber,
@@ -11,18 +10,14 @@ import {
 	parseNumber,
 	pluralize
 } from '../../../src/i18n/number';
-import { switchLocale, systemLocale } from '../../../src/i18n/i18n';
+import '../support/cldr';
+import { setDefaultLocale, setSupportedLocales, setLocale } from '../../../src/i18n/i18n';
 
 registerSuite('i18n/number', {
-	before() {
-		// Load the CLDR data for the locales used in the tests ('en' and 'fr');
-		return fetchCldrData(['en', 'fr']).then(() => {
-			switchLocale('en');
-		});
-	},
-
-	after() {
-		return switchLocale(systemLocale);
+	before: async () => {
+		setDefaultLocale('en');
+		setSupportedLocales(['en', 'fr']);
+		await setLocale({ locale: 'en', default: true });
 	},
 
 	tests: {
@@ -86,7 +81,7 @@ registerSuite('i18n/number', {
 
 			'assert with a locale'() {
 				assert.strictEqual(formatNumber(12.37, 'fr'), '12,37');
-				assert.strictEqual(formatNumber(12.37, { style: 'percent' }, 'fr'), '1\u00A0237\u00A0%');
+				assert.strictEqual(formatNumber(12.37, { style: 'percent' }, 'fr'), '1 237 %');
 				assert.strictEqual(formatNumber(12.37, { minimumIntegerDigits: 3 }, 'fr'), '012,37');
 				assert.strictEqual(formatNumber(12.37, { minimumFractionDigits: 3 }, 'fr'), '12,370');
 				assert.strictEqual(formatNumber(12.37, { maximumFractionDigits: 1 }, 'fr'), '12,4');
@@ -137,7 +132,7 @@ registerSuite('i18n/number', {
 					'12,3'
 				);
 
-				assert.strictEqual(formatNumber(1234567890, 'fr'), '1\u00A0234\u00A0567\u00A0890');
+				assert.strictEqual(formatNumber(1234567890, 'fr'), '1 234 567 890');
 				assert.strictEqual(formatNumber(1234567890, { useGrouping: false }, 'fr'), '1234567890');
 			}
 		},
@@ -202,7 +197,7 @@ registerSuite('i18n/number', {
 
 			'assert with a locale'() {
 				assert.strictEqual(getNumberFormatter('fr')(12.37), '12,37');
-				assert.strictEqual(getNumberFormatter({ style: 'percent' }, 'fr')(12.37), '1\u00A0237\u00A0%');
+				assert.strictEqual(getNumberFormatter({ style: 'percent' }, 'fr')(12.37), '1 237 %');
 				assert.strictEqual(getNumberFormatter({ minimumIntegerDigits: 3 }, 'fr')(12.37), '012,37');
 				assert.strictEqual(getNumberFormatter({ minimumFractionDigits: 3 }, 'fr')(12.37), '12,370');
 				assert.strictEqual(getNumberFormatter({ maximumFractionDigits: 1 }, 'fr')(12.37), '12,4');
@@ -249,7 +244,7 @@ registerSuite('i18n/number', {
 					'12,3'
 				);
 
-				assert.strictEqual(getNumberFormatter('fr')(1234567890), '1\u00A0234\u00A0567\u00A0890');
+				assert.strictEqual(getNumberFormatter('fr')(1234567890), '1 234 567 890');
 				assert.strictEqual(getNumberFormatter({ useGrouping: false }, 'fr')(1234567890), '1234567890');
 			}
 		},

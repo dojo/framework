@@ -1,14 +1,15 @@
 /* tslint:disable:interface-name */
-import i18n, { Bundle, formatMessage, getCachedMessages, Messages } from '../../i18n/i18n';
-import Map from '../../shim/Map';
+import { localizeBundle, Bundle, Messages, setLocale, getCurrentLocale } from '../../i18n/i18n';
 import { isVNode } from './../vdom';
 import { afterRender } from './../decorators/afterRender';
-import { inject } from './../decorators/inject';
+import { getInjector } from './../decorators/inject';
 import { Constructor, DNode, VNodeProperties, LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 import { Injector } from './../Injector';
 import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 import { decorate } from '../util';
+import { isThenable } from '../../shim/Promise';
+import beforeProperties from '../decorators/beforeProperties';
 
 export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 
@@ -44,8 +45,23 @@ interface I18nVNodeProperties extends VNodeProperties {
 	lang: string;
 }
 
-export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {
-	const injector = new Injector(localeData);
+class I18nInjector extends Injector {
+	set(localeData: LocaleData) {
+		if (localeData.locale) {
+			const result = setLocale({ locale: localeData.locale });
+			if (isThenable(result)) {
+				result.then(() => {
+					super.set(localeData);
+				});
+				return;
+			}
+			super.set(localeData);
+		}
+	}
+}
+
+export function registerI18nInjector(localeData: LocaleData, registry: Registry): I18nInjector {
+	const injector = new I18nInjector(localeData);
 	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
 		injector.setInvalidator(invalidator);
 		return () => injector;
@@ -53,46 +69,60 @@ export function registerI18nInjector(localeData: LocaleData, registry: Registry)
 	return injector;
 }
 
+const previousLocaleMap: WeakMap<WidgetBase, string> = new WeakMap();
+
 export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
-	@inject({
-		name: INJECTOR_KEY,
-		getProperties: (localeData: Injector<LocaleData>, properties: I18nProperties) => {
-			const { locale = localeData.get().locale, rtl = localeData.get().rtl } = properties;
-			return { locale, rtl };
+	@beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
+		const injector = getInjector(this, INJECTOR_KEY);
+		let injectedLocale: string | undefined;
+		let injectedRtl: boolean | undefined;
+		if (injector) {
+			const injectLocaleData = injector() as Injector<LocaleData>;
+			if (injectLocaleData) {
+				const injectedLocaleData = injectLocaleData.get();
+				if (injectedLocaleData) {
+					injectedLocale = injectedLocaleData.locale;
+					injectedRtl = injectedLocaleData.rtl;
+				}
+			}
 		}
+		const previousLocale = previousLocaleMap.get(this);
+		previousLocaleMap.set(this, properties.locale);
+
+		if (properties.locale && previousLocale !== properties.locale) {
+			const result = setLocale({ locale: properties.locale, local: true });
+			if (isThenable(result)) {
+				result.then(() => {
+					this.invalidate();
+				});
+				return {
+					locale: previousLocale || injectedLocale || getCurrentLocale(),
+					rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
+				};
+			}
+		}
+		return {
+			locale: properties.locale || injectedLocale || getCurrentLocale(),
+			rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
+		};
 	})
 	abstract class I18n extends Base {
 		public abstract properties: I18nProperties;
 
-		/**
-		 * Return a localized messages object for the provided bundle, deferring to the `i18nBundle` property
-		 * when present. If the localized messages have not yet been loaded, return either a blank bundle or the
-		 * default messages.
-		 *
-		 * @param bundle
-		 * The bundle to localize
-		 *
-		 * @param useDefaults
-		 * If `true`, the default messages will be used when the localized messages have not yet been loaded. If `false`
-		 * (the default), then a blank bundle will be returned (i.e., each key's value will be an empty string).
-		 */
-		public localizeBundle<T extends Messages>(
-			baseBundle: Bundle<T>,
-			useDefaults: boolean = false
-		): LocalizedMessages<T> {
-			const bundle = this._resolveBundle(baseBundle);
-			const messages = this._getLocaleMessages(bundle);
-			const isPlaceholder = !messages;
-			const { locale } = this.properties;
-			const format =
-				isPlaceholder && !useDefaults
-					? (key: string, options?: any) => ''
-					: (key: string, options?: any) => formatMessage(bundle, key, options, locale);
-
-			return Object.create({
-				format,
-				isPlaceholder,
-				messages: messages || (useDefaults ? bundle.messages : this._getBlankMessages(bundle))
+		public localizeBundle<T extends Messages>(baseBundle: Bundle<T>): LocalizedMessages<T> {
+			let { locale, i18nBundle } = this.properties;
+			if (i18nBundle) {
+				if (i18nBundle instanceof Map) {
+					baseBundle = i18nBundle.get(baseBundle) || baseBundle;
+				} else {
+					baseBundle = i18nBundle as Bundle<T>;
+				}
+			}
+			return localizeBundle(baseBundle, {
+				locale,
+				invalidator: () => {
+					this.invalidate();
+				}
 			});
 		}
 
@@ -114,76 +144,6 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 				predicate: isVNode
 			});
 			return result;
-		}
-
-		/**
-		 * @private
-		 * Return a message bundle containing an empty string for each key in the provided bundle.
-		 *
-		 * @param bundle
-		 * The message bundle
-		 *
-		 * @return
-		 * The blank message bundle
-		 */
-		private _getBlankMessages(bundle: Bundle<Messages>): Messages {
-			const blank = {} as Messages;
-			return Object.keys(bundle.messages).reduce((blank, key) => {
-				blank[key] = '';
-				return blank;
-			}, blank);
-		}
-
-		/**
-		 * @private
-		 * Return the cached dictionary for the specified bundle and locale, if it exists. If the requested dictionary does not
-		 * exist, then load it and update the instance's state with the appropriate messages.
-		 *
-		 * @param bundle
-		 * The bundle for which to load a locale-specific dictionary.
-		 *
-		 * @return
-		 * The locale-specific dictionary, if it has already been loaded and cached.
-		 */
-		private _getLocaleMessages(bundle: Bundle<Messages>): Messages | void {
-			const { properties } = this;
-			const locale = properties.locale || i18n.locale;
-			const localeMessages = getCachedMessages(bundle, locale);
-
-			if (localeMessages) {
-				return localeMessages;
-			}
-
-			i18n(bundle, locale).then(() => {
-				this.invalidate();
-			});
-		}
-
-		/**
-		 * @private
-		 * Resolve the bundle to use for the widget's messages to either the provided bundle or to the
-		 * `i18nBundle` property.
-		 *
-		 * @param bundle
-		 * The base bundle
-		 *
-		 * @return
-		 * Either override bundle or the original bundle.
-		 */
-		private _resolveBundle(bundle: Bundle<Messages>): Bundle<Messages> {
-			let { i18nBundle } = this.properties;
-			if (i18nBundle) {
-				if (i18nBundle instanceof Map) {
-					i18nBundle = i18nBundle.get(bundle);
-
-					if (!i18nBundle) {
-						return bundle;
-					}
-				}
-
-				return i18nBundle;
-			}
-			return bundle;
 		}
 	}
 

@@ -1,5 +1,5 @@
 import * as Globalize from 'globalize/dist/globalize';
-import i18n from '../i18n';
+import { getComputedLocale, getMatchedSupportedLocale } from '../i18n';
 
 /**
  * @private
@@ -35,20 +35,6 @@ export interface FormatterDelegatorOptions<T, O> extends DelegatorOptions<O> {
 }
 
 /**
- * Return a Globalize.js object for the specified locale. If no locale is provided, then the root
- * locale is assumed.
- *
- * @param string
- * An optional locale for the Globalize.js object.
- *
- * @return
- * The localized Globalize.js object.
- */
-export default function getGlobalize(locale?: string) {
-	return locale && locale !== i18n.locale ? new Globalize(locale) : Globalize;
-}
-
-/**
  * Call the specified Globalize.js method with the specified value, unit, and options, for the specified locale.
  *
  * @param method
@@ -66,7 +52,10 @@ export function globalizeDelegator<T, O, R>(
 	method: string,
 	args: DelegatorOptions<O> | FormatterDelegatorOptions<T, O>
 ): R {
-	const { locale, options, value, unit } = normalizeFormatterArguments<T, O>(args);
+	const { locale: requestedLocale = getComputedLocale(), options, value, unit } = normalizeFormatterArguments<T, O>(
+		args
+	);
+	const locale = getMatchedSupportedLocale(requestedLocale) || getComputedLocale();
 	const methodArgs: any[] = typeof value !== 'undefined' ? [value] : [];
 
 	if (typeof unit !== 'undefined') {
@@ -76,7 +65,6 @@ export function globalizeDelegator<T, O, R>(
 	if (typeof options !== 'undefined') {
 		methodArgs.push(options);
 	}
-
-	const globalize = getGlobalize(locale);
+	const globalize = new Globalize(locale);
 	return (globalize as any)[method].apply(globalize, methodArgs);
 }

@@ -1,515 +1,376 @@
-/* tslint:disable:interface-name */
 import global from '../shim/global';
-import { isArrayLike, isIterable } from '../shim/iterator';
-import Map from '../shim/Map';
-import Evented, { EventObject } from '../core/Evented';
-import has from '../core/has';
-import { uuid } from '../core/util';
+import WeakMap from '../shim/WeakMap';
 import * as Globalize from 'globalize/dist/globalize/message';
-import { isLoaded } from './cldr/load';
-import { generateLocales, normalizeLocale } from './util/main';
-import { Handle } from '../core/Destroyable';
+const Cldr = require('cldrjs/dist/cldr');
+`!has('cldr-elide')`;
+import './util/cldr';
 
-export function useDefault(modules: any[]): any[];
-export function useDefault(module: any): any;
-export function useDefault(modules: any | any[]): any[] | any {
-	if (isArrayLike(modules)) {
-		let processedModules: any[] = [];
-
-		for (let i = 0; i < modules.length; i++) {
-			const module = modules[i];
-			processedModules.push(module.__esModule && module.default ? module.default : module);
-		}
-
-		return processedModules;
-	} else if (isIterable(modules)) {
-		let processedModules: any[] = [];
-
-		for (const module of modules) {
-			processedModules.push(module.__esModule && module.default ? module.default : module);
-		}
-
-		return processedModules;
-	} else {
-		return modules.__esModule && modules.default ? modules.default : modules;
-	}
-}
-
-/**
- * A default bundle used as basis for loading locale-specific bundles.
- */
-export interface Bundle<T extends Messages> {
-	/**
-	 * A unique identifier for the bundle that will be generated automatically when it is registered.
-	 */
-	readonly id?: string;
-
-	/**
-	 * A list of supported locales. Any included locale MUST have an associated bundle.
-	 */
-	readonly locales?: LocaleLoaders<T>;
-
-	/**
-	 * The map of default messages that will be used when locale-specific messages are unavailable.
-	 * Note that any message key used in the i18n system MUST have a default specified here.
-	 */
-	readonly messages: T;
-}
-
-/**
- * Options object passed to message formatters and used for token replacement.
- */
-export interface FormatOptions {
-	[key: string]: any;
-}
-
-export interface I18n<T extends Messages> {
-	(bundle: Bundle<T>, locale?: string): Promise<T>;
-
-	/**
-	 * The current namespace as set via `switchLocale`. Defaults to `systemLocale`.
-	 */
-	readonly locale: string;
-}
-
-/**
- * A map of locales to functions responsible for loading their respective translations.
- */
-export interface LocaleLoaders<T extends Messages> {
-	[locale: string]: () => LocaleTranslations<T> | Promise<LocaleTranslations<T>>;
-}
-
-/**
- * An object of locale-specific translations.
- */
-export type LocaleTranslations<T extends Messages> = Partial<T> | { default?: Partial<T> };
-
-/**
- * Describes a compiled ICU message formatter function.
- */
-export interface MessageFormatter {
-	(options?: FormatOptions): string;
-}
-
-/**
- * An object of keys to locale messages.
- */
 export interface Messages {
 	[key: string]: string;
 }
 
-export interface I18nEventObject extends EventObject<string> {
-	target: any;
+export interface MessageLoader {
+	(): Promise<{ default: Messages }>;
 }
 
-const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
-const bundleMap = new Map<string, Map<string, Messages>>();
-const formatterMap = new Map<string, MessageFormatter>();
-const localeProducer = new Evented<{}, string, I18nEventObject>();
-let rootLocale: string;
+export interface CldrLoader {
+	(): Promise<{ default: any }[]>;
+}
+
+export interface LocaleLoaders {
+	[index: string]: Messages | MessageLoader;
+}
+
+export interface CldrLoaders {
+	[index: string]: CldrLoader | true;
+}
+
+export interface Bundle<T extends Messages> {
+	readonly locales?: LocaleLoaders;
+	readonly messages: T;
+}
+
+export interface LocalizeOptions {
+	locale?: string;
+	useDefault?: boolean;
+	invalidator: any;
+}
+
+export interface LocalizeResult<T extends Bundle<any>> {
+	messages: T['messages'];
+	isPlaceholder: boolean;
+	format: (key: keyof T['messages'], options: any) => string;
+}
+
+interface SetLocaleOptions {
+	locale?: string;
+	default?: boolean;
+	local?: boolean;
+}
 
 /**
- * Return the bundle's unique identifier, creating one if it does not already exist.
- *
- * @param bundle A message bundle
- * @return The bundle's unique identifier
+ * Ensure that the raw bundle is not mutated when
+ * the resolved bundles are set
  */
-function getBundleId<T extends Messages>(bundle: Bundle<T>): string {
-	if (bundle.id) {
-		return bundle.id;
+let cldrResolved = Cldr._resolved;
+
+Object.defineProperty(Cldr, '_resolved', {
+	get() {
+		return { ...cldrResolved };
+	},
+	set(value: any) {
+		cldrResolved = { ...value };
 	}
+});
 
-	const id = uuid();
-	Object.defineProperty(bundle, 'id', {
-		value: id
-	});
-	return id;
+const bundleIdMap = new WeakMap<Bundle<Messages>, string>();
+const bundleLoaderMap = new WeakMap<MessageLoader, string>();
+const idToBundleLoaderMap = new Map<string, MessageLoader>();
+const globalizeInstanceMap = new Map<string, Globalize>();
+const MESSAGE_BUNDLE_PATH = 'globalize-messages/{bundle}';
+const DOJO_PATH = 'dojo/{bundle}/lookup';
+
+let supportedLocales: string[] = [];
+let defaultLocale = '';
+let computedLocale = '';
+let currentLocale = '';
+let cldrLoaders: CldrLoaders = {};
+let bundleId = 0;
+const cldr = new Cldr('');
+
+/**
+ * Sets the array of supported locales for the application
+ */
+export function setSupportedLocales(locales: string[]) {
+	supportedLocales = locales;
 }
 
 /**
- * @private
- * Return a function that formats an ICU-style message, and takes an optional value for token replacement.
- *
- * Usage:
- * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
- * const message = formatter({
- *   host: 'Miles',
- *   gender: 'male',
- *   guest: 'Oscar',
- *   guestCount: '15'
- * });
- *
- * @param id
- * The message's bundle id.
- *
- * @param key
- * The message's key.
- *
- * @param locale
- * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
- * default locale is used.
- *
- * @return
- * The message formatter.
+ * Sets the default locale of the application.
  */
-function getIcuMessageFormatter(id: string, key: string, locale?: string): MessageFormatter {
-	locale = normalizeLocale(locale || getRootLocale());
-	const formatterKey = `${locale}:${id}:${key}`;
-	let formatter = formatterMap.get(formatterKey);
-
-	if (formatter) {
-		return formatter;
-	}
-
-	const globalize = locale !== getRootLocale() ? new Globalize(normalizeLocale(locale)) : Globalize;
-	formatter = globalize.messageFormatter(`${id}/${key}`);
-
-	const cached = bundleMap.get(id);
-	if (cached && cached.get(locale)) {
-		formatterMap.set(formatterKey, formatter);
-	}
-
-	return formatter;
+export function setDefaultLocale(locale: string) {
+	defaultLocale = locale;
 }
 
 /**
- * @private
- * Load the specified locale-specific bundles, mapping the default exports to simple `Messages` objects.
+ * Returns the users locale computed by using the system locale
+ * of the environment and the default locale.
+ *
+ * The users system local if supported by the application (i.e resolves
+ * to one of the set supported locales) otherwise the registered default
+ * locale
  */
-function loadLocaleBundles<T extends Messages>(locales: LocaleLoaders<T>, supported: string[]): Promise<T[]> {
-	return Promise.all(supported.map((locale) => locales[locale]())).then((bundles) => {
-		return bundles.map((bundle) => useDefault(bundle));
-	});
+export function getComputedLocale() {
+	return computedLocale;
 }
 
 /**
- * @private
- * Return the root locale. Defaults to the system locale.
+ * Returns the applications current locale
  */
-function getRootLocale(): string {
-	return rootLocale || systemLocale;
+export function getCurrentLocale() {
+	return currentLocale;
 }
 
 /**
- * @private
- * Retrieve a list of supported locales that can provide messages for the specified locale.
- *
- * @param locale
- * The target locale.
- *
- * @param supported
- * The locales that are supported by the bundle.
- *
- * @return
- * A list of supported locales that match the target locale.
+ * Sets the available cldr loaders for the i18n module
  */
-function getSupportedLocales(locale: string, supported: string[] = []): string[] {
-	return generateLocales(locale).filter((locale: string) => supported.indexOf(locale) > -1);
+export function setCldrLoaders(loaders: CldrLoaders) {
+	cldrLoaders = { ...loaders };
 }
 
 /**
- * @private
- * Inject messages for the specified locale into the i18n system.
- *
- * @param id
- * The bundle's unique identifier
- *
- * @param messages
- * The messages to inject
- *
- * @param locale
- * An optional locale. If not specified, then it is assumed that the messages are the defaults for the given
- * bundle path.
+ * Returns the matching supported locale for the passed locale. If there
+ * is no matching locale then undefined is returned
  */
-function loadMessages<T extends Messages>(id: string, messages: T, locale: string = 'root') {
-	let cached = bundleMap.get(id);
-
-	if (!cached) {
-		cached = new Map<string, Messages>();
-		bundleMap.set(id, cached);
-	}
-
-	cached.set(locale, messages);
-	Globalize.loadMessages({
-		[locale]: {
-			[id]: messages
+export function getMatchedSupportedLocale(locale: string): string | undefined {
+	let partialLocale = locale.replace(/^([a-z]{2}).*/i, '$1');
+	let matchedLocale;
+	for (let i = 0; i < supportedLocales.length; i++) {
+		const supportedLocale = supportedLocales[i];
+		if (locale === supportedLocale) {
+			matchedLocale = locale;
+			break;
 		}
-	});
-}
-
-/**
- * Return a formatted message.
- *
- * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
- * the ICU message format is supported. Otherwise, a simple token-replacement mechanism is used.
- *
- * Usage:
- * formatMessage(bundle, 'guestInfo', {
- *   host: 'Bill',
- *   guest: 'John'
- * }, 'fr');
- *
- * @param bundle
- * The bundle containing the target message.
- *
- * @param key
- * The message's key.
- *
- * @param options
- * An optional value used by the formatter to replace tokens with values.
- *
- * @param locale
- * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
- * default locale is used.
- *
- * @return
- * The formatted message.
- */
-export function formatMessage<T extends Messages>(
-	bundle: Bundle<T>,
-	key: string,
-	options?: FormatOptions,
-	locale?: string
-): string {
-	return getMessageFormatter(bundle, key, locale)(options);
-}
-
-/**
- * Return the cached messages for the specified bundle and locale. If messages have not been previously loaded for the
- * specified locale, no value will be returned.
- *
- * @param bundle
- * The default bundle that is used to determine where the locale-specific bundles are located.
- *
- * @param locale
- * The locale of the desired messages.
- *
- * @return The cached messages object, if it exists.
- */
-export function getCachedMessages<T extends Messages>(bundle: Bundle<T>, locale: string): T | undefined {
-	const { id = getBundleId(bundle), locales, messages } = bundle;
-	const cached = bundleMap.get(id);
-
-	if (!cached) {
-		loadMessages(id, messages);
-	} else {
-		const localeMessages = cached.get(locale);
-		if (localeMessages) {
-			return localeMessages as T;
+		if (partialLocale === supportedLocale) {
+			matchedLocale = partialLocale;
 		}
 	}
+	return matchedLocale;
+}
 
-	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
-	if (!supportedLocales.length) {
-		return messages;
-	}
+/**
+ * Determines if the fallback CLDR data needs to be loaded
+ * for the locale
+ */
+function shouldLoadFallbackCldr(locale: string) {
+	return !getMatchedSupportedLocale(locale) && cldrLoaders.fallback && cldrLoaders.fallback !== true;
+}
 
-	if (cached) {
-		return cached.get(supportedLocales[supportedLocales.length - 1]) as T;
+/**
+ * Sets the i18n modules locale state based on whether the locale
+ * is the default or local
+ */
+function setI18nLocales(locale: string, isDefault: boolean, local: boolean): void {
+	if (isDefault) {
+		Globalize.locale(locale);
+		computedLocale = locale;
+		currentLocale = locale;
+	} else if (!local) {
+		currentLocale = locale;
 	}
 }
 
 /**
- * Return a function that formats a specific message, and takes an optional value for token replacement.
- *
- * If both the "supplemental/likelySubtags" and "supplemental/plurals-type-cardinal" CLDR data have been loaded, then
- * the returned function will have ICU message format support. Otherwise, the returned function will perform a simple
- * token replacement on the message string.
- *
- * Usage:
- * const formatter = getMessageFormatter(bundle, 'guestInfo', 'fr');
- * const message = formatter({
- *   host: 'Miles',
- *   gender: 'male',
- *   guest: 'Oscar',
- *   guestCount: '15'
- * });
- *
- * @param bundle
- * The bundle containing the target message.
- *
- * @param key
- * The message's key.
- *
- * @param locale
- * An optional locale for the formatter. If no locale is supplied, or if the locale is not supported, the
- * default locale is used.
- *
- * @return
- * The message formatter.
+ * Load required CLDR data based on the registered loaders and support
+ * for the requested locale
  */
-export function getMessageFormatter<T extends Messages>(
-	bundle: Bundle<T>,
-	key: string,
-	locale?: string
-): MessageFormatter {
-	const { id = getBundleId(bundle), locales } = bundle;
-
-	locale = locale || getRootLocale();
-	const supportedLocales = getSupportedLocales(locale, locales && Object.keys(locales));
-	const bundleLocale = supportedLocales[supportedLocales.length - 1];
-
-	if (isLoaded('supplemental', 'likelySubtags') && isLoaded('supplemental', 'plurals-type-cardinal')) {
-		return getIcuMessageFormatter(id, key, bundleLocale);
-	}
-
-	const cached = bundleMap.get(id);
-	const messages = cached ? cached.get(bundleLocale) || cached.get('root') : null;
-
-	if (!messages) {
-		throw new Error(`The bundle has not been registered.`);
-	}
-
-	return function(options: FormatOptions = Object.create(null)) {
-		return messages[key].replace(TOKEN_PATTERN, (token: string, property: string) => {
-			const value = options[property];
-
-			if (typeof value === 'undefined') {
-				throw new Error(`Missing property ${property}`);
-			}
-
-			return value;
+async function loadCldrData(
+	loaderPromises: Promise<any>[],
+	userLocale: string,
+	requestedLocale: string,
+	calculatedLocale: string,
+	isDefault: boolean,
+	isLocal: boolean
+): Promise<any> {
+	const loaderData = await Promise.all(loaderPromises);
+	cldrLoaders[userLocale] = true;
+	cldrLoaders.supplemental = true;
+	loaderData.forEach((results) => {
+		results.forEach((result: any) => {
+			Globalize.load(result.default);
 		});
+	});
+	if (shouldLoadFallbackCldr(requestedLocale)) {
+		cldrLoaders.fallback = true;
+		const data = cldr.get('dojo');
+		const locales = Object.keys(data);
+		for (let i = 0; i < locales.length; i++) {
+			const locale = locales[i];
+			if (data[locale].bundles) {
+				Globalize.loadMessages({ [locale]: data[locale].bundles });
+			}
+		}
+		if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+			Globalize.loadMessages({ [requestedLocale]: {} });
+		}
+	}
+	setI18nLocales(calculatedLocale, isDefault, isLocal);
+	return calculatedLocale;
+}
+
+/**
+ * Sets the i18n locale information for the application, loading any CLDR data or NLS
+ * messages required to support the change.
+ */
+export function setLocale(options: SetLocaleOptions = {}): Promise<string> | string {
+	const {
+		local: isLocal = false,
+		default: isDefault = false,
+		locale: requestedLocale = global.navigator.language || global.navigator.userLanguage
+	} = options;
+	const matchedLocale = getMatchedSupportedLocale(requestedLocale);
+	const userLocale = matchedLocale || defaultLocale;
+	const calculatedLocale = matchedLocale ? requestedLocale : defaultLocale;
+
+	const loaderPromises: Promise<any>[] = [];
+	const supplementalLoader = cldrLoaders.supplemental;
+	const fallbackLoader = cldrLoaders.fallback;
+
+	if (supplementalLoader && supplementalLoader !== true) {
+		loaderPromises.push(supplementalLoader());
+	}
+	const localeCldrLoader = cldrLoaders[userLocale];
+	if (localeCldrLoader && localeCldrLoader !== true) {
+		loaderPromises.push(localeCldrLoader());
+	}
+	const loadFallback = !matchedLocale && fallbackLoader && fallbackLoader !== true;
+	if (loadFallback && fallbackLoader && fallbackLoader !== true) {
+		loaderPromises.push(fallbackLoader());
+	}
+
+	if (loaderPromises.length) {
+		return loadCldrData(loaderPromises, userLocale, requestedLocale, calculatedLocale, isDefault, isLocal);
+	} else if (!matchedLocale) {
+		Globalize.loadMessages({ [requestedLocale]: {} });
+	}
+
+	setI18nLocales(calculatedLocale, isDefault, isLocal);
+	return calculatedLocale;
+}
+
+function getPlaceholderBundle<T extends Messages>(bundle: Bundle<T>) {
+	return {
+		messages: Object.keys(bundle.messages).reduce(
+			(messages, key) => {
+				messages[key] = '';
+				return messages;
+			},
+			{} as any
+		),
+		isPlaceholder: true,
+		format: () => ''
 	};
 }
 
-/**
- * Load locale-specific messages for the specified bundle and locale.
- *
- * Since messages for a given locale need not be complete, the i18n ecosystem generates a list of
- * increasingly generic locales that are compatible with the specified locale and merges all of
- * their messages into a single message dictionary. For example, if the locale is `ar-JO`, then
- * all messages for both `ar-JO` and `ar` are loaded, and the final result contains all default
- * messages, overridden by any messages provided by the `ar` bundle, and finally overridden with
- * any messages provided by the most-specific `ar-JO` bundle.
- *
- * In the event that the specified locale is not compatible with any locale supported by the bundle,
- * the bundle's default messages are returned. Further, if the exact locale (e.g., "ar-JO") is not
- * supported by the bundle, but a more general locale is (e.g., "ar"), then the bundle is registered
- * under the more general locale and its messages are returned.
- *
- * @param bundle
- * The default bundle that is used to determine where the locale-specific bundles are located.
- *
- * @param locale
- * An optional locale. If no locale is provided, then the current locale is assumed.
- *
- * @return A promise to the locale-specific messages.
- */
-async function i18n<T extends Messages>(bundle: Bundle<T>, locale?: string): Promise<T> {
-	const currentLocale = locale ? normalizeLocale(locale) : getRootLocale();
-	const cachedMessages = getCachedMessages(bundle, currentLocale);
-
-	if (cachedMessages) {
-		return cachedMessages;
-	}
-
-	const locales = bundle.locales as LocaleLoaders<T>;
-	const supportedLocales = getSupportedLocales(currentLocale, Object.keys(locales));
-	const bundles = await loadLocaleBundles<T>(locales, supportedLocales);
-	const bundleLocale = supportedLocales[supportedLocales.length - 1];
-	return bundles.reduce((previous: any, partial: any): T => {
-		const localeMessages: T = { ...previous, ...partial };
-		loadMessages(getBundleId(bundle), <T>Object.freeze(localeMessages), bundleLocale);
-		return localeMessages;
-	}, bundle.messages);
+function getBundleId() {
+	return `id-${++bundleId}`;
 }
 
-Object.defineProperty(i18n, 'locale', {
-	get: getRootLocale
-});
-
-export default i18n as I18n<Messages>;
-
-/**
- * Invalidate the cache for a particular bundle, or invalidate the entire cache. Note that cached messages for all
- * locales for a given bundle will be cleared.
- *
- * @param bundle
- * An optional bundle to invalidate. If no bundle is provided, then the cache is cleared for all bundles.
- */
-export function invalidate<T extends Messages>(bundle?: Bundle<T>) {
-	if (bundle) {
-		bundle.id && bundleMap.delete(bundle.id);
-	} else {
-		bundleMap.clear();
-	}
-}
-
-/**
- * Register an observer to be notified when the root locale changes.
- *
- * @param callback
- * A callback function which will receive the updated locale string on updates.
- *
- * @return
- * A handle object that can be used to unsubscribe from updates.
- */
-export const observeLocale = function(callback: (locale: string) => {}): Handle {
-	return localeProducer.on('change', (event: any) => {
-		callback(event.target);
+function markBundleAsLoaded(locale: string, bundleId: string) {
+	Cldr.load({
+		dojo: {
+			[locale]: {
+				lookup: {
+					[bundleId]: {
+						locale: undefined,
+						id: undefined,
+						loading: undefined
+					}
+				}
+			}
+		}
 	});
-};
-
-/**
- * Pre-load locale-specific messages into the i18n system.
- *
- * @param bundle
- * The default bundle that is used to merge locale-specific messages with the default messages.
- *
- * @param messages
- * The messages to cache.
- *
- * @param locale
- * The locale for the messages
- */
-export function setLocaleMessages<T extends Messages>(
-	bundle: Bundle<T>,
-	localeMessages: Partial<T>,
-	locale: string
-): void {
-	const messages: T = { ...(bundle.messages as any), ...(localeMessages as any) };
-	loadMessages(getBundleId(bundle), <T>Object.freeze(messages), locale);
 }
 
 /**
- * Change the root locale, and notify any registered observers.
- *
- * @param locale
- * The new locale.
+ * Registers all locale loaders for the bundle
  */
-export function switchLocale(locale: string): void {
-	const previous = rootLocale;
-	rootLocale = locale ? normalizeLocale(locale) : '';
+function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
+	const { locales: localeBundleLoaders = {} } = bundle;
+	const locales = Object.keys(localeBundleLoaders);
+	let bundleId = bundleIdMap.get(bundle);
+	if (!bundleId) {
+		bundleId = getBundleId();
+		bundleIdMap.set(bundle, bundleId);
+		const messageBundles: { [index: string]: any } = {};
+		const lookup: { [index: string]: any } = {};
 
-	if (previous !== rootLocale) {
-		if (isLoaded('supplemental', 'likelySubtags')) {
-			Globalize.load({
-				main: {
-					[rootLocale]: {}
+		for (let i = 0; i < locales.length; i++) {
+			const locale = locales[i];
+			const isSupportedLocale = !!getMatchedSupportedLocale(locale);
+			const bundleLoader = localeBundleLoaders[locale];
+			let messages = {};
+			if (typeof bundleLoader === 'function') {
+				const id = getBundleId();
+				bundleLoaderMap.set(bundleLoader, id);
+				idToBundleLoaderMap.set(id, bundleLoader);
+				lookup[locale] = { lookup: { [bundleId]: { locale, id } } };
+			} else {
+				messages = bundleLoader;
+			}
+			if (isSupportedLocale) {
+				messageBundles[locale] = messages;
+			} else if (lookup[locale]) {
+				lookup[locale].bundles = { [bundleId]: messages };
+			} else {
+				lookup[locale] = {
+					bundles: { [bundleId]: messages }
+				};
+			}
+		}
+		Globalize.loadMessages({
+			root: { [bundleId]: bundle.messages },
+			[computedLocale]: { [bundleId]: bundle.messages },
+			...messageBundles
+		});
+		Cldr.load({ dojo: lookup });
+	}
+	return bundleId;
+}
+
+const cachedBundleMap = new WeakMap<Bundle<any>, Map<string, LocalizeResult<Bundle<any>>>>();
+
+export function localizeBundle<T extends Messages>(
+	bundle: Bundle<T>,
+	options: LocalizeOptions
+): LocalizeResult<Bundle<T>> {
+	const { locale = computedLocale, invalidator } = options;
+	const bundleId = registerBundle(bundle);
+	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
+	globalizeInstanceMap.set(locale, globalize);
+	const lookupId = globalize.cldr.get(`${DOJO_PATH}/${bundleId}/id`);
+	const lookupLocale = globalize.cldr.get(`${DOJO_PATH}/${bundleId}/locale`);
+	if (lookupId && lookupLocale) {
+		let bundleLoader = idToBundleLoaderMap.get(lookupId);
+		if (bundleLoader) {
+			Cldr.load({
+				dojo: {
+					[lookupLocale]: { lookup: { [bundleId]: { loading: true } } }
 				}
 			});
-			Globalize.locale(rootLocale);
+			const loaderPromise = bundleLoader();
+			loaderPromise.then((messages) => {
+				markBundleAsLoaded(lookupLocale, bundleId as string);
+				Globalize.loadMessages({ [lookupLocale]: { [bundleId as string]: messages.default } });
+				invalidator();
+			});
 		}
-
-		localeProducer.emit({ type: 'change', target: rootLocale });
 	}
+	const lookupLoading = globalize.cldr.get(`${DOJO_PATH}/${bundleId}/loading`);
+
+	if (lookupLoading) {
+		return getPlaceholderBundle(bundle);
+	}
+
+	const cachedLocaleMessagesMap = cachedBundleMap.get(bundle) || new Map<string, LocalizeResult<Bundle<any>>>();
+	let localizedBundleMessages = cachedLocaleMessagesMap.get(locale);
+	if (!localizedBundleMessages) {
+		localizedBundleMessages = {
+			messages: Object.keys(bundle.messages).reduce(
+				(messages, key) => {
+					const message = globalize.cldr.get(`${MESSAGE_BUNDLE_PATH}/${bundleId}/${key}`);
+					messages[key] = message;
+					return messages;
+				},
+				{} as any
+			),
+			isPlaceholder: false,
+			format: (key: any, options: {}) => {
+				return globalize.formatMessage(`${bundleId}/${key}`, options);
+			}
+		};
+		cachedLocaleMessagesMap.set(locale, localizedBundleMessages);
+		cachedBundleMap.set(bundle, cachedLocaleMessagesMap);
+	}
+	return localizedBundleMessages;
 }
-
-/**
- * The default environment locale.
- *
- * It should be noted that while the system locale will be normalized to a single
- * format when loading message bundles, this value represents the unaltered
- * locale returned directly by the environment.
- */
-export const systemLocale: string = (function() {
-	let systemLocale = 'en';
-	if (has('host-browser')) {
-		const navigator = global.navigator;
-		systemLocale = navigator.language || navigator.userLanguage;
-	} else if (has('host-node')) {
-		systemLocale = process.env.LANG || systemLocale;
-	}
-	return normalizeLocale(systemLocale);
-})();
