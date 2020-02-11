@@ -1,4 +1,4 @@
-import { create, invalidator } from '../vdom';
+import { create, invalidator, destroy } from '../vdom';
 
 type Invalidator = () => void;
 
@@ -11,6 +11,7 @@ export interface ResourceOptions {
 export interface Resource {
 	getOrRead(options: ResourceOptions, invalidator: Invalidator): any;
 	getTotal(options: ResourceOptions, invalidator: Invalidator): number | undefined;
+	disconnect(invalidator: Invalidator): void;
 }
 
 interface OptionsWrapper {
@@ -84,10 +85,18 @@ function createResourceWrapper(resource: Resource, options?: OptionsWrapper): Re
 }
 
 export function createDataMiddleware<T = void>() {
-	const factory = create({ invalidator }).properties<T extends void ? DataProperties : DataTransformProperties<T>>();
+	const factory = create({ invalidator, destroy }).properties<
+		T extends void ? DataProperties : DataTransformProperties<T>
+	>();
 
-	const data = factory(({ middleware: { invalidator }, properties }) => {
-		const optionsWrapperMap = new WeakMap<Resource, Map<string, OptionsWrapper>>();
+	const data = factory(({ middleware: { invalidator, destroy }, properties }) => {
+		const optionsWrapperMap = new Map<Resource, Map<string, OptionsWrapper>>();
+
+		destroy(() => {
+			[...optionsWrapperMap.keys()].forEach((resource) => {
+				resource.disconnect(invalidator);
+			});
+		});
 
 		return (dataOptions: DataInitialiserOptions = {}) => {
 			let resourceWrapperOrResource = dataOptions.resource || properties().resource;
