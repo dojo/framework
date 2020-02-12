@@ -16,7 +16,8 @@ const destroyStub = sb.stub();
 let resourceStub = {
 	getOrRead: sb.stub(),
 	getTotal: sb.stub(),
-	disconnect: sb.stub(),
+	subscribe: sb.stub(),
+	unsubscribe: sb.stub(),
 	isLoading: sb.stub(),
 	isFailed: sb.stub()
 };
@@ -183,7 +184,8 @@ jsdomDescribe('data middleware', () => {
 		const otherResource = {
 			getOrRead: sb.stub(),
 			getTotal: sb.stub(),
-			disconnect: sb.stub(),
+			subscribe: sb.stub(),
+			unsubscribe: sb.stub(),
 			isLoading: sb.stub(),
 			isFailed: sb.stub()
 		};
@@ -246,7 +248,40 @@ jsdomDescribe('data middleware', () => {
 		);
 	});
 
-	it('disconnects from the resource when widget is destroyed', () => {
+	it('subscribes to resource events when using the api', () => {
+		const { callback } = dataMiddleware();
+		const data = callback({
+			id: 'test',
+			middleware: {
+				invalidator: invalidatorStub,
+				destroy: destroyStub
+			},
+			properties: () => ({
+				resource: resourceStub
+			}),
+			children: () => []
+		});
+
+		const options = {
+			pageNumber: 1,
+			pageSize: 10
+		};
+
+		let { getTotal, isFailed, isLoading, getOrRead } = data();
+		getTotal(options);
+		assert.isTrue(resourceStub.subscribe.calledWith('total', options, invalidatorStub));
+		sb.resetHistory();
+		isFailed(options);
+		assert.isTrue(resourceStub.subscribe.calledWith('failed', options, invalidatorStub));
+		sb.resetHistory();
+		getOrRead(options);
+		assert.isTrue(resourceStub.subscribe.calledWith('data', options, invalidatorStub));
+		sb.resetHistory();
+		isLoading(options);
+		assert.isTrue(resourceStub.subscribe.calledWith('loading', options, invalidatorStub));
+	});
+
+	it('unsubscribes from the resource when widget is removed from render', () => {
 		let show = true;
 		let invalidate: any;
 		const Widget = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
@@ -268,7 +303,7 @@ jsdomDescribe('data middleware', () => {
 		show = false;
 		invalidate();
 		resolvers.resolveRAF();
-		assert.isTrue(resourceStub.disconnect.called);
+		assert.isTrue(resourceStub.unsubscribe.called);
 	});
 
 	it('returns loading status of resource', () => {

@@ -1,5 +1,5 @@
 import { create, invalidator, destroy } from '../vdom';
-import { ResourceOptions, Invalidator, Resource } from '../interfaces';
+import { Resource, ResourceOptions, Invalidator } from '../interfaces';
 
 interface OptionsWrapper {
 	getOptions(invalidator: Invalidator): ResourceOptions;
@@ -81,7 +81,7 @@ export function createDataMiddleware<T = void>() {
 
 		destroy(() => {
 			[...optionsWrapperMap.keys()].forEach((resource) => {
-				resource.disconnect(invalidator);
+				resource.unsubscribe(invalidator);
 			});
 		});
 
@@ -123,8 +123,9 @@ export function createDataMiddleware<T = void>() {
 			}
 
 			return {
-				getOrRead(options: ResourceOptions) {
-					const data = resource.getOrRead(options, invalidator);
+				getOrRead(options: ResourceOptions): T extends void ? any : T[] | undefined {
+					resource.subscribe('data', options, invalidator);
+					const data = resource.getOrRead(options);
 					const props = properties();
 
 					if (data && data.length && isDataTransformProperties(props)) {
@@ -134,12 +135,15 @@ export function createDataMiddleware<T = void>() {
 					return data;
 				},
 				getTotal(options: ResourceOptions) {
-					return resource.getTotal(options, invalidator);
+					resource.subscribe('total', options, invalidator);
+					return resource.getTotal(options);
 				},
 				isLoading(options: ResourceOptions) {
+					resource.subscribe('loading', options, invalidator);
 					return resource.isLoading(options);
 				},
 				isFailed(options: ResourceOptions) {
+					resource.subscribe('failed', options, invalidator);
 					return resource.isFailed(options);
 				},
 				setOptions(newOptions: ResourceOptions) {
