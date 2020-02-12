@@ -16,7 +16,9 @@ const destroyStub = sb.stub();
 let resourceStub = {
 	getOrRead: sb.stub(),
 	getTotal: sb.stub(),
-	disconnect: sb.stub()
+	disconnect: sb.stub(),
+	isLoading: sb.stub(),
+	isFailed: sb.stub()
 };
 
 jsdomDescribe('data middleware', () => {
@@ -181,7 +183,9 @@ jsdomDescribe('data middleware', () => {
 		const otherResource = {
 			getOrRead: sb.stub(),
 			getTotal: sb.stub(),
-			disconnect: sb.stub()
+			disconnect: sb.stub(),
+			isLoading: sb.stub(),
+			isFailed: sb.stub()
 		};
 		otherResource.getOrRead.returns(['apple', 'pear']);
 		const Widget = create({ dataMiddleware }).properties<{ otherResource: Resource }>()(function Widget({
@@ -265,5 +269,41 @@ jsdomDescribe('data middleware', () => {
 		invalidate();
 		resolvers.resolveRAF();
 		assert.isTrue(resourceStub.disconnect.called);
+	});
+
+	it('returns loading status of resource', () => {
+		resourceStub.isLoading.returns(true);
+		const Widget = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
+			const { isLoading, getOptions } = dataMiddleware();
+			const loading = isLoading(getOptions());
+			return <div>{`${loading}`}</div>;
+		});
+		const App = create({ dataMiddleware })(function App({ middleware: { dataMiddleware } }) {
+			const { resource } = dataMiddleware();
+			return <Widget resource={resource} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} />);
+		r.mount({ domNode: root });
+
+		assert.strictEqual(root.innerHTML, `<div>true</div>`);
+	});
+
+	it('returns failed status of resource', () => {
+		resourceStub.isFailed.returns(true);
+		const Widget = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
+			const { isFailed, getOptions } = dataMiddleware();
+			const failed = isFailed(getOptions());
+			return <div>{`${failed}`}</div>;
+		});
+		const App = create({ dataMiddleware })(function App({ middleware: { dataMiddleware } }) {
+			const { resource } = dataMiddleware();
+			return <Widget resource={resource} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} />);
+		r.mount({ domNode: root });
+
+		assert.strictEqual(root.innerHTML, `<div>true</div>`);
 	});
 });

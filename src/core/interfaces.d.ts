@@ -712,5 +712,7 @@ export interface ResourceOptions {
 export interface Resource {
 	getOrRead(options: ResourceOptions, invalidator: Invalidator): any;
 	getTotal(options: ResourceOptions, invalidator: Invalidator): number | undefined;
+	isLoading(options: ResourceOptions): boolean;
+	isFailed(options: ResourceOptions): boolean;
 	disconnect(invalidator: Invalidator): void;
 }

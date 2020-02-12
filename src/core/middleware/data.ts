@@ -136,6 +136,12 @@ export function createDataMiddleware<T = void>() {
 				getTotal(options: ResourceOptions) {
 					return resource.getTotal(options, invalidator);
 				},
+				isLoading(options: ResourceOptions) {
+					return resource.isLoading(options);
+				},
+				isFailed(options: ResourceOptions) {
+					return resource.isFailed(options);
+				},
 				setOptions(newOptions: ResourceOptions) {
 					optionsWrapper.setOptions(newOptions, invalidator);
 				},
