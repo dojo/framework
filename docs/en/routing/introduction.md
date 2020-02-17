@@ -108,7 +108,7 @@ Query parameters can also be added to route URLs. As with normal query parameter
 ```ts
 export default [
 	{
-		path: 'home/{page}',
+		path: 'home/{page}?queryOne=Friends&queryTwo=Family',
 		outlet: 'home'
 	}
 ];

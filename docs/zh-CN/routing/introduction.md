@@ -113,7 +113,7 @@ export default factory(function App() {
 ```ts
 export default [
 	{
-		path: 'home/{page}',
+		path: 'home/{page}?queryOne=Friends&queryTwo=Family',
 		outlet: 'home'
 	}
 ];
