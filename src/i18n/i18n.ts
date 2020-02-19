@@ -177,31 +177,32 @@ async function loadCldrData(
 	isLocal: boolean,
 	invalidator?: () => void
 ): Promise<any> {
-	const loaderData = await Promise.all(loaderPromises);
-	cldrLoaders[userLocale] = true;
-	cldrLoaders.supplemental = true;
-	loaderData.forEach((results) => {
-		results.forEach((result: any) => {
-			Globalize.load(result.default);
+	return Promise.all(loaderPromises).then((loaderData) => {
+		cldrLoaders[userLocale] = true;
+		cldrLoaders.supplemental = true;
+		loaderData.forEach((results) => {
+			results.forEach((result: any) => {
+				Globalize.load(result.default);
+			});
 		});
-	});
-	if (shouldLoadFallbackCldr(requestedLocale)) {
-		cldrLoaders.fallback = true;
-		const data = cldr.get('dojo') || {};
-		const locales = Object.keys(data);
-		for (let i = 0; i < locales.length; i++) {
-			const locale = locales[i];
-			if (data[locale].bundles) {
-				Globalize.loadMessages({ [locale]: data[locale].bundles });
+		if (shouldLoadFallbackCldr(requestedLocale)) {
+			cldrLoaders.fallback = true;
+			const data = cldr.get('dojo') || {};
+			const locales = Object.keys(data);
+			for (let i = 0; i < locales.length; i++) {
+				const locale = locales[i];
+				if (data[locale].bundles) {
+					Globalize.loadMessages({ [locale]: data[locale].bundles });
+				}
+			}
+			if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+				Globalize.loadMessages({ [requestedLocale]: {} });
 			}
 		}
-		if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
-			Globalize.loadMessages({ [requestedLocale]: {} });
-		}
-	}
-	setI18nLocales(calculatedLocale, isDefault, isLocal);
-	invalidator && invalidator();
-	return calculatedLocale;
+		setI18nLocales(calculatedLocale, isDefault, isLocal);
+		invalidator && invalidator();
+		return calculatedLocale;
+	});
 }
 
 /**
