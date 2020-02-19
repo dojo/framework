@@ -304,7 +304,7 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 				messages = bundleLoader;
 			}
 			if (isSupportedLocale) {
-				messageBundles[locale] = isSupportedLocale ? messages : {};
+				messageBundles[locale] = messages;
 			} else if (lookup[locale]) {
 				lookup[locale].bundles = { [bundleId]: messages };
 			} else {
