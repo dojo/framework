@@ -63,6 +63,7 @@ Object.defineProperty(Cldr, '_resolved', {
 	}
 });
 
+const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const bundleIdMap = new WeakMap<Bundle<Messages>, string>();
 const bundleLoaderMap = new WeakMap<MessageLoader, string>();
 const idToBundleLoaderMap = new Map<string, MessageLoader>();
@@ -327,6 +328,21 @@ export function localizeBundle<T extends Messages>(
 	options: LocalizeOptions
 ): LocalizeResult<Bundle<T>> {
 	const { locale = computedLocale, invalidator } = options;
+	if (computedLocale === 'unknown') {
+		return {
+			messages: bundle.messages,
+			isPlaceholder: false,
+			format: (key, options) => {
+				return bundle.messages[key].replace(TOKEN_PATTERN, (token, property) => {
+					const value = options[property];
+					if (typeof value === 'undefined') {
+						return token;
+					}
+					return value;
+				});
+			}
+		};
+	}
 	const bundleId = registerBundle(bundle);
 	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
 	globalizeInstanceMap.set(locale, globalize);
