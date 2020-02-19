@@ -4,6 +4,7 @@ import * as Globalize from 'globalize/dist/globalize/message';
 const Cldr = require('cldrjs/dist/cldr');
 `!has('cldr-elide')`;
 import './util/cldr';
+import { isThenable } from '../shim/Promise';
 
 export interface Messages {
 	[key: string]: string;
@@ -167,7 +168,7 @@ function setI18nLocales(locale: string, isDefault: boolean, local: boolean): voi
  * Load required CLDR data based on the registered loaders and support
  * for the requested locale
  */
-async function loadCldrData(
+function loadCldrData(
 	loaderPromises: Promise<any>[],
 	userLocale: string,
 	requestedLocale: string,
@@ -175,30 +176,31 @@ async function loadCldrData(
 	isDefault: boolean,
 	isLocal: boolean
 ): Promise<any> {
-	const loaderData = await Promise.all(loaderPromises);
-	cldrLoaders[userLocale] = true;
-	cldrLoaders.supplemental = true;
-	loaderData.forEach((results) => {
-		results.forEach((result: any) => {
-			Globalize.load(result.default);
+	return Promise.all(loaderPromises).then((loaderData) => {
+		cldrLoaders[userLocale] = true;
+		cldrLoaders.supplemental = true;
+		loaderData.forEach((results) => {
+			results.forEach((result: any) => {
+				Globalize.load(result.default);
+			});
 		});
-	});
-	if (shouldLoadFallbackCldr(requestedLocale)) {
-		cldrLoaders.fallback = true;
-		const data = cldr.get('dojo') || {};
-		const locales = Object.keys(data);
-		for (let i = 0; i < locales.length; i++) {
-			const locale = locales[i];
-			if (data[locale].bundles) {
-				Globalize.loadMessages({ [locale]: data[locale].bundles });
+		if (shouldLoadFallbackCldr(requestedLocale)) {
+			cldrLoaders.fallback = true;
+			const data = cldr.get('dojo') || {};
+			const locales = Object.keys(data);
+			for (let i = 0; i < locales.length; i++) {
+				const locale = locales[i];
+				if (data[locale].bundles) {
+					Globalize.loadMessages({ [locale]: data[locale].bundles });
+				}
+			}
+			if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+				Globalize.loadMessages({ [requestedLocale]: {} });
 			}
 		}
-		if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
-			Globalize.loadMessages({ [requestedLocale]: {} });
-		}
-	}
-	setI18nLocales(calculatedLocale, isDefault, isLocal);
-	return calculatedLocale;
+		setI18nLocales(calculatedLocale, isDefault, isLocal);
+		return calculatedLocale;
+	});
 }
 
 /**
@@ -301,8 +303,9 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 			} else {
 				messages = bundleLoader;
 			}
-			messageBundles[locale] = isSupportedLocale ? messages : {};
-			if (lookup[locale]) {
+			if (isSupportedLocale) {
+				messageBundles[locale] = isSupportedLocale ? messages : {};
+			} else if (lookup[locale]) {
 				lookup[locale].bundles = { [bundleId]: messages };
 			} else {
 				lookup[locale] = {
@@ -326,7 +329,7 @@ export function localizeBundle<T extends Messages>(
 	bundle: Bundle<T>,
 	options: LocalizeOptions
 ): LocalizeResult<Bundle<T>> {
-	const { locale = computedLocale, invalidator } = options;
+	let { locale = computedLocale, invalidator } = options;
 	if (computedLocale === 'unknown') {
 		return {
 			messages: bundle.messages,
@@ -341,6 +344,13 @@ export function localizeBundle<T extends Messages>(
 				});
 			}
 		};
+	}
+	if (shouldLoadFallbackCldr(locale)) {
+		const promise = setLocale({ default: false, local: true, locale });
+		if (isThenable(promise)) {
+			promise.then(() => invalidator());
+			return getPlaceholderBundle(bundle);
+		}
 	}
 	const bundleId = registerBundle(bundle);
 	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);

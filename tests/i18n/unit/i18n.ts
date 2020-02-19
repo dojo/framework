@@ -131,10 +131,13 @@ describe('i18n', () => {
 		});
 
 		it('Resolves async messages bundles', async () => {
+			const fallback = createAsyncMessageLoader();
 			const invalidator = stub();
 			setDefaultLocale('fr');
 			setSupportedLocales(['fr']);
-			setCldrLoaders({});
+			setCldrLoaders({
+				fallback: fallback.loader
+			});
 			await setLocale({ locale: 'fr' });
 			const enGb = createAsyncMessageLoader();
 			const en = createAsyncMessageLoader();
@@ -158,18 +161,26 @@ describe('i18n', () => {
 			assert.deepEqual(messages, { foo: '', fallback: '' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), '');
 			assert.isTrue(isPlaceholder);
-			enGb.resolver({ default: { foo: 'Oi, {name}' } });
 			assert.isTrue(invalidator.notCalled);
-			await enGb.promise;
+			fallback.resolver([{ default: {} }]);
+			await fallback.promise;
 			assert.isTrue(invalidator.calledOnce);
 			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'en-GB', invalidator }));
 			assert.deepEqual(messages, { foo: '', fallback: '' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), '');
 			assert.isTrue(isPlaceholder);
-			en.resolver({ default: { foo: 'Hello, {name}', fallback: 'en fallback' } });
+			enGb.resolver({ default: { foo: 'Oi, {name}' } });
 			assert.isTrue(invalidator.calledOnce);
-			await en.promise;
+			await enGb.promise;
 			assert.isTrue(invalidator.calledTwice);
+			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'en-GB', invalidator }));
+			assert.deepEqual(messages, { foo: '', fallback: '' });
+			assert.strictEqual(format('foo', { name: 'Steven' }), '');
+			assert.isTrue(isPlaceholder);
+			en.resolver({ default: { foo: 'Hello, {name}', fallback: 'en fallback' } });
+			assert.isTrue(invalidator.calledTwice);
+			await en.promise;
+			assert.isTrue(invalidator.calledThrice);
 			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'en-GB', invalidator }));
 			assert.deepEqual(messages, { foo: 'Oi, {name}', fallback: 'en fallback' });
 			assert.strictEqual(format('foo', { name: 'Steven' }), 'Oi, Steven');
