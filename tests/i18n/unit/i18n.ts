@@ -194,16 +194,16 @@ describe('i18n', () => {
 		it('should use fallback message bundle resolution for a non localised app', async () => {
 			const invalidator = stub();
 			const bundle = {
-				messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
+				messages: { foo: 'bonjour, {name}, {other}', fallback: 'root/fr fallback' },
 				locales: {
-					en: { foo: 'hello, {name}', fallback: 'en' }
+					en: { foo: 'hello, {name}, {other}', fallback: 'en' }
 				}
 			};
 			setDefaultLocale('unknown');
 			await setLocale({ locale: 'unknown', default: true });
 			let { messages, format, isPlaceholder } = localizeBundle(bundle, { invalidator, locale: 'en' });
-			assert.deepEqual(messages, { foo: 'bonjour, {name}', fallback: 'root/fr fallback' });
-			assert.strictEqual(format('foo', { name: 'Steven' }), 'bonjour, Steven');
+			assert.deepEqual(messages, { foo: 'bonjour, {name}, {other}', fallback: 'root/fr fallback' });
+			assert.strictEqual(format('foo', { name: 'Steven' }), 'bonjour, Steven, {other}');
 			assert.isFalse(isPlaceholder);
 		});
 

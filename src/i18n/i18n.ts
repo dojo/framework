@@ -357,10 +357,8 @@ export function localizeBundle<T extends Messages>(
 		};
 	}
 	if (shouldLoadFallbackCldr(locale)) {
-		const promise = setLocale({ default: false, local: true, locale, invalidator });
-		if (typeof promise === 'string') {
-			return getPlaceholderBundle(bundle);
-		}
+		setLocale({ default: false, local: true, locale, invalidator });
+		return getPlaceholderBundle(bundle);
 	}
 	const bundleId = registerBundle(bundle);
 	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
