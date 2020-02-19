@@ -185,7 +185,7 @@ async function loadCldrData(
 	});
 	if (shouldLoadFallbackCldr(requestedLocale)) {
 		cldrLoaders.fallback = true;
-		const data = cldr.get('dojo');
+		const data = cldr.get('dojo') || {};
 		const locales = Object.keys(data);
 		for (let i = 0; i < locales.length; i++) {
 			const locale = locales[i];
@@ -301,9 +301,8 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 			} else {
 				messages = bundleLoader;
 			}
-			if (isSupportedLocale) {
-				messageBundles[locale] = messages;
-			} else if (lookup[locale]) {
+			messageBundles[locale] = isSupportedLocale ? messages : {};
+			if (lookup[locale]) {
 				lookup[locale].bundles = { [bundleId]: messages };
 			} else {
 				lookup[locale] = {
