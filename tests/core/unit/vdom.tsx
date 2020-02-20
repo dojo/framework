@@ -2434,6 +2434,83 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(quxDetachCount, 8);
 		});
 
+		it('Should unmount the application and destroy all application widgets', () => {
+			const destroyStub = stub();
+			const factory = create({ destroy });
+			const Bar = factory(({ middleware: { destroy } }) => {
+				destroy(destroyStub);
+				return <div id="bar" />;
+			});
+
+			class Foo extends WidgetBase {
+				private _show = false;
+
+				constructor() {
+					super();
+				}
+
+				public show = () => {
+					this._show = !this._show;
+					this.invalidate();
+				};
+
+				public onDetach() {
+					destroyStub();
+				}
+
+				render() {
+					return (
+						<div id="foo">
+							<Bar />
+						</div>
+					);
+				}
+			}
+
+			let show = true;
+
+			class App extends WidgetBase {
+				render() {
+					return (
+						<div id="app">
+							<button
+								onclick={() => {
+									show = false;
+									this.invalidate();
+								}}
+							/>
+							{show && <Foo />}
+							<div>
+								<div>
+									<Bar />
+								</div>
+								<div>
+									<div>
+										<Foo />
+										<Bar />
+									</div>
+								</div>
+							</div>
+						</div>
+					);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual(
+				div.innerHTML,
+				'<div id="app"><button></button><div id="foo"><div id="bar"></div></div><div><div><div id="bar"></div></div><div><div><div id="foo"><div id="bar"></div></div><div id="bar"></div></div></div></div></div>'
+			);
+			(div.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			r.unmount();
+			assert.lengthOf(div.childNodes, 0);
+			assert.strictEqual(div.innerHTML, '');
+			assert.strictEqual(destroyStub.callCount, 6);
+		});
+
 		it('calls onDetach after the root node has been removed', () => {
 			let removeChildCount = 0;
 			let toggleShow: any;
