@@ -46,6 +46,7 @@ interface SetLocaleOptions {
 	locale?: string;
 	default?: boolean;
 	local?: boolean;
+	invalidator?: () => void;
 }
 
 /**
@@ -63,6 +64,7 @@ Object.defineProperty(Cldr, '_resolved', {
 	}
 });
 
+const TOKEN_PATTERN = /\{([a-z0-9_]+)\}/gi;
 const bundleIdMap = new WeakMap<Bundle<Messages>, string>();
 const bundleLoaderMap = new WeakMap<MessageLoader, string>();
 const idToBundleLoaderMap = new Map<string, MessageLoader>();
@@ -172,32 +174,35 @@ async function loadCldrData(
 	requestedLocale: string,
 	calculatedLocale: string,
 	isDefault: boolean,
-	isLocal: boolean
+	isLocal: boolean,
+	invalidator?: () => void
 ): Promise<any> {
-	const loaderData = await Promise.all(loaderPromises);
-	cldrLoaders[userLocale] = true;
-	cldrLoaders.supplemental = true;
-	loaderData.forEach((results) => {
-		results.forEach((result: any) => {
-			Globalize.load(result.default);
+	return Promise.all(loaderPromises).then((loaderData) => {
+		cldrLoaders[userLocale] = true;
+		cldrLoaders.supplemental = true;
+		loaderData.forEach((results) => {
+			results.forEach((result: any) => {
+				Globalize.load(result.default);
+			});
 		});
-	});
-	if (shouldLoadFallbackCldr(requestedLocale)) {
-		cldrLoaders.fallback = true;
-		const data = cldr.get('dojo');
-		const locales = Object.keys(data);
-		for (let i = 0; i < locales.length; i++) {
-			const locale = locales[i];
-			if (data[locale].bundles) {
-				Globalize.loadMessages({ [locale]: data[locale].bundles });
+		if (shouldLoadFallbackCldr(requestedLocale)) {
+			cldrLoaders.fallback = true;
+			const data = cldr.get('dojo') || {};
+			const locales = Object.keys(data);
+			for (let i = 0; i < locales.length; i++) {
+				const locale = locales[i];
+				if (data[locale].bundles) {
+					Globalize.loadMessages({ [locale]: data[locale].bundles });
+				}
+			}
+			if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
+				Globalize.loadMessages({ [requestedLocale]: {} });
 			}
 		}
-		if (requestedLocale && locales.indexOf(requestedLocale) === -1) {
-			Globalize.loadMessages({ [requestedLocale]: {} });
-		}
-	}
-	setI18nLocales(calculatedLocale, isDefault, isLocal);
-	return calculatedLocale;
+		setI18nLocales(calculatedLocale, isDefault, isLocal);
+		invalidator && invalidator();
+		return calculatedLocale;
+	});
 }
 
 /**
@@ -208,7 +213,8 @@ export function setLocale(options: SetLocaleOptions = {}): Promise<string> | str
 	const {
 		local: isLocal = false,
 		default: isDefault = false,
-		locale: requestedLocale = global.navigator.language || global.navigator.userLanguage
+		locale: requestedLocale = global.navigator.language || global.navigator.userLanguage,
+		invalidator
 	} = options;
 	const matchedLocale = getMatchedSupportedLocale(requestedLocale);
 	const userLocale = matchedLocale || defaultLocale;
@@ -231,7 +237,15 @@ export function setLocale(options: SetLocaleOptions = {}): Promise<string> | str
 	}
 
 	if (loaderPromises.length) {
-		return loadCldrData(loaderPromises, userLocale, requestedLocale, calculatedLocale, isDefault, isLocal);
+		return loadCldrData(
+			loaderPromises,
+			userLocale,
+			requestedLocale,
+			calculatedLocale,
+			isDefault,
+			isLocal,
+			invalidator
+		);
 	} else if (!matchedLocale) {
 		Globalize.loadMessages({ [requestedLocale]: {} });
 	}
@@ -326,7 +340,26 @@ export function localizeBundle<T extends Messages>(
 	bundle: Bundle<T>,
 	options: LocalizeOptions
 ): LocalizeResult<Bundle<T>> {
-	const { locale = computedLocale, invalidator } = options;
+	let { locale = computedLocale, invalidator } = options;
+	if (computedLocale === 'unknown') {
+		return {
+			messages: bundle.messages,
+			isPlaceholder: false,
+			format: (key, options) => {
+				return bundle.messages[key].replace(TOKEN_PATTERN, (token, property) => {
+					const value = options[property];
+					if (typeof value === 'undefined') {
+						return token;
+					}
+					return value;
+				});
+			}
+		};
+	}
+	if (shouldLoadFallbackCldr(locale)) {
+		setLocale({ default: false, local: true, locale, invalidator });
+		return getPlaceholderBundle(bundle);
+	}
 	const bundleId = registerBundle(bundle);
 	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
 	globalizeInstanceMap.set(locale, globalize);
