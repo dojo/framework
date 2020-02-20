@@ -292,6 +292,18 @@ const r = renderer(() => <MyComposingWidget />);
 r.mount({ domNode: dojoAppRootElement });
 ```
 
+## Unmounting an application
+
+To fully unmount a Dojo application the `renderer` provides an `unmount` API which will remove the DOM nodes and perform any registered destroy operations for all widgets that are current rendered.
+
+```tsx
+const r = renderer(() => <App />);
+r.mount();
+
+// To unmount the dojo application
+r.unmount();
+```
+
 ## Adding external DOM nodes into the VDOM
 
 Dojo can wrap external DOM elements, effectively bringing them into the application's VDOM and using them as part of the render output. This is accomplished with the `dom()` utility method from the `@dojo/framework/core/vdom` module. It works similarly to [`v()`](/learn/creating-widgets/rendering-widgets#instantiating-vdom-nodes), but takes an existing DOM node rather than an element tag string as its primary argument. It returns a `VNode` which references the DOM node passed into it, rather than a newly created element when using `v()`.
