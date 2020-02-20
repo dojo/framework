@@ -2504,7 +2504,6 @@ jsdomDescribe('vdom', () => {
 			const r = renderer(() => w(App, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div });
-			console.log(div.innerHTML);
 			assert.strictEqual(
 				div.innerHTML,
 				'<div id="app"><button></button><div id="foo"><div id="bar"></div></div><div><div><div id="bar"></div></div><div><div><div id="foo"><div id="bar"></div></div><div id="bar"></div></div></div></div></div>'
