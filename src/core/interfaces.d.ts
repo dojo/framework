@@ -702,20 +702,3 @@ export type LocalizedMessages<T extends Messages> = {
 };
 
 export type Invalidator = () => void;
-
-export type SubscriptionType = 'data' | 'total' | 'loading' | 'failed';
-
-export interface ResourceOptions {
-	pageNumber?: number;
-	query?: string;
-	pageSize?: number;
-}
-
-export interface Resource {
-	getOrRead(options: ResourceOptions): any;
-	getTotal(options: ResourceOptions): number | undefined;
-	isLoading(options: ResourceOptions): boolean;
-	isFailed(options: ResourceOptions): boolean;
-	subscribe(type: SubscriptionType, options: ResourceOptions, invalidator: Invalidator): void;
-	unsubscribe(invalidator: Invalidator): void;
-}

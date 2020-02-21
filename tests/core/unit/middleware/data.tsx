@@ -3,15 +3,16 @@ const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 import { renderer, tsx, create, invalidator } from '../../../../src/core/vdom';
-import dataMiddleware, { createDataMiddleware, ResourceWrapper } from '../../../../src/core/middleware/data';
+import dataMiddleware, { createDataMiddleware, ResourceOrResourceWrapper } from '../../../../src/core/middleware/data';
 import { createResolvers } from '../../support/util';
-import { Resource } from '../../../../src/core/interfaces';
+import { Resource } from '../../../../src/core/resource';
 
 const resolvers = createResolvers();
 
 const sb = sandbox.create();
 const invalidatorStub = sb.stub();
 const destroyStub = sb.stub();
+const diffPropertyStub = sb.stub();
 
 let resourceStub = {
 	getOrRead: sb.stub(),
@@ -19,7 +20,9 @@ let resourceStub = {
 	subscribe: sb.stub(),
 	unsubscribe: sb.stub(),
 	isLoading: sb.stub(),
-	isFailed: sb.stub()
+	isFailed: sb.stub(),
+	get: sb.stub(),
+	set: sb.stub()
 };
 
 jsdomDescribe('data middleware', () => {
@@ -37,7 +40,8 @@ jsdomDescribe('data middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator: invalidatorStub,
-				destroy: destroyStub
+				destroy: destroyStub,
+				diffProperty: diffPropertyStub
 			},
 			properties: () => ({
 				resource: resourceStub
@@ -57,7 +61,8 @@ jsdomDescribe('data middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator: invalidatorStub,
-				destroy: destroyStub
+				destroy: destroyStub,
+				diffProperty: diffPropertyStub
 			},
 			properties: () => ({
 				resource: resourceStub
@@ -68,37 +73,35 @@ jsdomDescribe('data middleware', () => {
 		let { setOptions, getOptions } = data();
 		setOptions({
 			pageNumber: 2,
-			pageSize: 15,
-			query: 'test'
+			pageSize: 15
 		});
 		assert.isTrue(invalidatorStub.calledOnce);
 		const options = getOptions();
 		assert.equal(options.pageNumber, 2);
 		assert.equal(options.pageSize, 15);
-		assert.equal(options.query, 'test');
 	});
 
 	it('should use a transform function when using createDataMiddleware', () => {
-		resourceStub.getOrRead.returns(['foo', 'bar']);
+		resourceStub.getOrRead.returns([{ item: 'foo' }, { item: 'bar' }]);
 		const factory = create({ data: createDataMiddleware<{ value: string }>() });
 		const App = factory(function App({ middleware: { data } }) {
 			const { getOrRead, getOptions } = data();
 			return <div>{JSON.stringify(getOrRead(getOptions()))}</div>;
 		});
 		const root = document.createElement('div');
-		const r = renderer(() => <App resource={resourceStub} transform={(item: any) => ({ value: item })} />);
+		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['item'] }} />);
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo' }, { value: 'bar' }])}</div>`);
 	});
 
 	it('can create shared resources that share options', () => {
-		resourceStub.getOrRead.returns(['foo', 'bar']);
+		resourceStub.getOrRead.returns([{ value: 'foo' }, { value: 'bar' }]);
 		const WidgetA = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
 			const { getOptions, setOptions } = dataMiddleware();
 			setOptions({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'test'
+				query: { value: 'test' }
 			});
 			return <div>{JSON.stringify(getOptions())}</div>;
 		});
@@ -124,23 +127,23 @@ jsdomDescribe('data middleware', () => {
 			`<div>${JSON.stringify({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'test'
+				query: { value: 'test' }
 			})}</div><div>${JSON.stringify({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'test'
+				query: { value: 'test' }
 			})}</div>`
 		);
 	});
 
 	it('can reset a shared resource to obtain its own options', () => {
-		resourceStub.getOrRead.returns(['foo', 'bar']);
+		resourceStub.getOrRead.returns([{ value: 'foo' }, { value: 'bar' }]);
 		const WidgetA = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
 			const { getOptions, setOptions } = dataMiddleware({ reset: true });
 			setOptions({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'testA'
+				query: { value: 'testA' }
 			});
 			return <div>{JSON.stringify(getOptions())}</div>;
 		});
@@ -149,7 +152,7 @@ jsdomDescribe('data middleware', () => {
 			setOptions({
 				pageNumber: 10,
 				pageSize: 10,
-				query: 'testB'
+				query: { value: 'testB' }
 			});
 			return <div>{JSON.stringify(getOptions())}</div>;
 		});
@@ -171,11 +174,11 @@ jsdomDescribe('data middleware', () => {
 			`<div>${JSON.stringify({
 				pageNumber: 99,
 				pageSize: 99,
-				query: 'testA'
+				query: { value: 'testA' }
 			})}</div><div>${JSON.stringify({
 				pageNumber: 10,
 				pageSize: 10,
-				query: 'testB'
+				query: { value: 'testB' }
 			})}</div>`
 		);
 	});
@@ -187,7 +190,9 @@ jsdomDescribe('data middleware', () => {
 			subscribe: sb.stub(),
 			unsubscribe: sb.stub(),
 			isLoading: sb.stub(),
-			isFailed: sb.stub()
+			isFailed: sb.stub(),
+			set: sb.stub(),
+			get: sb.stub()
 		};
 		otherResource.getOrRead.returns(['apple', 'pear']);
 		const Widget = create({ dataMiddleware }).properties<{ otherResource: Resource }>()(function Widget({
@@ -209,8 +214,8 @@ jsdomDescribe('data middleware', () => {
 	});
 
 	it('can use key property to differentiate between options on same resource', () => {
-		resourceStub.getOrRead.returns(['foo', 'bar']);
-		const Widget = create({ dataMiddleware }).properties<{ otherResource: Resource | ResourceWrapper }>()(
+		resourceStub.getOrRead.returns([{ value: 'foo' }, { value: 'bar' }]);
+		const Widget = create({ dataMiddleware }).properties<{ otherResource: ResourceOrResourceWrapper }>()(
 			function Widget({ properties, middleware: { dataMiddleware } }) {
 				const { setOptions } = dataMiddleware();
 				const { setOptions: setOptions2, getOptions: getOptions2 } = dataMiddleware({
@@ -220,12 +225,12 @@ jsdomDescribe('data middleware', () => {
 				setOptions2({
 					pageSize: 2,
 					pageNumber: 2,
-					query: 'two-query'
+					query: { value: 'two-query' }
 				});
 				setOptions({
 					pageSize: 1,
 					pageNumber: 1,
-					query: 'one-query'
+					query: { value: 'one-query' }
 				});
 				return <div>{JSON.stringify(getOptions2())}</div>;
 			}
@@ -243,7 +248,7 @@ jsdomDescribe('data middleware', () => {
 			`<div>${JSON.stringify({
 				pageSize: 2,
 				pageNumber: 2,
-				query: 'two-query'
+				query: { value: 'two-query' }
 			})}</div>`
 		);
 	});
@@ -254,7 +259,8 @@ jsdomDescribe('data middleware', () => {
 			id: 'test',
 			middleware: {
 				invalidator: invalidatorStub,
-				destroy: destroyStub
+				destroy: destroyStub,
+				diffProperty: diffPropertyStub
 			},
 			properties: () => ({
 				resource: resourceStub
@@ -286,7 +292,7 @@ jsdomDescribe('data middleware', () => {
 		let invalidate: any;
 		const Widget = create({ dataMiddleware })(function Widget({ middleware: { dataMiddleware } }) {
 			const { getOrRead } = dataMiddleware();
-			getOrRead({ pageNumber: 1, pageSize: 2, query: 'test' });
+			getOrRead({ pageNumber: 1, pageSize: 2, query: { value: 'test' } });
 			return <div>testing</div>;
 		});
 		const App = create({ dataMiddleware, invalidator })(function App({
