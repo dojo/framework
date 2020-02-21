@@ -55,6 +55,27 @@ jsdomDescribe('data middleware', () => {
 		assert.equal(result, 'test');
 	});
 
+	it('can call get with options', () => {
+		const { callback } = dataMiddleware();
+		const data = callback({
+			id: 'test',
+			middleware: {
+				invalidator: invalidatorStub,
+				destroy: destroyStub,
+				diffProperty: diffPropertyStub
+			},
+			properties: () => ({
+				resource: resourceStub
+			}),
+			children: () => []
+		});
+
+		resourceStub.get.returns('test');
+		const { get, getOptions } = data();
+		const result = get(getOptions());
+		assert.equal(result, 'test');
+	});
+
 	it('should invalidate when new options are set', () => {
 		const { callback } = dataMiddleware();
 		const data = callback({
@@ -81,7 +102,7 @@ jsdomDescribe('data middleware', () => {
 		assert.equal(options.pageSize, 15);
 	});
 
-	it('should use a transform function when using createDataMiddleware', () => {
+	it('should transform getOrRead response when using createDataMiddleware', () => {
 		resourceStub.getOrRead.returns([{ item: 'foo' }, { item: 'bar' }]);
 		const factory = create({ data: createDataMiddleware<{ value: string }>() });
 		const App = factory(function App({ middleware: { data } }) {
@@ -92,6 +113,71 @@ jsdomDescribe('data middleware', () => {
 		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['item'] }} />);
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo' }, { value: 'bar' }])}</div>`);
+	});
+
+	it('should transform get response when using createDataMiddleware', () => {
+		resourceStub.get.returns([{ item: 'foo' }, { item: 'bar' }]);
+		const factory = create({ data: createDataMiddleware<{ value: string }>() });
+		const App = factory(function App({ middleware: { data } }) {
+			const { get, getOptions } = data();
+			return <div>{JSON.stringify(get(getOptions()))}</div>;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['item'] }} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo' }, { value: 'bar' }])}</div>`);
+	});
+
+	it('should transform appropriate query options when calling resource apis', () => {
+		const factory = create({ data: createDataMiddleware<{ value: string }>() });
+		const App = factory(function App({ middleware: { data } }) {
+			const { get } = data();
+			return (
+				<div>
+					{JSON.stringify(
+						get({
+							query: {
+								value: 'test',
+								foo: 'bar'
+							}
+						})
+					)}
+				</div>
+			);
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['item'] }} />);
+		r.mount({ domNode: root });
+		assert.isTrue(
+			resourceStub.get.calledWith({ query: [{ keys: ['item'], value: 'test' }, { keys: ['foo'], value: 'bar' }] })
+		);
+	});
+
+	it('should still convert query options to resource query format when not using a transform', () => {
+		const factory = create({ data: dataMiddleware });
+		const App = factory(function App({ middleware: { data } }) {
+			const { get } = data();
+			return (
+				<div>
+					{JSON.stringify(
+						get({
+							query: {
+								value: 'test',
+								foo: 'bar'
+							}
+						})
+					)}
+				</div>
+			);
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} />);
+		r.mount({ domNode: root });
+		assert.isTrue(
+			resourceStub.get.calledWith({
+				query: [{ keys: ['value'], value: 'test' }, { keys: ['foo'], value: 'bar' }]
+			})
+		);
 	});
 
 	it('can create shared resources that share options', () => {
@@ -346,5 +432,59 @@ jsdomDescribe('data middleware', () => {
 		r.mount({ domNode: root });
 
 		assert.strictEqual(root.innerHTML, `<div>true</div>`);
+	});
+
+	it('should call create resource only once when provided a factory and data', () => {
+		const factory = create({ data: dataMiddleware, invalidator });
+		let invalidate: any;
+		const App = factory(function App({ middleware: { data, invalidator } }) {
+			invalidate = invalidator;
+			const { get } = data();
+			return <div>{JSON.stringify(get({}))}</div>;
+		});
+		const root = document.createElement('div');
+		const factoryStub = sb.stub().returns(resourceStub);
+		const r = renderer(() => (
+			<App resource={{ resource: factoryStub, data: [{ value: 'foo' }, { value: 'bar' }] }} />
+		));
+		r.mount({ domNode: root });
+		resolvers.resolveRAF();
+		invalidate();
+		resolvers.resolveRAF();
+		assert.isTrue(factoryStub.calledOnce);
+	});
+
+	it('should call create resource again if the data passed has changed', () => {
+		const testData = [{ value: 'foo' }, { value: 'bar' }];
+		const testData2 = [{ value: 'red' }, { value: 'blue' }, { value: 'green' }];
+		let invalidate: any;
+		let useAltData = false;
+
+		const Widget = create({ data: dataMiddleware, invalidator })(function Widget({
+			middleware: { data, invalidator }
+		}) {
+			const { get } = data();
+			return <div>{JSON.stringify(get({}))}</div>;
+		});
+
+		const App = create({ invalidator })(function App({ middleware: { invalidator } }) {
+			invalidate = invalidator;
+			const resource = useAltData
+				? { resource: factoryStub, data: testData2 }
+				: { resource: factoryStub, data: testData };
+			return <Widget resource={resource} />;
+		});
+
+		const root = document.createElement('div');
+		const factoryStub = sb.stub().returns(resourceStub);
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		resolvers.resolveRAF();
+		useAltData = true;
+
+		invalidate();
+
+		resolvers.resolveRAF();
+		assert.isTrue(factoryStub.calledTwice);
 	});
 });

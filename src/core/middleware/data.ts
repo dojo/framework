@@ -160,6 +160,7 @@ export function createDataMiddleware<T = void>() {
 					nextResource.data.length !== currentResource.data.length
 				) {
 					resourceWithDataMap.delete(nextResource.data);
+					invalidator();
 				}
 			}
 		});
