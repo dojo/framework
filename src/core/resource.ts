@@ -42,7 +42,6 @@ export type DataFetcher<S> = (
 
 export interface DataTemplate<S = {}> {
 	read: DataFetcher<S>;
-	set?: any;
 }
 
 type Status = 'LOADING' | 'FAILED';
@@ -69,7 +68,9 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 		failed: new Map<string, Set<Invalidator>>()
 	};
 
-	function invalidate(key: string, types: SubscriptionType[]) {
+	function invalidate(types: SubscriptionType[], options: ResourceOptions) {
+		const key = `${getQueryKey(options)}-${getPageKey(options)}`;
+
 		types.forEach((type) => {
 			const keyedInvalidatorMap = invalidatorMaps[type];
 			const invalidatorSet = keyedInvalidatorMap.get(key);
@@ -86,11 +87,11 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	}
 
 	function getQueryKey(query = {}): string {
-		return JSON.stringify(query, Object.keys(query).sort());
+		return JSON.stringify(query);
 	}
 
 	function subscribe(type: SubscriptionType, options: ResourceOptions, invalidator: Invalidator) {
-		const key = getPageKey(options);
+		const key = `${getQueryKey(options)}-${getPageKey(options)}`;
 		const keyedInvalidatorMap = invalidatorMaps[type];
 		const invalidatorSet = keyedInvalidatorMap.get(key) || new Set<Invalidator>();
 		invalidatorSet.add(invalidator);
@@ -125,6 +126,7 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	function setStatus(status: Status, options: ResourceOptions) {
 		const queryKey = getQueryKey(options.query);
 		const pageKey = getPageKey(options);
+		console.log(`setting status: ${status}, query: ${queryKey}, page: ${pageKey}`);
 		const pageStatuses = statusMap.get(queryKey) || {};
 		pageStatuses[pageKey] = status;
 		statusMap.set(queryKey, pageStatuses);
@@ -133,6 +135,7 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	function clearStatus(options: ResourceOptions) {
 		const queryKey = getQueryKey(options.query);
 		const pageKey = getPageKey(options);
+		console.log(`clearing status, query: ${queryKey}, page: ${pageKey}`);
 		const pageStatuses = statusMap.get(queryKey);
 		if (pageStatuses && pageStatuses[pageKey]) {
 			delete pageStatuses[pageKey];
@@ -179,7 +182,6 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	}
 
 	function setData(start: number, data: S[], size: number, query = {}) {
-		console.log(`set data called with start: ${start}, size: ${size}, query: ${query}`);
 		const queryKey = getQueryKey(query);
 		const cachedQueryData = queryMap.get(queryKey);
 		const newQueryData = cachedQueryData && cachedQueryData.length ? cachedQueryData : [];
@@ -193,7 +195,6 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 
 	function getOrRead(options: ResourceOptions): S[] | undefined {
 		const { pageNumber, query, pageSize } = options;
-		const pageKey = getPageKey(options);
 		const queryKey = getQueryKey(options.query);
 
 		if (isLoading(options) || isFailed(options)) {
@@ -244,7 +245,7 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 
 		if (isAsyncResponse(response)) {
 			setStatus('LOADING', options);
-			invalidate(pageKey, ['loading']);
+			invalidate(['loading'], options);
 
 			response
 				.then(({ data, total }) => {
@@ -254,15 +255,15 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 
 					clearStatus(options);
 
-					invalidate(pageKey, ['loading', 'data']);
+					invalidate(['loading', 'data'], options);
 					if (total !== totalMap.get(queryKey)) {
 						totalMap.set(queryKey, total);
-						invalidate(pageKey, ['total']);
+						invalidate(['total'], options);
 					}
 				})
 				.catch(() => {
 					setStatus('FAILED', options);
-					invalidate(pageKey, ['failed', 'loading']);
+					invalidate(['failed', 'loading'], options);
 				});
 
 			return undefined;
@@ -271,11 +272,11 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 			const start = readOptions.offset || 0;
 			const size = Math.min(data.length, readOptions.size || data.length);
 			setData(start, data, size, query);
-			invalidate(pageKey, ['data']);
+			invalidate(['data'], options);
 
 			if (total !== totalMap.get(queryKey)) {
 				totalMap.set(queryKey, total);
-				invalidate(pageKey, ['total']);
+				invalidate(['total'], options);
 			}
 			return data;
 		}

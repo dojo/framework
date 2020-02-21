@@ -14,6 +14,7 @@ import './tsx';
 import './tsxIntegration';
 import './NodeHandler';
 import './meta/all';
+import './resource';
 import './vdom';
 import './registerCustomElement';
 import './middleware/all';
