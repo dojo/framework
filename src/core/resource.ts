@@ -126,7 +126,6 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	function setStatus(status: Status, options: ResourceOptions) {
 		const queryKey = getQueryKey(options.query);
 		const pageKey = getPageKey(options);
-		console.log(`setting status: ${status}, query: ${queryKey}, page: ${pageKey}`);
 		const pageStatuses = statusMap.get(queryKey) || {};
 		pageStatuses[pageKey] = status;
 		statusMap.set(queryKey, pageStatuses);
@@ -135,7 +134,6 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 	function clearStatus(options: ResourceOptions) {
 		const queryKey = getQueryKey(options.query);
 		const pageKey = getPageKey(options);
-		console.log(`clearing status, query: ${queryKey}, page: ${pageKey}`);
 		const pageStatuses = statusMap.get(queryKey);
 		if (pageStatuses && pageStatuses[pageKey]) {
 			delete pageStatuses[pageKey];
