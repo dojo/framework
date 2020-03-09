@@ -117,6 +117,7 @@ export interface MountOptions {
 export interface Renderer {
 	invalidate(): void;
 	mount(mountOptions?: Partial<MountOptions>): void;
+	unmount(): void;
 }
 
 interface ProcessItem {
@@ -845,6 +846,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _deferredRenderCallbacks: Function[] = [];
 	let parentInvalidate: () => void;
 	let _allMergedNodes: Node[] = [];
+	let _appWrapperId: string | undefined;
+	let _deferredProcessIds = new Map<number, Function>();
 
 	function nodeOperation(
 		propName: string,
@@ -1202,21 +1205,32 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function _runDeferredRenderCallbacks() {
-		const { sync } = _mountOptions;
+	function _createDeferredRenderCallback(): (() => void) | undefined {
 		const callbacks = _deferredRenderCallbacks;
 		_deferredRenderCallbacks = [];
 		if (callbacks.length) {
-			const run = () => {
+			return () => {
 				let callback: Function | undefined;
 				while ((callback = callbacks.shift())) {
 					callback();
 				}
 			};
+		}
+	}
+
+	function _scheduleDeferredRenderCallbacks() {
+		const { sync } = _mountOptions;
+		const run = _createDeferredRenderCallback();
+		if (run) {
 			if (sync) {
 				run();
 			} else {
-				global.requestAnimationFrame(run);
+				let id: number;
+				id = global.requestAnimationFrame(() => {
+					_deferredProcessIds.delete(id);
+					run();
+				});
+				_deferredProcessIds.set(id, run);
 			}
 		}
 	}
@@ -1248,12 +1262,44 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
+	function unmount() {
+		_processQueue.push({
+			current: [_idToWrapperMap.get(_appWrapperId!)!],
+			next: [],
+			meta: {}
+		});
+		if (_renderScheduled) {
+			global.cancelAnimationFrame(_renderScheduled);
+		}
+		_runProcessQueue();
+		_runDomInstructionQueue();
+		_deferredProcessIds.forEach((callback, id) => {
+			global.cancelAnimationFrame(id);
+			callback();
+		});
+		const run = _createDeferredRenderCallback();
+		run && run();
+		_invalidationQueue = [];
+		_processQueue = [];
+		_deferredProcessQueue = [];
+		_applicationQueue = [];
+		_deferredRenderCallbacks = [];
+		_allMergedNodes = [];
+		_eventMap = new WeakMap();
+		_idToWrapperMap.clear();
+		_idToChildrenWrappers.clear();
+		_wrapperSiblingMap = new WeakMap();
+		_nodeToWrapperMap = new WeakMap();
+		_insertBeforeMap = undefined;
+	}
+
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		_mountOptions = { ..._mountOptions, ...mountOptions };
 		const { domNode } = _mountOptions;
 		const renderResult = wrapNodes(renderer)({});
+		_appWrapperId = `${wrapperId++}`;
 		const nextWrapper = {
-			id: `${wrapperId++}`,
+			id: _appWrapperId,
 			node: renderResult,
 			order: 0,
 			depth: 1,
@@ -1280,7 +1326,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
 		_insertBeforeMap = undefined;
-		_runDeferredRenderCallbacks();
+		_scheduleDeferredRenderCallbacks();
 	}
 
 	function invalidate() {
@@ -1362,7 +1408,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		_runDomInstructionQueue();
 		_cleanUpMergedNodes();
-		_runDeferredRenderCallbacks();
+		_scheduleDeferredRenderCallbacks();
 	}
 
 	function _cleanUpMergedNodes() {
@@ -2094,6 +2140,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	return {
 		mount,
+		unmount,
 		invalidate
 	};
 }
