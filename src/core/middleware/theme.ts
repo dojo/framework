@@ -1,4 +1,4 @@
-import { Theme, Classes, ClassNames, ThemeVariant, ThemeVariantConfig } from './../interfaces';
+import { Theme, Classes, ClassNames, ThemeVariant, ThemeVariantConfig, Variant } from './../interfaces';
 import { create, invalidator, diffProperty, getRegistry } from '../vdom';
 import icache from './icache';
 import injector from './injector';
@@ -24,6 +24,10 @@ function isThemeVariant(theme: Theme | ThemeVariant): theme is ThemeVariant {
 
 function isThemeVariantConfig(theme: Theme | ThemeVariantConfig): theme is ThemeVariantConfig {
 	return theme.hasOwnProperty('variants');
+}
+
+function isVariantModule(variant: string | Variant): variant is Variant {
+	return typeof variant !== 'string';
 }
 
 function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
@@ -85,8 +89,8 @@ export const theme = factory(
 		});
 
 		function set(theme: Theme): void;
-		function set(theme: ThemeVariantConfig, variant?: keyof ThemeVariantConfig['variants']): void;
-		function set(theme: Theme | ThemeVariantConfig, variant?: keyof ThemeVariantConfig['variants']): void {
+		function set<T extends ThemeVariantConfig>(theme: T, variant?: keyof T['variants']): void;
+		function set<T extends ThemeVariantConfig>(theme: Theme | T, variant?: keyof T['variants']): void {
 			const currentTheme = injector.get<Injector<Theme | ThemeVariant | undefined>>(INJECTED_THEME_KEY);
 
 			if (currentTheme) {
@@ -110,7 +114,9 @@ export const theme = factory(
 				let { theme: currentTheme, classes: currentClasses } = properties();
 
 				if (currentTheme && isThemeVariant(currentTheme)) {
-					currentTheme = currentTheme.theme;
+					currentTheme = isThemeVariantConfig(currentTheme.theme)
+						? currentTheme.theme.theme
+						: currentTheme.theme;
 				}
 
 				if (currentTheme && currentTheme[key]) {
@@ -142,7 +148,13 @@ export const theme = factory(
 				}
 
 				if (theme && isThemeVariant(theme)) {
-					return theme.variant.root;
+					if (isVariantModule(theme.variant)) {
+						return theme.variant.root;
+					}
+
+					if (isThemeVariantConfig(theme.theme)) {
+						return theme.theme.variants[theme.variant].root;
+					}
 				}
 			},
 			set,

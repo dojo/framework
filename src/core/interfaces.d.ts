@@ -129,8 +129,8 @@ export interface Variant {
 }
 
 export interface ThemeVariant {
-	theme: Theme;
-	variant: Variant;
+	theme: Theme | ThemeVariantConfig;
+	variant: Variant | string;
 }
 
 export interface ThemeVariantConfig {
