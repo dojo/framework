@@ -1,4 +1,12 @@
-import { Theme, Classes, ClassNames, Constructor, SupportedClassName } from './../interfaces';
+import {
+	Theme,
+	Classes,
+	ClassNames,
+	Constructor,
+	SupportedClassName,
+	ThemeVariant,
+	ThemeVariantConfig
+} from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -13,7 +21,7 @@ export { Theme, Classes, ClassNames } from './../interfaces';
  */
 export interface ThemedProperties<T = ClassNames> {
 	/** Overriding custom theme for the widget */
-	theme?: Theme;
+	theme?: Theme | ThemeVariant;
 	/** Map of widget keys and associated overriding classes */
 	classes?: Classes;
 	/** Extra classes to be applied to the widget */
@@ -24,12 +32,17 @@ export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
 
+function isThemeVariant(theme: Theme | ThemeVariant): theme is ThemeVariant {
+	return theme.hasOwnProperty('variant');
+}
+
 /**
  * Interface for the ThemedMixin
  */
 export interface ThemedMixin<T = ClassNames> {
 	theme(classes: SupportedClassName): SupportedClassName;
 	theme(classes: SupportedClassName[]): SupportedClassName[];
+	variant(): string | undefined;
 	properties: ThemedProperties<T>;
 }
 
@@ -140,6 +153,13 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			return this._getThemeClass(classes);
 		}
 
+		public variant() {
+			const { theme = {} } = this.properties;
+			if (isThemeVariant(theme)) {
+				return theme.variant.root;
+			}
+		}
+
 		/**
 		 * Function fired when `theme` or `extraClasses` are changed.
 		 */
@@ -199,7 +219,15 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		private _recalculateThemeClasses() {
-			const { theme = {}, classes = {} } = this.properties;
+			let { theme: themeProp = {}, classes = {} } = this.properties;
+			let theme: Theme;
+
+			if (isThemeVariant(themeProp)) {
+				theme = themeProp.theme;
+			} else {
+				theme = themeProp;
+			}
+
 			if (!this._registeredBaseTheme) {
 				const baseThemes = this.getDecorator('baseThemeClasses');
 				if (baseThemes.length === 0) {
