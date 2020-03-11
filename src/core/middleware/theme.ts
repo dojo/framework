@@ -89,16 +89,13 @@ export const theme = factory(
 		});
 
 		function set(theme: Theme): void;
-		function set<T extends ThemeVariantConfig>(theme: T, variant?: Extract<keyof T['variants'], string>): void;
-		function set<T extends ThemeVariantConfig>(
-			theme: Theme | T,
-			variant?: Extract<keyof T['variants'], string>
-		): void {
+		function set<T extends ThemeVariantConfig>(theme: T, variant?: keyof T['variants']): void;
+		function set<T extends ThemeVariantConfig>(theme: Theme | T, variant?: keyof T['variants']): void {
 			const currentTheme = injector.get<Injector<Theme | ThemeVariant | undefined>>(INJECTED_THEME_KEY);
 
 			if (currentTheme) {
 				if (isThemeVariantConfig(theme)) {
-					theme = { theme: theme.theme, variant: theme.variants[variant || 'default'] };
+					theme = { theme: theme.theme, variant: theme.variants[`${variant || 'default'}`] };
 				}
 
 				currentTheme.set(theme);
