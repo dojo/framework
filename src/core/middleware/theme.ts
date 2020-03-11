@@ -1,4 +1,4 @@
-import { Theme, Classes, ClassNames } from './../interfaces';
+import { Theme, Classes, ClassNames, ThemeVariant, ThemeVariantConfig } from './../interfaces';
 import { create, invalidator, diffProperty, getRegistry } from '../vdom';
 import icache from './icache';
 import injector from './injector';
@@ -10,13 +10,21 @@ import Registry from '../Registry';
 export { Theme, Classes, ClassNames } from './../interfaces';
 
 export interface ThemeProperties {
-	theme?: Theme;
+	theme?: Theme | ThemeVariant;
 	classes?: Classes;
 }
 
 export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
+
+function isThemeVariant(theme: Theme | ThemeVariant): theme is ThemeVariant {
+	return theme.hasOwnProperty('variant');
+}
+
+function isThemeVariantConfig(theme: Theme | ThemeVariantConfig): theme is ThemeVariantConfig {
+	return theme.hasOwnProperty('variants');
+}
 
 function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
 	const themeInjector = new Injector(theme);
@@ -75,6 +83,21 @@ export const theme = factory(
 			icache.clear();
 			invalidator();
 		});
+
+		function set(theme: Theme): void;
+		function set(theme: ThemeVariantConfig, variant?: keyof ThemeVariantConfig['variants']): void;
+		function set(theme: Theme | ThemeVariantConfig, variant?: keyof ThemeVariantConfig['variants']): void {
+			const currentTheme = injector.get<Injector<Theme | ThemeVariant | undefined>>(INJECTED_THEME_KEY);
+
+			if (currentTheme) {
+				if (isThemeVariantConfig(theme)) {
+					theme = { theme: theme.theme, variant: theme.variants[variant || 'default'] };
+				}
+
+				currentTheme.set(theme);
+			}
+		}
+
 		return {
 			classes<T extends ClassNames>(css: T): T {
 				let theme = icache.get<T>(css);
@@ -100,14 +123,26 @@ export const theme = factory(
 				icache.set(css, theme, false);
 				return theme;
 			},
-			set(css: Theme): void {
-				const currentTheme = injector.get<Injector<Theme | undefined>>(INJECTED_THEME_KEY);
-				if (currentTheme) {
-					currentTheme.set(css);
+			variant() {
+				let theme;
+				const { theme: themeProp } = properties();
+
+				if (themeProp) {
+					theme = themeProp;
+				} else {
+					const currentTheme = injector.get<Injector<Theme | ThemeVariant | undefined>>(INJECTED_THEME_KEY);
+					if (currentTheme) {
+						theme = currentTheme.get();
+					}
+				}
+
+				if (theme && isThemeVariant(theme)) {
+					return theme.variant.root;
 				}
 			},
-			get(): Theme | undefined {
-				const currentTheme = injector.get<Injector<Theme | undefined>>(INJECTED_THEME_KEY);
+			set,
+			get(): Theme | ThemeVariant | undefined {
+				const currentTheme = injector.get<Injector<Theme | ThemeVariant | undefined>>(INJECTED_THEME_KEY);
 				if (currentTheme) {
 					return currentTheme.get();
 				}
