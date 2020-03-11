@@ -108,6 +108,11 @@ export const theme = factory(
 				themeKeys.add(key);
 				theme = classes as T;
 				let { theme: currentTheme, classes: currentClasses } = properties();
+
+				if (currentTheme && isThemeVariant(currentTheme)) {
+					currentTheme = currentTheme.theme;
+				}
+
 				if (currentTheme && currentTheme[key]) {
 					theme = { ...theme, ...currentTheme[key] };
 				}
