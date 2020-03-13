@@ -96,6 +96,7 @@ describe('i18n', () => {
 			setCldrLoaders({
 				fallback: fallback.loader
 			});
+			setSupportedLocales(['fr', 'ja']);
 			const invalidator = stub();
 			const bundle = {
 				messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },

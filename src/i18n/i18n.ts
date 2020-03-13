@@ -315,7 +315,9 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 				messages = bundleLoader;
 			}
 			if (isSupportedLocale) {
-				messageBundles[locale] = messages;
+				messageBundles[locale] = {
+					[bundleId]: messages
+				};
 			} else if (lookup[locale]) {
 				lookup[locale].bundles = { [bundleId]: messages };
 			} else {
@@ -361,7 +363,7 @@ export function localizeBundle<T extends Messages>(
 		return getPlaceholderBundle(bundle);
 	}
 	const bundleId = registerBundle(bundle);
-	const globalize = globalizeInstanceMap.get(locale) || new Globalize(locale);
+	const globalize = globalizeInstanceMap.get(locale) || new Globalize(new Cldr(locale));
 	globalizeInstanceMap.set(locale, globalize);
 	const lookupId = globalize.cldr.get(`${DOJO_PATH}/${bundleId}/id`);
 	const lookupLocale = globalize.cldr.get(`${DOJO_PATH}/${bundleId}/locale`);
