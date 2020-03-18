@@ -5,7 +5,6 @@ import { inject } from './../decorators/inject';
 import { WidgetBase } from './../WidgetBase';
 import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
-import { shallow } from './../diff';
 
 export { Theme, Classes, ClassNames } from './../interfaces';
 
@@ -144,9 +143,9 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		/**
 		 * Function fired when `theme` or `extraClasses` are changed.
 		 */
-		@diffProperty('theme', shallow)
-		@diffProperty('extraClasses', shallow)
-		@diffProperty('classes', shallow)
+		@diffProperty('theme')
+		@diffProperty('extraClasses')
+		@diffProperty('classes')
 		protected onPropertiesChanged() {
 			this._recalculateClasses = true;
 		}

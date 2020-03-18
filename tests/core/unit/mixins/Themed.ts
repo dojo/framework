@@ -300,6 +300,25 @@ registerSuite('ThemedMixin', {
 				testWidget.__setProperties__({ foo: 'bar' });
 				renderResult = testWidget.__render__() as VNode;
 				assert.deepEqual(renderResult.properties.classes, 'theme1Class1');
+			},
+			'should not invalidate when previous and current theme is undefined'() {
+				let invalidateStub = stub();
+				class UndefinedTheme extends TestWidget {
+					invalidate() {
+						invalidateStub();
+						super.invalidate();
+					}
+				}
+
+				const testWidget = new UndefinedTheme();
+				assert.isTrue(invalidateStub.notCalled);
+				testWidget.registry.base = testRegistry;
+				testWidget.__setProperties__({ theme: undefined, classes: undefined, extraClasses: undefined });
+				testWidget.__render__() as VNode;
+				assert.isTrue(invalidateStub.notCalled);
+				testWidget.__setProperties__({ theme: undefined, classes: undefined, extraClasses: undefined });
+				testWidget.__render__() as VNode;
+				assert.isTrue(invalidateStub.notCalled);
 			}
 		},
 		integration: {
