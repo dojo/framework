@@ -700,3 +700,5 @@ export type LocalizedMessages<T extends Messages> = {
 	 */
 	readonly messages: T;
 };
+
+export type Invalidator = () => void;
