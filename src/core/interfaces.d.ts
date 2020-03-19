@@ -128,13 +128,13 @@ export interface Variant {
 	root: string;
 }
 
-export interface ThemeVariant {
-	theme: Theme | ThemeVariantConfig;
+export interface ThemeWithVariant {
+	css: Theme | ThemeWithVariants;
 	variant: Variant | string;
 }
 
-export interface ThemeVariantConfig {
-	theme: Theme;
+export interface ThemeWithVariants {
+	css: Theme;
 	variants: {
 		default: Variant;
 		[key: string]: Variant;

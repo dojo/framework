@@ -4,8 +4,8 @@ import {
 	ClassNames,
 	Constructor,
 	SupportedClassName,
-	ThemeVariant,
-	ThemeVariantConfig,
+	ThemeWithVariant,
+	ThemeWithVariants,
 	Variant
 } from './../interfaces';
 import { Registry } from './../Registry';
@@ -22,7 +22,7 @@ export { Theme, Classes, ClassNames } from './../interfaces';
  */
 export interface ThemedProperties<T = ClassNames> {
 	/** Overriding custom theme for the widget */
-	theme?: Theme | ThemeVariant;
+	theme?: Theme | ThemeWithVariant;
 	/** Map of widget keys and associated overriding classes */
 	classes?: Classes;
 	/** Extra classes to be applied to the widget */
@@ -33,11 +33,11 @@ export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
 
-function isThemeVariant(theme: Theme | ThemeVariant): theme is ThemeVariant {
+function isThemeVariant(theme: Theme | ThemeWithVariant): theme is ThemeWithVariant {
 	return theme.hasOwnProperty('variant');
 }
 
-function isThemeVariantConfig(theme: Theme | ThemeVariantConfig): theme is ThemeVariantConfig {
+function isThemeVariantConfig(theme: Theme | ThemeWithVariants): theme is ThemeWithVariants {
 	return theme.hasOwnProperty('variants');
 }
 
@@ -169,8 +169,8 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				if (isVariantModule(theme.variant)) {
 					return theme.variant.root;
 				}
-				if (isThemeVariantConfig(theme.theme)) {
-					return theme.theme.variants[theme.variant].root;
+				if (isThemeVariantConfig(theme.css)) {
+					return theme.css.variants[theme.variant].root;
 				}
 			}
 		}
@@ -238,7 +238,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			let theme: Theme;
 
 			if (isThemeVariant(themeProp)) {
-				theme = isThemeVariantConfig(themeProp.theme) ? themeProp.theme.theme : themeProp.theme;
+				theme = isThemeVariantConfig(themeProp.css) ? themeProp.css.css : themeProp.css;
 			} else {
 				theme = themeProp;
 			}
