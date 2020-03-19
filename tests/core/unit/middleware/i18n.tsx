@@ -5,6 +5,7 @@ const { assert } = intern.getPlugin('chai');
 import global from '../../../../src/shim/global';
 import { renderer, tsx, create } from '../../../../src/core/vdom';
 import i18n from '../../../../src/core/middleware/i18n';
+import icache from '../../../../src/core/middleware/icache';
 import { setCldrLoaders, setDefaultLocale, setLocale, setSupportedLocales } from '../../../../src/i18n/i18n';
 import { createResolvers } from './../../support/util';
 
@@ -47,10 +48,11 @@ describe('i18n middleware', () => {
 		const bundle = {
 			messages: { foo: 'hello, {name}' }
 		};
-		const App = factory(({ middleware: { i18n } }) => {
+		const App = factory(({ properties, middleware: { i18n } }) => {
 			const { messages, format, isPlaceholder } = i18n.localize(bundle);
 			return (
 				<div>
+					<div>{properties().locale}</div>
 					<div>{JSON.stringify(messages)}</div>
 					<div>{format('foo', { name: 'John' })}</div>
 					<div>{`${isPlaceholder}`}</div>
@@ -69,7 +71,69 @@ describe('i18n middleware', () => {
 		r.mount({ domNode: root });
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
+			'<div><div>en</div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div>'
+		);
+	});
+
+	it('should return current locale while loading request locale bundle', async () => {
+		const root = global.document.createElement('div');
+		const factory = create({ i18n, icache });
+		const bundle = {
+			locales: {
+				es: {
+					foo: 'hello spain'
+				}
+			},
+			messages: { foo: 'hello, {name}' }
+		};
+		const es = createAsyncMessageLoader();
+		setCldrLoaders({
+			es: es.loader
+		});
+		const Foo = factory(({ properties, middleware: { i18n } }) => {
+			const { messages, format, isPlaceholder } = i18n.localize(bundle);
+			return (
+				<div>
+					<div>{properties().locale}</div>
+					<div>{JSON.stringify(messages)}</div>
+					<div>{format('foo', { name: 'John' })}</div>
+					<div>{`${isPlaceholder}`}</div>
+					<div>{JSON.stringify(i18n.get())}</div>
+					<button
+						onclick={() => {
+							i18n.set({ locale: 'es' });
+						}}
+					>
+						es
+					</button>
+				</div>
+			);
+		});
+
+		const App = factory(({ middleware: { icache } }) => {
+			const locale = icache.getOrSet('locale', undefined);
+			return (
+				<div>
+					<button
+						onclick={() => {
+							icache.set('locale', 'es');
+						}}
+					/>
+					<Foo locale={locale} />
+				</div>
+			);
+		});
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><button></button><div><div>en</div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div></div>'
+		);
+		root.children[0].children[0].click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><button></button><div><div>en</div><div>{"foo":"hello, {name}"}</div><div>hello, John</div><div>false</div><div>{}</div><button>es</button></div></div>'
 		);
 	});
 
