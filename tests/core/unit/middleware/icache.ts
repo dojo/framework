@@ -126,7 +126,7 @@ describe('icache middleware', () => {
 		});
 		icache.set('test', () => promiseOne);
 		assert.isUndefined(icache.get('test'));
-		invalidatorStub.notCalled;
+		assert.isTrue(invalidatorStub.notCalled);
 		resolverOne('value');
 		await promiseOne;
 
@@ -161,11 +161,15 @@ describe('icache middleware', () => {
 		assert.isUndefined(icache.get('test'));
 		icache.set('test', 'value');
 		icache.set('test-two', 'value');
+		assert.isTrue(invalidatorStub.calledTwice);
 		assert.strictEqual(icache.get('test'), 'value');
 		assert.strictEqual(icache.get('test-two'), 'value');
 		icache.delete('test');
+		assert.isTrue(invalidatorStub.calledThrice);
 		assert.isUndefined(icache.get('test'));
 		assert.strictEqual(icache.get('test-two'), 'value');
+		icache.delete('test', false);
+		assert.isTrue(invalidatorStub.calledThrice);
 	});
 
 	it('should be able to clear the cache', () => {
@@ -180,9 +184,13 @@ describe('icache middleware', () => {
 		});
 		assert.isUndefined(icache.get('test'));
 		icache.set('test', 'value');
+		assert.isTrue(invalidatorStub.calledOnce);
 		assert.strictEqual(icache.get('test'), 'value');
 		icache.clear();
+		assert.isTrue(invalidatorStub.calledTwice);
 		assert.isUndefined(icache.get('test'));
+		icache.clear(false);
+		assert.isTrue(invalidatorStub.calledTwice);
 	});
 
 	describe('icache factory', () => {

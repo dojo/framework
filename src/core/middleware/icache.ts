@@ -48,8 +48,8 @@ export interface ICacheResult<S = void> {
 		): void;
 	};
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
-	delete<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): void;
-	clear(): void;
+	delete<T extends void extends S ? any : keyof S>(key: void extends S ? any : T, invalidate?: boolean): void;
+	clear(invalidate?: boolean): void;
 }
 
 export function createICacheMiddleware<S = void>() {
@@ -108,11 +108,13 @@ export function createICacheMiddleware<S = void>() {
 				has(key: any) {
 					return cacheMap.has(key);
 				},
-				delete(key: any) {
+				delete(key: any, invalidate = true) {
 					cacheMap.delete(key);
+					invalidate && invalidator();
 				},
-				clear(): void {
+				clear(invalidate = true): void {
 					cacheMap.clear();
+					invalidate && invalidator();
 				}
 			};
 		}

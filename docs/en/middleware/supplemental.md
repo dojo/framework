@@ -181,9 +181,9 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   Sets the provided `value` for the given `key`. If `value` is a function, it will be invoked in order to obtain the actual value to cache. If the function returns a promise, a 'pending' value will be cached until the final value is fully resolved. In all scenarios, once a value is available and has been stored in the cache, the widget will be marked as invalid so it can be re-rendered with the final value available.
 -   `icache.has(key: any): boolean`
     -   Returns `true` or `false` based in whether the key is set in the cache.
--   `icache.delete(key: any): void`
+-   `icache.delete(key: any, invalidate: boolean = true): void`
     -   Remove the item from the cache.
--   `clear()`
+-   `clear(invalidate: boolean = true)`
     -   Clears all values currently stored in the widget's local cache.
 
 `icache` can be typed in two different ways. One approach uses generics to enable the return type to get specified at the call-site, and for `getOrSet`, the return type can get inferred from the value type. If the `value` for `getOrSet` is a function then the type will get inferred from the functions return type.

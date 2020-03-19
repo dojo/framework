@@ -186,9 +186,9 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   将提供的 `value` 设置给指定的 `key`。如果 `value` 是一个函数，则将调用它以获取要缓存的实际值。如果函数返回的是 promise，则会先缓存一个“pending”值，直到解析出最终的值。在所有场景中，一旦一个值可用并存储到缓存中，该部件将被标记为无效，这样就可以使用最终的值重新渲染。
 -   `icache.has(key: any): boolean`
     -   根据 key 是否已在缓存中设置，来返回 `true` 或 `false`。
--   `icache.delete(key: any): void`
+-   `icache.delete(key: any, invalidate: boolean = true): void`
     -   从缓存中移除对应的项。
--   `clear()`
+-   `clear(invalidate: boolean = true)`
     -   清除当前在部件本地缓存中存储的所有值。
 
 可以使用两种方式为 `icache` 设置类型。一种方式是使用泛型来在调用的地方指定返回类型，对于 `getOrSet`，可以根据值类型推断出返回的类型，如果 `getOrSet` 的 `value` 是一个函数，则使用函数返回的类型推断出值类型。
