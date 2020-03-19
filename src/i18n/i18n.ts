@@ -77,7 +77,7 @@ let defaultLocale = '';
 // Set to `unknown` to support using default message bundles
 // without an application locale configured
 let computedLocale = 'unknown';
-let currentLocale = '';
+let currentLocale: string | undefined;
 let cldrLoaders: CldrLoaders = {};
 let bundleId = 0;
 const cldr = new Cldr('');

@@ -43,20 +43,20 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 				result.then(() => {
 					invalidator();
 				});
-				return current.locale || injectedLocale;
+				return current.locale || injectedLocale || getCurrentLocale();
 			}
 		}
 		if (current.locale !== next.locale) {
 			invalidator();
 		}
-		return next.locale || injectedLocale;
+		return next.locale || injectedLocale || getCurrentLocale();
 	});
 
 	injector.subscribe(INJECTOR_KEY);
 
 	return {
 		localize<T extends Messages>(bundle: Bundle<T>): LocalizedMessages<T> {
-			let { locale = getCurrentLocale(), i18nBundle } = properties();
+			let { locale, i18nBundle } = properties();
 			if (i18nBundle) {
 				if (i18nBundle instanceof Map) {
 					bundle = i18nBundle.get(bundle) || bundle;
