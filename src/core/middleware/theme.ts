@@ -30,7 +30,7 @@ function isVariantModule(variant: string | Variant): variant is Variant {
 	return typeof variant !== 'string';
 }
 
-function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
+function registerThemeInjector(theme: Theme | ThemeWithVariant | undefined, themeRegistry: Registry): Injector {
 	const themeInjector = new Injector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);

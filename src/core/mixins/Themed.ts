@@ -92,7 +92,7 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  *
  * @returns the theme injector used to set the theme
  */
-export function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
+export function registerThemeInjector(theme: Theme | ThemeWithVariant, themeRegistry: Registry): Injector {
 	const themeInjector = new Injector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
