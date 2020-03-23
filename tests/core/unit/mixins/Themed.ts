@@ -353,6 +353,129 @@ registerSuite('ThemedMixin', {
 					fixedClassName
 				]);
 			}
+		},
+		variants: {
+			'theme variant can be injected via a registry'() {
+				const themeWithVariant = {
+					css: {
+						'test-key': {
+							root: 'themed-root'
+						}
+					},
+					variant: {
+						root: 'default-variant-root'
+					}
+				};
+
+				registerThemeInjector(themeWithVariant, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				const renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'default-variant-root');
+			},
+			'theme variant can be set via theme context'() {
+				const theme = {
+					'test-key': {
+						root: 'themed-root'
+					}
+				};
+
+				const themeWithVariant = {
+					css: {
+						'test-key': {
+							root: 'variant-themed-root'
+						}
+					},
+					variant: {
+						root: 'variant-root'
+					}
+				};
+
+				const themeInjectorContext = registerThemeInjector(theme, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, undefined);
+				themeInjectorContext.set(themeWithVariant);
+				themedInstance.__setProperties__({});
+				renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
+			},
+			'theme variant can be set at the widget level'() {
+				const themeWithVariant = {
+					css: {
+						'test-key': {
+							root: 'themed-root'
+						}
+					},
+					variant: {
+						root: 'variant-root'
+					}
+				};
+
+				class ThemedWidget extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new ThemedWidget();
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, undefined);
+				themedInstance.__setProperties__({ theme: themeWithVariant });
+				renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
+			},
+			'theme property overrides injected property'() {
+				const themeWithVariant = {
+					css: {
+						'test-key': {
+							root: 'themed-root'
+						}
+					},
+					variant: {
+						root: 'variant-root'
+					}
+				};
+
+				const secondThemeWithVariant = {
+					css: {
+						'test-key': {
+							root: 'themed-root'
+						}
+					},
+					variant: {
+						root: 'second-variant-root'
+					}
+				};
+
+				registerThemeInjector(themeWithVariant, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
+				themedInstance.__setProperties__({ theme: secondThemeWithVariant });
+				renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'second-variant-root');
+			}
 		}
 	}
 });

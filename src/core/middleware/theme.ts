@@ -19,11 +19,11 @@ export const THEME_KEY = ' _key';
 export const INJECTED_THEME_KEY = '__theme_injector';
 
 function isThemeWithVariant(theme: Theme | ThemeWithVariant): theme is ThemeWithVariant {
-	return theme.hasOwnProperty('variant');
+	return theme && theme.hasOwnProperty('variant');
 }
 
 function isThemeWithVariants(theme: Theme | ThemeWithVariants): theme is ThemeWithVariants {
-	return theme.hasOwnProperty('variants');
+	return theme && theme.hasOwnProperty('variants');
 }
 
 function isVariantModule(variant: string | Variant): variant is Variant {
@@ -52,6 +52,7 @@ export const theme = factory(
 				icache.clear();
 				invalidator();
 			}
+
 			if (!next.theme && themeInjector) {
 				return themeInjector.get();
 			}

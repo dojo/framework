@@ -163,7 +163,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		public variant() {
-			const { theme = {} } = this.properties;
+			const { theme } = this.properties;
 
 			if (theme && isThemeVariant(theme)) {
 				if (isVariantModule(theme.variant)) {
