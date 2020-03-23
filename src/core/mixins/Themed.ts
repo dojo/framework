@@ -169,9 +169,6 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				if (isVariantModule(theme.variant)) {
 					return theme.variant.root;
 				}
-				if (isThemeVariantConfig(theme.css)) {
-					return theme.css.variants[theme.variant].root;
-				}
 			}
 		}
 

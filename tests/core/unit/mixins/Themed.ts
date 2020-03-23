@@ -475,6 +475,37 @@ registerSuite('ThemedMixin', {
 				themedInstance.__setProperties__({ theme: secondThemeWithVariant });
 				renderResult = themedInstance.__render__() as VNode;
 				assert.deepEqual(renderResult.properties.classes, 'second-variant-root');
+			},
+			'can inject theme config with variants'() {
+				const themeWithVariantConfig = {
+					css: {
+						css: {
+							'test-key': {
+								root: 'themed-root'
+							}
+						},
+						variants: {
+							default: {
+								root: 'default-root'
+							}
+						}
+					},
+					variant: {
+						root: 'variant-root'
+					}
+				};
+
+				registerThemeInjector(themeWithVariantConfig, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
 			}
 		}
 	}
