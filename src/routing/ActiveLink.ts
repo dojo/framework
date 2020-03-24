@@ -55,7 +55,7 @@ export const ActiveLink = factory(function ActiveLink({
 			icache.set('handle', () => handle);
 		}
 		const context = router.getOutlet(to);
-		const isActive = context && paramsEqual(params, context.params);
+		const isActive = context && paramsEqual(params, { ...context.params, ...context.queryParams });
 		const contextIsExact = context && context.isExact();
 
 		classes = Array.isArray(classes) ? classes : [classes];
