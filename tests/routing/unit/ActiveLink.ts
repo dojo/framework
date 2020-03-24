@@ -28,6 +28,10 @@ const router = new Router(
 			outlet: 'other'
 		},
 		{
+			path: 'query/{path}?{query}',
+			outlet: 'query'
+		},
+		{
 			path: 'param',
 			outlet: 'param',
 			children: [
@@ -68,6 +72,20 @@ describe('ActiveLink', () => {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
 		h.expect(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
+	});
+
+	it('Should render the ActiveLink children when matching query params', () => {
+		router.setPath('/query/path?query=query');
+		const h = harness(
+			() =>
+				w(ActiveLink, { to: 'query', params: { path: 'path', query: 'query' }, activeClasses: ['foo'] }, [
+					'hello'
+				]),
+			{
+				middleware: [[getRegistry, mockGetRegistry]]
+			}
+		);
+		h.expect(() => w(Link, { classes: ['foo'], to: 'query', params: { path: 'path', query: 'query' } }, ['hello']));
 	});
 
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
