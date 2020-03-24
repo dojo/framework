@@ -157,4 +157,156 @@ jsdomDescribe('theme middleware', () => {
 			'<div><div><div class="themed-root classes-root"></div><button></button><div>{"test-key":{"root":"themed-root"}}</div></div></div>'
 		);
 	});
+
+	it('returns theme variant class', () => {
+		const factory = create({ theme });
+		const themeWithVariant = {
+			css: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variant: {
+				root: 'variant-root'
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			const variantRoot = theme.variant();
+			return <div classes={variantRoot} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App theme={themeWithVariant} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div class="variant-root"></div>');
+	});
+
+	it('selects default variant theme with variants is set', () => {
+		const factory = create({ theme });
+		const themeWithVariants = {
+			css: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variants: {
+				default: {
+					root: 'default-variant-root'
+				}
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			const variantRoot = theme.variant();
+			return (
+				<div classes={variantRoot}>
+					<button
+						onclick={() => {
+							theme.set(themeWithVariants);
+						}}
+					/>
+				</div>
+			);
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		(root.children[0].children[0] as HTMLButtonElement).click();
+		resolvers.resolve();
+		assert.strictEqual(root.innerHTML, '<div class="default-variant-root"><button></button></div>');
+	});
+
+	it('selects keyes variant theme with variants is set with variant key', () => {
+		const factory = create({ theme });
+		const themeWithVariants = {
+			css: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variants: {
+				default: {
+					root: 'default-variant-root'
+				},
+				foo: {
+					root: 'foo-variant-root'
+				}
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			const variantRoot = theme.variant();
+			return (
+				<div classes={variantRoot}>
+					<button
+						onclick={() => {
+							theme.set(themeWithVariants, 'foo');
+						}}
+					/>
+				</div>
+			);
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		(root.children[0].children[0] as HTMLButtonElement).click();
+		resolvers.resolve();
+		assert.strictEqual(root.innerHTML, '<div class="foo-variant-root"><button></button></div>');
+	});
+
+	it('selects specific variant when passed', () => {
+		const factory = create({ theme });
+		const themeWithVariants = {
+			css: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variants: {
+				default: {
+					root: 'default-variant-root'
+				},
+				foo: {
+					root: 'foo-variant-root'
+				}
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			const variantRoot = theme.variant();
+			return <div classes={variantRoot} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App theme={{ css: themeWithVariants, variant: themeWithVariants.variants.foo }} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div class="foo-variant-root"></div>');
+	});
+
+	it('selects specific variant when key passed', () => {
+		const factory = create({ theme });
+		const themeWithVariants = {
+			css: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variants: {
+				default: {
+					root: 'default-variant-root'
+				},
+				bar: {
+					root: 'bar-variant-root'
+				}
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			const variantRoot = theme.variant();
+			return <div classes={variantRoot} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App theme={{ css: themeWithVariants, variant: 'bar' }} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div class="bar-variant-root"></div>');
+	});
 });

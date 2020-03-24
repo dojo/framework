@@ -124,6 +124,23 @@ export interface Theme {
 	[key: string]: object;
 }
 
+export interface Variant {
+	root: string;
+}
+
+export interface ThemeWithVariant {
+	css: Theme | ThemeWithVariants;
+	variant: Variant | string;
+}
+
+export interface ThemeWithVariants {
+	css: Theme;
+	variants: {
+		default: Variant;
+		[key: string]: Variant;
+	};
+}
+
 export interface Classes {
 	[widgetKey: string]: {
 		[classKey: string]: SupportedClassName[];

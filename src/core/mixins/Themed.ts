@@ -1,4 +1,13 @@
-import { Theme, Classes, ClassNames, Constructor, SupportedClassName } from './../interfaces';
+import {
+	Theme,
+	Classes,
+	ClassNames,
+	Constructor,
+	SupportedClassName,
+	ThemeWithVariant,
+	ThemeWithVariants,
+	Variant
+} from './../interfaces';
 import { Registry } from './../Registry';
 import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
@@ -13,7 +22,7 @@ export { Theme, Classes, ClassNames } from './../interfaces';
  */
 export interface ThemedProperties<T = ClassNames> {
 	/** Overriding custom theme for the widget */
-	theme?: Theme;
+	theme?: Theme | ThemeWithVariant;
 	/** Map of widget keys and associated overriding classes */
 	classes?: Classes;
 	/** Extra classes to be applied to the widget */
@@ -24,12 +33,25 @@ export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
 
+function isThemeVariant(theme: Theme | ThemeWithVariant): theme is ThemeWithVariant {
+	return theme.hasOwnProperty('variant');
+}
+
+function isThemeVariantConfig(theme: Theme | ThemeWithVariants): theme is ThemeWithVariants {
+	return theme.hasOwnProperty('variants');
+}
+
+function isVariantModule(variant: string | Variant): variant is Variant {
+	return typeof variant !== 'string';
+}
+
 /**
  * Interface for the ThemedMixin
  */
 export interface ThemedMixin<T = ClassNames> {
 	theme(classes: SupportedClassName): SupportedClassName;
 	theme(classes: SupportedClassName[]): SupportedClassName[];
+	variant(): string | undefined;
 	properties: ThemedProperties<T>;
 }
 
@@ -70,7 +92,7 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  *
  * @returns the theme injector used to set the theme
  */
-export function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
+export function registerThemeInjector(theme: Theme | ThemeWithVariant, themeRegistry: Registry): Injector {
 	const themeInjector = new Injector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
@@ -140,6 +162,16 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			return this._getThemeClass(classes);
 		}
 
+		public variant() {
+			const { theme } = this.properties;
+
+			if (theme && isThemeVariant(theme)) {
+				if (isVariantModule(theme.variant)) {
+					return theme.variant.root;
+				}
+			}
+		}
+
 		/**
 		 * Function fired when `theme` or `extraClasses` are changed.
 		 */
@@ -199,7 +231,15 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		}
 
 		private _recalculateThemeClasses() {
-			const { theme = {}, classes = {} } = this.properties;
+			let { theme: themeProp = {}, classes = {} } = this.properties;
+			let theme: Theme;
+
+			if (isThemeVariant(themeProp)) {
+				theme = isThemeVariantConfig(themeProp.css) ? themeProp.css.css : themeProp.css;
+			} else {
+				theme = themeProp;
+			}
+
 			if (!this._registeredBaseTheme) {
 				const baseThemes = this.getDecorator('baseThemeClasses');
 				if (baseThemes.length === 0) {
