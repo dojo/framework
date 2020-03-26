@@ -47,6 +47,15 @@ describe('resource', () => {
 		assert.deepEqual(resource.get({}), data);
 	});
 
+	it('sets the date and total when the set function is used to sideload data', () => {
+		const testData = [{ value: 1 }, { value: 2 }];
+		template.read.returns({ data: testData, total: 2 });
+		const resource = createResource(template);
+		resource.set(testData);
+		assert.deepEqual(resource.get({}), testData);
+		assert.equal(resource.getTotal({}), 2);
+	});
+
 	it('does not call read if the data is already present', () => {
 		template.read.returns({ data: [], total: 0 });
 		const resource = createResource(template);
