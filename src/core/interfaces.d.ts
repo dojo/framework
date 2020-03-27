@@ -451,9 +451,12 @@ export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValu
 }
 
 export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
-	(properties: W['properties'], children?: W['children'] extends any[] ? W['children'] : [W['children']]): WNode<W>;
-	new (): {
-		__properties__: W['properties'] & { __children__?: DNode | DNode[] | (DNode | DNode[])[] };
+	<V extends W['properties'] = W['properties']>(
+		properties: V,
+		children?: W['children'] extends any[] ? W['children'] : [W['children']]
+	): WNode<W>;
+	new <V extends W['properties'] = W['properties']>(): {
+		__properties__: V & { __children__?: DNode | DNode[] | (DNode | DNode[])[] };
 	};
 	properties: W['properties'];
 	children: W['children'];
@@ -461,14 +464,14 @@ export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
 }
 
 export interface WNodeFactory<W extends WNodeFactoryTypes> {
-	(
-		properties: W['properties'],
+	<V extends W['properties'] = W['properties']>(
+		properties: V,
 		children: W['children'] extends [any]
 			? W['children'][0][]
 			: W['children'] extends any[] ? W['children'] : [W['children']]
 	): WNode<W>;
-	new (): {
-		__properties__: W['properties'] & { __children__: W['children'] };
+	new <V extends W['properties'] = W['properties']>(): {
+		__properties__: V & { __children__: W['children'] };
 	};
 	properties: W['properties'];
 	children: W['children'];
@@ -476,14 +479,14 @@ export interface WNodeFactory<W extends WNodeFactoryTypes> {
 }
 
 export interface OptionalWNodeFactory<W extends WNodeFactoryTypes> {
-	(
-		properties: W['properties'],
+	<V extends W['properties'] = W['properties']>(
+		properties: V,
 		children?: W['children'] extends [any]
 			? W['children'][0][]
 			: W['children'] extends any[] ? W['children'] : [W['children']]
 	): WNode<W>;
-	new (): {
-		__properties__: W['properties'] & { __children__?: W['children'] };
+	new <V extends W['properties'] = W['properties']>(): {
+		__properties__: V & { __children__?: W['children'] };
 	};
 	properties: W['properties'];
 	children: W['children'];

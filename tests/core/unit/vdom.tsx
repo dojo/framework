@@ -3629,6 +3629,88 @@ jsdomDescribe('vdom', () => {
 				assert.strictEqual(root.outerHTML, '<div><div>1<div>foo</div></div></div>');
 			});
 
+			it('generic properties', () => {
+				type Generic<T> = {
+					data: T;
+					createNode(data: T): RenderResult;
+				};
+				const factory = create({ node }).properties<Generic<{ prop1: string }>>();
+				const Foo = factory(function Foo({ properties }) {
+					const { data, createNode } = properties();
+					return createNode(data);
+				});
+				const r = renderer(() => (
+					<Foo<Generic<{ prop1: string; prop2: string }>>
+						data={{ prop1: 'prop1', prop2: 'prop2' }}
+						createNode={(data) => data.prop2}
+					/>
+				));
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div>prop2</div>');
+			});
+
+			it('generic properties with children', () => {
+				type Generic<T> = {
+					data: T;
+					createNode(data: T, children: RenderResult): RenderResult;
+				};
+				const factory = create({ node })
+					.properties<Generic<{ prop1: string }>>()
+					.children<(value: string) => RenderResult>();
+				const Foo = factory(function Foo({ properties, children }) {
+					const { data, createNode } = properties();
+					return createNode(data, children()[0]('foo'));
+				});
+				const r = renderer(() => (
+					<Foo<Generic<{ prop1: string; prop2: string }>>
+						data={{ prop1: 'prop1', prop2: 'prop2' }}
+						createNode={(data, children) => (
+							<div>
+								{data.prop2}
+								{children}
+							</div>
+						)}
+					>
+						{(value: string) => value}
+					</Foo>
+				));
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div>prop2foo</div></div>');
+			});
+
+			it('generic properties with optional children', () => {
+				type Generic<T> = {
+					data: T;
+					createNode(data: T, children: RenderResult | undefined): RenderResult;
+				};
+				const factory = create({ node })
+					.properties<Generic<{ prop1: any }>>()
+					.children<string | undefined>();
+				const Foo = factory(function Foo({ properties, children }) {
+					const { data, createNode } = properties();
+					return createNode(data, children()[0]);
+				});
+				const r = renderer(() => (
+					<Foo<Generic<{ prop1: string; prop2: string }>>
+						data={{ prop1: 'prop1', prop2: 'prop2' }}
+						createNode={(data, children) => (
+							<div>
+								{data.prop2}
+								{children}
+							</div>
+						)}
+					/>
+				));
+				const root = document.createElement('div');
+				r.mount({ domNode: root });
+				resolvers.resolve();
+				assert.strictEqual(root.outerHTML, '<div><div>prop2</div></div>');
+			});
+
 			it('properties should have a live binding', () => {
 				const factory = create({ icache }).properties<any>();
 
