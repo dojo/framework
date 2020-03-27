@@ -290,6 +290,7 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 		isLoading,
 		set(data: S[]) {
 			setData(0, data, data.length);
+			totalMap.set(getQueryKey(), data.length);
 		}
 	};
 }
