@@ -128,11 +128,18 @@ function transformData<T>(item: any, transformConfig: TransformConfig<T>) {
 	Object.keys(transformConfig).forEach((key: string) => {
 		const sourceValues = transformConfig[key as keyof T];
 		if (sourceValues) {
-			const transformedValues: string[] = sourceValues.map((value) => item[value] || '');
-			transformedItem = {
-				...transformedItem,
-				[key]: transformedValues.join(' ')
-			};
+			if (sourceValues.length === 1) {
+				transformedItem = {
+					...transformedItem,
+					[key]: item[sourceValues[0]]
+				};
+			} else {
+				const transformedValues: string | undefined[] = sourceValues.map((value) => item[value]);
+				transformedItem = {
+					...transformedItem,
+					[key]: transformedValues.join(' ')
+				};
+			}
 		}
 	});
 	return transformedItem;

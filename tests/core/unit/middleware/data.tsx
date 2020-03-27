@@ -115,6 +115,35 @@ jsdomDescribe('data middleware', () => {
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo' }, { value: 'bar' }])}</div>`);
 	});
 
+	it('should concat multiple sources into a single response field where appropriate', () => {
+		resourceStub.getOrRead.returns([{ a: 'foo', b: 'b' }, { a: 'bar', b: 'b' }]);
+		const factory = create({ data: createDataMiddleware<{ value: string }>() });
+		const App = factory(function App({ middleware: { data } }) {
+			const { getOrRead, getOptions } = data();
+			return <div>{JSON.stringify(getOrRead(getOptions()))}</div>;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['a', 'b'] }} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo b' }, { value: 'bar b' }])}</div>`);
+	});
+
+	it('should not convery single sources into strings', () => {
+		resourceStub.getOrRead.returns([{ a: true, b: 2 }, { a: false, b: 3 }, { b: 4 }]);
+		const factory = create({ data: createDataMiddleware<{ value: string }>() });
+		const App = factory(function App({ middleware: { data } }) {
+			const { getOrRead, getOptions } = data();
+			return <div>{JSON.stringify(getOrRead(getOptions()))}</div>;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App resource={resourceStub} transform={{ value: ['a'], foo: ['b'] }} />);
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			`<div>${JSON.stringify([{ value: true, foo: 2 }, { value: false, foo: 3 }, { foo: 4 }])}</div>`
+		);
+	});
+
 	it('should transform get response when using createDataMiddleware', () => {
 		resourceStub.get.returns([{ item: 'foo' }, { item: 'bar' }]);
 		const factory = create({ data: createDataMiddleware<{ value: string }>() });
