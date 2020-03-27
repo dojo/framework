@@ -419,6 +419,18 @@ Application of these properties is considered unidirectional, in that Dojo appli
 
 Dojo uses virtual node properties to determine if a given node has been updated and therefore requires re-rendering. Specifically, it uses a difference detection strategy to compare sets of properties from the previous and current render frames. If a difference is detected in the latest set of properties that a node receives, that node is invalidated and gets re-rendered in the next paint cycle.
 
+Note that function properties are ignored during property diff detection as it is a common pattern to instantiate a new function on every render. Consider the following example in which the child widget, `ChildWidget`, receives a new `onClick` function on every render.
+
+```tsx
+export const ParentWidget(function ParentWidget() {
+  return <ChildWidget onClick={() => {
+      console.log('child widget clicked.');
+  }} />
+});
+```
+
+If functions were checked during diff detection, this would cause `ChildWidget` to re-render every time `ParentWidget` rendered.
+
 > **Be aware:** Property change detection is managed internally by the framework, and is dependent on the declarative structure of widgets' VDOM output from their render functions. Attempting to keep references to properties and modifying them outside of the usual widget render cycle [is considered an anti-pattern in Dojo application development](/learn/creating-widgets/best-practice-development), and should be avoided.
 
 # Enabling interactivity
