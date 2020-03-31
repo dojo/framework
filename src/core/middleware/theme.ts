@@ -96,7 +96,7 @@ export const theme = factory(
 
 			if (currentTheme) {
 				if (isThemeWithVariants(theme)) {
-					theme = { css: theme.css, variant: theme.variants[`${variant || 'default'}`] };
+					theme = { theme: theme.theme, variant: theme.variants[`${variant || 'default'}`] };
 				}
 
 				currentTheme.set(theme);
@@ -115,7 +115,9 @@ export const theme = factory(
 				let { theme: currentTheme, classes: currentClasses } = properties();
 
 				if (currentTheme && isThemeWithVariant(currentTheme)) {
-					currentTheme = isThemeWithVariants(currentTheme.css) ? currentTheme.css.css : currentTheme.css;
+					currentTheme = isThemeWithVariants(currentTheme.theme)
+						? currentTheme.theme.theme
+						: currentTheme.theme;
 				}
 
 				if (currentTheme && currentTheme[key]) {
@@ -141,8 +143,8 @@ export const theme = factory(
 						return theme.variant.root;
 					}
 
-					if (isThemeWithVariants(theme.css)) {
-						return theme.css.variants[theme.variant].root;
+					if (isThemeWithVariants(theme.theme)) {
+						return theme.theme.variants[theme.variant].root;
 					}
 				}
 			},
