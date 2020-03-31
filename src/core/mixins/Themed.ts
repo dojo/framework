@@ -235,7 +235,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			let theme: Theme;
 
 			if (isThemeVariant(themeProp)) {
-				theme = isThemeVariantConfig(themeProp.css) ? themeProp.css.css : themeProp.css;
+				theme = isThemeVariantConfig(themeProp.theme) ? themeProp.theme.theme : themeProp.theme;
 			} else {
 				theme = themeProp;
 			}

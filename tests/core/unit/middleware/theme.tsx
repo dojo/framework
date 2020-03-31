@@ -161,7 +161,7 @@ jsdomDescribe('theme middleware', () => {
 	it('returns theme variant class', () => {
 		const factory = create({ theme });
 		const themeWithVariant = {
-			css: {
+			theme: {
 				'test-key': {
 					root: 'themed-root'
 				}
@@ -184,7 +184,7 @@ jsdomDescribe('theme middleware', () => {
 	it('selects default variant theme with variants is set', () => {
 		const factory = create({ theme });
 		const themeWithVariants = {
-			css: {
+			theme: {
 				'test-key': {
 					root: 'themed-root'
 				}
@@ -219,7 +219,7 @@ jsdomDescribe('theme middleware', () => {
 	it('selects keyes variant theme with variants is set with variant key', () => {
 		const factory = create({ theme });
 		const themeWithVariants = {
-			css: {
+			theme: {
 				'test-key': {
 					root: 'themed-root'
 				}
@@ -257,7 +257,7 @@ jsdomDescribe('theme middleware', () => {
 	it('selects specific variant when passed', () => {
 		const factory = create({ theme });
 		const themeWithVariants = {
-			css: {
+			theme: {
 				'test-key': {
 					root: 'themed-root'
 				}
@@ -277,7 +277,7 @@ jsdomDescribe('theme middleware', () => {
 			return <div classes={variantRoot} />;
 		});
 		const root = document.createElement('div');
-		const r = renderer(() => <App theme={{ css: themeWithVariants, variant: themeWithVariants.variants.foo }} />);
+		const r = renderer(() => <App theme={{ theme: themeWithVariants, variant: themeWithVariants.variants.foo }} />);
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, '<div class="foo-variant-root"></div>');
 	});
@@ -285,7 +285,7 @@ jsdomDescribe('theme middleware', () => {
 	it('selects specific variant when key passed', () => {
 		const factory = create({ theme });
 		const themeWithVariants = {
-			css: {
+			theme: {
 				'test-key': {
 					root: 'themed-root'
 				}
@@ -305,7 +305,7 @@ jsdomDescribe('theme middleware', () => {
 			return <div classes={variantRoot} />;
 		});
 		const root = document.createElement('div');
-		const r = renderer(() => <App theme={{ css: themeWithVariants, variant: 'bar' }} />);
+		const r = renderer(() => <App theme={{ theme: themeWithVariants, variant: 'bar' }} />);
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, '<div class="bar-variant-root"></div>');
 	});

@@ -129,12 +129,12 @@ export interface Variant {
 }
 
 export interface ThemeWithVariant {
-	css: Theme | ThemeWithVariants;
+	theme: Theme | ThemeWithVariants;
 	variant: Variant | string;
 }
 
 export interface ThemeWithVariants {
-	css: Theme;
+	theme: Theme;
 	variants: {
 		default: Variant;
 		[key: string]: Variant;
