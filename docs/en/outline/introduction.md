@@ -21,7 +21,7 @@ Dojo offers a variety of framework components, tooling and a build pipeline that
 
 -   Develop [themeable widgets and applications](/learn/styling/introduction) to help isolate presentational and functional concerns, and allow for an easy way to achieve consistent presentation across a full application.
 -   Make use of a suite of [user interface (UI) widgets](https://github.com/dojo/widgets/blob/master/README.md) that support internationalization (i18n), accessibility (a11y) and theming out-of-the-box.
--   Use an [internationalization (i18n) framework](/learn/i18n/introduction) to support multiple locales, including optional advanced message formatting through [Unicode CLDR](/learn/i18n/advanced-formatting-cldr).
+-   Use an [internationalization (i18n) framework](/learn/i18n/introduction) to support multiple locales, including optional advanced message formatting through [Unicode CLDR](/learn/i18n/advanced-formatting).
 
 ## Create adaptable applications
 

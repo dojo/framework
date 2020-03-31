@@ -100,16 +100,16 @@ export function setDefaultLocale(locale: string) {
  * Returns the users locale computed by using the system locale
  * of the environment and the default locale.
  *
- * The users system local if supported by the application (i.e resolves
+ * The users system locale if supported by the application (i.e resolves
  * to one of the set supported locales) otherwise the registered default
- * locale
+ * locale.
  */
 export function getComputedLocale() {
 	return computedLocale;
 }
 
 /**
- * Returns the applications current locale
+ * Returns the application's current locale
  */
 export function getCurrentLocale() {
 	return currentLocale;

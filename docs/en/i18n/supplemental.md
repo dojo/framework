@@ -114,8 +114,8 @@ export default {
 		ar: () => import('./ar/main'),
 		'ar-JO': () => import('./ar-JO/main'),
 
-		// ... or return translations directly.
-		fr: () => fr
+		// ... or return references directly.
+		fr
 	},
 	// Default/fallback messages
 	messages: {
@@ -130,6 +130,8 @@ export default {
 ## Configuring supported application locales
 
 An internationalized application should specify all its supported locales within its `.dojorc` build configuration file. One locale should be designated as the primary/default locale for the application, with the remainder of the supported locales as secondary options that can be activated when required. This is done via the `locale` property and `supportedLocales` list within the `build-app` section.
+
+**Note**: Since the various formatters and parsers rely on locale-specific [CLDR](http://cldr.unicode.org) data, most of the functionality provided by `@dojo/framework/i18n` requires at least a `locale` to be set in the `.dojorc` in order to function properly. For example, if no default `locale` is specified, then only the default bundle messages will be returned and [ICU message formatting](#icu-message-formatting) will be disabled.
 
 -   `locale`: string
     -   The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
@@ -418,102 +420,13 @@ The locale that an [i18n-aware widget](#creating-i18n-aware-widgets) will use is
 |     6 | **`@dojo/framework/i18n`**                          | An explicit locale set via [Dojo i18n's `switchLocale` method](#changing-the-root-locale-and-observing-locale-changes).                                                                      |
 |     7 | **`@dojo/framework/i18n`**                          | The [`systemLocale` for the current execution environment](#determining-the-current-locale).                                                                                                 |
 
-# Advanced formatting: CLDR
-
-## Loading CLDR data
-
-Given the very large size of the [Unicode CLDR data](http://cldr.unicode.org), it is not included as a dependency of `@dojo/framework/i18n`. Relevant portions of CLDR data must be explicitly loaded when applications require features such as [ICU-formatted messages](http://userguide.icu-project.org/formatparse/messages) or others provided by `@dojo/framework/i18n` such as date or number formatters.
-
-**Note**: Internationalized applications that require simple, unformatted locale-specific messages do not need to concern themselves with loading CLDR data. These applications only need to be configured as per [an internationalized Dojo application](/learn/i18n/internationalizing-a-dojo-application).
-
-### Dojo build system
-
-CLDR data can be loaded from an application's `.dojorc` build configuration file via the `cldrPaths` list within the `build-app` section.
-
--   `cldrPaths`: string[]
-    -   An array of paths to [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) files to load. Can be used in conjunction with the [locale and supportedLocales](#configuring-supported-application-locales) options - if a path contains the string `{locale}`, that file will be loaded for each locale listed in the `locale` and `supportedLocales` properties.
-
-For example, with the following configuration, the `numbers.json` CLDR file will be loaded for all three supported `en`, `es`, and `fr` locales:
-
-> .dojorc
-
-```json
-{
-	"build-app": {
-		"locale": "en",
-		"supportedLocales": ["es", "fr"],
-		"cldrPaths": ["cldr-data/main/{locale}/numbers.json"]
-	}
-}
-```
-
-### Standalone
-
-Outside of the Dojo build system, CLDR data can be loaded via the `loadCldrData` method exported by `@dojo/framework/i18n/cldr/load`. `loadCldrData` accepts an object of CLDR data. All CLDR data must match the format used by the [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) files. Supplemental data must be nested within a top-level `supplemental` object, and locale-specific data must be nested under locale objects within a top-level `main` object.
-
-For example:
-
-```ts
-import loadCldrData from '@dojo/framework/i18n/cldr/load';
-
-loadCldrData({
-	"supplemental": {
-		"likelySubtags": { ... }
-	},
-	"main": {
-		"en": {
-			"numbers": { ... }
-		}
-	}
-});
-```
-
-## Required CLDR data per feature
-
-Dojo's `i18n` module requires the following CLDR data for each particular formatting feature:
-
-For [ICU message formatting](#icu-message-formatting):
-
--   `supplemental/likelySubtags`
--   `supplemental/plurals`
-
-For [date/time formatting](#date-and-number-formatting):
-
--   `main/{locale}/ca-gregorian`
--   `main/{locale}/dateFields`
--   `main/{locale}/numbers`
--   `main/{locale}/timeZoneNames`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
--   `supplemental/timeData`
--   `supplemental/weekData`
-
-For [number/currency formatting](#date-and-number-formatting):
-
--   `main/{locale}/currencies`
--   `main/{locale}/numbers`
--   `supplemental/currencyData`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
-
-For [unit formatting](#date-and-number-formatting):
-
--   `main/{locale}/numbers`
--   `main/{locale}/units`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
+# Advanced formatting
 
 ## Message formatting
 
 ### Basic token replacement
 
-Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formatting), but this requires CLDR data to be available and is not something that every application requires. As such, if the `supplemental/likeSubtags` and `supplemental/plurals` CLDR data are not loaded in the application, then Dojo's various message formatting methods will perform simple token replacement.
+Dojo's `i18n` framework supports [ICU message formatting](#icu-message-formatting), which also supports basic token replacement.
 
 The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with a `guestInfo` message as follows:
 
@@ -526,8 +439,6 @@ export default {
 	}
 };
 ```
-
-With basic token replacement, an object with `host` and `guest` properties can be provided to a formatter without the need to load CLDR data.
 
 #### Replacing tokens in widgets
 
@@ -562,43 +473,22 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 
 #### Direct token replacement formatting
 
-The `i18n` module exposes two methods that handle message formatting:
-
--   `formatMessage`, which directly returns a formatted message based on its inputs
--   `getMessageFormatter`, which returns a method dedicated to formatting a single message.
-
-Both of these methods operate on bundle objects, which must first be registered with the i18n ecosystem by passing them to [the `i18n` function](#accessing-locale-message-bundles).
+The object returned by [the `localizeBundle` function](#accessing-locale-message-bundles) from the `i18n` module includes a `format` method that handles message formatting:
 
 ```ts
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
-i18n(bundle, 'en').then(() => {
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
-	let message = formatter({
+localizeBundle(bundle, { locale: 'en' }).then(({ format }) => {
+	const message = format('guestInfo', {
 		host: 'Margaret Mead',
 		guest: 'Laura Nader'
 	});
 	console.log(message); // "Margaret Mead invites Laura Nader to the party."
-
-	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
-	message = formatMessage(
-		bundle,
-		'guestInfo',
-		{
-			host: 'Marshall Sahlins',
-			gender: 'male',
-			guest: 'Bronisław Malinowski'
-		},
-		'en'
-	);
-	console.log(message); // "Marshall Sahlins invites Bronisław Malinowski to the party."
 });
 ```
 
 ### ICU message formatting
-
-**Note**: This feature requires appropriate [CLDR data](#loading-cldr-data) to have been loaded into the application.
 
 `@dojo/framework/i18n` relies on [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) for [ICU message formatting](http://userguide.icu-project.org/formatparse/messages), and as such all of the features offered by Globalize.js are available through `@dojo/framework/i18n`.
 
@@ -669,41 +559,24 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 
 #### Direct ICU message formatting
 
-The ICU-formatted `guestInfo` message can be converted directly with `formatMessage`, or `getMessageFormatter` can be used to generate a function that can be called several times with different options. Note that the formatters created and used by both methods are cached, so there is no performance penalty from compiling the same message multiple times.
-
-Since the Globalize.js formatting methods use message paths rather than the message strings themselves, the `@dojo/framework/i18n` methods also require that the bundle itself be provided, so its unique identifier can be resolved to a message path within the Globalize.js ecosystem. If an optional locale is provided, then the corresponding locale-specific message will be used. Otherwise, the current locale is assumed.
+The ICU-formatted `guestInfo` message can be converted directly with the `format` method included on the object returned by [`localizeBundle`](#accessing-locale-message-bundles).
 
 ```ts
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
-i18n(bundle, 'en').then(() => {
-	const message = formatMessage(
-		bundle,
-		'guestInfo',
-		{
-			host: 'Margaret Mead',
-			gender: 'female',
-			guest: 'Laura Nader',
-			guestCount: 20
-		},
-		'en'
-	);
+localizeBundle(bundle, { locale: 'en' }).then(({ format }) => {
+	const message = format('guestInfo', {
+		host: 'Margaret Mead',
+		gender: 'female',
+		guest: 'Laura Nader',
+		guestCount: 20
+	});
 	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
 	console.log(
-		formatter({
-			host: 'Margaret Mead',
-			gender: 'female',
-			guest: 'Laura Nader',
-			guestCount: 20
-		})
-	); // "Margaret Mead invites Laura Nader and 19 other people to her party."
-
-	console.log(
-		formatter({
+		format('guestInfo', {
 			host: 'Marshall Sahlins',
 			gender: 'male',
 			guest: 'Bronisław Malinowski'
@@ -713,8 +586,6 @@ i18n(bundle, 'en').then(() => {
 ```
 
 ## Date and number formatting.
-
-**Note**: This feature requires appropriate [CLDR data](#loading-cldr-data) to have been loaded into the application.
 
 As with the message formatting capabilities, `@dojo/framework/i18n` relies on Globalize.js to provide locale-specific formatting for dates, times, currencies, numbers, and units. The formatters themselves are essentially light wrappers around their Globalize.js counterparts, which helps maintain consistency with the Dojo ecosystem and prevents the need to work with the `Globalize` object directly. Unlike the message formatters, the date, number, and unit formatters are not cached, as they have a more complex set of options. As such, executing the various "get formatter" methods multiple times with the same inputs does not return the exact same function object.
 
@@ -792,10 +663,10 @@ Once a [default language bundle](/learn/i18n/working-with-message-bundles#defaul
 For example:
 
 ```ts
-import i18n, { Messages } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
-i18n(bundle, 'fr').then(function(messages: Messages) {
+localizeBundle(bundle, { locale: 'fr' }).then(({ messages }) => {
 	console.log(messages.hello); // "Bonjour"
 	console.log(messages.goodbye); // "Au revoir"
 });
@@ -803,93 +674,9 @@ i18n(bundle, 'fr').then(function(messages: Messages) {
 
 If an unsupported locale is passed to `i18n`, then the default messages are returned. Further, any messages not provided by the locale-specific bundle will also fall back to their defaults. As such, the default bundle should contain _all_ message keys used by any of the locale-specific bundles.
 
-Alternatively, locale messages can be manually loaded by passing them to `setLocaleMessages`. This is useful for pre-caching locale-specific messages so that an additional HTTP request is not sent to load them. Locale-specific messages are merged with the default messages, so partial message bundles are acceptable:
-
-```ts
-import i18n, { setLocaleMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const partialMessages = { hello: 'Ahoj' };
-setLocaleMessages(bundle, partialMessages, 'cz');
-
-i18n(bundle, 'cz').then((messages) => {
-	console.log(messages.hello); // "Ahoj"
-	console.log(messages.goodbye); // "Goodbye" (defaults are used when not overridden)
-});
-```
-
-Once locale dictionaries for a bundle have been loaded, they are cached and can be accessed synchronously via `getCachedMessages`:
-
-```ts
-import { getCachedMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const messages = getCachedMessages(bundle, 'fr');
-console.log(messages.hello); // "Bonjour"
-console.log(messages.goodbye); // "Au revoir"
-```
-
-`getCachedMessages` will look up the bundle's supported `locales` to determine whether the default messages should be returned. Locales are also normalized to their most specific messages. For example, if the 'fr' locale is supported, but 'fr-CA' is not, `getCachedMessages` will return the messages for the 'fr' locale:
-
-```ts
-import { getCachedMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const frenchMessages = getCachedMessages(bundle, 'fr-CA');
-console.log(frenchMessages.hello); // "Bonjour"
-console.log(frenchMessages.goodbye); // "Au revoir"
-
-const madeUpLocaleMessages = getCachedMessages(bundle, 'made-up-locale');
-console.log(madeUpLocaleMessages.hello); // "Hello"
-console.log(madeUpLocaleMessages.goodbye); // "Goodbye"
-```
-
-If need be, bundle caches can be cleared with `invalidate`. If called with a bundle, only the messages for that particular bundle are removed from the cache. Otherwise, all messages are cleared:
-
-```ts
-import i18n, { getCachedMessages, invalidate } from '@dojo/framework/i18n/main';
-import bundle from 'nls/main';
-
-i18n(bundle, 'ar').then(() => {
-	invalidate(bundle);
-	console.log(getCachedMessages(bundle, 'ar')); // undefined
-});
-```
-
 ## Determining the current locale
 
-The current locale can be accessed via the read-only property `i18n.locale`, which will always be either the locale set via [`switchLocale` (see below)](#changing-the-root-locale-and-observing-locale-changes)
-or the `systemLocale`.
+`@dojo/framework/i18n/i18n` exposes two related methods for determining the current locale:
 
-The `systemLocale` is also read-only, and its value is determined by the current execution environment in the following manner:
-
-| Environment | Locale                                             |
-| ----------: | -------------------------------------------------- |
-|     Browser | User's default language setting                    |
-|     Node.js | The Node.js process's `LANG` environment variable. |
-|    Fallback | `en`                                               |
-
-## Changing the root locale and observing locale changes
-
-The `switchLocale` method changes the root locale and notifies all consumers registered with `observeLocale`, which accepts a function that receives the new locale string as its sole argument. For example, suppose the system locale is `en-GB`:
-
-```ts
-import i18n, { observeLocale, switchLocale, systemLocale } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/bundle';
-
-// Register an event listener
-observeLocale((locale: string) => {
-	// handle locale change...
-});
-
-// Change the locale to German. The registered observer's callback will be called
-// with the new locale.
-switchLocale('de');
-
-// The locale is again switched to German, but since the current root locale is
-// already German, registered observers will not be notified.
-switchLocale('de');
-
-console.log(i18n.locale); // 'de'
-console.log(systemLocale); // 'en-GB' (the system locale does not change with the root locale)
-```
+-   `getCurrentLocale`, which represents the application's current, top-level locale.
+-   `getComputedLocale`, which will be either the user's system locale if it is listed among the supported locales specified in the `.dojorc`, or the default locale specified in the `.dojorc` if the user's system locale is not supported.
