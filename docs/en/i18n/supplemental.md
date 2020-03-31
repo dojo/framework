@@ -131,6 +131,8 @@ export default {
 
 An internationalized application should specify all its supported locales within its `.dojorc` build configuration file. One locale should be designated as the primary/default locale for the application, with the remainder of the supported locales as secondary options that can be activated when required. This is done via the `locale` property and `supportedLocales` list within the `build-app` section.
 
+**Note**: Since the various formatters and parsers rely on locale-specific [CLDR](http://cldr.unicode.org) data, most of the functionality provided by `@dojo/framework/i18n` requires at least a `locale` to be set in the `.dojorc` in order to function properly. For example, if no default `locale` is specified, then only the default bundle messages will be returned and [ICU message formatting](#icu-message-formatting) will be disabled.
+
 -   `locale`: string
     -   The primary locale supported by the application. That is, the default language that will be used if an override locale is not specified.
 -   `supportedLocales`: string[]
