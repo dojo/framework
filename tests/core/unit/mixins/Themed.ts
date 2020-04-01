@@ -357,7 +357,7 @@ registerSuite('ThemedMixin', {
 		variants: {
 			'theme variant can be injected via a registry'() {
 				const themeWithVariant = {
-					css: {
+					theme: {
 						'test-key': {
 							root: 'themed-root'
 						}
@@ -387,7 +387,7 @@ registerSuite('ThemedMixin', {
 				};
 
 				const themeWithVariant = {
-					css: {
+					theme: {
 						'test-key': {
 							root: 'variant-themed-root'
 						}
@@ -413,9 +413,71 @@ registerSuite('ThemedMixin', {
 				renderResult = themedInstance.__render__() as VNode;
 				assert.deepEqual(renderResult.properties.classes, 'variant-root');
 			},
+			'should use default theme when set via theme context'() {
+				const themeWithVariants = {
+					theme: {
+						'test-key': {
+							root: 'variant-themed-root'
+						}
+					},
+					variants: {
+						default: {
+							root: 'variant-root'
+						},
+						red: {
+							root: 'red-root'
+						}
+					}
+				};
+
+				registerThemeInjector(themeWithVariants, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
+			},
+			'should use be able to choose variant via theme context'() {
+				const themeWithVariants = {
+					theme: {
+						'test-key': {
+							root: 'variant-themed-root'
+						}
+					},
+					variants: {
+						default: {
+							root: 'variant-root'
+						},
+						red: {
+							root: 'red-root'
+						}
+					}
+				};
+
+				const themeInjectorContext = registerThemeInjector(themeWithVariants, testRegistry);
+				class InjectedTheme extends TestWidget {
+					render() {
+						return v('div', { classes: this.variant() });
+					}
+				}
+				const themedInstance = new InjectedTheme();
+				themedInstance.registry.base = testRegistry;
+				themedInstance.__setProperties__({});
+				let renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'variant-root');
+				themeInjectorContext.set(themeWithVariants, 'red');
+				themedInstance.__setProperties__({});
+				renderResult = themedInstance.__render__() as VNode;
+				assert.deepEqual(renderResult.properties.classes, 'red-root');
+			},
 			'theme variant can be set at the widget level'() {
 				const themeWithVariant = {
-					css: {
+					theme: {
 						'test-key': {
 							root: 'themed-root'
 						}
@@ -440,7 +502,7 @@ registerSuite('ThemedMixin', {
 			},
 			'theme property overrides injected property'() {
 				const themeWithVariant = {
-					css: {
+					theme: {
 						'test-key': {
 							root: 'themed-root'
 						}
@@ -451,7 +513,7 @@ registerSuite('ThemedMixin', {
 				};
 
 				const secondThemeWithVariant = {
-					css: {
+					theme: {
 						'test-key': {
 							root: 'themed-root'
 						}
@@ -478,8 +540,8 @@ registerSuite('ThemedMixin', {
 			},
 			'can inject theme config with variants'() {
 				const themeWithVariantConfig = {
-					css: {
-						css: {
+					theme: {
+						theme: {
 							'test-key': {
 								root: 'themed-root'
 							}

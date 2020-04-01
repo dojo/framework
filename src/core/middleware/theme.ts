@@ -6,6 +6,7 @@ import Injector from '../Injector';
 import Set from '../../shim/Set';
 import { shallow, auto } from '../diff';
 import Registry from '../Registry';
+import { ThemeInjector } from '../ThemeInjector';
 
 export { Theme, Classes, ClassNames } from './../interfaces';
 
@@ -22,7 +23,7 @@ function isThemeWithVariant(theme: Theme | ThemeWithVariant): theme is ThemeWith
 	return theme && theme.hasOwnProperty('variant');
 }
 
-function isThemeWithVariants(theme: Theme | ThemeWithVariants): theme is ThemeWithVariants {
+function isThemeWithVariants(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariants {
 	return theme && theme.hasOwnProperty('variants');
 }
 
@@ -30,8 +31,8 @@ function isVariantModule(variant: string | Variant): variant is Variant {
 	return typeof variant !== 'string';
 }
 
-function registerThemeInjector(theme: Theme | ThemeWithVariant | undefined, themeRegistry: Registry): Injector {
-	const themeInjector = new Injector(theme);
+function registerThemeInjector(theme: Theme | ThemeWithVariant | undefined, themeRegistry: Registry): ThemeInjector {
+	const themeInjector = new ThemeInjector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
 		return () => themeInjector;
@@ -92,14 +93,13 @@ export const theme = factory(
 		function set(theme: Theme): void;
 		function set<T extends ThemeWithVariants>(theme: T, variant?: keyof T['variants']): void;
 		function set<T extends ThemeWithVariants>(theme: Theme | T, variant?: keyof T['variants']): void {
-			const currentTheme = injector.get<Injector<Theme | ThemeWithVariant | undefined>>(INJECTED_THEME_KEY);
-
+			const currentTheme = injector.get<ThemeInjector>(INJECTED_THEME_KEY);
 			if (currentTheme) {
 				if (isThemeWithVariants(theme)) {
-					theme = { theme: theme.theme, variant: theme.variants[`${variant || 'default'}`] };
+					currentTheme.set(theme, variant);
+				} else {
+					currentTheme.set(theme);
 				}
-
-				currentTheme.set(theme);
 			}
 		}
 

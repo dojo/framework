@@ -14,6 +14,7 @@ import { inject } from './../decorators/inject';
 import { WidgetBase } from './../WidgetBase';
 import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
+import { ThemeInjector } from '../ThemeInjector';
 
 export { Theme, Classes, ClassNames } from './../interfaces';
 
@@ -37,7 +38,7 @@ function isThemeVariant(theme: Theme | ThemeWithVariant): theme is ThemeWithVari
 	return theme.hasOwnProperty('variant');
 }
 
-function isThemeVariantConfig(theme: Theme | ThemeWithVariants): theme is ThemeWithVariants {
+function isThemeVariantConfig(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariants {
 	return theme.hasOwnProperty('variants');
 }
 
@@ -92,8 +93,11 @@ function createThemeClassesLookup(classes: ClassNames[]): ClassNames {
  *
  * @returns the theme injector used to set the theme
  */
-export function registerThemeInjector(theme: Theme | ThemeWithVariant, themeRegistry: Registry): Injector {
-	const themeInjector = new Injector(theme);
+export function registerThemeInjector(
+	theme: Theme | ThemeWithVariants | ThemeWithVariant,
+	themeRegistry: Registry
+): ThemeInjector {
+	const themeInjector = new ThemeInjector(theme);
 	themeRegistry.defineInjector(INJECTED_THEME_KEY, (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
 		return () => themeInjector;
