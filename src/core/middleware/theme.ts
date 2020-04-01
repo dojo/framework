@@ -91,8 +91,8 @@ export const theme = factory(
 		});
 
 		function set(theme: Theme): void;
-		function set<T extends ThemeWithVariants>(theme: T, variant?: keyof T['variants']): void;
-		function set<T extends ThemeWithVariants>(theme: Theme | T, variant?: keyof T['variants']): void {
+		function set<T extends ThemeWithVariants>(theme: T, variant?: keyof T['variants'] | Variant): void;
+		function set<T extends ThemeWithVariants>(theme: Theme | T, variant?: keyof T['variants'] | Variant): void {
 			const currentTheme = injector.get<ThemeInjector>(INJECTED_THEME_KEY);
 			if (currentTheme) {
 				if (isThemeWithVariants(theme)) {
