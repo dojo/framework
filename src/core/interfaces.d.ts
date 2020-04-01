@@ -121,7 +121,9 @@ export type ClassNames = {
 };
 
 export interface Theme {
-	[key: string]: object;
+	[key: string]: {
+		[key: string]: string;
+	};
 }
 
 export interface Variant {
