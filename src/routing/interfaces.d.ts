@@ -12,6 +12,7 @@ import { WidgetBase } from '../core/WidgetBase';
  * Description of a registered route
  */
 export interface Route {
+	id: string;
 	path: string;
 	outlet: string;
 	params: string[];
@@ -28,6 +29,7 @@ export interface Route {
  * Route configuration
  */
 export interface RouteConfig {
+	id?: string;
 	path: string;
 	outlet: string;
 	children?: RouteConfig[];
@@ -50,11 +52,16 @@ export type MatchType = 'error' | 'index' | 'partial';
 /**
  * Context stored for matched outlets
  */
-export interface OutletContext {
+export interface RouteContext {
+	/**
+	 * Route id
+	 */
+	id: string;
+
 	/**
 	 * Outlet id
 	 */
-	id: string;
+	outlet: string;
 	/**
 	 * The type of match for the outlet
 	 */
@@ -98,7 +105,12 @@ export interface RouterInterface {
 	/**
 	 * Returns the outlet context if matched
 	 */
-	getOutlet(outletId: string): OutletContext | undefined;
+	getRoute(outletId: string): RouteContext | undefined;
+
+	/**
+	 * Returns the outlet context if matched
+	 */
+	getOutlet(outletId: string): undefined | Map<string, RouteContext>;
 
 	/**
 	 * The current params for matched routes

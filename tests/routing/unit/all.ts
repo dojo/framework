@@ -1,6 +1,6 @@
 import './ActiveLink';
 import './Link';
-import './Outlet';
+import './Route';
 import './Router';
 import './RouterInjector';
 import './history/all';
