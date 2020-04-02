@@ -246,6 +246,25 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
+			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
+				return [
+					this._children.reduce((slots, child) => {
+						const { domNode } = child;
+
+						if (!domNode.getAttribute || !domNode.getAttribute('slot')) {
+							return slots;
+						}
+
+						return {
+							...slots,
+							[domNode.getAttribute('slot')]: child.domNode.isWidget
+								? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
+								: dom({ node: domNode, diffType: 'dom' })
+						};
+					}, {})
+				];
+			}
+
 			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;

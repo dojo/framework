@@ -567,4 +567,61 @@ describe('registerCustomElement', () => {
 		);
 		console.log(element.outerHTML);
 	});
+
+	it('transforms children with slots into a child object', () => {
+		@customElement({
+			tag: 'parent-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child = this.children[0];
+
+				return v('div', {}, [
+					v('div', { classes: ['a-slot'] }, [child && (child as any).a]),
+					v('div', { classes: ['b-slot'] }, [child && (child as any).b])
+				]);
+			}
+		}
+
+		@customElement({
+			tag: 'slot-b-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetB extends WidgetBase<any> {
+			render() {
+				return 'WidgetB';
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementB = create((WidgetB as any).__customElementDescriptor, WidgetB);
+
+		customElements.define('parent-element', CustomElement);
+		customElements.define('slot-b-element', CustomElementB);
+
+		const element = document.createElement('parent-element');
+
+		const slotChild = document.createElement('div');
+		slotChild.setAttribute('slot', 'a');
+		slotChild.innerHTML = 'test';
+
+		const slotBChild = document.createElement('slot-b-element');
+		slotBChild.setAttribute('slot', 'b');
+
+		element.appendChild(slotChild);
+		element.appendChild(slotBChild);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<parent-element style="display: block;"><div><div class="a-slot"><div slot="a">test</div></div><div class="b-slot"><slot-b-element slot="b">WidgetB</slot-b-element></div></div></parent-element>'
+		);
+	});
 });
