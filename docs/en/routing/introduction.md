@@ -12,15 +12,16 @@ Dojo's Routing package provides a first class declarative routing solution for w
 
 ## Adding routing to an application
 
--   Add an initial route configuration that defines a single url path that maps to an identifier referred to as an `outlet`. Outlets will be described later in the documentation.
+-   Add an initial route configuration that defines a single url path that maps to a route identifier and an `outlet` name.
 
 > src/routes.ts
 
 ```ts
 export default [
 	{
+		id: 'home',
 		path: 'home',
-		outlet: 'home'
+		outlet: 'main'
 	}
 ];
 ```
@@ -45,20 +46,20 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
--   Add an `outlet` widget to show the text "Home" when the `home` route is visited. Outlets are widgets that display something when a route is matched. The application's `src/routes.ts` file associates a route to an outlet via the outlet's `id` property.
+-   Add a `Route` widget to show the text "Home" when the `home` route is visited. `Route` is a widget that display something when the path for the route id is matched. The application's `src/routes.ts` file associates a route to an id via the `Route`'s `id` property.
 
 > src/App.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import Outlet from '@dojo/framework/routing/Outlet';
+import Route from '@dojo/framework/routing/Route';
 
 const factory = create();
 
 export default factory(function App() {
 	return (
 		<div>
-			<Outlet id="home" renderer={() => <div>Home</div>} />
+			<Route id="home" renderer={() => <div>Home</div>} />
 		</div>
 	);
 });
@@ -76,26 +77,27 @@ Path parameters are placeholders in the routing configuration that will match an
 ```ts
 export default [
 	{
+		id: 'home,
 		path: 'home/{page}',
 		outlet: 'home'
 	}
 ];
 ```
 
-The parameters values are injected into to matching `Outlets`'s `renderer` property.
+The parameters values are injected into to matching `Route`'s `renderer` property.
 
 > src/App.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import Outlet from '@dojo/framework/routing/Outlet';
+import Route from '@dojo/framework/routing/Route';
 
 const factory = create();
 
 export default factory(function App() {
 	return (
 		<div>
-			<Outlet id="home" renderer={(matchDetails) => <div>{`Home ${matchDetails.params.page}`}</div>} />
+			<Route id="home" renderer={(matchDetails) => <div>{`Home ${matchDetails.params.page}`}</div>} />
 		</div>
 	);
 });
@@ -108,7 +110,8 @@ Query parameters can also be added to route URLs. As with normal query parameter
 ```ts
 export default [
 	{
-		path: 'home/{page}',
+		id: 'home',
+		path: 'home/{page}?{queryOne}&{queryTwo}',
 		outlet: 'home'
 	}
 ];
@@ -118,14 +121,14 @@ export default [
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import Outlet from '@dojo/framework/routing/Outlet';
+import Route from '@dojo/framework/routing/Route';
 
 const factory = create();
 
 export default factory(function App() {
 	return (
 		<div>
-			<Outlet
+			<Route
 				id="home"
 				renderer={(matchDetails) => {
 					const { queryParams } = matchDetails;
@@ -137,7 +140,7 @@ export default factory(function App() {
 });
 ```
 
-If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query parameters are injected into the matching `Outlet`'s `renderer` method as an object of type `MatchDetails` and accessed via that object's `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
+If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query parameters are injected into the matching `Route`'s `renderer` method as an object of type `MatchDetails` and accessed via that object's `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
 
 ## Default route and parameters
 
@@ -148,6 +151,7 @@ If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=d
 ```ts
 export default [
 	{
+		id: 'home',
 		path: 'home',
 		outlet: 'home',
 		defaultRoute: true
@@ -162,6 +166,7 @@ If the default route has path or query parameters a map of defaults need to be s
 ```ts
 export default [
 	{
+		id: 'home',
 		path: 'home/{page}',
 		outlet: 'home',
 		defaultRoute: true,
@@ -174,12 +179,12 @@ export default [
 
 ## Using link widgets
 
-The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an `outlet` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
+The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an route `id` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
 Link Properties:
 
--   `to: string`: The `outlet` id.
--   `params: { [index: string]: string }`: Params to generate the link with for the outlet.
+-   `to: string`: The `route` id.
+-   `params: { [index: string]: string }`: Params to generate the link with for the route.
 -   `onClick: (event: MouseEvent) => void` (optional): Function that gets called when the `Link` is clicked.
 
 In addition to the `Link` specific properties, all the standard `VNodeProperties` are available for the `Link` widget as they would be creating an anchor tag.
@@ -207,7 +212,7 @@ The `ActiveLink` widget is a wrapper around the `Link` widget that conditionally
 
 ActiveLink Properties:
 
--   `activeClasses: string[]`: An array of classes to apply when the `Link`'s outlet is matched.
+-   `activeClasses: string[]`: An array of classes to apply when the `Link`'s route is matched.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -228,51 +233,56 @@ export default factory(function App() {
 
 ## Code splitting by route
 
-When using `@dojo/cli-build-app`, Dojo supports automatic code splitting by default for all top level outlets. This means that all widgets referenced within the `Outlet`s `renderer` will include a specific bundle for the outlet that will be loaded lazily when a user accesses the route.
+When using `@dojo/cli-build-app`, Dojo supports automatic code splitting by default for all top level routes. This means that all widgets referenced within the `Route`s `renderer` will include a specific bundle for the route that will be loaded lazily when a user accesses the route.
 
 To take advantage of the code splitting there are 4 rules:
 
 1.  The routing configuration needs to be the default export in the `src/routes.ts` module.
 2.  The widgets must be the default export of their module.
 3.  The `renderer` property must be defined inline.
-4.  The outlet `id` must be static and defined inline.
+4.  The `id` and `outlet` in the routing config and must be static and defined inline.
 
 > src/routes.ts
 
 ```ts
 export default [
 	{
+		id: 'home',
 		path: 'home',
 		outlet: 'home'
 	},
 	{
+		id: 'about',
 		path: 'about',
 		outlet: 'about',
 		children: [
 			{
+				id: 'company',
 				path: 'company',
 				outlet: 'about-company'
 			}
 		]
 	},
 	{
+		id: 'profile',
 		path: 'profile',
 		outlet: 'profile'
 	},
 	{
+		id: 'settings',
 		path: 'settings',
 		outlet: 'settings'
 	}
 ];
 ```
 
-With the routing configuration above the following example will generate 4 separate bundles for each of the widgets returned in the `Outlet`'s renderer, `Home`, `About`, `Profile` and `Settings`.
+With the routing configuration above the following example will generate 4 separate bundles for each of the widgets returned in the `Route`'s renderer, `Home`, `About`, `Profile` and `Settings`.
 
 > src/App.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import Outlet from '@dojo/framework/routing/Outlet';
+import Route from '@dojo/framework/routing/Route';
 
 import Home from './Home';
 import About from './About';
@@ -284,10 +294,10 @@ const factory = create();
 export default factory(function App() {
 	return (
 		<div>
-			<Outlet id="home" renderer={() => <Home />} />
-			<Outlet id="about" renderer={() => <About />} />
-			<Outlet id="profile" renderer={() => <Profile />} />
-			<Outlet id="settings" renderer={() => <Settings />} />
+			<Route id="home" renderer={() => <Home />} />
+			<Route id="about" renderer={() => <About />} />
+			<Route id="profile" renderer={() => <Profile />} />
+			<Route id="settings" renderer={() => <Settings />} />
 		</div>
 	);
 });
