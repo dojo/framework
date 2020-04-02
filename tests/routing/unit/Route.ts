@@ -21,15 +21,18 @@ const routeConfig = [
 	{
 		path: '/foo',
 		outlet: 'foo',
+		id: 'foo',
 		children: [
 			{
 				path: '/bar',
-				outlet: 'bar'
+				outlet: 'bar',
+				id: 'bar'
 			}
 		]
 	},
 	{
 		path: 'baz/{baz}',
+		id: 'baz',
 		outlet: 'baz'
 	}
 ];
@@ -106,7 +109,8 @@ describe('Route', () => {
 		const routeConfig = [
 			{
 				path: '/foo',
-				outlet: 'foo'
+				outlet: 'foo',
+				id: 'foo'
 			}
 		];
 

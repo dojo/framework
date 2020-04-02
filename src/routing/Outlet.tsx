@@ -45,7 +45,7 @@ export const Outlet = factory(function Outlet({
 }) {
 	diffProperty('routerKey', (current: RouteProperties, next: RouteProperties) => {
 		const { routerKey: currentRouterKey = ROUTER_KEY } = current;
-		const { routerKey = 'router' } = next;
+		const { routerKey = ROUTER_KEY } = next;
 		if (routerKey !== currentRouterKey) {
 			const currentHandle = icache.get<Function>('handle');
 			if (currentHandle) {

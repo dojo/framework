@@ -29,7 +29,7 @@ export interface Route {
  * Route configuration
  */
 export interface RouteConfig {
-	id?: string;
+	id: string;
 	path: string;
 	outlet: string;
 	children?: RouteConfig[];

@@ -85,7 +85,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 	public start() {
 		const { HistoryManager = HashHistory, base, window } = this._options;
 		this._history = new HistoryManager({ onChange: this._onChange, base, window });
-		if (this._matchedRoutes.errorOutlet && this._defaultRoute) {
+		if (this._matchedRoutes.errorRoute && this._defaultRoute) {
 			const path = this.link(this._defaultRoute);
 			if (path) {
 				this.setPath(path);
@@ -187,7 +187,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 			const segments: string[] = parsedPath.split('/');
 			const route: Route = {
 				params: [],
-				id: id || outlet,
+				id,
 				outlet,
 				path: parsedPath,
 				segments,
@@ -222,7 +222,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 			if (children && children.length > 0) {
 				this._register(children, route.children, route);
 			}
-			this._routeMap[id || outlet] = route;
+			this._routeMap[id] = route;
 			routes.push(route);
 		}
 	}
@@ -350,9 +350,9 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				matchedRoute = parent;
 			}
 		} else {
-			this._matchedRoutes.errorOutlet = {
-				id: 'errorOutlet',
-				outlet: 'errorOutlet',
+			this._matchedRoutes.errorRoute = {
+				id: 'errorRoute',
+				outlet: 'errorRoute',
 				queryParams: {},
 				params: {},
 				isError: () => true,
