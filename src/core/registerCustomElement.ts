@@ -1,8 +1,9 @@
 import Registry from './Registry';
-import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator } from './vdom';
+import { create as vdomCreate, diffProperty, dom, invalidator, isTextNode, renderer, w } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
+import { VNode, WNode } from './interfaces';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -246,6 +247,16 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
+			function wrap(node: WNode | VNode) {
+				function w() {
+					return node;
+				}
+
+				Object.keys(node).forEach((key) => ((w as any)[key] = (node as any)[key]));
+
+				return w;
+			}
+
 			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
 				return [
 					this._children.reduce((slots, child) => {
@@ -257,9 +268,11 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 						return {
 							...slots,
-							[domNode.getAttribute('slot')]: child.domNode.isWidget
-								? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
-								: dom({ node: domNode, diffType: 'dom' })
+							[domNode.getAttribute('slot')]: wrap(
+								child.domNode.isWidget
+									? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
+									: dom({ node: domNode, diffType: 'dom' })
+							)
 						};
 					}, {})
 				];

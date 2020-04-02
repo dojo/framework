@@ -581,7 +581,7 @@ describe('registerCustomElement', () => {
 
 				return v('div', {}, [
 					v('div', { classes: ['a-slot'] }, [child && (child as any).a]),
-					v('div', { classes: ['b-slot'] }, [child && (child as any).b])
+					v('div', { classes: ['b-slot'] }, [child && (child as any).b && (child as any).b()])
 				]);
 			}
 		}
