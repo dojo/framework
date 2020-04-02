@@ -281,10 +281,10 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
-					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
+					return wrap(w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]));
 				});
 			} else {
-				return this._children;
+				return this._children.map(wrap);
 			}
 		}
 

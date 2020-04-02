@@ -624,4 +624,39 @@ describe('registerCustomElement', () => {
 			'<parent-element style="display: block;"><div><div class="a-slot"><div slot="a">test</div></div><div class="b-slot"><slot-b-element slot="b">WidgetB</slot-b-element></div></div></parent-element>'
 		);
 	});
+
+	it('wraps child nodes in render functions', () => {
+		@customElement({
+			tag: 'render-func-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child && child()]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('render-func-element', CustomElement);
+
+		const element = document.createElement('render-func-element');
+
+		const slotChild = document.createElement('label');
+		slotChild.innerHTML = 'test';
+
+		element.appendChild(slotChild);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<render-func-element style="display: block;"><div><label>test</label></div></render-func-element>'
+		);
+	});
 });
