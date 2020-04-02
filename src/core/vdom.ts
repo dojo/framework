@@ -2205,8 +2205,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (widgetMeta.dirty) {
 					_idToChildrenWrappers.delete(id);
 					didRender = true;
-					widgetMeta.dirty = false;
 					rendered = Constructor(createWidgetOptions(id, id, widgetMeta.middleware));
+					widgetMeta.dirty = false;
 					if (widgetMeta.deferRefs > 0) {
 						rendered = null;
 					}

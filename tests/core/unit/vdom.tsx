@@ -3826,6 +3826,81 @@ jsdomDescribe('vdom', () => {
 				);
 			});
 
+			it('should only render widget once during a scheduled render', () => {
+				const Widget = create({ icache }).properties<{
+					start: number;
+					onStart(value: number): void;
+				}>()(function Widget({ properties, middleware: { icache } }) {
+					const { start } = properties();
+					if (start !== undefined && start !== icache.get('start')) {
+						icache.set('start', start);
+						icache.set('currentStart', start);
+					}
+
+					const currentStart = icache.getOrSet('currentStart', 1);
+					console.log(currentStart, start);
+
+					const nodes = [<div key="prev">p</div>];
+					for (let i = currentStart; i < 10; i++) {
+						nodes.push(<button key={`page-${i}`}>{`${i}`}</button>);
+					}
+					nodes.push(<div key="next">n</div>);
+
+					return (
+						<div>
+							<button
+								key="button1"
+								onclick={() => {
+									const start = Math.min(icache.getOrSet('currentStart', 1) + 4, 10);
+									properties().onStart(start);
+									icache.set('currentStart', start);
+								}}
+							>
+								plus
+							</button>
+							<button
+								key="button2"
+								onclick={() => {
+									const start = Math.max(icache.getOrSet('currentStart', 1) - 4, 1);
+									properties().onStart(start);
+									icache.set('currentStart', start);
+								}}
+							>
+								minus
+							</button>
+							{nodes}
+						</div>
+					);
+				});
+
+				const App = create({ icache })(function App({ middleware: { icache } }) {
+					const start = icache.getOrSet('start', 5);
+
+					return (
+						<Widget
+							start={start}
+							onStart={(value) => {
+								icache.set('start', value);
+							}}
+						/>
+					);
+				});
+
+				const root = document.createElement('root');
+				const r = renderer(() => <App />);
+				r.mount({ domNode: root });
+				assert.strictEqual(
+					root.innerHTML,
+					'<div><button>plus</button><button>minus</button><div>p</div><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><div>n</div></div>'
+				);
+				(root.children[0].children[1] as any).click();
+				resolvers.resolve();
+				assert.strictEqual(
+					root.innerHTML,
+					'<div><button>plus</button><button>minus</button><div>p</div><button>1</button><button>2</button><button>3</button><button>4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><div>n</div></div>'
+				);
+			});
+
 			it('should create live binding to the latest version of function properties', () => {
 				const factory = create({ icache }).properties<any>();
 
