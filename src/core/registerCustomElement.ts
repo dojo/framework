@@ -1,5 +1,5 @@
 import Registry from './Registry';
-import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator, isElementNode } from './vdom';
+import { create as vdomCreate, diffProperty, dom, invalidator, isElementNode, isTextNode, renderer, w } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
@@ -8,6 +8,7 @@ const RESERVED_PROPS = ['focus'];
 
 export enum CustomElementChildType {
 	DOJO = 'DOJO',
+	SLOTS = 'SLOTS',
 	NODE = 'NODE',
 	TEXT = 'TEXT'
 }
@@ -176,6 +177,8 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				}
 			}
 
+			const slots: any = {};
+
 			from(children).forEach((childNode: Node) => {
 				if (isElementNode(childNode)) {
 					const slotName = childNode.getAttribute('slot');
@@ -184,26 +187,34 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 						const slotArray = childNode.getAttribute('slot-array');
 
 						if (slotArray && slotArray.toLowerCase() === 'true') {
-							this._properties[slotName] = from(childNode.children).map((slotNode) => {
+							slots[slotName] = from(childNode.children).map((slotNode) => {
 								if (slotNode instanceof HTMLElement) {
 									childNode.removeChild(slotNode);
 									return w(DomToWidgetWrapper(slotNode), {});
 								}
 							});
 						} else if (childNode instanceof HTMLElement) {
-							this._properties[slotName] = w(DomToWidgetWrapper(childNode as HTMLElement), {});
+							slots[slotName] = w(DomToWidgetWrapper(childNode as HTMLElement), {});
 						}
+
+						this.removeChild(childNode);
+						this._childType = CustomElementChildType.SLOTS;
 					}
 				}
 
 				if (this._childType === CustomElementChildType.DOJO) {
 					childNode.addEventListener('dojo-ce-render', () => this._render());
 					childNode.addEventListener('dojo-ce-connected', () => this._render());
+
 					this._children.push(DomToWidgetWrapper(childNode as HTMLElement));
-				} else {
+				} else if (this._childType !== CustomElementChildType.SLOTS) {
 					this._children.push(dom({ node: childNode as HTMLElement, diffType: 'dom' }));
 				}
 			});
+
+			if (Object.keys(slots).length > 0) {
+				this._children.push(slots);
+			}
 
 			this.addEventListener('dojo-ce-connected', (e: any) => this._childConnected(e));
 
@@ -266,7 +277,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 		public __children__() {
 			if (this._childType === CustomElementChildType.DOJO) {
-				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
+				return this._children.filter((Child) => Child.domNode && Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
 					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
 				});
