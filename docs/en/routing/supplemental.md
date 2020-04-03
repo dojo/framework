@@ -156,7 +156,7 @@ const App = factory(function App() {
 });
 ```
 
-More words on the outlets and matcher capabilities.
+The node structure of the `App` looks good and succinctly represents the actual visual output for the user with minimal duplication, there still is a need to duplicate the the usage of the `Example` widget across to different routes. This can be solved by using the `matcher` property to override the default route matching rules. The `matcher` receives the `defaultMatches` and a `matchDetailsMap` in order to make custom matching decisions. In the final example below the usage of `Example` has been combined into a new `key`, `details` that does not exist as a route. This will never match for the outlet unless we override the default matches to set it to true when either the `example` or `overview` route has matched. Finally in the `details` renderer the example property has been defaulted to `overview` to maintain the same behavior as before.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -177,13 +177,13 @@ const App = factory(function App() {
 			<main>
 				<div>
 					<Outlet id="main" matcher={(defaultMatches, matchDetailsMap) => {
-						defaultMatches.widget = matchDetailsMap.has('example') || matchDetailsMap.has('overview');
+						defaultMatches.details = matchDetailsMap.has('example') || matchDetailsMap.has('overview');
 						return defaultMatches;
 					}}>
 						{{
 							landing: <Landing />,
 							tests: <Tests />,
-							widget: ({ params: { example = "overview" }}) => <Example example={example}/>,
+							details: ({ params: { example = "overview" }}) => <Example example={example}/>,
 						}}
 					</Outlet>
 				</div>
