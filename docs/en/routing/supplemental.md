@@ -328,7 +328,7 @@ export default [
 ```ts
 export default [
 	{
-		id: 'home,
+		id: 'home',
 		path: 'home/{page}',
 		outlet: 'home'
 	}

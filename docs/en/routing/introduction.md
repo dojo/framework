@@ -112,7 +112,7 @@ Path parameters are placeholders in the routing configuration that will match an
 ```ts
 export default [
 	{
-		id: 'home,
+		id: 'home',
 		path: 'home/{page}',
 		outlet: 'home'
 	}
