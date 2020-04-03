@@ -156,6 +156,48 @@ const App = factory(function App() {
 });
 ```
 
+More words on the outlets and matcher capabilities.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Outlet from '@dojo/framework/routing/Outlet';
+
+import Menu from './Menu';
+import SideMenu from './SideMenu';
+import Landing from './Landing';
+import Tests from './Tests';
+import Example from './Example';
+
+const factory = create();
+
+const App = factory(function App() {
+	return (
+		<div>
+			<Menu />
+			<main>
+				<div>
+					<Outlet id="main" matcher={(defaultMatches, matchDetailsMap) => {
+						defaultMatches.widget = matchDetailsMap.has('example') || matchDetailsMap.has('overview');
+						return defaultMatches;
+					}}>
+						{{
+							landing: <Landing />,
+							tests: <Tests />,
+							widget: ({ params: { example = "overview" }}) => <Example example={example}/>,
+						}}
+					</Outlet>
+				</div>
+				<div>
+					<Outlet id="side-menu">
+						{({ params: { widget }}) => <SideMenu widget={widget}>}
+					</Outlet>
+				</div>
+			</main>
+		</div>
+	);
+});
+```
+
 # Router API
 
 The Dojo Router exposes an API that can be used to generate and navigate to links, get the params for the current route and check if an route id has been matched.
