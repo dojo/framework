@@ -366,7 +366,7 @@ describe('test renderer', () => {
 						</div>
 					))
 				);
-			}, '\n<div>\n\t<ChildObjectFactory>\n\t\t{\n\t\t\ttop: (\n\t\t\t\ttop\n\t\t\t)\n\t\t\tbottom: (\n\t\t\t\tbottom\n\t\t\t)\n\t\t}\n\t</ChildObjectFactory>\n\t<ChildFunctionWidget>\n\t\tfunc\n\t</ChildFunctionWidget>\n\t<ChildObjectFactory>\n\t\t{\n\t\t\ttop: (\n\t\t\t\tparent-top\n\t\t\t)\n\t\t\tbottom: (\n\t\t\t\t<ChildFunctionWidget>\n\t\t\t\t\t<ChildObjectFactory>\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\ttop: (\n(A)\t\t\t\t\t\t\t\tnested-top-nested-function\n(E)\t\t\t\t\t\t\t\tnested-topper-nested-function\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t\tbottom: (\n(A)\t\t\t\t\t\t\t\tnested-bottom-parent-bottom\n(E)\t\t\t\t\t\t\t\tnested-bottom-parent-bottomer\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t}\n\t\t\t\t\t</ChildObjectFactory>\n\t\t\t\t</ChildFunctionWidget>\n\t\t\t)\n\t\t}\n\t</ChildObjectFactory>\n</div>');
+			});
 		});
 
 		it('Should use custom comparator for the template assertion', () => {
