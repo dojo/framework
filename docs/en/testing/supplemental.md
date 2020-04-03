@@ -27,7 +27,7 @@ const r = renderer(() => <MyWidget />);
 r.expect(baseTemplate);
 ```
 
-## The test renderer uses the location of a wrapped test node in the expected tree to attempt to perform the requested action (either `r.property()` or `r.child()`) on the actual output of the widget under test. If the wrapped test node does not match the corresponding node in the actual output tree then no action will be performed and the assertion will report a failure.
+## Wrapped Test Nodes
 
 In order for the test renderer and assertion templates to be able to identify nodes within the expected and actual node structure a special wrapping node must be used. The wrapped nodes can get used in place of the real node in the expected assertion template structure, maintaining all the correct property and children typings.
 
