@@ -699,4 +699,43 @@ describe('registerCustomElement', () => {
 			'<slot-array-element style="display: block;"><div><label slot="foo">test1</label><label slot="foo">test2</label></div></slot-array-element>'
 		);
 	});
+
+	it('ignores elements with no slots when at least one element has a slot', () => {
+		@customElement({
+			tag: 'ignore-slot-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('ignore-slot-element', CustomElement);
+
+		const element = document.createElement('ignore-slot-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+		const slotChild2 = document.createElement('label');
+		slotChild2.innerHTML = 'test2';
+
+		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<ignore-slot-element style="display: inline;"><label>test2</label><div><label slot="foo">test1</label></div></ignore-slot-element>'
+		);
+	});
 });
