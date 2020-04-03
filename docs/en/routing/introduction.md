@@ -22,6 +22,16 @@ export default [
 		id: 'home',
 		path: 'home',
 		outlet: 'main'
+	},
+	{
+		id: 'about',
+		path: 'about',
+		outlet: 'main'
+	},
+	{
+		id: 'profile',
+		path: 'profile',
+		outlet: 'main'
 	}
 ];
 ```
@@ -60,6 +70,31 @@ export default factory(function App() {
 	return (
 		<div>
 			<Route id="home" renderer={() => <div>Home</div>} />
+			<Route id="about" renderer={() => <div>About</div>} />
+			<Route id="profile" renderer={() => <div>Profile</div>} />
+		</div>
+	);
+});
+```
+
+or using outlets and the `Outlet` widget, check out the [`Outlet` documentation](/learn/routing/outlets) for more information;
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Outlet from '@dojo/framework/routing/Outlet';
+
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Outlet id="main">
+				{{
+					home: <div>Home</div>,
+					about: <div>About</div>,
+					profile: <div>Profile</div>
+				}}
+			</Outlet>
 		</div>
 	);
 });

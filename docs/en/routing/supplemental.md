@@ -59,6 +59,103 @@ This example would register the following paths and route ids:
 
 The `about-services` route has been registered to match any path after `/about` This is at odds with the other registered routes, `about-company` and `about-history`, however Dojo routing ensures that the correct routes is matched in these scenarios.
 
+# Outlets
+
+An outlet represents a visual location of an application that renderers different content depending which route has been matched. Using outlets reduces boilerplate required compared to using routes, multiple routes can be associated to the same outlet to more naturally and accurately structure the application output.
+
+Consider a typical application layout which includes a left side menu and a main content view that depending on the route has a right hand side bar:
+
+```
+-------------------------------------------------------------------
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+|  menu  |                   main                     | side-menu |
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+|        |                                            |           |
+-------------------------------------------------------------------
+```
+
+With a route configuration below that specifies all the main pages to the main content outlet, but the `widget` to a `side-menu` outlet. This enables building an application that constantly renders the main content depending on route, but also include a right hand side menu for all children routes of the `widget` route.
+
+```tsx
+const routes = [
+	{
+		id: 'landing',
+		path: '/',
+		outlet: 'main',
+		defaultRoute: true
+	},
+	{
+		id: 'widget',
+		path: 'widget/{widget}',
+		outlet: 'side-menu',
+		children: [
+			{
+				id: 'tests',
+				path: 'tests',
+				outlet: 'main'
+			},
+			{
+				id: 'overview',
+				path: 'overview',
+				outlet: 'main'
+			},
+			{
+				id: 'example'
+				path: 'example/{example}',
+				outlet: 'main'
+			}
+		]
+	}
+];
+```
+
+In the routing configuration above, there are two outlets defined, `main` and `side-menu` and a simplified application layout using outlets is shown below. By default the `Outlet` will render any of the keys that equal a route id that has been match for the outlet, in this case `main`. If a function is passed to the `Outlet` then it will render whenever _any_ route is matched for the outlet specified.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Outlet from '@dojo/framework/routing/Outlet';
+
+import Menu from './Menu';
+import SideMenu from './SideMenu';
+import Landing from './Landing';
+import Tests from './Tests';
+import Example from './Example';
+
+const factory = create();
+
+const App = factory(function App() {
+	return (
+		<div>
+			<Menu />
+			<main>
+				<div>
+					<Outlet id="main">
+						{{
+							landing: <Landing />,
+							tests: <Tests />,
+							example: ({ params: { example }}) => <Example example={example}/>,
+							overview: <Example example="overview"/>
+						}}
+					</Outlet>
+				</div>
+				<div>
+					<Outlet id="side-menu">
+						{({ params: { widget }}) => <SideMenu widget={widget}>}
+					</Outlet>
+				</div>
+			</main>
+		</div>
+	);
+});
+```
+
 # Router API
 
 The Dojo Router exposes an API that can be used to generate and navigate to links, get the params for the current route and check if an route id has been matched.
