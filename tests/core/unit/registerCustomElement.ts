@@ -671,7 +671,7 @@ describe('registerCustomElement', () => {
 			render() {
 				const child: any = this.children[0];
 
-				return v('div', {}, [child.foo]);
+				return v('div', {}, child.foo);
 			}
 		}
 
@@ -696,7 +696,7 @@ describe('registerCustomElement', () => {
 
 		assert.strictEqual(
 			element.outerHTML,
-			'<render-func-element style="display: block;"><div><label>test1</label><label>test2</label></div></render-func-element>'
+			'<slot-array-element style="display: block;"><div><label slot="foo">test1</label><label slot="foo">test2</label></div></slot-array-element>'
 		);
 	});
 });
