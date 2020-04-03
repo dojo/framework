@@ -7,7 +7,8 @@ import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
 import { w, create, getRegistry } from '../../../src/core/vdom';
 
-import harness from '../../../src/testing/harness';
+import renderer, { wrap } from '../../../src/testing/renderer';
+import assertionTemplate from '../../../src/testing/assertionTemplate';
 
 const registry = new Registry();
 
@@ -64,25 +65,28 @@ const mockGetRegistry = factory(() => {
 describe('ActiveLink', () => {
 	it('Should add and remove active class as the outlet match status changes', () => {
 		router.setPath('/other');
-		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }), {
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', undefined, null] }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: [], to: 'foo' }));
+		const WrappedLink = wrap(Link);
+		const template = assertionTemplate(() => w(WrappedLink, { classes: [], to: 'foo' }));
+		r.expect(template);
 		router.setPath('/foo');
-		h.expect(() => w(Link, { classes: ['foo', undefined, null], to: 'foo' }));
+		r.expect(template.setProperty(WrappedLink, 'classes', ['foo', undefined, null]));
 	});
 
 	it('Should render the ActiveLink children', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']), {
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
+		const template = assertionTemplate(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
+		r.expect(template);
 	});
 
 	it('Should render the ActiveLink children when matching query params', () => {
 		router.setPath('/query/path?query=query');
-		const h = harness(
+		const r = renderer(
 			() =>
 				w(ActiveLink, { to: 'query', params: { path: 'path', query: 'query' }, activeClasses: ['foo'] }, [
 					'hello'
@@ -91,48 +95,54 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		h.expect(() => w(Link, { classes: ['foo'], to: 'query', params: { path: 'path', query: 'query' } }, ['hello']));
+		const template = assertionTemplate(() =>
+			w(Link, { classes: ['foo'], to: 'query', params: { path: 'path', query: 'query' } }, ['hello'])
+		);
+		r.expect(template);
 	});
 
 	it('Should mix the active class onto existing string class when the outlet is active', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }), {
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
+		const template = assertionTemplate(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
+		r.expect(template);
 	});
 
 	it('Should mix the active class onto existing array of classes when the outlet is active', () => {
 		router.setPath('/foo');
-		const h = harness(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] }), {
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
+		const template = assertionTemplate(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
+		r.expect(template);
 	});
 
 	it('Should support changing the target outlet', () => {
 		router.setPath('/foo');
 
 		let properties: any = { to: 'foo', activeClasses: ['foo'] };
-
-		const h = harness(() => w(ActiveLink, properties), {
+		const WrappedLink = wrap(Link);
+		const r = renderer(() => w(ActiveLink, properties), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { to: 'foo', classes: ['foo'] }));
+		const template = assertionTemplate(() => w(WrappedLink, { to: 'foo', classes: ['foo'] }));
+		r.expect(template);
 
 		properties = { to: 'other', activeClasses: ['foo'] };
-		h.expect(() => w(Link, { to: 'other', classes: [] }));
+		r.expect(template.setProperties(WrappedLink, { to: 'other', classes: [] }));
 
 		router.setPath('/foo/bar');
-		h.expect(() => w(Link, { to: 'other', classes: [] }));
+		r.expect(template.setProperties(WrappedLink, { to: 'other', classes: [] }));
 
 		router.setPath('/other');
-		h.expect(() => w(Link, { to: 'other', classes: ['foo'] }));
+		r.expect(template.setProperties(WrappedLink, { to: 'other', classes: ['foo'] }));
 	});
 
 	it('Should look at route params when determining active', () => {
 		router.setPath('/param/one');
-		const h1 = harness(
+		const r1 = renderer(
 			() =>
 				w(ActiveLink, {
 					to: 'suffixed-param',
@@ -145,9 +155,11 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		h1.expect(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } }));
+		r1.expect(
+			assertionTemplate(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } }))
+		);
 
-		const h2 = harness(
+		const r2 = renderer(
 			() =>
 				w(ActiveLink, {
 					to: 'suffixed-param',
@@ -160,19 +172,19 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		h2.expect(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } }));
+		r2.expect(assertionTemplate(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } })));
 	});
 
 	it('Should be able to check for an exact match', () => {
 		router.setPath('/param/suffix');
-		let h = harness(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'] }), {
+		let r = renderer(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'] }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: ['foo'], to: 'param' }));
+		r.expect(assertionTemplate(() => w(Link, { classes: ['foo'], to: 'param' })));
 
-		h = harness(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'], isExact: true }), {
+		r = renderer(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'], isExact: true }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => w(Link, { classes: [], to: 'param' }));
+		r.expect(assertionTemplate(() => w(Link, { classes: [], to: 'param' })));
 	});
 });

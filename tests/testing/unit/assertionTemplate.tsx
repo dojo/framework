@@ -1,11 +1,11 @@
-const { describe, it, after, afterEach } = intern.getInterface('bdd');
+const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
-import { stub } from 'sinon';
 
-import { harness } from '../../../src/testing/harness';
+import { renderer, wrap } from '../../../src/testing/renderer';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx, create } from '../../../src/core/vdom';
 import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
+import { DNode } from '../../../src/core/interfaces';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
@@ -45,11 +45,16 @@ class MyWidget extends WidgetBase<{
 	}
 }
 
+const WrappedRoot = wrap('div');
+const WrappedHeader = wrap('h2');
+const WrappedList = wrap('ul');
+const WrappedListItem = wrap('li');
+
 const baseAssertion = assertionTemplate(() =>
-	v('div', { '~key': 'root', classes: ['root'] }, [
-		v('h2', { '~key': 'header' }, ['hello']),
+	v(WrappedRoot.tag, { classes: ['root'] }, [
+		v(WrappedHeader.tag, {}, ['hello']),
 		undefined,
-		v('ul', [v('li', { '~key': 'li-one', foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
+		v(WrappedList.tag, [v(WrappedListItem.tag, { foo: 'a' }, ['one']), v('li', ['two']), v('li', ['three'])]),
 		undefined
 	])
 );
@@ -64,7 +69,7 @@ class ListWidget extends WidgetBase {
 	}
 }
 
-const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v('ul', [])]));
+const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v(WrappedList.tag, [])]));
 
 class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 	render() {
@@ -80,114 +85,122 @@ class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 	}
 }
 
+const WrappedFirst = wrap('div');
+const WrappedSecond = wrap('div');
+
 const baseMultiRootAssertion = assertionTemplate(() => [
-	v('div', { '~key': 'first' }, ['first']),
-	v('div', { '~key': 'last' }, ['last'])
+	v(WrappedFirst.tag, ['first']),
+	v(WrappedSecond.tag, ['last'])
 ]);
 
 const tsxAssertion = assertionTemplate(() => (
 	<div classes={['root']}>
 		<h2>hello</h2>
 		<ul>
-			<li assertion-key="li-one" foo="a">
-				one
-			</li>
+			<WrappedListItem foo="a">one</WrappedListItem>
 			<li>two</li>
 			<li>three</li>
 		</ul>
 	</div>
 ));
 
-let consoleStub = stub(console, 'warn');
-
-describe('assertionTemplate', () => {
-	afterEach(() => {
-		consoleStub.resetHistory();
-	});
-
-	after(() => {
-		consoleStub.restore();
-	});
-
+describe('new/assertionTemplate', () => {
 	it('can get a property', () => {
-		const classes = baseAssertion.getProperty('~root', 'classes');
+		const classes = baseAssertion.getProperty(WrappedRoot, 'classes');
 		assert.deepEqual(classes, ['root']);
 	});
 
 	it('can get properties', () => {
-		const properties = baseAssertion.getProperties('~root');
-		assert.deepEqual(properties, { '~key': 'root', classes: ['root'] });
+		const properties = baseAssertion.getProperties(WrappedRoot);
+		assert.deepEqual(properties, { classes: ['root'] });
 	});
 
 	it('can get a child', () => {
-		const children = baseAssertion.getChildren('~header');
-		assert.equal(children[0], 'hello');
+		const children = baseAssertion.getChildren(WrappedHeader);
+		// TODO this is pony
+		assert.equal(Array.isArray(children) ? children[0] : children, 'hello');
 	});
 
 	it('can assert a base assertion', () => {
-		const h = harness(() => w(MyWidget, {}));
-		h.expect(baseAssertion);
+		const r = renderer(() => w(MyWidget, {}));
+		r.expect(baseAssertion);
 	});
 
 	it('can set a property', () => {
-		const h = harness(() => w(MyWidget, { toggleProperty: true }));
-		const propertyAssertion = baseAssertion.setProperty('~li-one', 'foo', 'b');
-		h.expect(propertyAssertion);
+		const r = renderer(() => w(MyWidget, { toggleProperty: true }));
+		r.expect(baseAssertion.setProperty(WrappedListItem, 'foo', 'b'));
 	});
 
 	it('can set properties', () => {
-		const h = harness(() => w(MyWidget, { toggleProperty: true }));
-		const propertyAssertion = baseAssertion.setProperties('~li-one', { foo: 'b' });
-		h.expect(propertyAssertion);
+		const r = renderer(() => w(MyWidget, { toggleProperty: true }));
+		r.expect(baseAssertion.setProperties(WrappedListItem, { foo: 'b' }));
+	});
+
+	it('can set properties on a widget', () => {
+		class MyClassWidget extends WidgetBase<{ foo: string; bar?: number }> {}
+		const MyFunctionWidget = create().properties<{ foo: string; bar?: number }>()(function MyFunctionWidget() {
+			return 'test';
+		});
+		const MyWidget = create()(function MyWidget() {
+			return (
+				<div>
+					<MyClassWidget foo="foo" bar={1} />
+					<MyFunctionWidget foo="foo" bar={1} />
+				</div>
+			);
+		});
+		const WrappedClassWidget = wrap(MyClassWidget);
+		const WrappedFunctionWidget = wrap(MyFunctionWidget);
+		const template = assertionTemplate(() => (
+			<div>
+				<WrappedClassWidget foo="bar" bar={2} />
+				<WrappedFunctionWidget foo="bar" bar={2} />
+			</div>
+		));
+
+		const r = renderer(() => <MyWidget />);
+		const updatedTemplate = template
+			.setProperty(WrappedClassWidget, 'foo', 'foo')
+			// type error as property type is not correct
+			// .setProperty(WrappedClassWidget, 'foo', 1)
+			.setProperty(WrappedClassWidget, 'bar', 1)
+			.setProperty(WrappedFunctionWidget, 'foo', 'foo')
+			.setProperty(WrappedFunctionWidget, 'bar', 1);
+
+		r.expect(updatedTemplate);
 	});
 
 	it('can set properties and use the actual properties', () => {
-		const h = harness(() => w(MyWidget, { toggleProperty: true }));
-		const propertyAssertion = baseAssertion.setProperties('~li-one', (actualProps: any) => {
+		const propertyAssertion = baseAssertion.setProperties(WrappedListItem, (actualProps: any) => {
 			return actualProps;
 		});
-		h.expect(propertyAssertion);
+		const r = renderer(() => w(MyWidget, { toggleProperty: true }));
+		r.expect(propertyAssertion);
 	});
 
 	it('can remove a node', () => {
-		const h = harness(() => w(MyWidget, { removeHeader: true }));
-		const childAssertion = baseAssertion.remove('~header');
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { removeHeader: true }));
+		r.expect(baseAssertion.remove(WrappedHeader));
 	});
 
 	it('can remove a node in the root', () => {
-		const h = harness(() => w(MultiRootWidget, { last: false }));
-		const insertionAssertion = baseMultiRootAssertion.remove('~last');
-		h.expect(insertionAssertion);
+		const r = renderer(() => w(MultiRootWidget, { last: false }));
+		r.expect(baseMultiRootAssertion.remove(WrappedSecond));
 	});
 
 	it('can replace a node', () => {
-		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.replace('~header', v('h2', ['replace']));
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { replaceChild: true }));
+		r.expect(baseAssertion.replace(WrappedHeader, v('h2', ['replace'])));
 	});
 
 	it('can replace a node in the root', () => {
-		const h = harness(() => w(MyWidget, { removeHeader: true, before: true }));
-		const childAssertion = baseAssertion.replace('~header', v('span', ['before']));
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { removeHeader: true, before: true }));
+		r.expect(baseAssertion.replace(WrappedHeader, v('span', ['before'])));
 	});
 
 	it('can set a child', () => {
-		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', ['replace']);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set a child with a factory function', () => {
-		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.setChildren('~header', () => ['replace']);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { replaceChild: true }));
+		r.expect(baseAssertion.setChildren(WrappedHeader, () => ['replace']));
 	});
 
 	it('children set should be immutable', () => {
@@ -210,146 +223,87 @@ describe('assertionTemplate', () => {
 			);
 		});
 
-		const baseAssertion = assertionTemplate(() => v('div', { key: 'parent', classes: ['root'] }, []));
+		const WrappedParent = wrap('div');
+		const WrappedChild = wrap('div');
 
-		const childAssertion = baseAssertion.setChildren('@parent', () => [<div key="child">hello</div>]);
+		const baseAssertion = assertionTemplate(() => v(WrappedParent.tag, { key: 'parent', classes: ['root'] }, []));
 
-		const h = harness(() => w(Widget, {}));
-		const h1 = harness(() => w(WidgetWithProps, {}));
-		h.expect(childAssertion);
-		const propertyAssertion = childAssertion.setProperty('@child', 'disabled', true);
-		h1.expect(propertyAssertion);
-		h.expect(childAssertion);
+		const childAssertion = baseAssertion.setChildren(WrappedParent, () => [
+			<WrappedChild key="child">hello</WrappedChild>
+		]);
+
+		const r = renderer(() => w(Widget, {}));
+		r.expect(childAssertion);
+		const h1 = renderer(() => w(WidgetWithProps, {}));
+		h1.expect(childAssertion.setProperty(WrappedChild, 'disabled', true));
+		r.expect(childAssertion);
 	});
 
 	it('can set a child with replace', () => {
-		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.replaceChildren('~header', ['replace']);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set a child with replace with a factory function', () => {
-		const h = harness(() => w(MyWidget, { replaceChild: true }));
-		const childAssertion = baseAssertion.replaceChildren('~header', () => ['replace']);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { replaceChild: true }));
+		r.expect(baseAssertion.replaceChildren(WrappedHeader, () => ['replace']));
 	});
 
 	it('can set a child with prepend', () => {
-		const h = harness(() => w(MyWidget, { prependChild: true }));
-		const childAssertion = baseAssertion.prepend('~header', ['prepend']);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set a child with prepend with a factory function', () => {
-		const h = harness(() => w(MyWidget, { prependChild: true }));
-		const childAssertion = baseAssertion.prepend('~header', () => ['prepend']);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { prependChild: true }));
+		r.expect(baseAssertion.prepend(WrappedHeader, () => ['prepend']));
 	});
 
 	it('can set a child with append', () => {
-		const h = harness(() => w(MyWidget, { appendChild: true }));
-		const childAssertion = baseAssertion.append('~header', ['append']);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set a child with append with a factory function', () => {
-		const h = harness(() => w(MyWidget, { appendChild: true }));
-		const childAssertion = baseAssertion.append('~header', () => ['append']);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { appendChild: true }));
+		r.expect(baseAssertion.append(WrappedHeader, () => ['append']));
 	});
 
 	it('can set children after with insert', () => {
-		const h = harness(() => w(MyWidget, { after: true }));
-		const childAssertion = baseAssertion.insertAfter('ul', [v('span', ['after'])]);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set children after with insert with a factory function', () => {
-		const h = harness(() => w(MyWidget, { after: true }));
-		const childAssertion = baseAssertion.insertAfter('ul', () => [v('span', ['after'])]);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { after: true }));
+		r.expect(baseAssertion.insertAfter(WrappedList, () => [v('span', ['after'])]));
 	});
 
 	it('can insert after a node in the root', () => {
-		const h = harness(() => w(MultiRootWidget, { after: true }));
-		const insertionAssertion = baseMultiRootAssertion.insertAfter('~first', () => [v('div', {}, ['after'])]);
-		h.expect(insertionAssertion);
+		const insertionAssertion = baseMultiRootAssertion.insertAfter(WrappedFirst, () => [v('div', {}, ['after'])]);
+		const r = renderer(() => w(MultiRootWidget, { after: true }));
+		r.expect(insertionAssertion);
 	});
 
 	it('can set children before with insert', () => {
-		const h = harness(() => w(MyWidget, { before: true }));
-		const childAssertion = baseAssertion.insertBefore('ul', [v('span', ['before'])]);
-		assert.isTrue(consoleStub.calledOnce);
-		assert.strictEqual(
-			consoleStub.firstCall.args[0],
-			'The array API (`children: DNode[]`) has been deprecated. Working with children should use a factory to avoid issues with mutation.'
-		);
-		h.expect(childAssertion);
-	});
-
-	it('can set children before with insert with a factory function', () => {
-		const h = harness(() => w(MyWidget, { before: true }));
-		const childAssertion = baseAssertion.insertBefore('ul', () => [v('span', ['before'])]);
-		h.expect(childAssertion);
+		const r = renderer(() => w(MyWidget, { before: true }));
+		r.expect(baseAssertion.insertBefore(WrappedList, () => [v('span', ['before'])]));
 	});
 
 	it('can be used with tsx', () => {
-		const h = harness(() => <MyWidget toggleProperty={true} />);
-		const propertyAssertion = tsxAssertion.setProperty('~li-one', 'foo', 'b');
-		h.expect(propertyAssertion);
+		const r = renderer(() => <MyWidget toggleProperty={true} />);
+		r.expect(tsxAssertion.setProperty(WrappedListItem, 'foo', 'b'));
 	});
 
 	it('should throw an error when selector is not found', () => {
-		const h = harness(() => w(MyWidget, {}));
-		assert.throws(
-			() => h.expect(baseAssertion.setProperty('~cant-spell', 'foo', 'b')),
-			'Node not found for selector "~cant-spell"'
-		);
+		const UnknownWrapped = wrap('unknown');
+		const r = renderer(() => w(MyWidget, {}));
+		assert.throws(() => r.expect(baseAssertion.setProperty(UnknownWrapped, 'foo', 'b')), 'Unable to find node');
 	});
 
 	it('can use ignore', () => {
-		const h = harness(() => w(ListWidget, {}));
-		const nodes = [];
+		const nodes: DNode[] = [];
 		for (let i = 0; i < 28; i++) {
 			nodes.push(w(Ignore, {}));
 		}
-		const childListAssertion = baseListAssertion.replaceChildren('ul', [
+		const childListAssertion = baseListAssertion.replaceChildren(WrappedList, () => [
 			v('li', ['item: 0']),
 			...nodes,
 			v('li', ['item: 29'])
 		]);
-		h.expect(childListAssertion);
+		const r = renderer(() => w(ListWidget, {}));
+		r.expect(childListAssertion);
 	});
 
 	it('should be immutable', () => {
 		const fooAssertion = baseAssertion
-			.setChildren(':root', ['foo'])
-			.setProperty(':root', 'foo', true)
-			.setProperty(':root', 'bar', false);
+			.setChildren(WrappedRoot, () => ['foo'])
+			.setProperty(WrappedRoot, 'foo', true)
+			.setProperty(WrappedRoot, 'bar', false);
 		const barAssertion = fooAssertion
-			.setChildren(':root', ['bar'])
-			.setProperty(':root', 'foo', false)
-			.setProperty(':root', 'bar', true);
+			.setChildren(WrappedRoot, () => ['bar'])
+			.setProperty(WrappedRoot, 'foo', false)
+			.setProperty(WrappedRoot, 'bar', true);
 
 		const foo = fooAssertion() as any;
 		const bar = barAssertion() as any;

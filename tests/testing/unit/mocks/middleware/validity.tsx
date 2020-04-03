@@ -5,7 +5,8 @@ const { assert } = intern.getPlugin('chai');
 import { tsx, create } from '../../../../../src/core/vdom';
 import validity from '../../../../../src/core/middleware/validity';
 import createValidityMock from '../../../../../src/testing/mocks/middleware/validity';
-import harness from '../../../../../src/testing/harness';
+import renderer from '../../../../../src/testing/renderer';
+import assertionTemplate from '../../../../../src/testing/assertionTemplate';
 
 describe('validity mock', () => {
 	it('should mock validity', () => {
@@ -17,12 +18,12 @@ describe('validity mock', () => {
 		});
 
 		validityMock('test', { valid: false, message: 'test message' });
-		let h = harness(() => <App />, { middleware: [[validity, validityMock]] });
-		h.expect(() => <div>test message</div>);
+		let r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
+		r.expect(assertionTemplate(() => <div>test message</div>));
 
 		validityMock('test', { valid: true, message: '' });
-		h = harness(() => <App />, { middleware: [[validity, validityMock]] });
-		h.expect(() => <div>valid</div>);
+		r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
+		r.expect(assertionTemplate(() => <div>valid</div>));
 	});
 
 	it('defaults to a default return value', () => {
@@ -35,7 +36,7 @@ describe('validity mock', () => {
 			return !valid ? <div>{message}</div> : <div>valid</div>;
 		});
 
-		let h = harness(() => <App />, { middleware: [[validity, validityMock]] });
-		h.expect(() => <div />);
+		const r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
+		r.expect(assertionTemplate(() => <div />));
 	});
 });

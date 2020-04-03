@@ -1,5 +1,5 @@
-import './harness';
-import './harnessWithTsx';
-import './mocks/middleware/all';
+import './harness/all';
 import './assertionTemplate';
-import './support/all';
+import './assertRender';
+import './renderer';
+import './mocks/middleware/all';

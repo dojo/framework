@@ -1,0 +1,545 @@
+const { describe, it } = intern.getInterface('bdd');
+const { assert } = intern.getPlugin('chai');
+
+import { renderer, wrap, compare } from '../../../src/testing/renderer';
+import assertionTemplate from '../../../src/testing/assertionTemplate';
+import { WidgetBase } from '../../../src/core/WidgetBase';
+import { v, w, create, tsx, diffProperty, invalidator } from '../../../src/core/vdom';
+import Set from '../../../src/shim/Set';
+import Map from '../../../src/shim/Map';
+import { WNode, WidgetProperties, RenderResult } from '../../../src/core/interfaces';
+import icache from '../../../src/core/middleware/icache';
+import { uuid } from '../../../src/core/util';
+
+const noop: any = () => {};
+
+class ChildWidget extends WidgetBase<{ id: string; func?: () => void }> {}
+
+class MyWidget extends WidgetBase {
+	_count = 0;
+	_result = 'result';
+	_onclick() {
+		this._count++;
+		this.invalidate();
+	}
+
+	_otherOnClick(count: any = 50) {
+		this._count = count;
+		this.invalidate();
+	}
+
+	_widgetFunction() {
+		this._result = `${this._result}-result`;
+		this.invalidate();
+	}
+
+	// prettier-ignore
+	protected render() {
+		return v('div', { classes: ['root', 'other'], onclick: this._otherOnClick }, [
+			v('span', {
+				key: 'span',
+				classes: 'span',
+				style: 'width: 100px',
+				id: 'random-id',
+				onclick: this._onclick
+			}, [
+				`hello ${this._count}`
+			]),
+			this._result,
+			w(ChildWidget, { key: 'widget', id: 'random-id', func: this._widgetFunction }),
+			w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+		]);
+	}
+}
+
+class MyDeferredWidget extends WidgetBase {
+	// prettier-ignore
+	protected render() {
+		return v('div', (inserted: boolean) => {
+			return { classes: ['root', 'other'], styles: { marginTop: '100px' } };
+		});
+	}
+}
+
+describe('test renderer', () => {
+	describe('widget with a single top level DNode', () => {
+		it('expect', () => {
+			const baseAssertion = assertionTemplate(() =>
+				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+					v(
+						'span',
+						{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+						['hello 0']
+					),
+					'result',
+					w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+					w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+				])
+			);
+
+			const r = renderer(() => w(MyWidget, {}));
+			r.expect(baseAssertion);
+		});
+
+		it('Should support deferred properties', () => {
+			const r = renderer(() => w(MyDeferredWidget, {}));
+			r.expect(assertionTemplate(() => v('div', { classes: ['root', 'other'], styles: { marginTop: '100px' } })));
+		});
+
+		it('Should support widgets that have typed children', () => {
+			class WidgetWithTypedChildren extends WidgetBase<WidgetProperties, WNode<MyDeferredWidget>> {}
+			const r = renderer(() => w(WidgetWithTypedChildren, {}, [w(MyDeferredWidget, {})]));
+			r.expect(assertionTemplate(() => v('div', [w(MyDeferredWidget, {})])));
+		});
+
+		it('trigger property of wrapped node', () => {
+			const WrappedDiv = wrap('div');
+			const baseTemplate = assertionTemplate(() =>
+				v(WrappedDiv.tag, { classes: ['root', 'other'], onclick: () => {} }, [
+					v(
+						'span',
+						{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+						['hello 0']
+					),
+					'result',
+					w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+					w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+				])
+			);
+			const r = renderer(() => w(MyWidget, {}));
+			r.expect(baseTemplate);
+
+			r.property(WrappedDiv, 'onclick');
+			r.expect(
+				assertionTemplate(() =>
+					v(WrappedDiv.tag, { classes: ['root', 'other'], onclick: () => {} }, [
+						v(
+							'span',
+							{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+							['hello 50']
+						),
+						'result',
+						w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+						w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+					])
+				)
+			);
+			r.property(WrappedDiv, 'onclick', [100]);
+			r.expect(
+				assertionTemplate(() =>
+					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+						v(
+							'span',
+							{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+							['hello 100']
+						),
+						'result',
+						w(ChildWidget, { key: 'widget', id: 'random-id', func: noop }),
+						w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+					])
+				)
+			);
+		});
+
+		it('trigger property of wrapped widget', () => {
+			const WrappedChild = wrap(ChildWidget);
+			const baseTemplate = assertionTemplate(() =>
+				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+					v(
+						'span',
+						{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+						['hello 0']
+					),
+					'result',
+					w(WrappedChild, { key: 'widget', id: compare(() => true), func: noop }),
+					w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+				])
+			);
+			const r = renderer(() => w(MyWidget, {}));
+			r.expect(baseTemplate);
+			r.property(WrappedChild, 'func');
+			r.expect(
+				assertionTemplate(() =>
+					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+						v(
+							'span',
+							{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+							['hello 0']
+						),
+						'result-result',
+						w(WrappedChild, { key: 'widget', id: 'random-id', func: noop }),
+						w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+					])
+				)
+			);
+			r.property(WrappedChild, 'func');
+			r.expect(
+				assertionTemplate(() =>
+					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
+						v(
+							'span',
+							{ key: 'span', classes: 'span', style: 'width: 100px', id: 'random-id', onclick: () => {} },
+							['hello 0']
+						),
+						'result-result-result',
+						w(WrappedChild, { key: 'widget', id: 'random-id', func: noop }),
+						w<ChildWidget>('registry-item', { key: 'registry', id: 'random-id' })
+					])
+				)
+			);
+		});
+
+		it('should trigger properties in the correct order', () => {
+			const factory = create({ icache });
+
+			const MyWidget = factory(function MyWidget({ middleware: { icache } }) {
+				const name = icache.getOrSet('name', 'Dojo');
+				const inputValue = icache.getOrSet('input', '');
+				return (
+					<div>
+						<button
+							disabled={!inputValue}
+							onclick={() => {
+								icache.set('name', icache.get('input'));
+								icache.set('input', '');
+							}}
+						>
+							Update Name
+						</button>
+						<input
+							value={inputValue}
+							oninput={(event) => {
+								const value = (event.target as HTMLInputElement).value;
+								icache.set('input', value);
+							}}
+						/>
+						<span>hello, </span>
+						<span>{name}</span>
+					</div>
+				);
+			});
+
+			const r = renderer(() => <MyWidget />);
+
+			const WrappedInput = wrap('input');
+			const WrappedButton = wrap('button');
+			const WrappedSpan = wrap('span');
+
+			const template = assertionTemplate(() => (
+				<div>
+					<WrappedButton disabled={true} onclick={() => {}}>
+						Update Name
+					</WrappedButton>
+					<WrappedInput value="" oninput={() => {}} />
+					<span>hello, </span>
+					<WrappedSpan>Dojo</WrappedSpan>
+				</div>
+			));
+			r.expect(template);
+
+			const nameTemplate = template.replaceChildren(WrappedSpan, () => ['Dojo.io']);
+
+			r.property(WrappedInput, 'oninput', { target: { value: 'Dojo.io' } });
+			r.property(WrappedButton, 'onclick');
+			r.expect(nameTemplate);
+		});
+
+		it('should throw error when property used before first expect', () => {
+			const WrappedDiv = wrap('div');
+			const r = renderer(() => w(MyWidget, {}));
+			assert.throws(() => {
+				r.property(WrappedDiv, 'onclick');
+			}, 'To use `.property` please perform an initial expect');
+		});
+
+		it('resolve functional children', () => {
+			const childFunctionFactory = create().children<(value: string) => RenderResult>();
+
+			const ChildFunctionWidget = childFunctionFactory(function ChildFunctionWidget() {
+				return '';
+			});
+
+			const childObjectFactory = create().children<{
+				top: (value: string) => RenderResult;
+				bottom: (value: string) => RenderResult;
+			}>();
+
+			const ChildObjectFactory = childObjectFactory(function ChildObjectFactory() {
+				return '';
+			});
+
+			const factory = create();
+
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<ChildObjectFactory>{{ top: (value) => value, bottom: (value) => value }}</ChildObjectFactory>
+						<ChildFunctionWidget>{(value) => value}</ChildFunctionWidget>
+						<ChildObjectFactory>
+							{{
+								top: (parentTop) => parentTop,
+								bottom: (parentBottom) => (
+									<ChildFunctionWidget>
+										{(childValue) => (
+											<ChildObjectFactory>
+												{{
+													top: (value) => `${value}-${childValue}`,
+													bottom: (value) => `${value}-${parentBottom}`
+												}}
+											</ChildObjectFactory>
+										)}
+									</ChildFunctionWidget>
+								)
+							}}
+						</ChildObjectFactory>
+					</div>
+				);
+			});
+
+			const WrappedChildObjectFactory = wrap(ChildObjectFactory);
+			const WrappedChildFunctionWidget = wrap(ChildFunctionWidget);
+
+			const WrappedParentChildObjectFactory = wrap(ChildObjectFactory);
+			const WrappedNestedChildFunctionWidget = wrap(ChildFunctionWidget);
+			const WrappedNestedChildObjectFactory = wrap(ChildObjectFactory);
+			const r = renderer(() => <MyWidget />);
+
+			r.child(WrappedChildObjectFactory, { top: ['top'], bottom: ['bottom'] });
+			r.child(WrappedChildFunctionWidget, ['func']);
+			r.child(WrappedParentChildObjectFactory, { top: ['parent-top'], bottom: ['parent-bottom'] });
+			r.child(WrappedNestedChildObjectFactory, { top: ['nested-top'], bottom: ['nested-bottom'] });
+			r.child(WrappedNestedChildFunctionWidget, ['nested-function']);
+
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<WrappedChildObjectFactory>
+							{{ top: () => 'top', bottom: () => 'bottom' }}
+						</WrappedChildObjectFactory>
+						<WrappedChildFunctionWidget>{() => 'func'}</WrappedChildFunctionWidget>
+						<WrappedParentChildObjectFactory>
+							{{
+								top: () => 'parent-top',
+								bottom: () => (
+									<WrappedNestedChildFunctionWidget>
+										{() => (
+											<WrappedNestedChildObjectFactory>
+												{{
+													top: () => 'nested-top-nested-function',
+													bottom: () => 'nested-bottom-parent-bottom'
+												}}
+											</WrappedNestedChildObjectFactory>
+										)}
+									</WrappedNestedChildFunctionWidget>
+								)
+							}}
+						</WrappedParentChildObjectFactory>
+					</div>
+				))
+			);
+
+			assert.throws(() => {
+				r.expect(
+					assertionTemplate(() => (
+						<div>
+							<WrappedChildObjectFactory>
+								{{ top: () => 'top', bottom: () => 'bottom' }}
+							</WrappedChildObjectFactory>
+							<WrappedChildFunctionWidget>{() => 'func'}</WrappedChildFunctionWidget>
+							<WrappedParentChildObjectFactory>
+								{{
+									top: () => 'parent-top',
+									bottom: () => (
+										<WrappedNestedChildFunctionWidget>
+											{() => (
+												<WrappedNestedChildObjectFactory>
+													{{
+														top: () => 'nested-topper-nested-function',
+														bottom: () => 'nested-bottom-parent-bottomer'
+													}}
+												</WrappedNestedChildObjectFactory>
+											)}
+										</WrappedNestedChildFunctionWidget>
+									)
+								}}
+							</WrappedParentChildObjectFactory>
+						</div>
+					))
+				);
+			}, '\n<div>\n\t<ChildObjectFactory>\n\t\t{\n\t\t\ttop: (\n\t\t\t\ttop\n\t\t\t)\n\t\t\tbottom: (\n\t\t\t\tbottom\n\t\t\t)\n\t\t}\n\t</ChildObjectFactory>\n\t<ChildFunctionWidget>\n\t\tfunc\n\t</ChildFunctionWidget>\n\t<ChildObjectFactory>\n\t\t{\n\t\t\ttop: (\n\t\t\t\tparent-top\n\t\t\t)\n\t\t\tbottom: (\n\t\t\t\t<ChildFunctionWidget>\n\t\t\t\t\t<ChildObjectFactory>\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\ttop: (\n(A)\t\t\t\t\t\t\t\tnested-top-nested-function\n(E)\t\t\t\t\t\t\t\tnested-topper-nested-function\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t\tbottom: (\n(A)\t\t\t\t\t\t\t\tnested-bottom-parent-bottom\n(E)\t\t\t\t\t\t\t\tnested-bottom-parent-bottomer\n\t\t\t\t\t\t\t)\n\t\t\t\t\t\t}\n\t\t\t\t\t</ChildObjectFactory>\n\t\t\t\t</ChildFunctionWidget>\n\t\t\t)\n\t\t}\n\t</ChildObjectFactory>\n</div>');
+		});
+
+		it('Should use custom comparator for the template assertion', () => {
+			const factory = create();
+			const WrappedSpan = wrap('span');
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<span id={uuid()} />
+					</div>
+				);
+			});
+			const r = renderer(() => <MyWidget />);
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<WrappedSpan id={compare((actual) => typeof actual === 'string')} />
+					</div>
+				))
+			);
+		});
+
+		it('Should fail with an unsuccessful custom compare', () => {
+			const factory = create();
+			const WrappedSpan = wrap('span');
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<span id={uuid()} />
+					</div>
+				);
+			});
+			const r = renderer(() => <MyWidget />);
+			assert.throws(() => {
+				r.expect(
+					assertionTemplate(() => (
+						<div>
+							<WrappedSpan id={compare((actual) => typeof actual !== 'string')} />
+						</div>
+					))
+				);
+			});
+		});
+
+		it('Support Maps and Sets in properties', () => {
+			class Bar extends WidgetBase<{ foo: Map<any, any>; bar: Set<any> }> {}
+			class Foo extends WidgetBase<{ foo: Map<any, any>; bar: Set<any> }> {
+				render() {
+					const { foo, bar } = this.properties;
+					return w(Bar, { foo, bar });
+				}
+			}
+			const bar = new Set();
+			bar.add('foo');
+			const foo = new Map();
+			foo.set('a', 'a');
+			const r = renderer(() => w(Foo, { foo, bar }));
+			r.expect(assertionTemplate(() => w(Bar, { foo, bar })));
+		});
+	});
+
+	describe('functional widgets', () => {
+		it('should inject invalidator mock', () => {
+			const factory = create({ icache });
+
+			const App = factory(({ middleware: { icache } }) => {
+				const counter = icache.get<number>('counter') || 0;
+				return (
+					<div>
+						<button
+							key="click-me"
+							onclick={() => {
+								const counter = icache.get<number>('counter') || 0;
+								icache.set('counter', counter + 1);
+							}}
+						>{`Click Me ${counter}`}</button>
+					</div>
+				);
+			});
+			const WrappedButton = wrap('button');
+			const r = renderer(() => <App />);
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<WrappedButton key="click-me" onclick={() => {}}>
+							Click Me 0
+						</WrappedButton>
+					</div>
+				))
+			);
+			r.property(WrappedButton, 'onclick');
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me" onclick={() => {}}>
+							Click Me 1
+						</button>
+					</div>
+				))
+			);
+		});
+
+		it('should run diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator });
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator } }) => {
+				diffProperty('key', () => {
+					id++;
+					invalidator();
+				});
+				return (
+					<div>
+						<button key="click-me">{`Click Me ${id}`}</button>
+					</div>
+				);
+			});
+			const r = renderer(() => <App />);
+
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me">Click Me 0</button>
+					</div>
+				))
+			);
+
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me">Click Me 1</button>
+					</div>
+				))
+			);
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me">Click Me 2</button>
+					</div>
+				))
+			);
+		});
+
+		it('should support conditional logic in diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator });
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator }, properties }) => {
+				diffProperty('key', (prev: any, current: any) => {
+					if (prev.key === 'app' && current.key === 'app') {
+						id++;
+						invalidator();
+					}
+				});
+				return (
+					<div>
+						<button key="click-me">{`${properties().key} ${id}`}</button>
+					</div>
+				);
+			});
+			const r = renderer(() => <App key="app" />);
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me">app 0</button>
+					</div>
+				))
+			);
+			r.expect(
+				assertionTemplate(() => (
+					<div>
+						<button key="click-me">app 1</button>
+					</div>
+				))
+			);
+		});
+	});
+});

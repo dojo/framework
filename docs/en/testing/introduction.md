@@ -41,7 +41,7 @@ dojo test --functional --config local
 
 ## Writing unit tests
 
--   Using Dojo's [`harness` API](/learn/testing/dojo-test-harness#harness-api) for unit testing widgets.
+-   Using Dojo's [test `renderer` API](/learn/testing/test-renderer) for unit testing widgets.
 
 > src/widgets/Home.tsx
 
@@ -63,8 +63,7 @@ export default Home;
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertionTemplate } from '@dojo/framework/testing/renderer';
 
 import Home from '../../../src/widgets/Home';
 import * as css from '../../../src/widgets/Home.m.css';
@@ -73,13 +72,13 @@ const baseTemplate = assertionTemplate(() => <h1 classes={[css.root]}>Home Page<
 
 describe('Home', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => <Home />);
-		h.expect(baseTemplate);
+		const r = renderer(() => <Home />);
+		r.expect(baseTemplate);
 	});
 });
 ```
 
-The `harness` API allows you to verify that the output of a rendered widget is what you expect.
+The `renderer` API allows you to verify that the output of a rendered widget is what you expect.
 
 -   Does it render as expected?
 -   Do event handlers work as expected?
@@ -149,53 +148,66 @@ export default Profile;
 
 > tests/unit/widgets/Profile.tsx
 
-```ts
+```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
 import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import harness from '@dojo/framework/testing/harness';
+import renderer from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
 
 // Create an assertion
+const profileAssertion = assertionTemplate(() => <h1 classes={[css.root]}>Welcome Stranger!</h1>);
+
+describe('Profile', () => {
+	it('default renders correctly', () => {
+		const r = renderer(() => <Profile />);
+		// Test against my base assertion
+		r.expect(profileAssertion);
+	});
+});
+```
+
+To work with assertion templates, wrapped nodes can get created using `@dojo/framework/testing/renderer#wrap` in order to use the assertion template API. Note: when using wrapped `VNode`s with `v()`, the `.tag` property needs to get used, for example `v(WrappedDiv.tag, {} [])`.
+
+> tests/unit/widgets/Profile.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer { wrap } from '@dojo/framework/testing/renderer';
+
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/Profile.m.css';
+
+// Create a wrapped test node
+const WrappedHeader = wrap('h1');
+
+// Create an assertion
 const profileAssertion = assertionTemplate(() => (
-	<h1 classes={[css.root]} assertion-key="welcome">
-		Welcome Stranger!
-	</h1>
+	// Use the wrapped node in place of the normal node
+	<WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>
 ));
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => <Profile />);
+		const r = renderer(() => <Profile />);
 		// Test against my base assertion
-		h.expect(profileAssertion);
-	});
-});
-```
-
-A value can be provided to any virtual DOM node under test using `assertion-key` properties defined in the assertion template. Note: when `v()` and `w()` from `@dojo/framework/core/vdom` are used, the `~key` property serves the same purpose.
-
-> tests/unit/widgets/Profile.tsx
-
-```ts
-describe('Profile', () => {
-	it('default renders correctly', () => {
-		const h = harness(() => <Profile />);
-		// Test against my base assertion
-		h.expect(profileAssertion);
+		r.expect(profileAssertion);
 	});
 
 	it('renders given username correctly', () => {
 		// update the expected result with a given username
-		const namedAssertion = profileAssertion.setChildren('~welcome', () => ['Welcome Kel Varnsen!']);
-		const h = harness(() => <Profile username="Kel Varnsen" />);
-		h.expect(namedAssertion);
+		const namedAssertion = profileAssertion.setChildren(WrappedHeader, () => ['Welcome Kel Varnsen!']);
+		const r = renderer(() => <Profile username="Kel Varnsen" />);
+		r.expect(namedAssertion);
 	});
 });
 ```
 
-Using the `setChildren` method of an assertion template with the assigned `assertion-key` value, ~welcome in this case, will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
+Using the `setChildren` method of an assertion template with a wrapped testing node, `WrappedHeader` in this case, will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/

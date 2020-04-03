@@ -3867,7 +3867,6 @@ jsdomDescribe('vdom', () => {
 					}
 
 					const currentStart = icache.getOrSet('currentStart', 1);
-					console.log(currentStart, start);
 
 					const nodes = [<div key="prev">p</div>];
 					for (let i = currentStart; i < 10; i++) {

@@ -1,11 +1,11 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import Set from '../../../../src/shim/Set';
-import Map from '../../../../src/shim/Map';
-import assertRender from '../../../../src/testing/support/assertRender';
-import { v, w } from '../../../../src/core/vdom';
-import WidgetBase from '../../../../src/core/WidgetBase';
+import Set from '../../../src/shim/Set';
+import Map from '../../../src/shim/Map';
+import assertRender from '../../../src/testing/assertRender';
+import { v, w } from '../../../src/core/vdom';
+import WidgetBase from '../../../src/core/WidgetBase';
 
 class MockWidget extends WidgetBase {
 	render() {
@@ -40,25 +40,23 @@ class WidgetWithMap extends WidgetBase {
 function getExpectedError() {
 	const widgetName = (MockWidget as any).name || 'Widget-5';
 	return `
-v("div", {
-(A)	"classes": "class",
-(A)	"key": "one"
-(E)	"classes": "other",
-(E)	"extras": "foo",
-(E)	"key": "two"
-}, [
-(E)	v("span", {}, [
-(E)		"text node"
-(E)		"other"
-(E)	])
-(E)	v("span", {})
-	"text node"
-(A)	w(${widgetName}, {})
-(E)	v("span", {})
-])`;
+(A)<div classes="class" key="one">
+(E)<div classes="other" extras="foo" key="two">
+(E)	<span>
+(E)		text node
+(E)		other
+(E)	</span>
+(E)	<span>
+(E)	</span>
+	text node
+(A)	<${widgetName}>
+(A)	</${widgetName}>
+(E)	<span>
+(E)	</span>
+</div>`;
 }
 
-describe('support/assertRender', () => {
+describe('new/assertRender', () => {
 	it('should create an informative error message', () => {
 		const widget = new OtherWidget();
 		const renderResult = widget.__render__();
