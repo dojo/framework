@@ -247,7 +247,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			function wrap(node: WNode | VNode) {
+			function wrap(node: WNode | VNode | (WNode | VNode)[]) {
 				function w() {
 					return node;
 				}
@@ -258,21 +258,36 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			}
 
 			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
-				return [
-					this._children.reduce((slots, child) => {
-						const { domNode } = child;
+				const slots = this._children.reduce((slots, child) => {
+					const { domNode } = child;
 
-						if (!domNode.getAttribute || !domNode.getAttribute('slot')) {
-							return slots;
-						}
+					const slotName = domNode.getAttribute && domNode.getAttribute('slot');
+
+					if (!slotName) {
+						return slots;
+					}
+
+					let slotResult = wrap(
+						child.domNode.isWidget
+							? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
+							: dom({ node: domNode, diffType: 'dom' })
+					);
+
+					const existingSlotValue = slots[slotName];
+
+					return {
+						...slots,
+						[slotName]: existingSlotValue ? [...existingSlotValue, slotResult] : [slotResult]
+					};
+				}, {});
+
+				return [
+					Object.keys(slots).reduce((result, key) => {
+						const value = slots[key];
 
 						return {
-							...slots,
-							[domNode.getAttribute('slot')]: wrap(
-								child.domNode.isWidget
-									? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
-									: dom({ node: domNode, diffType: 'dom' })
-							)
+							...result,
+							[key]: value.length === 1 ? value[0] : value
 						};
 					}, {})
 				];

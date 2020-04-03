@@ -659,4 +659,44 @@ describe('registerCustomElement', () => {
 			'<render-func-element style="display: block;"><div><label>test</label></div></render-func-element>'
 		);
 	});
+
+	it('combines children with the same slot name into an array', () => {
+		@customElement({
+			tag: 'slot-array-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('slot-array-element', CustomElement);
+
+		const element = document.createElement('slot-array-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+		const slotChild2 = document.createElement('label');
+		slotChild2.setAttribute('slot', 'foo');
+		slotChild2.innerHTML = 'test2';
+
+		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<render-func-element style="display: block;"><div><label>test1</label><label>test2</label></div></render-func-element>'
+		);
+	});
 });
