@@ -61,7 +61,7 @@ The `about-services` route has been registered to match any path after `/about` 
 
 # Outlets
 
-An outlet represents a visual location of an application that renderers different content depending which route has been matched. Using outlets reduces boilerplate required compared to using routes, multiple routes can be associated to the same outlet to more naturally and accurately structure the application output.
+An outlet represents a visual location of an application that renderers different content depending on which route has been matched. Using outlets reduces boilerplate required compared to using routes, multiple routes can be associated to the same outlet to more naturally and accurately structure the application output.
 
 Consider a typical application layout which includes a left side menu and a main content view that depending on the route has a right hand side bar:
 
@@ -81,7 +81,7 @@ Consider a typical application layout which includes a left side menu and a main
 -------------------------------------------------------------------
 ```
 
-With a route configuration below that specifies all the main pages to the main content outlet, but the `widget` to a `side-menu` outlet. This enables building an application that constantly renders the main content depending on route, but also include a right hand side menu for all children routes of the `widget` route.
+The route configuration below specifies all the main pages to the main content outlet, but the `widget` to a `side-menu` outlet. This enables building an application that constantly renders the main content depending on route, but also include a right hand side menu for all children routes of the `widget` route.
 
 ```tsx
 const routes = [
@@ -116,7 +116,7 @@ const routes = [
 ];
 ```
 
-In the routing configuration above, there are two outlets defined, `main` and `side-menu` and a simplified application layout using outlets is shown below. By default the `Outlet` will render any of the keys that equal a route id that has been match for the outlet, in this case `main`. If a function is passed to the `Outlet` then it will render whenever _any_ route is matched for the outlet specified.
+In the routing configuration above, there are two outlets defined, `main` and `side-menu`, and a simplified application layout using outlets is shown below. By default the `Outlet` will render any of the keys that equal a route id that has been matched for the outlet, in this case `main`. If a function is passed to the `Outlet` then it will render whenever _any_ route is matched for the outlet specified.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -156,7 +156,7 @@ const App = factory(function App() {
 });
 ```
 
-The node structure of the `App` looks good and succinctly represents the actual visual output for the user with minimal duplication, there still is a need to duplicate the the usage of the `Example` widget across to different routes. This can be solved by using the `matcher` property to override the default route matching rules. The `matcher` receives the `defaultMatches` and a `matchDetailsMap` in order to make custom matching decisions. In the final example below the usage of `Example` has been combined into a new `key`, `details` that does not exist as a route. This will never match for the outlet unless we override the default matches to set it to true when either the `example` or `overview` route has matched. Finally in the `details` renderer the example property has been defaulted to `overview` to maintain the same behavior as before.
+The node structure of the `App` looks good and succinctly represents the actual visual output for the user with minimal duplication, there still is a need to duplicate the usage of the `Example` widget across to different routes. This can be solved by using the `matcher` property to override the default route matching rules. The `matcher` receives the `defaultMatches` and a `matchDetailsMap` in order to make custom matching decisions. In the final example below the usage of `Example` has been combined into a new `key`, `details` that does not exist as a route. This will never match for the outlet unless we override the default matches to set it to true when either the `example` or `overview` route has matched. Finally in the `details` renderer the example property has been defaulted to `overview` to maintain the same behavior as before.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -200,12 +200,12 @@ const App = factory(function App() {
 
 # Router API
 
-The Dojo Router exposes an API that can be used to generate and navigate to links, get the params for the current route and check if an route id has been matched.
+The Dojo Router exposes an API that can be used to generate and navigate to links, get the params for the current route and check if a route id has been matched.
 
 -   `link(route: string, params: Params = {}): string | undefined`: Generate a link based on the route id and optionally params. If no params are passed it will attempt to use the current routes parameters, then any default parameters provided in the routing configuration. If a link cannot be generated, `undefined` is returned.
 -   `setPath(path: string): void`: Sets the path in the router.
 -   `get currentParams(): { [string: index]: string }`: Returns parameters in the current route
--   `getRoute(id: string): RouteContext | undefined`: Returns the `RouteContext` for an route id if it is currently matched. If the route id is not matched, then return `undefined`.
+-   `getRoute(id: string): RouteContext | undefined`: Returns the `RouteContext` for a route id if it is currently matched. If the route id is not matched, then return `undefined`.
 
 ## Generating a link for a route
 
@@ -408,7 +408,7 @@ export default [
 ];
 ```
 
--   given the above route definition, if the URL path is set to `/#home/about`, then `isExact()` will evaluate to `false` for the `Route` with the id "home" and `true` for the an `Route` that is a child of the home `Route` with the id "about" as shown in the following file:
+-   given the above route definition, if the URL path is set to `/#home/about`, then `isExact()` will evaluate to `false` for the `Route` with the id "home" and `true` for a `Route` that is a child of the home `Route` with the id "about" as shown in the following file:
 
 > src/App.tsx
 
@@ -661,7 +661,7 @@ These history managers work like adapters, meaning that custom history managers 
 
 # Error route
 
-A special `route` called `errorRoute` is registered for that will match when the route doesn't match (`exact` or `partial`) any route in the routing configuration. You can use this `route` to render a widget to inform the user that the route does not exist.
+A special `route` called `errorRoute` is registered that will match when the route doesn't match (`exact` or `partial`) any route in the routing configuration. You can use this `route` to render a widget to inform the user that the route does not exist.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';

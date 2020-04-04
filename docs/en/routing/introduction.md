@@ -56,7 +56,7 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
--   Add a `Route` widget to show the text "Home" when the `home` route is visited. `Route` is a widget that display something when the path for the route id is matched. The application's `src/routes.ts` file associates a route to an id via the `Route`'s `id` property.
+-   Add a `Route` widget to show the text "Home" when the `home` route is visited. `Route` is a widget that displays something when the path for the route id is matched. The application's `src/routes.ts` file associates a route to an id via the `Route`'s `id` property.
 
 > src/App.tsx
 
@@ -119,7 +119,7 @@ export default [
 ];
 ```
 
-The parameters values are injected into to matching `Route`'s `renderer` property.
+The parameter values are injected into the matching `Route`'s `renderer` property.
 
 > src/App.tsx
 
@@ -214,7 +214,7 @@ export default [
 
 ## Using link widgets
 
-The `Link` widget is a wrapper around an anchor tag that enables consumers to specify an route `id` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
+The `Link` widget is a wrapper around an anchor tag that enables consumers to specify a route `id` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
 Link Properties:
 
