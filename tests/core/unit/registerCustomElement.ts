@@ -774,8 +774,10 @@ describe('registerCustomElement', () => {
 		element.appendChild(slotChild1);
 		document.body.appendChild(element);
 
+		// this one to render
 		resolvers.resolve();
-		await Promise.resolve();
+		// this one to call the event dispatch
+		resolvers.resolve();
 
 		assert.strictEqual(
 			element.outerHTML,
