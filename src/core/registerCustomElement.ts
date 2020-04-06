@@ -247,15 +247,25 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			function wrap(node: WNode | VNode | (WNode | VNode)[]) {
-				function w() {
+			const wrap = (domNode: HTMLElement, node: WNode | VNode) => {
+				const w = (...args: any[]) => {
+					if (args.length) {
+						setTimeout(() => {
+							domNode.dispatchEvent(
+								new CustomEvent('render', {
+									bubbles: false,
+									detail: args
+								})
+							);
+						});
+					}
 					return node;
-				}
+				};
 
 				Object.keys(node).forEach((key) => ((w as any)[key] = (node as any)[key]));
 
 				return w;
-			}
+			};
 
 			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
 				const slots = this._children.reduce((slots, child) => {
@@ -268,6 +278,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					}
 
 					let slotResult = wrap(
+						child.domNode,
 						child.domNode.isWidget
 							? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
 							: dom({ node: domNode, diffType: 'dom' })
@@ -296,10 +307,10 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
-					return wrap(w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]));
+					return wrap(domNode, w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]));
 				});
 			} else {
-				return this._children.map(wrap);
+				return this._children.map((child) => wrap(child.domNode, child));
 			}
 		}
 

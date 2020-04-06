@@ -13,6 +13,7 @@ import { waitFor } from './waitFor';
 
 const { describe, it, beforeEach, afterEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
 @customElement({
 	tag: 'foo-element'
@@ -737,5 +738,57 @@ describe('registerCustomElement', () => {
 			element.outerHTML,
 			'<ignore-slot-element style="display: inline;"><label>test2</label><div><label slot="foo">test1</label></div></ignore-slot-element>'
 		);
+	});
+
+	it('dispatches events when child render funcs have arguments', () => {
+		const eventStub = stub();
+		const timeoutStub = stub(global, 'setTimeout').returns(1);
+
+		@customElement({
+			tag: 'dispatch-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo(15)]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('dispatch-element', CustomElement);
+
+		const element = document.createElement('dispatch-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+
+		slotChild1.addEventListener('render', (event: any) => {
+			eventStub(event.detail[0]);
+		});
+
+		element.appendChild(slotChild1);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		const calls = timeoutStub.getCalls();
+		for (let i = 0; i < calls.length; i++) {
+			calls[i].callArg(0);
+		}
+
+		timeoutStub.restore();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label></div></dispatch-element>'
+		);
+
+		assert.isTrue(eventStub.calledWith(15));
 	});
 });
