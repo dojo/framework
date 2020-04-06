@@ -3487,6 +3487,35 @@ jsdomDescribe('vdom', () => {
 				});
 			});
 
+			it('should close properties', () => {
+				const factory = create().properties<{ count: number }>();
+				const Foo = factory(function Foo({ properties }) {
+					return <div>{`${properties().count}`}</div>;
+				});
+				const properties: any = { count: 0 };
+				const App = create({ invalidator })(function App({ middleware: { invalidator } }) {
+					return (
+						<div>
+							<button
+								onclick={() => {
+									invalidator();
+								}}
+							/>
+							{w(Foo, properties)}
+						</div>
+					);
+				});
+				const root = document.createElement('div');
+				const r = renderer(() => App({}));
+				r.mount({ domNode: root });
+				console.log(root.innerHTML);
+				assert.strictEqual(root.innerHTML, '<div><button></button><div>0</div></div>');
+				properties.count = 1;
+				(root.children[0].children[0] as any).click();
+				resolvers.resolveRAF();
+				assert.strictEqual(root.innerHTML, '<div><button></button><div>1</div></div>');
+			});
+
 			it('registry items', () => {
 				const createWidget = create();
 				let resolver = () => {};
