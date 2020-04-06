@@ -740,9 +740,8 @@ describe('registerCustomElement', () => {
 		);
 	});
 
-	it('dispatches events when child render funcs have arguments', () => {
+	it('dispatches events when child render funcs have arguments', async () => {
 		const eventStub = stub();
-		const timeoutStub = stub(global, 'setTimeout').returns(1);
 
 		@customElement({
 			tag: 'dispatch-element',
@@ -776,13 +775,8 @@ describe('registerCustomElement', () => {
 		document.body.appendChild(element);
 
 		resolvers.resolve();
-
-		const calls = timeoutStub.getCalls();
-		for (let i = 0; i < calls.length; i++) {
-			calls[i].callArg(0);
-		}
-
-		timeoutStub.restore();
+		await new Promise((resolve) => setTimeout(resolve));
+		resolvers.resolve();
 
 		assert.strictEqual(
 			element.outerHTML,
