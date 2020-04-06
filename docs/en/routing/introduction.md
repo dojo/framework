@@ -77,7 +77,7 @@ export default factory(function App() {
 });
 ```
 
-or using outlets and the `Outlet` widget, check out the [`Outlet` documentation](/learn/routing/outlets) for more information;
+or using outlets and the `Outlet` widget, check out the [`Outlet` documentation](/learn/routing/outlets) for more information:
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
