@@ -2064,7 +2064,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 		let rendered: RenderResult;
 		let invalidate: () => void;
-		next.properties = next.node.properties;
+		next.properties = { ...next.node.properties };
 		next.id = next.id || `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
 		const { id, depth, order } = next;
@@ -2175,7 +2175,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		next.hasAnimations = hasAnimations;
 		next.id = id;
 		next.childDomWrapperId = current.childDomWrapperId;
-		next.properties = next.node.properties;
+		next.properties = { ...next.node.properties };
 		_wrapperSiblingMap.delete(current);
 		if (domNode && domNode.parentNode) {
 			next.domNode = domNode;
