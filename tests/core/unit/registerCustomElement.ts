@@ -775,8 +775,7 @@ describe('registerCustomElement', () => {
 		document.body.appendChild(element);
 
 		resolvers.resolve();
-		await new Promise((resolve) => setTimeout(resolve));
-		resolvers.resolve();
+		await Promise.resolve();
 
 		assert.strictEqual(
 			element.outerHTML,
