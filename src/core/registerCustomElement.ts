@@ -1,8 +1,9 @@
 import Registry from './Registry';
-import { renderer, w, dom, isTextNode, create as vdomCreate, diffProperty, invalidator } from './vdom';
+import { create as vdomCreate, diffProperty, dom, invalidator, isTextNode, renderer, w } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
+import { VNode, WNode } from './interfaces';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -246,13 +247,70 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
+			const wrap = (domNode: HTMLElement, node: WNode | VNode) => {
+				const w = (...args: any[]) => {
+					if (args.length) {
+						setTimeout(() => {
+							domNode.dispatchEvent(
+								new CustomEvent('render', {
+									bubbles: false,
+									detail: args
+								})
+							);
+						});
+					}
+					return node;
+				};
+
+				Object.keys(node).forEach((key) => ((w as any)[key] = (node as any)[key]));
+
+				return w;
+			};
+
+			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
+				const slots = this._children.reduce((slots, child) => {
+					const { domNode } = child;
+
+					const slotName = domNode.getAttribute && domNode.getAttribute('slot');
+
+					if (!slotName) {
+						return slots;
+					}
+
+					let slotResult = wrap(
+						child.domNode,
+						child.domNode.isWidget
+							? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
+							: dom({ node: domNode, diffType: 'dom' })
+					);
+
+					const existingSlotValue = slots[slotName];
+
+					return {
+						...slots,
+						[slotName]: existingSlotValue ? [...existingSlotValue, slotResult] : [slotResult]
+					};
+				}, {});
+
+				return [
+					Object.keys(slots).reduce((result, key) => {
+						const value = slots[key];
+
+						return {
+							...result,
+							[key]: value.length === 1 ? value[0] : value
+						};
+					}, {})
+				];
+			}
+
 			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
-					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
+					return wrap(domNode, w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]));
 				});
 			} else {
-				return this._children;
+				return this._children.map((child) => wrap(child.domNode, child));
 			}
 		}
 

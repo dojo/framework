@@ -13,6 +13,7 @@ import { waitFor } from './waitFor';
 
 const { describe, it, beforeEach, afterEach, before } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
+import { stub } from 'sinon';
 
 @customElement({
 	tag: 'foo-element'
@@ -566,5 +567,223 @@ describe('registerCustomElement', () => {
 			element.outerHTML
 		);
 		console.log(element.outerHTML);
+	});
+
+	it('transforms children with slots into a child object', () => {
+		@customElement({
+			tag: 'parent-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child = this.children[0];
+
+				return v('div', {}, [
+					v('div', { classes: ['a-slot'] }, [child && (child as any).a]),
+					v('div', { classes: ['b-slot'] }, [child && (child as any).b && (child as any).b()])
+				]);
+			}
+		}
+
+		@customElement({
+			tag: 'slot-b-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetB extends WidgetBase<any> {
+			render() {
+				return 'WidgetB';
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementB = create((WidgetB as any).__customElementDescriptor, WidgetB);
+
+		customElements.define('parent-element', CustomElement);
+		customElements.define('slot-b-element', CustomElementB);
+
+		const element = document.createElement('parent-element');
+
+		const slotChild = document.createElement('div');
+		slotChild.setAttribute('slot', 'a');
+		slotChild.innerHTML = 'test';
+
+		const slotBChild = document.createElement('slot-b-element');
+		slotBChild.setAttribute('slot', 'b');
+
+		element.appendChild(slotChild);
+		element.appendChild(slotBChild);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<parent-element style="display: block;"><div><div class="a-slot"><div slot="a">test</div></div><div class="b-slot"><slot-b-element slot="b">WidgetB</slot-b-element></div></div></parent-element>'
+		);
+	});
+
+	it('wraps child nodes in render functions', () => {
+		@customElement({
+			tag: 'render-func-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child && child()]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('render-func-element', CustomElement);
+
+		const element = document.createElement('render-func-element');
+
+		const slotChild = document.createElement('label');
+		slotChild.innerHTML = 'test';
+
+		element.appendChild(slotChild);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<render-func-element style="display: block;"><div><label>test</label></div></render-func-element>'
+		);
+	});
+
+	it('combines children with the same slot name into an array', () => {
+		@customElement({
+			tag: 'slot-array-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, child.foo);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('slot-array-element', CustomElement);
+
+		const element = document.createElement('slot-array-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+		const slotChild2 = document.createElement('label');
+		slotChild2.setAttribute('slot', 'foo');
+		slotChild2.innerHTML = 'test2';
+
+		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<slot-array-element style="display: block;"><div><label slot="foo">test1</label><label slot="foo">test2</label></div></slot-array-element>'
+		);
+	});
+
+	it('ignores elements with no slots when at least one element has a slot', () => {
+		@customElement({
+			tag: 'ignore-slot-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('ignore-slot-element', CustomElement);
+
+		const element = document.createElement('ignore-slot-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+		const slotChild2 = document.createElement('label');
+		slotChild2.innerHTML = 'test2';
+
+		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<ignore-slot-element style="display: inline;"><label>test2</label><div><label slot="foo">test1</label></div></ignore-slot-element>'
+		);
+	});
+
+	it('dispatches events when child render funcs have arguments', async () => {
+		const eventStub = stub();
+
+		@customElement({
+			tag: 'dispatch-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo(15)]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('dispatch-element', CustomElement);
+
+		const element = document.createElement('dispatch-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+
+		slotChild1.addEventListener('render', (event: any) => {
+			eventStub(event.detail[0]);
+		});
+
+		element.appendChild(slotChild1);
+		document.body.appendChild(element);
+
+		// this one to render
+		resolvers.resolve();
+		// this one to call the event dispatch
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label></div></dispatch-element>'
+		);
+
+		assert.isTrue(eventStub.calledWith(15));
 	});
 });

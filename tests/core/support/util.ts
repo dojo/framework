@@ -4,6 +4,7 @@ import { stub, SinonStub } from 'sinon';
 export function createResolvers() {
 	let rAFStub: SinonStub;
 	let rICStub: SinonStub;
+	let timeoutStub: SinonStub;
 
 	function resolveRAFCallbacks() {
 		const calls = rAFStub.getCalls();
@@ -21,10 +22,21 @@ export function createResolvers() {
 		}
 	}
 
+	function resolveTimeoutCallbacks() {
+		if (timeoutStub) {
+			const calls = timeoutStub.getCalls();
+			timeoutStub.resetHistory();
+			for (let i = 0; i < calls.length; i++) {
+				calls[i].callArg(0);
+			}
+		}
+	}
+
 	return {
 		resolve() {
 			resolveRAFCallbacks();
 			resolveRICCallbacks();
+			resolveTimeoutCallbacks();
 		},
 		resolveRIC() {
 			resolveRICCallbacks();
@@ -36,6 +48,7 @@ export function createResolvers() {
 			rAFStub = stub(global, 'requestAnimationFrame').returns(1);
 			if (global.requestIdleCallback) {
 				rICStub = stub(global, 'requestIdleCallback').returns(1);
+				timeoutStub = stub(global, 'setTimeout').returns(1);
 			} else {
 				rICStub = stub(global, 'setTimeout').returns(1);
 			}
@@ -43,6 +56,10 @@ export function createResolvers() {
 		restore() {
 			rAFStub.restore();
 			rICStub.restore();
+
+			if (timeoutStub) {
+				timeoutStub.restore();
+			}
 		}
 	};
 }
