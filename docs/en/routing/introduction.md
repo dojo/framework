@@ -275,7 +275,7 @@ To take advantage of the code splitting there are 4 rules:
 1.  The routing configuration needs to be the default export in the `src/routes.ts` module.
 2.  The widgets must be the default export of their module.
 3.  The `renderer` property must be defined inline.
-4.  The `id` and `outlet` in the routing config and must be static and defined inline.
+4.  The `id` and `outlet` in the routing config must be static and defined inline.
 
 > src/routes.ts
 
