@@ -3487,7 +3487,7 @@ jsdomDescribe('vdom', () => {
 				});
 			});
 
-			it('should close properties', () => {
+			it('should clone properties', () => {
 				const factory = create().properties<{ count: number }>();
 				const Foo = factory(function Foo({ properties }) {
 					return <div>{`${properties().count}`}</div>;
