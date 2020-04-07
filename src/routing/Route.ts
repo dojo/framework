@@ -5,15 +5,15 @@ import { DNode } from '../core/interfaces';
 import { MatchDetails } from './interfaces';
 import Router from './Router';
 
-export interface OutletProperties {
+export interface RouteProperties {
 	renderer: (matchDetails: MatchDetails) => DNode | DNode[];
 	id: string;
 	routerKey?: string;
 }
 
-const factory = create({ icache, injector, diffProperty, invalidator }).properties<OutletProperties>();
+const factory = create({ icache, injector, diffProperty, invalidator }).properties<RouteProperties>();
 
-export const Outlet = factory(function Outlet({
+export const Route = factory(function Route({
 	middleware: { icache, injector, diffProperty, invalidator },
 	properties
 }) {
@@ -25,7 +25,7 @@ export const Outlet = factory(function Outlet({
 			icache.set('handle', () => handle);
 		}
 	}
-	diffProperty('routerKey', (current: OutletProperties, next: OutletProperties) => {
+	diffProperty('routerKey', (current: RouteProperties, next: RouteProperties) => {
 		const { routerKey: currentRouterKey = 'router' } = current;
 		const { routerKey = 'router' } = next;
 		if (routerKey !== currentRouterKey) {
@@ -43,9 +43,9 @@ export const Outlet = factory(function Outlet({
 	const router = injector.get<Router>(routerKey);
 
 	if (router) {
-		const outletContext = router.getOutlet(id);
-		if (outletContext) {
-			const { queryParams, params, type, isError, isExact } = outletContext;
+		const routeContext = router.getRoute(id);
+		if (routeContext) {
+			const { queryParams, params, type, isError, isExact } = routeContext;
 			const result = renderer({ queryParams, params, type, isError, isExact, router });
 			if (result) {
 				return result;
@@ -55,4 +55,4 @@ export const Outlet = factory(function Outlet({
 	return null;
 });
 
-export default Outlet;
+export default Route;

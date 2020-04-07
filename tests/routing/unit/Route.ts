@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
-import { Outlet } from '../../../src/routing/Outlet';
+import { Route } from '../../../src/routing/Route';
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { w, create, getRegistry } from '../../../src/core/vdom';
@@ -21,15 +21,18 @@ const routeConfig = [
 	{
 		path: '/foo',
 		outlet: 'foo',
+		id: 'foo',
 		children: [
 			{
 				path: '/bar',
-				outlet: 'bar'
+				outlet: 'bar',
+				id: 'bar'
 			}
 		]
 	},
 	{
 		path: 'baz/{baz}',
+		id: 'baz',
 		outlet: 'baz'
 	}
 ];
@@ -42,18 +45,18 @@ const mockGetRegistry = factory(() => {
 	};
 });
 
-describe('Outlet', () => {
+describe('Route', () => {
 	beforeEach(() => {
 		registry = new Registry();
 	});
 
-	it('Should render the result of the renderer when the outlet matches', () => {
+	it('Should render the result of the renderer when the Route matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
 		router.setPath('/foo');
 		const h = harness(
 			() =>
-				w(Outlet, {
+				w(Route, {
 					id: 'foo',
 					renderer() {
 						return w(Widget, {});
@@ -70,7 +73,7 @@ describe('Outlet', () => {
 		router.setPath('/foo');
 		const h = harness(
 			() =>
-				w(Outlet, {
+				w(Route, {
 					id: 'foo',
 					renderer(details: any) {
 						matchType = details.type;
@@ -89,7 +92,7 @@ describe('Outlet', () => {
 		router.setPath('/foo/other');
 		const h = harness(
 			() =>
-				w(Outlet, {
+				w(Route, {
 					id: 'foo',
 					renderer(details: any) {
 						matchType = details.type;
@@ -106,7 +109,8 @@ describe('Outlet', () => {
 		const routeConfig = [
 			{
 				path: '/foo',
-				outlet: 'foo'
+				outlet: 'foo',
+				id: 'foo'
 			}
 		];
 
@@ -114,7 +118,7 @@ describe('Outlet', () => {
 		router.setPath('/other');
 		const h = harness(
 			() =>
-				w(Outlet, {
+				w(Route, {
 					id: 'foo',
 					renderer(details: any) {
 						if (details.type === 'index') {

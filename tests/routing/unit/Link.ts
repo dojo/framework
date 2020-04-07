@@ -15,11 +15,13 @@ const router = new Router(
 	[
 		{
 			path: 'foo',
-			outlet: 'foo'
+			outlet: 'foo',
+			id: 'foo'
 		},
 		{
 			path: 'foo/{foo}',
-			outlet: 'foo2'
+			outlet: 'foo2',
+			id: 'foo2'
 		}
 	],
 	{ HistoryManager: MemoryHistory }

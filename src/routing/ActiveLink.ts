@@ -33,8 +33,8 @@ export const ActiveLink = factory(function ActiveLink({
 				currentHandle.destroy();
 			}
 			if (router) {
-				const handle = router.on('outlet', ({ outlet }) => {
-					if (outlet.id === to) {
+				const handle = router.on('route', ({ route }) => {
+					if (route.id === to) {
 						invalidator();
 					}
 				});
@@ -47,14 +47,14 @@ export const ActiveLink = factory(function ActiveLink({
 	const router = injector.get<Router>(routerKey);
 	if (router) {
 		if (!icache.get('handle')) {
-			const handle = router.on('outlet', ({ outlet }) => {
-				if (outlet.id === to) {
+			const handle = router.on('route', ({ route }) => {
+				if (route.id === to) {
 					invalidator();
 				}
 			});
 			icache.set('handle', () => handle);
 		}
-		const context = router.getOutlet(to);
+		const context = router.getRoute(to);
 		const isActive = context && paramsEqual(params, { ...context.params, ...context.queryParams });
 		const contextIsExact = context && context.isExact();
 

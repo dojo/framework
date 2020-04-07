@@ -8,7 +8,7 @@ import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
 suite('RouterInjector', () => {
 	test('registerRouterInjector', () => {
 		const registry = new Registry();
-		const router = registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, {
+		const router = registerRouterInjector([{ path: 'path', outlet: 'path', id: 'path' }], registry, {
 			HistoryManager: MemoryHistory
 		});
 		const { injector, invalidator } = registry.getInjector('router')!;
@@ -21,7 +21,7 @@ suite('RouterInjector', () => {
 
 	test('registerRouterInjector with custom key', () => {
 		const registry = new Registry();
-		const router = registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, {
+		const router = registerRouterInjector([{ path: 'path', outlet: 'path', id: 'path' }], registry, {
 			HistoryManager: MemoryHistory,
 			key: 'custom-key'
 		});
@@ -36,10 +36,14 @@ suite('RouterInjector', () => {
 
 	test('throws error if a second router is registered for the same key', () => {
 		const registry = new Registry();
-		registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, { HistoryManager: MemoryHistory });
+		registerRouterInjector([{ path: 'path', outlet: 'path', id: 'path' }], registry, {
+			HistoryManager: MemoryHistory
+		});
 		assert.throws(
 			() => {
-				registerRouterInjector([{ path: 'path', outlet: 'path' }], registry, { HistoryManager: MemoryHistory });
+				registerRouterInjector([{ path: 'path', outlet: 'path', id: 'path' }], registry, {
+					HistoryManager: MemoryHistory
+				});
 			},
 			Error,
 			'Router has already been defined'

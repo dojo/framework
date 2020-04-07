@@ -16,27 +16,33 @@ const router = new Router(
 		{
 			path: 'foo',
 			outlet: 'foo',
+			id: 'foo',
 			children: [
 				{
 					path: 'bar',
-					outlet: 'bar'
+					outlet: 'bar',
+					id: 'bar'
 				}
 			]
 		},
 		{
 			path: 'other',
-			outlet: 'other'
+			outlet: 'other',
+			id: 'other'
 		},
 		{
 			path: 'query/{path}?{query}',
-			outlet: 'query'
+			outlet: 'query',
+			id: 'query'
 		},
 		{
 			path: 'param',
 			outlet: 'param',
+			id: 'param',
 			children: [
 				{
 					path: '{suffix}',
+					id: 'suffixed-param',
 					outlet: 'suffixed-param'
 				}
 			]
