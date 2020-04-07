@@ -278,10 +278,13 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 					}
 
 					let slotResult = wrap(
-						child.domNode,
-						child.domNode.isWidget
-							? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
-							: dom({ node: domNode, diffType: 'dom' })
+						domNode,
+						child.isFactory
+							? child(
+									domNode.__properties__ ? { ...domNode.__properties__() } : {},
+									domNode.__children__ ? [...domNode.__children__()] : []
+							  )
+							: child
 					);
 
 					const existingSlotValue = slots[slotName];

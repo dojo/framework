@@ -786,4 +786,102 @@ describe('registerCustomElement', () => {
 
 		assert.isTrue(eventStub.calledWith(15));
 	});
+
+	it('renders dom-only nodes as slots', async () => {
+		@customElement({
+			tag: 'dom-slots-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, child.foo);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('dom-slots-element', CustomElement);
+
+		const element = document.createElement('dom-slots-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+
+		const slotChild2 = document.createElement('label');
+		slotChild2.setAttribute('slot', 'foo');
+		slotChild2.innerHTML = 'test2';
+
+		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<dom-slots-element style="display: block;"><div><label slot="foo">test1</label><label slot="foo">test2</label></div></dom-slots-element>'
+		);
+	});
+
+	it('renders children before and after they hydrate', () => {
+		@customElement({
+			tag: 'late-hydrate-parent-slots-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo]);
+			}
+		}
+
+		@customElement({
+			tag: 'late-hydrate-child-slots-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetB extends WidgetBase<any> {
+			render() {
+				return v('label', {}, ['i am a child']);
+			}
+		}
+
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, WidgetB);
+
+		customElements.define('late-hydrate-parent-slots-element', CustomElementParent);
+
+		const element = document.createElement('late-hydrate-parent-slots-element');
+
+		const slotChild1 = document.createElement('late-hydrate-child-slots-element');
+		slotChild1.setAttribute('slot', 'foo');
+
+		element.appendChild(slotChild1);
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<late-hydrate-parent-slots-element style="display: block;"><div><late-hydrate-child-slots-element slot="foo"></late-hydrate-child-slots-element></div></late-hydrate-parent-slots-element>'
+		);
+
+		customElements.define('late-hydrate-child-slots-element', CustomElementChild);
+
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<late-hydrate-parent-slots-element style="display: block;"><div><late-hydrate-child-slots-element slot="foo" style="display: inline;"><label>i am a child</label></late-hydrate-child-slots-element></div></late-hydrate-parent-slots-element>'
+		);
+	});
 });
