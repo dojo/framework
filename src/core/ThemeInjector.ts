@@ -34,3 +34,5 @@ export class ThemeInjector extends Injector {
 		super.set(createThemeInjectorPayload(theme, variant));
 	}
 }
+
+export default ThemeInjector;

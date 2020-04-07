@@ -10,7 +10,7 @@ import {
 } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
-import Injector from './Injector';
+import ThemeInjector from './ThemeInjector';
 import { DomVNode, WNode } from './interfaces';
 
 const RESERVED_PROPS = ['focus'];
@@ -97,8 +97,8 @@ export function DomToWidgetWrapper(domNode: HTMLElement): any {
 	return wrapper;
 }
 
-function registerThemeInjector(theme: any, themeRegistry: Registry): Injector {
-	const themeInjector = new Injector(theme);
+function registerThemeInjector(theme: any, themeRegistry: Registry): ThemeInjector {
+	const themeInjector = new ThemeInjector(theme);
 	themeRegistry.defineInjector('__theme_injector', (invalidator) => {
 		themeInjector.setInvalidator(invalidator);
 		return () => themeInjector;
