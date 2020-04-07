@@ -52,9 +52,8 @@ export interface SyncCommand<T = any, P extends object = DefaultPayload> {
  */
 export type Command<T = any, P extends object = DefaultPayload> =
 	| SyncCommand<T, P>
-	| AsyncCommand<T, P>
-	| SyncCommandWithOps<T, P>
-	| AsyncCommandWithOps<T, P>;
+	| ((request: CommandRequest<T, P>) => Promise<void | PatchOperation<T>[]>)
+	| SyncCommandWithOps<T, P>;
 
 /**
  * Transformer function
@@ -321,7 +320,8 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					});
 
 					if (isThenable(result)) {
-						return result.then((result) => {
+						result.then();
+						return result.then((result: any) => {
 							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
 
 							return result;

@@ -4,8 +4,8 @@ const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
 
-import focusMiddleware from '../../../../src/core/middleware/focus';
-import icacheMiddleware from '../../../../src/core/middleware/icache';
+import focusMiddleware, { FocusState } from '../../../../src/core/middleware/focus';
+import { createICacheMiddleware } from '../../../../src/core/middleware/icache';
 
 const sb = sandbox.create();
 const diffPropertyStub = sb.stub();
@@ -16,8 +16,8 @@ const nodeStub = {
 const invalidatorStub = sb.stub();
 const icacheInvalidatorStub = sb.stub();
 
-function icacheFactory() {
-	return icacheMiddleware().callback({
+function icacheFactory<T>() {
+	return createICacheMiddleware<T>()().callback({
 		id: 'test-cache',
 		properties: () => ({}),
 		children: () => [],
@@ -36,7 +36,7 @@ describe('focus middleware', () => {
 			id: 'test',
 			middleware: {
 				diffProperty: diffPropertyStub,
-				icache: icacheFactory(),
+				icache: icacheFactory<FocusState>(),
 				destroy: destroyStub,
 				node: nodeStub,
 				invalidator: invalidatorStub

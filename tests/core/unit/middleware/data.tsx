@@ -128,9 +128,9 @@ jsdomDescribe('data middleware', () => {
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ value: 'foo b' }, { value: 'bar b' }])}</div>`);
 	});
 
-	it('should not convery single sources into strings', () => {
+	it('should not convert single sources into strings', () => {
 		resourceStub.getOrRead.returns([{ a: true, b: 2 }, { a: false, b: 3 }, { b: 4 }]);
-		const factory = create({ data: createDataMiddleware<{ value: string }>() });
+		const factory = create({ data: createDataMiddleware<{ value: string; foo: string }>() });
 		const App = factory(function App({ middleware: { data } }) {
 			const { getOrRead, getOptions } = data();
 			return <div>{JSON.stringify(getOrRead(getOptions()))}</div>;

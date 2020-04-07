@@ -260,7 +260,7 @@ if (!has('es6-array')) {
 		return this;
 	};
 
-	type Predicate = (this: void, value: any, index: number, obj: any[]) => boolean;
+	type Predicate = (this: {} | void, value: any, index: number, obj: any[]) => boolean;
 
 	Array.prototype.find = function find(callback: Predicate, thisArg?: {}) {
 		const index = this.findIndex(callback, thisArg);

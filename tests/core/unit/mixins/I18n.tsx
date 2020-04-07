@@ -3,6 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
 import global from '../../../../src/shim/global';
+import Map from '../../../../src/shim/Map';
 import { renderer, tsx } from '../../../../src/core/vdom';
 import WidgetBase from '../../../../src/core/WidgetBase';
 import I18nMixin, { registerI18nInjector } from '../../../../src/core/mixins/I18n';

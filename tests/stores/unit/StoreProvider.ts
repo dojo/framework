@@ -16,8 +16,8 @@ interface State {
 	bar: string;
 	qux: {
 		baz: number;
-		foobar: number;
-		bar: {
+		foobar?: number;
+		bar?: {
 			foo: {
 				foobar: {
 					baz: {

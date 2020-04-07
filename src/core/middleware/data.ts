@@ -93,8 +93,9 @@ function createResourceOptions(
 ): ResourceOptions {
 	if (options.query) {
 		let query: ResourceQuery[] = [];
-		if (isDataTransformProperties(properties)) {
-			query = transformQuery(options.query, properties.transform);
+		if (isDataTransformProperties<any>(properties)) {
+			const newProperties: DataTransformProperties<any> = properties;
+			query = transformQuery(options.query, newProperties.transform);
 		} else {
 			query = transformQuery(options.query);
 		}

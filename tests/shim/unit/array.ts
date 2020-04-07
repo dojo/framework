@@ -225,7 +225,7 @@ registerSuite('array', {
 		},
 
 		'with union type': function() {
-			let thing: ArrayLike<number> | Iterable<number> = {
+			let thing: ArrayLike<number> | Iterable<number | undefined> = {
 				'0': 0,
 				'1': 1,
 				'2': 2,
