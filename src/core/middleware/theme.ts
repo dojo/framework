@@ -104,8 +104,8 @@ export const theme = factory(
 		}
 
 		return {
-			classes<T extends ClassNames>(css: T & ClassNames): T {
-				const cachedTheme = icache.get<T & ClassNames>(css);
+			classes<T extends ClassNames>(css: T): T {
+				const cachedTheme = icache.get<T>(css);
 				if (cachedTheme) {
 					return cachedTheme;
 				}
