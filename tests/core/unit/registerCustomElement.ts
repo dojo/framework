@@ -740,9 +740,8 @@ describe('registerCustomElement', () => {
 		);
 	});
 
-	it('dispatches events when child render funcs have arguments', async () => {
-		const domEventSub = stub();
-		const nodeEventStub = stub();
+	it('dispatches events to dom nodes when child render funcs have arguments', async () => {
+		const eventStub = stub();
 
 		@customElement({
 			tag: 'dispatch-element',
@@ -754,7 +753,54 @@ describe('registerCustomElement', () => {
 			render() {
 				const child: any = this.children[0];
 
-				return v('div', {}, child.foo.map((child: any) => child(15)));
+				return v('div', {}, [child.foo(15)]);
+			}
+		}
+
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('dispatch-element', CustomElement);
+
+		const element = document.createElement('dispatch-element');
+
+		const slotChild1 = document.createElement('label');
+		slotChild1.setAttribute('slot', 'foo');
+		slotChild1.innerHTML = 'test1';
+
+		slotChild1.addEventListener('render', (event: any) => {
+			eventStub(event.detail[0]);
+		});
+
+		element.appendChild(slotChild1);
+		document.body.appendChild(element);
+
+		// this one to render
+		resolvers.resolve();
+		// this one to call the event dispatch
+		resolvers.resolve();
+
+		assert.strictEqual(
+			element.outerHTML,
+			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label></div></dispatch-element>'
+		);
+
+		assert.isTrue(eventStub.calledWith(15));
+	});
+
+	it('dispatches events to wnodes when child render funcs have arguments', async () => {
+		const nodeEventStub = stub();
+
+		@customElement({
+			tag: 'dispatch-node-element',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				const child: any = this.children[0];
+
+				return v('div', {}, [child.foo(15)]);
 			}
 		}
 
@@ -773,27 +819,18 @@ describe('registerCustomElement', () => {
 		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
 		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, WidgetB);
 
-		customElements.define('dispatch-element', CustomElement);
+		customElements.define('dispatch-node-element', CustomElement);
 		customElements.define('dispatch-element-child', CustomElementChild);
 
-		const element = document.createElement('dispatch-element');
+		const element = document.createElement('dispatch-node-element');
 
-		const slotChild1 = document.createElement('label');
-		slotChild1.setAttribute('slot', 'foo');
-		slotChild1.innerHTML = 'test1';
-
-		slotChild1.addEventListener('render', (event: any) => {
-			domEventSub(event.detail[0]);
-		});
-
-		const slotChild2 = document.createElement('dispatch-element-child');
-		slotChild2.setAttribute('slot', 'foo');
-		slotChild2.addEventListener('render', (event: any) => {
+		const slotChild = document.createElement('dispatch-element-child');
+		slotChild.setAttribute('slot', 'foo');
+		slotChild.addEventListener('render', (event: any) => {
 			nodeEventStub(event.detail[0]);
 		});
 
-		element.appendChild(slotChild1);
-		element.appendChild(slotChild2);
+		element.appendChild(slotChild);
 		document.body.appendChild(element);
 
 		// this one to render
@@ -801,7 +838,6 @@ describe('registerCustomElement', () => {
 		// this one to call the event dispatch
 		resolvers.resolve();
 
-		assert.isTrue(domEventSub.calledWith(15));
 		assert.isTrue(nodeEventStub.calledWith(15));
 	});
 
