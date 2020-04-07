@@ -320,7 +320,6 @@ export function processExecutor<T = any, P extends object = DefaultPayload>(
 					});
 
 					if (isThenable(result)) {
-						result.then();
 						return result.then((result: any) => {
 							result = result ? [...proxyOperations, ...result] : [...proxyOperations];
 
