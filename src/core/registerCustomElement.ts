@@ -2,16 +2,16 @@ import Registry from './Registry';
 import {
 	create as vdomCreate,
 	diffProperty,
+	dom as vdomDom,
 	invalidator,
 	isTextNode,
 	renderer,
-	dom as vdomDom,
 	w as vdomW
 } from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
-import { RenderResult } from './interfaces';
+import { DomVNode, WNode } from './interfaces';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -29,10 +29,10 @@ function isDojoChild(item: any): boolean {
 	return isElement(item) && item.tagName.indexOf('-') > -1;
 }
 
-function w(node: any, properties: any, children?: any): RenderResult {
-	const wrapped = vdomW(node, properties, children);
+function w(node: any, properties: any, children?: any): WNode {
+	const wrappedWNode = vdomW(node, properties, children);
 
-	function n(...args: any[]) {
+	function wrapper(...args: any[]) {
 		const { domNode } = node;
 		if (args.length && domNode) {
 			setTimeout(() => {
@@ -44,19 +44,19 @@ function w(node: any, properties: any, children?: any): RenderResult {
 				);
 			});
 		}
-		return wrapped;
+		return wrappedWNode;
 	}
 
-	Object.keys(wrapped).forEach((key) => ((n as any)[key] = (wrapped as any)[key]));
+	Object.keys(wrappedWNode).forEach((key) => ((wrapper as any)[key] = (wrappedWNode as any)[key]));
 
-	return n as any;
+	return wrapper as any;
 }
 
-function dom(options: any, children?: any): RenderResult {
-	const wrapped = vdomDom(options, children);
+function dom(options: any, children?: any): DomVNode {
+	const wrappedDomNode = vdomDom(options, children);
 
-	function n(...args: any[]) {
-		const { domNode } = wrapped;
+	function wrapper(...args: any[]) {
+		const { domNode } = wrappedDomNode;
 		if (args.length && domNode) {
 			setTimeout(() => {
 				domNode.dispatchEvent(
@@ -67,12 +67,12 @@ function dom(options: any, children?: any): RenderResult {
 				);
 			});
 		}
-		return wrapped;
+		return wrappedDomNode;
 	}
 
-	Object.keys(wrapped).forEach((key) => ((n as any)[key] = (wrapped as any)[key]));
+	Object.keys(wrappedDomNode).forEach((key) => ((wrapper as any)[key] = (wrappedDomNode as any)[key]));
 
-	return n as any;
+	return wrapper as any;
 }
 
 const factory = vdomCreate({ diffProperty, invalidator }).properties<any>();
