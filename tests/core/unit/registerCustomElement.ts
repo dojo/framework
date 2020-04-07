@@ -801,11 +801,6 @@ describe('registerCustomElement', () => {
 		// this one to call the event dispatch
 		resolvers.resolve();
 
-		assert.strictEqual(
-			element.outerHTML,
-			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label><dispatch-element-child slot="foo" style="display: inline;"><label>test</label></dispatch-element-child></div></dispatch-element>'
-		);
-
 		assert.isTrue(domEventSub.calledWith(15));
 		assert.isTrue(nodeEventStub.calledWith(15));
 	});
