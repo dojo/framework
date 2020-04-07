@@ -1,9 +1,17 @@
 import Registry from './Registry';
-import { create as vdomCreate, diffProperty, dom, invalidator, isTextNode, renderer, w } from './vdom';
+import {
+	create as vdomCreate,
+	diffProperty,
+	dom as vdomDom,
+	invalidator,
+	isTextNode,
+	renderer,
+	w as vdomW
+} from './vdom';
 import { from } from '../shim/array';
 import global from '../shim/global';
 import Injector from './Injector';
-import { VNode, WNode } from './interfaces';
+import { DomVNode, WNode } from './interfaces';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -19,6 +27,52 @@ function isElement(item: any): item is Element {
 
 function isDojoChild(item: any): boolean {
 	return isElement(item) && item.tagName.indexOf('-') > -1;
+}
+
+function w(node: any, properties: any, children?: any): WNode {
+	const wrappedWNode = vdomW(node, properties, children);
+
+	function wrapper(...args: any[]) {
+		const { domNode } = node;
+		if (args.length && domNode) {
+			setTimeout(() => {
+				domNode.dispatchEvent(
+					new CustomEvent('render', {
+						bubbles: false,
+						detail: args
+					})
+				);
+			});
+		}
+		return wrappedWNode;
+	}
+
+	Object.keys(wrappedWNode).forEach((key) => ((wrapper as any)[key] = (wrappedWNode as any)[key]));
+
+	return wrapper as any;
+}
+
+function dom(options: any, children?: any): DomVNode {
+	const wrappedDomNode = vdomDom(options, children);
+
+	function wrapper(...args: any[]) {
+		const { domNode } = wrappedDomNode;
+		if (args.length && domNode) {
+			setTimeout(() => {
+				domNode.dispatchEvent(
+					new CustomEvent('render', {
+						bubbles: false,
+						detail: args
+					})
+				);
+			});
+		}
+		return wrappedDomNode;
+	}
+
+	Object.keys(wrappedDomNode).forEach((key) => ((wrapper as any)[key] = (wrappedDomNode as any)[key]));
+
+	return wrapper as any;
 }
 
 const factory = vdomCreate({ diffProperty, invalidator }).properties<any>();
@@ -247,26 +301,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		}
 
 		public __children__() {
-			const wrap = (domNode: HTMLElement, node: WNode | VNode) => {
-				const w = (...args: any[]) => {
-					if (args.length) {
-						setTimeout(() => {
-							domNode.dispatchEvent(
-								new CustomEvent('render', {
-									bubbles: false,
-									detail: args
-								})
-							);
-						});
-					}
-					return node;
-				};
-
-				Object.keys(node).forEach((key) => ((w as any)[key] = (node as any)[key]));
-
-				return w;
-			};
-
 			if (this._children.some((child) => child.domNode.getAttribute && child.domNode.getAttribute('slot'))) {
 				const slots = this._children.reduce((slots, child) => {
 					const { domNode } = child;
@@ -277,12 +311,13 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 						return slots;
 					}
 
-					let slotResult = wrap(
-						child.domNode,
-						child.domNode.isWidget
-							? w(child, { ...domNode.__properties__() }, [...domNode.__children__()])
-							: dom({ node: domNode, diffType: 'dom' })
-					);
+					let slotResult = child.isFactory
+						? w(
+								child,
+								domNode.__properties__ ? { ...domNode.__properties__() } : {},
+								domNode.__children__ ? [...domNode.__children__()] : []
+						  )
+						: child;
 
 					const existingSlotValue = slots[slotName];
 
@@ -307,10 +342,10 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			if (this._childType === CustomElementChildType.DOJO) {
 				return this._children.filter((Child) => Child.domNode.isWidget).map((Child: any) => {
 					const { domNode } = Child;
-					return wrap(domNode, w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]));
+					return w(Child, { ...domNode.__properties__() }, [...domNode.__children__()]);
 				});
 			} else {
-				return this._children.map((child) => wrap(child.domNode, child));
+				return this._children;
 			}
 		}
 
