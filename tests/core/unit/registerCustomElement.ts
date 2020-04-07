@@ -741,7 +741,8 @@ describe('registerCustomElement', () => {
 	});
 
 	it('dispatches events when child render funcs have arguments', async () => {
-		const eventStub = stub();
+		const domEventSub = stub();
+		const nodeEventStub = stub();
 
 		@customElement({
 			tag: 'dispatch-element',
@@ -753,13 +754,27 @@ describe('registerCustomElement', () => {
 			render() {
 				const child: any = this.children[0];
 
-				return v('div', {}, [child.foo(15)]);
+				return v('div', {}, child.foo.map((child: any) => child(15)));
+			}
+		}
+
+		@customElement({
+			tag: 'dispatch-element-child',
+			properties: [],
+			attributes: [],
+			events: []
+		})
+		class WidgetB extends WidgetBase<any> {
+			render() {
+				return v('label', {}, ['test']);
 			}
 		}
 
 		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, WidgetB);
 
 		customElements.define('dispatch-element', CustomElement);
+		customElements.define('dispatch-element-child', CustomElementChild);
 
 		const element = document.createElement('dispatch-element');
 
@@ -768,10 +783,17 @@ describe('registerCustomElement', () => {
 		slotChild1.innerHTML = 'test1';
 
 		slotChild1.addEventListener('render', (event: any) => {
-			eventStub(event.detail[0]);
+			domEventSub(event.detail[0]);
+		});
+
+		const slotChild2 = document.createElement('dispatch-element-child');
+		slotChild2.setAttribute('slot', 'foo');
+		slotChild2.addEventListener('render', (event: any) => {
+			nodeEventStub(event.detail[0]);
 		});
 
 		element.appendChild(slotChild1);
+		element.appendChild(slotChild2);
 		document.body.appendChild(element);
 
 		// this one to render
@@ -781,10 +803,11 @@ describe('registerCustomElement', () => {
 
 		assert.strictEqual(
 			element.outerHTML,
-			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label></div></dispatch-element>'
+			'<dispatch-element style="display: block;"><div><label slot="foo">test1</label><dispatch-element-child slot="foo" style="display: inline;"><label>test</label></dispatch-element-child></div></dispatch-element>'
 		);
 
-		assert.isTrue(eventStub.calledWith(15));
+		assert.isTrue(domEventSub.calledWith(15));
+		assert.isTrue(nodeEventStub.calledWith(15));
 	});
 
 	it('renders dom-only nodes as slots', async () => {
