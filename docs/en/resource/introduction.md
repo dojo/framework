@@ -2,7 +2,7 @@
 
 Dojo **resource** provides a consistent means to make widgets data aware.
 
-Dojo resource allows you to create a single store of data, backed by a template describing how to read data which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget it's using. Coupled with the data middleware, resources allow consistent, source agnostic data access for your widgets without them being aware of the underlying data fetching implementation or the raw data format being used.
+Dojo resource allows you to create a single store of data which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget it's using. Coupled with the data middleware, resources allow consistent, source agnostic data access for your widgets without them being aware of the underlying data fetching implementation or the raw data format being used.
 
 | Feature                                   | Description                                                                                                                                                                   |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -16,9 +16,9 @@ Dojo resource allows you to create a single store of data, backed by a template 
 
 Dojo resource is comprised of a resource which you create to get and read data and a data middleware which you use within your widgets to access the resource.
 
-## The resource
+## Creating a resource
 
-A basic resource requires only a DataTemplate to be created which specifies a `read` function.
+A basic resource requires only a `DataTemplate` to be created which specifies a `read` function.
 
 > main.ts
 
@@ -35,7 +35,7 @@ const resource = createResource(template);
 
 When a call is made to the resource api which requires data to be read, the read function will be called with the readoptions, a put function and a get function. These two helper functions can be used to side load data or to read existing data from the resource.
 
-## The transformer
+## Transforming Data
 
 Resources provides a `createTransformer` function which works in conjuction with the generic attached to the `DataTemplate` to ensure that only values returned in the object from the `read` functions are used to transform the data.
 
@@ -57,7 +57,7 @@ const transformer = createTransformer(template, {
 
 The transformer can be passed to a widget which uses the data middleware to ensure that the data it receives from the resource is correct.
 
-## Passing a resource to a widget
+## Passing a Resource to a Widget
 
 A widget that uses the data middleware can be passed a `resource` to use.
 
@@ -78,3 +78,24 @@ export default factory(function() {
 	return <List resource={resource} />;
 });
 ```
+
+## Accessing data within a widget
+
+A data aware widget should use the `data` middleware to access data via its API. Each call made to the data apis require `ReadOptions` to be passed. These should be accessed and set via `getOptions` and `setOptions` functions to ensure that any widgets sharing the resource are using the same options.
+
+> List.ts
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+
+const factory = create({ data });
+
+export const List = factory(function Select({ middleware: { data } }) {
+	const { getOrRead, getOptions } = data();
+
+	const items = getOrRead(getOptions());
+});
+```
+
+As you can see in the above example, `getOrRead` is being called with the result of `getOptions`. This is a reactive api and will return data if it is available or invalidate the widget when a read is complete and the data becomes available.
