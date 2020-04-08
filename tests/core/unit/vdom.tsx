@@ -5165,7 +5165,7 @@ jsdomDescribe('vdom', () => {
 				const div = document.createElement('div');
 				r.mount({ domNode: div, sync: true });
 				const root = div.childNodes[0] as HTMLElement;
-				meta.setRenderResult(v('div', { styles: { height: null, width: '30px' } }));
+				meta.setRenderResult(v('div', { styles: { height: undefined, width: '30px' } }));
 
 				assert.strictEqual(root.outerHTML, '<div style="width: 30px;"></div>');
 			});

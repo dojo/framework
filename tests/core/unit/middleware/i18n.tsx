@@ -1,3 +1,5 @@
+import Map from '../../../../src/shim/Map';
+
 const { it, beforeEach, afterEach } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');

@@ -1,8 +1,9 @@
 import { create, invalidator, diffProperty, destroy, node } from '../../../core/vdom';
-import focus from '../../../core/middleware/focus';
-import icache from '../../../core/middleware/icache';
+import focus, { FocusState } from '../../../core/middleware/focus';
+import { createICacheMiddleware } from '../../../core/middleware/icache';
 import { DefaultMiddlewareResult } from '../../../core/interfaces';
 
+const icache = createICacheMiddleware<FocusState>();
 export function createFocusMock() {
 	const focusNodes: { [key: string]: boolean } = {};
 	let invalidate: () => void | undefined;

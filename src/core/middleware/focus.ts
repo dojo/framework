@@ -5,7 +5,7 @@ import { FocusProperties } from '../interfaces';
 
 export { FocusProperties } from '../interfaces';
 
-interface FocusState {
+export interface FocusState {
 	current: number;
 }
 

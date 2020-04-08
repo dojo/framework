@@ -10,11 +10,11 @@ class DragExample extends WidgetBase {
 			{
 				key: 'root',
 				styles: {
-					'background-color': dragResults.isDragging ? 'green' : 'white',
+					backgroundColor: dragResults.isDragging ? 'green' : 'white',
 					border: '1px solid black',
 					color: dragResults.isDragging ? 'white' : 'black',
 					height: '400px',
-					'user-select': 'none',
+					userSelect: 'none',
 					width: '200px'
 				}
 			},

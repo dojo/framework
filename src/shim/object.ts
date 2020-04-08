@@ -168,8 +168,8 @@ if (!has('es2017-object')) {
 				previous[key] = Object.getOwnPropertyDescriptor(o, key)!;
 				return previous;
 			},
-			{} as { [P in keyof T]: TypedPropertyDescriptor<T[P]> } & { [x: string]: PropertyDescriptor }
-		);
+			{} as { [x: string]: PropertyDescriptor }
+		) as { [P in keyof T]: TypedPropertyDescriptor<T[P]> } & { [x: string]: PropertyDescriptor };
 	};
 
 	Object.entries = function entries(o: any): [string, any][] {

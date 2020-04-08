@@ -105,13 +105,13 @@ export const theme = factory(
 
 		return {
 			classes<T extends ClassNames>(css: T): T {
-				let theme = icache.get<T>(css);
-				if (theme) {
-					return theme;
+				const cachedTheme = icache.get<T>(css);
+				if (cachedTheme) {
+					return cachedTheme;
 				}
 				const { [THEME_KEY]: key, ...classes } = css;
 				themeKeys.add(key);
-				theme = classes as T;
+				let theme = classes as ClassNames;
 				let { theme: currentTheme, classes: currentClasses } = properties();
 
 				if (currentTheme && isThemeWithVariant(currentTheme)) {
@@ -133,7 +133,7 @@ export const theme = factory(
 					}
 				}
 				icache.set(css, theme, false);
-				return theme;
+				return theme as T;
 			},
 			variant() {
 				const { theme } = properties();
