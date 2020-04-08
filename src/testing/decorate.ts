@@ -13,8 +13,12 @@ export interface DecoratorResult<T> {
 	nodes: T;
 }
 
-function isNode(node: any): node is VNode | WNode {
+function isNode(node: any): node is VNode & { id?: string } | WNode & { id?: string } {
 	return isVNode(node) || isWNode(node);
+}
+
+function isWrappedNode(node: any): node is VNode & { id: string } | WNode & { id: string } {
+	return Boolean(isNode(node) && node.id);
 }
 
 export function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
@@ -45,6 +49,7 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 	let nodes: DecorateTuple[] = [
 		[Array.isArray(actual) ? [...actual] : [actual], Array.isArray(expected) ? [...expected] : [expected]]
 	];
+	const wrappedNodeIds = [];
 
 	let node = nodes.shift();
 	while (node) {
@@ -53,8 +58,11 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 		while (expectedNodes.length > 0) {
 			let actualNode: DNode | { [index: string]: any } = actualNodes.shift();
 			let expectedNode: DNode | { [index: string]: any } = expectedNodes.shift();
-			if (isNode(expectedNode)) {
-				const instruction = instructions.get((expectedNode as any).id);
+			if (isWrappedNode(expectedNode)) {
+				if (wrappedNodeIds.indexOf(expectedNode.id) !== -1) {
+					throw new Error('Cannot use a wrapped test node more than once within an assertion template.');
+				}
+				const instruction = instructions.get(expectedNode.id);
 				if (instruction) {
 					if (instruction.type === 'child') {
 						const expectedChild: any = expectedNode.children && expectedNode.children[0];
@@ -89,6 +97,7 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 						actualNode.properties[instruction.key](...instruction.params);
 					}
 				}
+				wrappedNodeIds.push(expectedNode.id);
 			}
 
 			if (isNode(expectedNode) && isNode(actualNode)) {

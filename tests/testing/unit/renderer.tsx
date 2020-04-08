@@ -426,6 +426,30 @@ describe('test renderer', () => {
 			const r = renderer(() => w(Foo, { foo, bar }));
 			r.expect(assertionTemplate(() => w(Bar, { foo, bar })));
 		});
+
+		it('should throw error if wrapped test node is used more than once', () => {
+			const factory = create();
+			const WrappedSpan = wrap('span');
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<span>hello</span>
+						<span>world</span>
+					</div>
+				);
+			});
+			const r = renderer(() => <MyWidget />);
+			assert.throws(() => {
+				r.expect(
+					assertionTemplate(() => (
+						<div>
+							<WrappedSpan>hello</WrappedSpan>
+							<WrappedSpan>world</WrappedSpan>
+						</div>
+					))
+				);
+			}, 'Cannot use a wrapped test node more than once within an assertion template.');
+		});
 	});
 
 	describe('functional widgets', () => {
