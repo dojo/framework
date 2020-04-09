@@ -47,7 +47,7 @@ const WrappedMyWidget = wrap(MyWidget);
 const WrappedDiv = wrap('div');
 ```
 
-The test renderer uses the location of a wrapped test node in the expected tree to attempt to perform the requested action (either `r.property()` or `r.child()`) on the actual output of the widget under test. If the wrapped test node does not match the corresponding node in the actual output tree then no action will be performed and the assertion will report a failure.
+The test renderer uses the location of a wrapped test node in the expected tree to attempt to perform any requested actions (either `r.property()` or `r.child()`) on the actual output of the widget under test. If the wrapped test node does not match the corresponding node in the actual output tree then no action will be performed and the assertion will report a failure.
 
 **Note:** Wrapped test nodes should only be used once within an assertion template, if the same test node is detected more than once during an assertion an error will be thrown and the test fail.
 
