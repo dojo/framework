@@ -1,3 +1,4 @@
+import global from '../shim/global';
 import Evented from '../core/Evented';
 import {
 	RouteConfig,
@@ -179,7 +180,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 	private _register(config: RouteConfig[], routes?: Route[], parentRoute?: Route): void {
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
-			let { path, outlet, children, defaultRoute = false, defaultParams = {}, id } = config[i];
+			let { path, outlet, children, defaultRoute = false, defaultParams = {}, id, title } = config[i];
 			let [parsedPath, queryParamString] = path.split('?');
 			let queryParams: string[] = [];
 			parsedPath = this._stripLeadingSlash(parsedPath);
@@ -189,6 +190,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				params: [],
 				id,
 				outlet,
+				title,
 				path: parsedPath,
 				segments,
 				defaultParams: parentRoute ? { ...parentRoute.defaultParams, ...defaultParams } : defaultParams,
@@ -326,6 +328,17 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				matchedRoute.type = 'error';
 			}
 			matchedRouteId = matchedRoute.route.id;
+			const title = this._options.setDocumentTitle
+				? this._options.setDocumentTitle({
+						id: matchedRouteId,
+						title: matchedRoute.route.title,
+						params: matchedRoute.params,
+						queryParams: this._currentQueryParams
+				  })
+				: matchedRoute.route.title;
+			if (title) {
+				global.document.title = title;
+			}
 			while (matchedRoute) {
 				let { type, params, route } = matchedRoute;
 				let parent: RouteWrapper | undefined = matchedRoute.parent;

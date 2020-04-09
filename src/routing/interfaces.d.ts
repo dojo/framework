@@ -15,6 +15,7 @@ export interface Route {
 	id: string;
 	path: string;
 	outlet: string;
+	title?: string;
 	params: string[];
 	segments: string[];
 	children: Route[];
@@ -35,6 +36,7 @@ export interface RouteConfig {
 	children?: RouteConfig[];
 	defaultParams?: Params;
 	defaultRoute?: boolean;
+	title?: string;
 }
 
 /**
@@ -207,9 +209,24 @@ export interface History {
 	readonly current: string;
 }
 
+/**
+ * Document title option
+ */
+export interface DocumentTitleOptions {
+	id: string;
+	params: Params;
+	queryParams: Params;
+	title?: string;
+}
+
+export interface SetDocumentTitle {
+	(options: DocumentTitleOptions): string | undefined;
+}
+
 export interface RouterOptions {
 	autostart?: boolean;
 	window?: Window;
 	base?: string;
 	HistoryManager?: HistoryConstructor;
+	setDocumentTitle?: SetDocumentTitle;
 }
