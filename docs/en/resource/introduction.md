@@ -81,7 +81,7 @@ export default factory(function() {
 
 ## Accessing data within a widget
 
-A data aware widget should use the `data` middleware to access data via its API. Each call made to the data apis require `ReadOptions` to be passed. These should be accessed and set via `getOptions` and `setOptions` functions to ensure that any widgets sharing the resource are using the same options.
+A data aware widget should use the `data` middleware to access data via its API. Each call made to the data apis require `Options` to be passed. These should be accessed and set via `getOptions` and `setOptions` functions to ensure that any widgets sharing the resource are using the same options.
 
 > List.ts
 
