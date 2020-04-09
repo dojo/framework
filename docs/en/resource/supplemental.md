@@ -92,9 +92,111 @@ The above approach will allow the `data` to be changed at any time causing the r
 
 # Data Middleware
 
-The data middleware provides a widget with access to the underlying resource via the data middleware which offers an api to initialise and share the resource and functions to interact with it.
+The data middleware provides a widget with access to the underlying resource via the data middleware which offers an api to initialise and share the resource and functions to interact with it. The middleware should be imported and passed to the widgets `create` function the same as other middlwares. It will add two extra properties to your widget; `resource` and `transform`.
+
+```ts
+import { create } from '@dojo/framework/core/vdom';
+import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+
+const factory = create({ data });
+
+export const DataAwareWidget = factory(function ({
+	middleware: { data }
+}) {
+	const api = data();
+}
+```
+
+## The Resource Property
+
+The resource property added to a widget can be used to pass a resource, a resource factory and data to initialise the resource with or a resource wrapper.
+
+### resource
+
+A resource is the result of the `createResource` function. It is a new resource and does not have any `ResourceOptions` or data middleware connections associated to it. This is how you will pass a resource into a widget in most cases pertaining to a remote data source.
+
+```tsx
+import { DataTemplate, createResource } from '@dojo/framework/core/resource';
+import { fetcher } from './personfetcher';
+import { List } from './List';
+
+const template: DataTemplate = {
+	read: fetcher
+};
+
+const resource = createResource(template);
+
+export default factory(function() {
+	return <List resource={resource} />;
+});
+```
+
+### resource factory with data
+
+A resource factory with data is the approach you would use when you wish to side load data into the resource. This will commonly be used when working in an in memory data array and a memory template as it allows the resource data to be reloaded when the data passed is changed.
+
+```tsx
+import { DataTemplate, createResource } from '@dojo/framework/core/resource';
+import { List } from './List';
+
+const memoryTemplate: DataTemplate = {
+	read: ({ query }, get, put) => {
+		let data: any[] = get();
+		const filteredData = filter && query ? data.filter((i) => filter(query, i)) : data;
+		put(0, filteredData);
+		return { data: filteredData, total: filteredData.length };
+	}
+};
+
+export default factory(function() {
+	return (
+		<List
+			resource={{
+				resource: () => createResource(memoryTemplate),
+				data: ['dog', 'fish', 'cat']
+			}}
+		/>
+	);
+});
+```
+
+### resource wrapper
+
+The resource wrapper is obtained from the data middleware. It is used inside widgets when they wish to pass the resource onto a child widget either as a new wrapper with it's own `ReadOptions` or as a `shared` wrapper with a common set of `ReadOption`.
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+
+const factory = create({ data });
+
+export const DataAwareWidget = factory(function ({
+	middleware: { data }
+}) {
+	const { resource, shared } = data();
+
+	return (
+		<virtual>
+			// this List will be given the underlying resource
+			// with no shared `ReadOptions
+			<List resource={resource} />
+			// this List will share `ReadOptions` with the
+			// parent widget
+			<List resource={shared()} />
+		</virtual>
+	)
+}
+```
+
+This shared approach is used within our typeahead widget to share the query between the text input and the list of options. See more information on this in the `sharing` section below.
+
+## Typing the data middleware
+
+When
 
 ## API
+
+The data middleware is provided as a function
 
 ### get options
 
