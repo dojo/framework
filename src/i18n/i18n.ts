@@ -329,6 +329,7 @@ function registerBundle<T extends Messages>(bundle: Bundle<T>): string {
 		Globalize.loadMessages({
 			root: { [bundleId]: bundle.messages },
 			[computedLocale]: { [bundleId]: bundle.messages },
+			[defaultLocale]: { [bundleId]: bundle.messages },
 			...messageBundles
 		});
 		Cldr.load({ dojo: lookup });

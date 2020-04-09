@@ -266,10 +266,11 @@ describe('i18n middleware', () => {
 				es: overrideEs.loader
 			}
 		};
-		const App = factory(({ middleware: { i18n } }) => {
+		const App = factory(({ properties, middleware: { i18n } }) => {
 			const { messages, format, isPlaceholder } = i18n.localize(bundle);
 			return (
 				<div>
+					<div>{properties().locale}</div>
 					<div>{JSON.stringify(messages)}</div>
 					<div>{format('foo', { name: 'John' })}</div>
 					<div>{`${isPlaceholder}`}</div>
@@ -281,6 +282,13 @@ describe('i18n middleware', () => {
 					>
 						es
 					</button>
+					<button
+						onclick={() => {
+							i18n.set();
+						}}
+					>
+						reset
+					</button>
 				</div>
 			);
 		});
@@ -290,21 +298,27 @@ describe('i18n middleware', () => {
 		r.mount({ domNode: root });
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"Oi, {name}"}</div><div>Oi, John</div><div>false</div><div>{}</div><button>es</button></div>'
+			'<div><div>en</div><div>{"foo":"Oi, {name}"}</div><div>Oi, John</div><div>false</div><div>{}</div><button>es</button><button>reset</button></div>'
 		);
-		root.children[0].children[4].click();
+		root.children[0].children[5].click();
 		await localeLoader;
 		resolvers.resolveRAF();
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button></div>'
+			'<div><div>es</div><div>{"foo":""}</div><div></div><div>true</div><div>{"locale":"es"}</div><button>es</button><button>reset</button></div>'
 		);
 		overrideEs.resolver({ default: { foo: 'bonjour, {name}' } });
 		await overrideEs.promise;
 		resolvers.resolveRAF();
 		assert.strictEqual(
 			root.innerHTML,
-			'<div><div>{"foo":"bonjour, {name}"}</div><div>bonjour, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button></div>'
+			'<div><div>es</div><div>{"foo":"bonjour, {name}"}</div><div>bonjour, John</div><div>false</div><div>{"locale":"es"}</div><button>es</button><button>reset</button></div>'
+		);
+		root.children[0].children[6].click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div>en</div><div>{"foo":"Oi, {name}"}</div><div>Oi, John</div><div>false</div><div>{}</div><button>es</button><button>reset</button></div>'
 		);
 	});
 });
