@@ -1,7 +1,7 @@
 # Data Templates
 
-Data templates tells the resource how to read data and can accept a generic which is used to type the transformer.
-The templates `read` function receives three paramaters.
+Data templates tell the resource how to read data and can accept a generic which is used to type the transformer.
+The template's `read` function receives three paramaters.
 
 -   options: This is a `ReadOptions` object consisting of the current `query`, the read `offset` and the page `size` to request.
 -   put: This is a function that can be used to side-load data into the resource. This could be used by the template to pre-fetch data or to load the full data payload in a memory template. This function takes two parameters, an `offset` to place the data and the array of `data` to load. It is pre-configured to use the current `ReadOption` query when setting data.
@@ -36,7 +36,7 @@ const template: DataTemplate = {
 Sometimes we may want to create a template that works off of a local in-memory array rather than via an async endpoint. When creating this type of template, the same approach is taken but we have a couple of things to consider.
 
 -   We should cater for filering via the query option.
--   We can side load the full data set using the `put` param. This will allow data-aware widgets access to the full data set up front and is useful for widgets suchg as `select` which need to skip to content related to a given keypress etc...
+-   We can side load the full data set using the `put` param. This will allow data-aware widgets access to the full data set up front and is useful for widgets such as `select` which need to skip to content related to a given keypress etc...
 
 ```ts
 import USStates from './states';

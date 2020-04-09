@@ -7,10 +7,10 @@ Dojo resource allows you to create a single store of data which can be passed in
 | Feature                                   | Description                                                                                                                                                                   |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Single data source**                    | Resources allows you to create a single resource for a given template and share it with multiple widgets via the data middleware.                                             |
-| **Data transforms**                       | A data tranform mechanism allows you to specify the data form at your widget requires and transforms the data transparently                                                   |
+| **Data transforms**                       | A data tranform mechanism allows you to specify the data form that your widget requires and transforms the data transparently                                                   |
 | **Support for async and sync data reads** | The resource template can read data in any way it sees fit, the data middleware uses a reactive API to invalidate widgets when data becomes available.                        |
 | **Consistent Resource Options**           | Resource options objects are passed to all api functions ensuring that all api functions are pure and provide only the data that was requested                                |
-| **Sharable Resource Options**             | Resource options can be shared between widgets via the data middleware meaning that multiple widgets can react to changes to the resource options, ie. query, page number etc |
+| **Sharable Resource Options**             | Resource options can be shared between widgets via the data middleware. This allows multiple widgets to react to changes to the resource options, ie. query, page number etc |
 
 # Basic Usage
 
