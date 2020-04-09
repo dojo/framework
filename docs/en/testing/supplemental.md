@@ -2,9 +2,9 @@
 
 Dojo provides a simple and type safe test renderer for shallowly asserting the expected output and behavior from a widget. The test renderer's API has been designed to encourage unit testing best practices from the outset to ensure high confidence in you Dojo application.
 
-Working with [assertion templates](/missing/link) and the test renderer is done using [wrapped test nodes](/missing/link) that are defined in the assertion templates structure, ensuring type safety throughout the testing life-cycle.
+Working with [assertion templates](/learn/testing/test-renderer#assertion-templates) and the test renderer is done using [wrapped test nodes](/learn/testing/test-renderer#wrapped-test-nodes) that are defined in the assertion templates structure, ensuring type safety throughout the testing life-cycle.
 
-The expected structure of a widget is defined using an assertionTemplate and passed to the test renderer's [`.expect()`](/missing/link) function which executes the assertion.
+The expected structure of a widget is defined using an assertionTemplate and passed to the test renderer's `.expect()` function which executes the assertion.
 
 > src/MyWidget.spec.tsx
 
@@ -101,7 +101,7 @@ describe('Profile', () => {
 		const r = renderer(() => <Profile />);
 
 		// Test against the base assertion
-		h.expect(baseAssertion);
+		r.expect(baseAssertion);
 	});
 });
 ```
@@ -131,7 +131,7 @@ describe('Profile', () => {
 		const r = renderer(() => <Profile />);
 
 		// Test against the base assertion
-		h.expect(baseAssertion);
+		r.expect(baseAssertion);
 	});
 
 	it('Should render using the passed username', () => {
@@ -141,7 +141,7 @@ describe('Profile', () => {
 		const usernameTemplate = baseAssertion.setChildren(WrappedHeader, () => ['Dojo']);
 
 		// Test against the username template
-		h.expect(usernameTemplate);
+		r.expect(usernameTemplate);
 	});
 });
 ```
@@ -322,22 +322,24 @@ describe('MyWidget', () => {
         const r = renderer(() => <MyWidget onClick={onClickStub} />);
 
         // assert against the base assertion
-        h.expect(baseAssertion);
+        r.expect(baseAssertion);
 
         // register a call to the button's onclick property
-        h.property(WrappedButton, 'onclick');
+        r.property(WrappedButton, 'onclick');
 
         // create a new template with the updated count
         const counterTemplate = baseAssertion.setChildren(WrappedSpan, () => ['1']);
 
         // expect against the new template, the property will be called before the test render
-        h.expect(counterTemplate);
+        r.expect(counterTemplate);
 
         // once the assertion is complete, check that the stub property was called
         assert.isTrue(onClickStub.calledOnce);
     });
 });
 ```
+
+Arguments for the function can be passed after the function name, for example `r.property(WrappedButton, 'onclick', { target: { value: 'value' }})`. When there are multiple parameters for the function they are passed one after the other `r.property(WrappedButton, 'onclick', 'first-arg', 'second-arg', 'third-arg')`
 
 ## Asserting Functional Children
 
@@ -393,7 +395,7 @@ describe('MyWidget', () => {
         // with the provided params
         r.child(WrappedMyWidgetWithChildren, ['Hello!']);
 
-        h.expect(baseAssertion);
+        r.expect(baseAssertion);
     });
 });
 ```
@@ -577,11 +579,11 @@ describe('Breakpoint', () => {
 		const r = renderer(() => <Breakpoint />, {
 			middleware: [[breakpoint, mockBreakpoint]]
 		});
-		h.expect(template);
+		r.expect(template);
 
 		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
 
-		h.expect(template.insertAfter(WrappedHeader, () => [<h2>Subtitle</h2>]);
+		r.expect(template.insertAfter(WrappedHeader, () => [<h2>Subtitle</h2>]);
 	});
 });
 ```
@@ -638,11 +640,11 @@ describe('Focus', () => {
 			middleware: [[focus, focusMock]]
 		});
 
-		h.expect(template);
+		r.expect(template);
 
 		focusMock('text', true);
 
-		h.expect(template.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
+		r.expect(template.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
 	});
 });
 ```
@@ -700,11 +702,11 @@ describe('MyWidget', () => {
 		const template = assertionTemplate(() => <WrappedRoot>Loading</WrappedRoot>);
 		const mockICache = createICacheMock();
 		const r = renderer(() => <Home />, { middleware: [[icache, mockICache]] });
-		h.expect(template);
+		r.expect(template);
 
 		// await the async method passed to the mock cache
 		await mockICache('users');
-		h.expect(template.setChildren(WrappedRoot, () => ['api data']));
+		r.expect(template.setChildren(WrappedRoot, () => ['api data']));
 	});
 });
 ```
@@ -757,7 +759,7 @@ describe('MyWidget', () => {
 		intersectionMock('root', { isIntersecting: true });
 
 		// assert again with the updated expectation
-		h.expect(assertionTemplate.setChildren(WrappedRoot, () => [`{"isIntersecting": true }`]));
+		r.expect(assertionTemplate.setChildren(WrappedRoot, () => [`{"isIntersecting": true }`]));
 	});
 });
 ```
@@ -994,7 +996,7 @@ describe('Validity', () => {
 			</WrappedRoot>
 		));
 
-		h.expect(template);
+		r.expect(template);
 
 		validityMock('input', { valid: false, message: 'invalid message' });
 
@@ -1002,7 +1004,7 @@ describe('Validity', () => {
 			.append(WrappedRoot, () => [<p key="validityMessage">invalid message</p>])
 			.setProperty(WrappedRoot, 'classes', [css.root, css.invalid]);
 
-		h.expect(invalidTemplate);
+		r.expect(invalidTemplate);
 	});
 });
 ```
