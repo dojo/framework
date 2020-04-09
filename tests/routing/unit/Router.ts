@@ -1,6 +1,8 @@
-const { describe, it } = intern.getInterface('bdd');
+const { it } = intern.getInterface('bdd');
+const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 
+import global from '../../../src/shim/global';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
 
@@ -577,6 +579,27 @@ describe('Router', () => {
 		router.start();
 		assert.strictEqual(historyManagerCount, 1);
 		assert.isTrue(initialNavEvent);
+	});
+
+	describe('Document Title', () => {
+		it('should set the title as defined in the routing config', () => {
+			const router = new Router([{ id: 'foo', outlet: 'foo', path: 'foo/{id}?{query}', title: 'foo' }], {
+				HistoryManager
+			});
+			router.setPath('/foo/id-value?query=queryValue');
+			assert.strictEqual(global.document.title, 'foo');
+		});
+
+		it('should set the title as using the set document title callback', () => {
+			const router = new Router([{ id: 'foo', outlet: 'foo', path: 'foo/{id}?{query}', title: 'static-foo' }], {
+				HistoryManager,
+				setDocumentTitle({ title, params, queryParams, id }) {
+					return `${title}-${id}-${params.id}-${queryParams.query}`;
+				}
+			});
+			router.setPath('/foo/id-value?query=queryValue');
+			assert.strictEqual(global.document.title, 'static-foo-foo-id-value-queryValue');
+		});
 	});
 
 	describe('outlets', () => {
