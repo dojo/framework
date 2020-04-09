@@ -166,7 +166,7 @@ The resource wrapper is obtained from the data middleware. It is used inside wid
 
 ```tsx
 import { create } from '@dojo/framework/core/vdom';
-import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+import { data } from '@dojo/framework/core/middleware/data';
 
 const factory = create({ data });
 
@@ -190,9 +190,65 @@ export const DataAwareWidget = factory(function ({
 
 This shared approach is used within our typeahead widget to share the query between the text input and the list of options. See more information on this in the `sharing` section below.
 
-## Typing the data middleware
+## The Transform Property
 
-When
+The `transform` property is used to convert the data returned by the `read` function to the format expected by the widget. When a widget uses the standard `data` middleware, `transform` is an optional property. However, when a widget creates a typed middleware using the `createDataMiddleware` function, it becomes a required property and is typed via a generic to ensure that the correct data format is created by the transform config.
+
+The transform is transparent and occurs in the middleware before data is returned to the widget. When performing queries on the resource, a reverse transform is used to convert the widget values back to the source values provided.
+
+```ts
+// resource data
+const resourceData = [{ firstname: 'joe', lastname: 'bloggs' }, { firstname: 'jane', lastname: 'doe' }];
+
+// with a transform of
+const transform = {
+	value: ['firstname']
+};
+
+// would create
+const transformedData = [{ value: 'joe' }, { value: 'jane' }];
+```
+
+Transforms can also be used to join source keys together to create composite fields. For example, with the same resource data as above
+
+```ts
+// with a transform of
+const transform = {
+	value: ['firstname', 'lastname']
+};
+
+// would create
+const transformedData = [{ value: 'joe bloggs' }, { value: 'jane doe' }];
+```
+
+### using a typed transform
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+
+// create the middleware with a generic
+const data = createDataMiddleware<{ value: string }>();
+const factory = create({ data });
+
+export const DataAwareWidget = factory(function ({
+	middleware: { data }
+}) {
+	const { getOrRead, getOptions } = data();
+	const data = getOrRead(getOptions());
+
+	return (
+		<virtual>
+			{ data.map(item => <span>{item.value}</span>) }
+		</virtual>;
+	)
+}
+
+// in render function elsewhere
+<List resource={resource} transform={{ value: ['firstname', 'lastname']}}>
+// if a key other than `value` was passed in the transform or no transform at all
+// was passed, a type error would occur
+```
 
 ## API
 

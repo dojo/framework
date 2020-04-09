@@ -87,7 +87,7 @@ A data aware widget should use the `data` middleware to access data via its API.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+import { data } from '@dojo/framework/core/middleware/data';
 
 const factory = create({ data });
 
