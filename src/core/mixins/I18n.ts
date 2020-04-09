@@ -5,15 +5,14 @@ import { afterRender } from './../decorators/afterRender';
 import { getInjector } from './../decorators/inject';
 import { Constructor, DNode, VNodeProperties, LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
 import { Injector } from './../Injector';
-import { Registry } from './../Registry';
 import { WidgetBase } from './../WidgetBase';
 import { decorate } from '../util';
 import { isThenable } from '../../shim/Promise';
 import beforeProperties from '../decorators/beforeProperties';
+import { INJECTOR_KEY } from '../I18nInjector';
 
 export { LocalizedMessages, I18nProperties, LocaleData } from './../interfaces';
-
-export const INJECTOR_KEY = '__i18n_injector';
+export { INJECTOR_KEY, registerI18nInjector } from '../I18nInjector';
 
 /**
  * interface for I18n functionality
@@ -43,30 +42,6 @@ export interface I18nMixin {
 interface I18nVNodeProperties extends VNodeProperties {
 	dir: string;
 	lang: string;
-}
-
-class I18nInjector extends Injector {
-	set(localeData: LocaleData) {
-		if (localeData.locale) {
-			const result = setLocale({ locale: localeData.locale });
-			if (isThenable(result)) {
-				result.then(() => {
-					super.set(localeData);
-				});
-				return;
-			}
-			super.set(localeData);
-		}
-	}
-}
-
-export function registerI18nInjector(localeData: LocaleData, registry: Registry): I18nInjector {
-	const injector = new I18nInjector(localeData);
-	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
-		injector.setInvalidator(invalidator);
-		return () => injector;
-	});
-	return injector;
 }
 
 const previousLocaleMap: WeakMap<WidgetBase, string> = new WeakMap();

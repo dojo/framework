@@ -1,21 +1,11 @@
-import { localizeBundle, Bundle, Messages, setLocale, getCurrentLocale, getComputedLocale } from '../../i18n/i18n';
+import { localizeBundle, Bundle, Messages, setLocale, getCurrentLocale } from '../../i18n/i18n';
 import { create, invalidator, getRegistry, diffProperty } from '../vdom';
 import injector from './injector';
-import Injector from '../Injector';
-import Registry from '../Registry';
 import { I18nProperties, LocalizedMessages, LocaleData } from '../interfaces';
 import { isThenable } from '../../shim/Promise';
+import I18nInjector, { INJECTOR_KEY, registerI18nInjector } from '../I18nInjector';
 
-export const INJECTOR_KEY = '__i18n_injector';
-
-export function registerI18nInjector(localeData: LocaleData, registry: Registry): Injector {
-	const injector = new Injector(localeData);
-	registry.defineInjector(INJECTOR_KEY, (invalidator) => {
-		injector.setInvalidator(invalidator);
-		return () => injector;
-	});
-	return injector;
-}
+export { INJECTOR_KEY, registerI18nInjector } from '../I18nInjector';
 
 const factory = create({ invalidator, injector, getRegistry, diffProperty }).properties<I18nProperties>();
 
@@ -29,7 +19,7 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 	}
 
 	diffProperty('locale', properties, (current, next) => {
-		const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+		const localeDataInjector = injector.get<I18nInjector>(INJECTOR_KEY);
 		let injectedLocale: string | undefined;
 		if (localeDataInjector) {
 			const injectLocaleData = localeDataInjector.get();
@@ -67,20 +57,13 @@ export const i18n = factory(({ properties, middleware: { invalidator, injector, 
 			return localizeBundle(bundle, { locale, invalidator });
 		},
 		set(localeData: LocaleData = {}) {
-			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			const localeDataInjector = injector.get<I18nInjector>(INJECTOR_KEY);
 			if (localeDataInjector) {
-				const result = setLocale({ locale: localeData.locale || getComputedLocale() });
-				if (isThenable(result)) {
-					result.then(() => {
-						localeDataInjector.set(localeData);
-					});
-					return;
-				}
 				localeDataInjector.set(localeData);
 			}
 		},
 		get() {
-			const localeDataInjector = injector.get<Injector<LocaleData | undefined>>(INJECTOR_KEY);
+			const localeDataInjector = injector.get<I18nInjector>(INJECTOR_KEY);
 			if (localeDataInjector) {
 				return localeDataInjector.get();
 			}
