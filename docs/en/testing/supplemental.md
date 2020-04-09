@@ -152,7 +152,7 @@ Creating templates from a base template means that if there is a change to the d
 
 #### `assertionTemplate.setChildren()`
 
-Returns a new assertion template with the new children are either pre-pended, appended or replaced depending on the `type` passed.
+Returns a new assertion template with the new children either pre-pended, appended or replaced depending on the `type` passed.
 
 ```tsx
 .setChildren(
@@ -162,11 +162,11 @@ Returns a new assertion template with the new children are either pre-pended, ap
 );`
 ```
 
-Convience functions exists for all 3 types, [`prepend()`](/missing/link), [`append()`](/missing/link) and [`replaceChildren()`](/missing/link).
+Convenience functions exists for all 3 types, [`prepend()`](/missing/link), [`append()`](/missing/link) and [`replaceChildren()`](/missing/link).
 
 #### `assertionTemplate.append()`
 
-Returns a new assertion template with the new children appended to the nodes existing children.
+Returns a new assertion template with the new children appended to the node's existing children.
 
 ```tsx
 .append(wrapped: Wrapped, children: () => RenderResult);
@@ -174,7 +174,7 @@ Returns a new assertion template with the new children appended to the nodes exi
 
 #### `assertionTemplate.prepend()`
 
-Returns a new assertion template with the new children pre-pended to the nodes existing children.
+Returns a new assertion template with the new children pre-pended to the node's existing children.
 
 ```tsx
 .append(wrapped: Wrapped, children: () => RenderResult);
@@ -182,7 +182,7 @@ Returns a new assertion template with the new children pre-pended to the nodes e
 
 #### `assertionTemplate.replaceChildren()`
 
-Returns a new assertion template with the new children replacing the nodes existing children.
+Returns a new assertion template with the new children replacing the node's existing children.
 
 ```tsx
 .append(wrapped: Wrapped, children: () => RenderResult);
@@ -190,7 +190,7 @@ Returns a new assertion template with the new children replacing the nodes exist
 
 #### `assertionTemplate.insertSiblings()`
 
-Returns a new assertion template with the passed children either inserted either `before` or `after` depending on the `type` passed.
+Returns a new assertion template with the passed children inserted either `before` or `after` depending on the `type` passed.
 
 ```tsx
 .insertSiblings(
@@ -202,7 +202,7 @@ Returns a new assertion template with the passed children either inserted either
 
 #### `assertionTemplate.insertBefore()`
 
-Returns a new assertion template with the passed children inserted before the existing nodes children.
+Returns a new assertion template with the passed children inserted before the existing node's children.
 
 ```tsx
 .insertBefore(wrapped: Wrapped, children: () => RenderResult);
@@ -210,7 +210,7 @@ Returns a new assertion template with the passed children inserted before the ex
 
 #### `assertionTemplate.insertAfter()`
 
-Returns a new assertion template with the passed children inserted after the existing nodes children.
+Returns a new assertion template with the passed children inserted after the existing node's children.
 
 ```tsx
 .insertAfter(wrapped: Wrapped, children: () => RenderResult);
@@ -254,7 +254,7 @@ Returns a new assertion template with the updated properties for the target wrap
 ): AssertionTemplateResult;
 ```
 
-A function can be set in place of the properties object to return the expected properties based of the actual properties.
+A function can be set in place of the properties object to return the expected properties based off the actual properties.
 
 ## Triggering Properties
 
