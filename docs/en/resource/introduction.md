@@ -2,7 +2,7 @@
 
 Dojo **resource** provides a consistent means to make widgets data aware.
 
-Dojo resource allows you to create a single store of data which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget it's using. Coupled with the data middleware, resources allow consistent, source agnostic data access for your widgets without them being aware of the underlying data fetching implementation or the raw data format being used.
+Dojo resource allows you to create a single store of data which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source agnostic data access for your widgets without them being aware of the underlying data fetching implementation or the raw data format being used.
 
 | Feature                                   | Description                                                                                                                                                                   |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
