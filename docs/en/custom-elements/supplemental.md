@@ -219,7 +219,7 @@ export interface WidgetChildren {
 
 # Using Themes
 
-A Dojo Theme can be used with a custom element by including the theme's JavaScript and CSS files.
+Themes can be used with custom elements by including the theme's JavaScript and CSS files.
 
 ```html
 <!DOCTYPE html>
