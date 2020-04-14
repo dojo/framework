@@ -2,7 +2,7 @@
 
 A widget's properties are exposed from a custom element automatically as either attributes, events, or properties.
 
-The following EmailSignup widget contains several different property types.
+The following `EmailSignup` widget contains several different property types.
 
 > src/widgets/EmailSignup.tsx
 
@@ -62,7 +62,7 @@ export default factory(function EmailSignup({ middleware: { icache }, properties
 
 ### Events
 
-All widget properties that start with `on` and have a function signature are exposed as events. The emitted event is the lower cased part of the property name without the "on." Listening for the onSignUp property (`{ onSignUp?: () => void }`) would look like this.
+Widget properties that start with `on` and have a function signature are exposed as events. The emitted event is the lower cased part of the property name without the "on." Listening for the onSignUp property (`{ onSignUp?: () => void }`) would look like this.
 
 ```html
 <script>
@@ -74,7 +74,7 @@ All widget properties that start with `on` and have a function signature are exp
 
 ### Properties
 
-All non-event widget properties are automatically created as properties on the custom element. These properties can be fully controlled by JavaScript. In the email subscription widget, both the title and signUpBonusDate properties can be set programmatically as properties.
+All non-event widget properties are automatically created as properties on the custom element. These properties can be fully controlled by JavaScript. In the email subscription widget, both the `title` and `signUpBonusDate` properties can be set programmatically as properties.
 
 ```html
 <script>
@@ -89,7 +89,7 @@ All non-event widget properties are automatically created as properties on the c
 
 # Custom Element Slots
 
-Some Dojo widgets utilize child objects rather than child widgets. These child objects are supported as custom elements by using "slots." A `slot` attribute is added to a child of the custom element, and the child gets passed in as the value of the slot.
+Dojo widgets can support child objects, these children are supported as custom elements by using "slots." A `slot` attribute is added to a child of the custom element, and the child gets passed in as the value of the slot.
 
 The most common child object scenarios are supported by Dojo custom elements.
 
@@ -147,6 +147,8 @@ export interface WidgetChildren {
 
 ## Named Array of Children
 
+If multiple children have the same slot name, they are bundled together in an array and passed to the custom element.
+
 > Widget.tsx
 
 ```tsx
@@ -161,6 +163,15 @@ export interface WidgetChildren {
 		foo: [<Label>Label 1</Label>, <Label>Label 2</Label>]
 	}}
 </Widget>
+```
+
+> index.html
+
+```html
+<dojo-widget>
+  <dojo-label slot="foo">Label 1</dojo-label>
+  <dojo-label slot="foo">Label 2</dojo-label>
+</dojo-widget>
 ```
 
 ## Named Array of Child Renderers
@@ -192,6 +203,8 @@ export interface WidgetChildren {
 
 ## Named Child Renderers with Arguments
 
+If the widget passes arguments to a child render function, the arguments get sent to the child in the slot via a "render" event.
+
 > Widget.tsx
 
 ```tsx
@@ -212,9 +225,19 @@ export interface WidgetChildren {
 
 ```html
 <dojo-widget>
-  <dojo-label slot="foo">Label 1</dojo-label>
-  <dojo-label slot="foo">Label 2</dojo-label>
+  <dojo-label slot="foo" id="label1">Label 1</dojo-label>
+  <dojo-label slot="foo" id="label2">Label 2</dojo-label>
 </dojo-widget>
+
+<script>
+  function setActive(event) {
+    const { detail: [active] } = event;
+    event.target.active = active;
+  }
+
+  label1.addEventListener('render', setActive);
+  label2.addEventListener('render', setActive);
+</script>
 ```
 
 # Using Themes

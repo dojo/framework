@@ -25,7 +25,7 @@ Each widget is bundled into a JavaScript file and a CSS file, both of which are 
 
 ## Building Custom Elements
 
-Dojo widgets can be built as custom elements using @dojo/cli-build-widget.
+Dojo widgets can be built as custom elements using the `@dojo/cli-build-widget` command.
 
 > src/widgets/Hero.tsx
 
@@ -64,7 +64,7 @@ To build a widget as a custom element, add a `build-widget` property to your `.d
 }
 ```
 
-Custom Elements are required to contain dash characters. During the build process, Dojo will take the widget name, `MyWidget` and add dashes on uppercase letter boundaries, `my-widget`. As this is sometimes not enough, a prefix is added to each widget that guarantees the element contains a dash. By default, the `name` field from `package.json` is used as the prefix, but this can be overriden using the `prefix` option in your `.dojorc`. Because the prefix is `ref`, the EmailSignup widget will be built into a custom element named `ref-my-widget`.
+Custom Elements are required to contain dash characters. During the build process, Dojo will take the widget name, `MyWidget` and add dashes on uppercase letter boundaries, `my-widget`. As this is sometimes not enough, a prefix is added to each widget that guarantees the element contains a dash. By default, the `name` field from `package.json` is used as the prefix, but this can be overriden using the `prefix` option in your `.dojorc`. Because the prefix is `ref`, the `MyWidget` widget will be built into a custom element named `ref-my-widget`.
 
 With this configuration in place, build the widgets using the Dojo CLI.
 
@@ -74,7 +74,7 @@ $ dojo build widget
 
 The `output/dist/` directory now contains the built custom elements.
 
--   `ref-hero.js` -All of the code required to hydrate your custom element. Loading this script in your HTML file is what makes your Dojo widget come alive as a custom element.
+-   `ref-hero.js` - All of the code required to hydrate your custom element. Loading this script in your HTML file is what makes your Dojo widget come alive as a custom element.
 -   `ref-hero.js.map` - A JavaScript source map file for making debugging easier. These files are used only during debugging and do not need to be uploaded to a production environment.
 -   `ref-hero.css` - The CSS used by the widget. Note that this includes the styles only for this one widget.
 
