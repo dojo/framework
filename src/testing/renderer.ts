@@ -43,8 +43,12 @@ export type Instruction = ChildInstruction | PropertyInstruction;
 export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
 		wrapped: Wrapped<T>,
-		params: T['children'] extends { [index: string]: (...args: any[]) => RenderResult }
-			? { [P in keyof T['children']]: Parameters<T['children'][P]> }
+		params: T['children'] extends { [index: string]: any }
+			? {
+					[P in keyof T['children']]?: Parameters<T['children'][P]> extends never
+						? []
+						: Parameters<T['children'][P]>
+			  }
 			: T['children'] extends (...args: any[]) => RenderResult ? Parameters<T['children']> : never
 	): void;
 }
@@ -61,12 +65,7 @@ export type RequiredVNodeProperties = Required<Pick<VNodeProperties, KnownKeys<V
 
 export interface Property {
 	<T extends WidgetBase<any>, K extends FunctionPropertyNames<Required<T['properties']>>>(
-		wrapped: Constructor<T>,
-		key: K,
-		...params: Parameters<Exclude<T['properties'][K], CompareFunc<any>>>
-	): void;
-	<T extends WidgetFactory, K extends FunctionPropertyNames<Required<T['properties']>>>(
-		wrapped: T,
+		wrapped: Wrapped<Constructor<T>>,
 		key: K,
 		...params: Parameters<Exclude<T['properties'][K], CompareFunc<any>>>
 	): void;
@@ -74,9 +73,14 @@ export interface Property {
 		T extends OptionalWNodeFactory<{ properties: Comparable<VNodeProperties>; children: any }>,
 		K extends FunctionPropertyNames<RequiredVNodeProperties>
 	>(
-		wrapped: T,
+		wrapped: Wrapped<T>,
 		key: K,
 		...params: any[]
+	): void;
+	<T extends WidgetFactory, K extends FunctionPropertyNames<Required<T['properties']>>>(
+		wrapped: Wrapped<T>,
+		key: K,
+		...params: Parameters<Exclude<T['properties'][K], CompareFunc<any>>>
 	): void;
 }
 

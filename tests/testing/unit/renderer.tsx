@@ -369,6 +369,66 @@ describe('test renderer', () => {
 			});
 		});
 
+		it('should selectively named children functions but resolve assert all children', () => {
+			const factory = create({ icache });
+
+			const App = factory(function App({ middleware: { icache } }) {
+				const strings = icache.getOrSet('strings', []);
+
+				return (
+					<div>
+						<Widget key="widget">{{ leading: strings, trailing: () => strings }}</Widget>
+						<button
+							key="clicker"
+							onclick={() => icache.set('strings', [...(icache.get<any[]>('strings') || []), 'string'])}
+						>
+							Add String
+						</button>
+					</div>
+				);
+			});
+
+			interface WidgetChildren {
+				leading: string[];
+				trailing: () => RenderResult;
+			}
+
+			const widgetFactory = create().children<WidgetChildren>();
+
+			const Widget = widgetFactory(function Widget({ children }) {
+				const [{ leading }] = children();
+
+				return <div>The strings are {leading.join(', ')}</div>;
+			});
+
+			const r = renderer(() => <App />);
+
+			const WrappedWidget = wrap(Widget);
+			const WrappedButton = wrap('button');
+			const baseAssertion = assertionTemplate(() => (
+				<div>
+					<WrappedWidget key="widget">{{ leading: [], trailing: () => [] }}</WrappedWidget>
+					<WrappedButton key="clicker" onclick={() => undefined}>
+						Add String
+					</WrappedButton>
+				</div>
+			));
+
+			r.child(WrappedWidget, { trailing: [] });
+			r.expect(baseAssertion);
+			r.property(WrappedButton, 'onclick');
+			r.expect(
+				baseAssertion.setChildren(WrappedWidget, () => ({ leading: ['string'], trailing: () => ['string'] }))
+			);
+			r.property(WrappedButton, 'onclick');
+			r.expect(
+				baseAssertion.setChildren(WrappedWidget, () => ({
+					leading: ['string', 'string'],
+					trailing: () => ['string', 'string']
+				}))
+			);
+		});
+
 		it('Should use custom comparator for the template assertion', () => {
 			const factory = create();
 			const WrappedSpan = wrap('span');
