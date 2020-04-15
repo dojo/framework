@@ -189,7 +189,7 @@ describe('test renderer', () => {
 			);
 		});
 
-		it('should trigger properties in the correct order', () => {
+		it('should call properties in the correct order', () => {
 			const factory = create({ icache });
 
 			const MyWidget = factory(function MyWidget({ middleware: { icache } }) {

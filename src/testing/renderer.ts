@@ -129,6 +129,38 @@ export function wrap(node: any): any {
 	return nodeFactory;
 }
 
+export function ignore(
+	node: string
+): OptionalWNodeFactory<{ properties: Comparable<VNodeProperties>; children: DNode | (DNode | DNode[])[] }> & {
+	tag: string;
+};
+export function ignore<T extends WidgetBaseInterface>(
+	node: Constructor<T>
+): Constructor<WidgetBase<Comparable<T['properties']>>>;
+export function ignore<T extends OptionalWNodeFactory<any>>(
+	node: T
+): OptionalWNodeFactory<{ properties: Comparable<T['properties']>; children: T['children'] }>;
+export function ignore<T extends DefaultChildrenWNodeFactory<any>>(
+	node: T
+): DefaultChildrenWNodeFactory<{ properties: Comparable<T['properties']>; children: T['children'] }>;
+export function ignore<T extends WNodeFactory<any>>(
+	node: T
+): WNodeFactory<{ properties: Comparable<T['properties']>; children: T['children'] }>;
+export function ignore(node: any): any {
+	const nodeFactory: any = (properties: any, children: any[]) => {
+		const dNode: any =
+			typeof node === 'string' ? v(node, properties, children) : w(node as any, properties, children);
+		dNode.isIgnore = true;
+		return dNode;
+	};
+
+	nodeFactory.isFactory = true;
+	if (typeof node === 'string') {
+		nodeFactory.tag = nodeFactory;
+	}
+	return nodeFactory;
+}
+
 export function compare(compareFunc: (actual: unknown, expected: unknown) => boolean): CompareFunc<unknown> {
 	(compareFunc as any).type = 'compare';
 	return compareFunc as any;

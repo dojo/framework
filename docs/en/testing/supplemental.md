@@ -409,7 +409,8 @@ compare(comparator: (actual) => boolean)
 ```
 
 ```tsx
-import { assertionTemplate, wrap, compare } from '@dojo/framework/testing/renderer';
+import { wrap, compare } from '@dojo/framework/testing/renderer';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
 
 // create a wrapped node the `h1`
 const WrappedHeader = wrap('h1');
@@ -419,6 +420,41 @@ const baseTemplate = assertionTemplate(() => (
 		<WrappedHeader id={compare((actual) => typeof actual === 'string')}>Header!</WrappedHeader>
 	</div>
 ));
+```
+
+## Ignoring Nodes during Assertion
+
+When dealing with widgets that render multiple items, for example a list it can be desirable to be able to instruct the test renderer to ignore sections of the output. For example asserting that the first and last items are valid and then ignoring the detail of the items in-between, simply asserting that they are the expected type. To do this with the test renderer the `ignore` function can be used that instructs the test renderer to ignore the node, as long as it is the same type, i.e. matching tag name or matching widget factory/constructor.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import renderer, { ignore } from '@dojo/framework/testing/renderer';
+import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+
+const factory = create().properties<{ items: string[] }>();
+
+const ListWidget = create(function ListWidget({ properties }) {
+	const { items } = properties();
+	return (
+		<div>
+			<ul>{items.map((item) => <li>{item}</li>)}</ul>
+		</div>
+	);
+});
+
+const r = renderer(() => <ListWidget items={['a', 'b', 'c', 'd']} />);
+const IgnoredItem = ignore('li');
+const template = assertionTemplate(() => (
+	<div>
+		<ul>
+			<li>a</li>
+			<IgnoredItem />
+			<IgnoredItem />
+			<li>d</li>
+		</ul>
+	</div>
+));
+r.expect(template);
 ```
 
 ## Mocking Middleware

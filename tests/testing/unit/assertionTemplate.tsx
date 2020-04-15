@@ -1,10 +1,10 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { renderer, wrap } from '../../../src/testing/renderer';
+import { renderer, wrap, ignore } from '../../../src/testing/renderer';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx, create } from '../../../src/core/vdom';
-import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
+import assertionTemplate from '../../../src/testing/assertionTemplate';
 import { DNode } from '../../../src/core/interfaces';
 
 class MyWidget extends WidgetBase<{
@@ -283,8 +283,9 @@ describe('new/assertionTemplate', () => {
 
 	it('can use ignore', () => {
 		const nodes: DNode[] = [];
+		const IgnoredListItem = ignore('li');
 		for (let i = 0; i < 28; i++) {
-			nodes.push(w(Ignore, {}));
+			nodes.push(w(IgnoredListItem, {}));
 		}
 		const childListAssertion = baseListAssertion.replaceChildren(WrappedList, () => [
 			v('li', ['item: 0']),
@@ -293,6 +294,21 @@ describe('new/assertionTemplate', () => {
 		]);
 		const r = renderer(() => w(ListWidget, {}));
 		r.expect(childListAssertion);
+	});
+
+	it('will not ignore when the node type does not match', () => {
+		const nodes: DNode[] = [];
+		const IgnoredListItem = ignore('div');
+		for (let i = 0; i < 28; i++) {
+			nodes.push(w(IgnoredListItem, {}));
+		}
+		const childListAssertion = baseListAssertion.replaceChildren(WrappedList, () => [
+			v('li', ['item: 0']),
+			...nodes,
+			v('li', ['item: 29'])
+		]);
+		const r = renderer(() => w(ListWidget, {}));
+		assert.throws(() => r.expect(childListAssertion));
 	});
 
 	it('should be immutable', () => {

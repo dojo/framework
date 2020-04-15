@@ -12,6 +12,10 @@ export type Wrapped<T extends Constructor<WidgetBaseInterface> | WidgetFactory> 
 	id: string;
 };
 
+export type Ignore<T extends Constructor<WidgetBaseInterface> | WidgetFactory> = T & {
+	isIgnore: boolean;
+};
+
 export interface CompareFunc<T> {
 	(actual: T): boolean;
 	type: 'compare';

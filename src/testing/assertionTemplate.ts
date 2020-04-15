@@ -2,7 +2,6 @@ import { VNode, WNode, DNode, RenderResult, WidgetBaseInterface, Constructor } f
 import { isWNode, isVNode } from '../core/vdom';
 import { decorate } from '../core/util';
 import { Wrapped, WidgetFactory, NonComparable, CompareFunc } from './interfaces';
-import WidgetBase from '../core/WidgetBase';
 
 export type PropertiesComparatorFunction<T = any> = (actualProperties: T) => T;
 
@@ -167,8 +166,6 @@ const replaceChildren = (
 	parent.children = newChildren;
 	return render;
 };
-
-export class Ignore extends WidgetBase {}
 
 export function assertionTemplate(renderFunc: () => DNode | DNode[]) {
 	const assertionTemplateResult: any = () => {

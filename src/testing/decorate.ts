@@ -2,7 +2,6 @@ import { isVNode, isWNode } from '../core/vdom';
 import { RenderResult, DNode, VNode, WNode } from '../core/interfaces';
 import { Instruction } from './renderer';
 import Map from '../shim/Map';
-import { Ignore } from './assertionTemplate';
 import { findIndex } from '../shim/array';
 import { decorate as coreDecorate } from '../core/util';
 
@@ -19,6 +18,20 @@ function isNode(node: any): node is VNode & { id?: string } | WNode & { id?: str
 
 function isWrappedNode(node: any): node is VNode & { id: string } | WNode & { id: string } {
 	return Boolean(isNode(node) && node.id);
+}
+
+function isIgnoredNode(node: any): node is VNode | WNode {
+	return Boolean(node && node.isIgnore && isNode(node));
+}
+
+function isSameType(expected: DNode | { [index: string]: any }, actual: DNode | { [index: string]: any }): boolean {
+	if (isNode(expected) && isNode(actual)) {
+		if (isVNode(expected) && isVNode(actual) && expected.tag === actual.tag) {
+			return true;
+		}
+		return isWNode(expected) && isWNode(actual) && expected.widgetConstructor === actual.widgetConstructor;
+	}
+	return false;
 }
 
 export function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
@@ -63,7 +76,7 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 					throw new Error('Cannot use a wrapped test node more than once within an assertion template.');
 				}
 				const instruction = instructions.get(expectedNode.id);
-				if (instruction) {
+				if (instruction && isSameType(actualNode, expectedNode)) {
 					if (instruction.type === 'child') {
 						const expectedChild: any = expectedNode.children && expectedNode.children[0];
 						const actualChild: any = isNode(actualNode) && actualNode.children && actualNode.children[0];
@@ -100,6 +113,15 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 				wrappedNodeIds.push(expectedNode.id);
 			}
 
+			if (isIgnoredNode(expectedNode)) {
+				const index = findIndex((expectedNode as any).parent.children, (child) => child === expectedNode);
+				if (index !== -1) {
+					if (isSameType(expectedNode, actualNode)) {
+						(expectedNode as any).parent.children[index] = actualNode || expectedNode;
+					}
+				}
+			}
+
 			if (isNode(expectedNode) && isNode(actualNode)) {
 				const propertyKeys = Object.keys(expectedNode.properties);
 				for (let i = 0; i < propertyKeys.length; i++) {
@@ -112,13 +134,6 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 							expectedNode.properties[key] = 'Compare FAILED';
 						}
 					}
-				}
-			}
-
-			if (expectedNode && (expectedNode as any).widgetConstructor === Ignore) {
-				const index = findIndex((expectedNode as any).parent.children, (child) => child === expectedNode);
-				if (index !== -1) {
-					(expectedNode as any).parent.children[index] = actualNode || expectedNode;
 				}
 			}
 
