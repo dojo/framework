@@ -30,7 +30,7 @@ function getTagName(node: VNode | WNode): string {
 		name = widgetConstructor.toString();
 	} else {
 		name = (widgetConstructor as any).name;
-		if (name === undefined) {
+		if (!name) {
 			let id = widgetMap.get(widgetConstructor);
 			if (id === undefined) {
 				id = ++widgetClassCounter;

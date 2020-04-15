@@ -553,6 +553,26 @@ describe('test renderer', () => {
 			);
 		});
 
+		it('should differentiate between two unnamed widgets', () => {
+			const factory = create();
+			const Foo = factory(() => 'foo');
+			const Bar = factory(() => 'bar');
+			const WidgetUnderTest = factory(() => (
+				<div>
+					<Foo />
+				</div>
+			));
+			const template = assertionTemplate(() => (
+				<div>
+					<Bar />
+				</div>
+			));
+			const r = renderer(() => <WidgetUnderTest />);
+			assert.throws(() => {
+				r.expect(template);
+			});
+		});
+
 		it('should run diffProperty middleware', () => {
 			const factory = create({ diffProperty, invalidator });
 			let id = 0;
