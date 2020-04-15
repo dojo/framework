@@ -2,12 +2,12 @@
 
 Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allows you to efficiently test the output of your widgets and validate your expectations.
 
-| Feature                 | Description                                                                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Minimal API**         | Simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.                                                       |
-| **Unit tests**          | Unit tests are tests run via node and browser to test isolated blocks of code.                                                              |
-| **Functional tests**    | Functional tests are run using Selenium in the browser and test the overall functionality of the software as a user would interact with it. |
-| **Assertion templates** | Assertion Templates allow you to build expected render functions to validate the output of your widgets.                                    |
+| Feature              | Description                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Minimal API**      | Simple API for testing and asserting Dojo widget's expected virtual DOM and behavior.                                                       |
+| **Unit tests**       | Unit tests are tests run via node and browser to test isolated blocks of code.                                                              |
+| **Functional tests** | Functional tests are run using Selenium in the browser and test the overall functionality of the software as a user would interact with it. |
+| **Assertions**       | Assertions allow you to build expected render functions to validate the output of your widgets.                                             |
 
 # Basic usage
 
@@ -117,9 +117,9 @@ describe('routing', () => {
 });
 ```
 
-## Using assertion templates
+## Using assertions
 
-Assertion templates provide a way to create a base assertion that allow parts of the expected output to vary between tests.
+Assertions provide a way to create a base assertion that allow parts of the expected output to vary between tests.
 
 -   Given a widget that renders output differently based on property values:
 
@@ -144,7 +144,7 @@ const Profile = factory(function Profile({ properties }) {
 export default Profile;
 ```
 
--   Create an assertion template using `@dojo/framework/testing/assertion`
+-   Create an assertion using `@dojo/framework/testing/renderer#assertion`
 
 > tests/unit/widgets/Profile.tsx
 
@@ -168,7 +168,7 @@ describe('Profile', () => {
 });
 ```
 
-To work with assertion templates, wrapped nodes can get created using `@dojo/framework/testing/renderer#wrap` in order to use the assertion template API. Note: when using wrapped `VNode`s with `v()`, the `.tag` property needs to get used, for example `v(WrappedDiv.tag, {} [])`.
+To work with assertion, wrapped nodes can get created using `@dojo/framework/testing/renderer#wrap` in order to use the assertion API. Note: when using wrapped `VNode`s with `v()`, the `.tag` property needs to get used, for example `v(WrappedDiv.tag, {} [])`.
 
 > tests/unit/widgets/Profile.tsx
 
@@ -205,7 +205,7 @@ describe('Profile', () => {
 });
 ```
 
-Using the `setChildren` method of an assertion template with a wrapped testing node, `WrappedHeader` in this case, will return an assertion template with the updated virtual DOM structure. This resulting assertion template can then be used to test widget output.
+Using the `setChildren` method of an assertion with a wrapped testing node, `WrappedHeader` in this case, will return an assertion with the updated virtual DOM structure. This resulting assertion can then be used to test widget output.
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/
