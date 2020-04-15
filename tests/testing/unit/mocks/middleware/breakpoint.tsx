@@ -3,8 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 import createBreakpointMock from '../../../../../src/testing/mocks/middleware/breakpoint';
 import breakpoint from '../../../../../src/core/middleware/breakpoint';
 import { tsx, create } from '../../../../../src/core/vdom';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('breakpoint mock', () => {
 	it('should mock breakpoint middleware calls', () => {
@@ -15,11 +14,11 @@ describe('breakpoint mock', () => {
 			return <div key="root">{JSON.stringify(breakpointResult)}</div>;
 		});
 		const r = renderer(() => <App key="app" />, { middleware: [[breakpoint, breakpointMock]] });
-		r.expect(assertionTemplate(() => <div key="root">null</div>));
+		r.expect(assertion(() => <div key="root">null</div>));
 		breakpointMock('root', { breakpoint: 'SM', contentRect: { width: 20 } });
-		r.expect(assertionTemplate(() => <div key="root">{'{"breakpoint":"SM","contentRect":{"width":20}}'}</div>));
+		r.expect(assertion(() => <div key="root">{'{"breakpoint":"SM","contentRect":{"width":20}}'}</div>));
 		breakpointMock('root', { breakpoint: 'XL', contentRect: { width: 1020 } });
-		r.expect(assertionTemplate(() => <div key="root">{'{"breakpoint":"XL","contentRect":{"width":1020}}'}</div>));
+		r.expect(assertion(() => <div key="root">{'{"breakpoint":"XL","contentRect":{"width":1020}}'}</div>));
 	});
 
 	it('should deal with multiple mocked keys', () => {
@@ -37,7 +36,7 @@ describe('breakpoint mock', () => {
 		});
 		const r = renderer(() => <App key="app" />, { middleware: [[breakpoint, breakpointMock]] });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">null</div>
 					<div key="other">null</div>
@@ -46,7 +45,7 @@ describe('breakpoint mock', () => {
 		);
 		breakpointMock('root', { breakpoint: 'SM', contentRect: { width: 50 } });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">{'{"breakpoint":"SM","contentRect":{"width":50}}'}</div>
 					<div key="other">null</div>
@@ -56,7 +55,7 @@ describe('breakpoint mock', () => {
 		breakpointMock('root', { breakpoint: 'XL', contentRect: { width: 1020 } });
 		breakpointMock('other', { breakpoint: 'MD', contentRect: { width: 620 } });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">{'{"breakpoint":"XL","contentRect":{"width":1020}}'}</div>
 					<div key="other">{'{"breakpoint":"MD","contentRect":{"width":620}}'}</div>

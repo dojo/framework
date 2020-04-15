@@ -1,5 +1,5 @@
 import './harness/all';
-import './assertionTemplate';
+import './assertion';
 import './assertRender';
 import './renderer';
 import './mocks/middleware/all';

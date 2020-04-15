@@ -63,17 +63,17 @@ export default Home;
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate } from '@dojo/framework/testing/renderer';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 
 import Home from '../../../src/widgets/Home';
 import * as css from '../../../src/widgets/Home.m.css';
 
-const baseTemplate = assertionTemplate(() => <h1 classes={[css.root]}>Home Page</h1>);
+const baseAssertion = assertion(() => <h1 classes={[css.root]}>Home Page</h1>);
 
 describe('Home', () => {
 	it('default renders correctly', () => {
 		const r = renderer(() => <Home />);
-		r.expect(baseTemplate);
+		r.expect(baseAssertion);
 	});
 });
 ```
@@ -144,21 +144,20 @@ const Profile = factory(function Profile({ properties }) {
 export default Profile;
 ```
 
--   Create an assertion template using `@dojo/framework/testing/assertionTemplate`
+-   Create an assertion template using `@dojo/framework/testing/assertion`
 
 > tests/unit/widgets/Profile.tsx
 
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import renderer from '@dojo/framework/testing/renderer';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
 
 // Create an assertion
-const profileAssertion = assertionTemplate(() => <h1 classes={[css.root]}>Welcome Stranger!</h1>);
+const profileAssertion = assertion(() => <h1 classes={[css.root]}>Welcome Stranger!</h1>);
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
@@ -176,8 +175,7 @@ To work with assertion templates, wrapped nodes can get created using `@dojo/fra
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import renderer { wrap } from '@dojo/framework/testing/renderer';
+import renderer { wrap, assertion } from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
@@ -186,7 +184,7 @@ import * as css from '../../../src/widgets/Profile.m.css';
 const WrappedHeader = wrap('h1');
 
 // Create an assertion
-const profileAssertion = assertionTemplate(() => (
+const profileAssertion = assertion(() => (
 	// Use the wrapped node in place of the normal node
 	<WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>
 ));

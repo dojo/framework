@@ -7,8 +7,7 @@ import { Route } from '../../../src/routing/Route';
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { w, create, getRegistry } from '../../../src/core/vdom';
-import renderer from '../../../src/testing/renderer';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../src/testing/renderer';
 
 class Widget extends WidgetBase {
 	render() {
@@ -65,7 +64,7 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		r.expect(assertionTemplate(() => w(Widget, {}, [])));
+		r.expect(assertion(() => w(Widget, {}, [])));
 	});
 
 	it('Should set the type as index for exact matches', () => {
@@ -83,7 +82,7 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		r.expect(assertionTemplate(() => null));
+		r.expect(assertion(() => null));
 		assert.strictEqual(matchType, 'index');
 	});
 
@@ -102,7 +101,7 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		r.expect(assertionTemplate(() => null));
+		r.expect(assertion(() => null));
 		assert.strictEqual(matchType, 'error');
 	});
 
@@ -129,6 +128,6 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		r.expect(assertionTemplate(() => null));
+		r.expect(assertion(() => null));
 	});
 });

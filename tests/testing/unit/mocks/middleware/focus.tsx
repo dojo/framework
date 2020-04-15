@@ -3,8 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 import createFocusMock from '../../../../../src/testing/mocks/middleware/focus';
 import focus from '../../../../../src/core/middleware/focus';
 import { tsx, create } from '../../../../../src/core/vdom';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('focus mock', () => {
 	it('should mock focus of a node', () => {
@@ -16,9 +15,9 @@ describe('focus mock', () => {
 		const r = renderer(() => <App />, { middleware: [[focus, focusMock]] });
 
 		focusMock('root', false);
-		r.expect(assertionTemplate(() => <div key="root">no focus</div>));
+		r.expect(assertion(() => <div key="root">no focus</div>));
 
 		focusMock('root', true);
-		r.expect(assertionTemplate(() => <div key="root">focus</div>));
+		r.expect(assertion(() => <div key="root">focus</div>));
 	});
 });

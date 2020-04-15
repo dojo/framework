@@ -2,19 +2,19 @@
 
 Dojo provides a simple and type safe test renderer for shallowly asserting the expected output and behavior from a widget. The test renderer's API has been designed to encourage unit testing best practices from the outset to ensure high confidence in you Dojo application.
 
-Working with [assertion templates](/learn/testing/test-renderer#assertion-templates) and the test renderer is done using [wrapped test nodes](/learn/testing/test-renderer#wrapped-test-nodes) that are defined in the assertion templates structure, ensuring type safety throughout the testing life-cycle.
+Working with [assertions](/learn/testing/test-renderer#assertion) and the test renderer is done using [wrapped test nodes](/learn/testing/test-renderer#wrapped-test-nodes) that are defined in the assertion structure, ensuring type safety throughout the testing life-cycle.
 
-The expected structure of a widget is defined using an assertionTemplate and passed to the test renderer's `.expect()` function which executes the assertion.
+The expected structure of a widget is defined using an assertion and passed to the test renderer's `.expect()` function which executes the assertion.
 
 > src/MyWidget.spec.tsx
 
 ```tsx
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate } from '@dojo/framework/testing/renderer';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
-const baseTemplate = assertionTemplate(() => (
+const baseAssertion = assertion(() => (
 	<div>
 		<h1>Heading</h1>
 		<h2>Sub Heading</h2>
@@ -24,12 +24,12 @@ const baseTemplate = assertionTemplate(() => (
 
 const r = renderer(() => <MyWidget />);
 
-r.expect(baseTemplate);
+r.expect(baseAssertion);
 ```
 
 ## Wrapped Test Nodes
 
-In order for the test renderer and assertion templates to be able to identify nodes within the expected and actual node structure a special wrapping node must be used. The wrapped nodes can get used in place of the real node in the expected assertion template structure, maintaining all the correct property and children typings.
+In order for the test renderer and assertions to be able to identify nodes within the expected and actual node structure a special wrapping node must be used. The wrapped nodes can get used in place of the real node in the expected assertion structure, maintaining all the correct property and children typings.
 
 To create a wrapped test node use the `wrap` function from `@dojo/framework/testing/renderer`:
 
@@ -49,11 +49,11 @@ const WrappedDiv = wrap('div');
 
 The test renderer uses the location of a wrapped test node in the expected tree to attempt to perform any requested actions (either `r.property()` or `r.child()`) on the actual output of the widget under test. If the wrapped test node does not match the corresponding node in the actual output tree then no action will be performed and the assertion will report a failure.
 
-**Note:** Wrapped test nodes should only be used once within an assertion template, if the same test node is detected more than once during an assertion an error will be thrown and the test fail.
+**Note:** Wrapped test nodes should only be used once within an assertion, if the same test node is detected more than once during an assertion an error will be thrown and the test fail.
 
-## Assertion Templates
+## Assertion
 
-Assertion templates get used to build the expected widget output structure to use with `renderer.expect()`. The templates expose a wide range of APIs that enable the expected output to vary between tests.
+Assertions get used to build the expected widget output structure to use with `renderer.expect()`. The assertion expose a wide range of APIs that enable the expected output to vary between tests.
 
 Given a widget that renders output differently based on property values:
 
@@ -78,14 +78,14 @@ const Profile = factory(function Profile({ properties }) {
 export default Profile;
 ```
 
-Create an assertion template using `@dojo/framework/testing/renderer#assertionTemplate`:
+Create an assertion using `@dojo/framework/testing/renderer#assertion`:
 
 > src/Profile.spec.tsx
 
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate, wrap } from '@dojo/framework/testing/renderer';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
@@ -93,8 +93,8 @@ import * as css from '../../../src/widgets/Profile.m.css';
 // Create a wrapped node
 const WrappedHeader = wrap('h1');
 
-// Create an assertion template using the `WrappedHeader` in place of the `h1`
-const baseAssertion = assertionTemplate(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
+// Create an assertion using the `WrappedHeader` in place of the `h1`
+const baseAssertion = assertion(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
 
 describe('Profile', () => {
 	it('Should render using the default username', () => {
@@ -106,16 +106,16 @@ describe('Profile', () => {
 });
 ```
 
-To test when a `username` property gets passed to the `Profile` widget, we could create a new assertion template with the updated expected username. However, as a widget increases its functionality, recreating the entire assertion template for each scenario becomes verbose and unmaintainable, as any changes to the common widget structure would require updating every assertion template.
+To test when a `username` property gets passed to the `Profile` widget, we could create a new assertion with the updated expected username. However, as a widget increases its functionality, recreating the entire assertion for each scenario becomes verbose and unmaintainable, as any changes to the common widget structure would require updating every assertion.
 
-To help avoid the maintenance overhead and reduce duplication, assertion templates offer a comprehensive API for creating variations from a base template. The assertion template API uses wrapped test nodes to identify the node in the expected structure to update.
+To help avoid the maintenance overhead and reduce duplication, assertions offer a comprehensive API for creating variations from a base assertion. The assertion API uses wrapped test nodes to identify the node in the expected structure to update.
 
 > src/Profile.spec.tsx
 
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate, wrap } from '@dojo/framework/testing/renderer';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
@@ -123,8 +123,8 @@ import * as css from '../../../src/widgets/Profile.m.css';
 // Create a wrapped node
 const WrappedHeader = wrap('h1');
 
-// Create an assertion template using the `WrappedHeader` in place of the `h1`
-const baseAssertion = assertionTemplate(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
+// Create an assertion using the `WrappedHeader` in place of the `h1`
+const baseAssertion = assertion(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
 
 describe('Profile', () => {
 	it('Should render using the default username', () => {
@@ -137,121 +137,120 @@ describe('Profile', () => {
 	it('Should render using the passed username', () => {
 		const r = renderer(() => <Profile username="Dojo" />);
 
-		// Create a variation of the base template
-		const usernameTemplate = baseAssertion.setChildren(WrappedHeader, () => ['Dojo']);
+		// Create a variation of the base assertion
+		const usernameAssertion = baseAssertion.setChildren(WrappedHeader, () => ['Dojo']);
 
-		// Test against the username template
-		r.expect(usernameTemplate);
+		// Test against the username assertion
+		r.expect(usernameAssertion);
 	});
 });
 ```
 
-Creating templates from a base template means that if there is a change to the default widget output, only a change to the baseTemplate is required to update all the widget's tests.
+Creating assertions from a base assertion means that if there is a change to the default widget output, only a change to the baseAssertion is required to update all the widget's tests.
 
-### Assertion Template API
+### Assertion API
 
-#### `assertionTemplate.setChildren()`
+#### `assertion.setChildren()`
 
-Returns a new assertion template with the new children either pre-pended, appended or replaced depending on the `type` passed.
+Returns a new assertion with the new children either pre-pended, appended or replaced depending on the `type` passed.
 
 ```tsx
 .setChildren(
   wrapped: Wrapped,
   children: () => RenderResult,
   type: 'prepend' | 'replace' | 'append' = 'replace'
-);`
+): AssertionResult;
 ```
 
-Convenience functions exists for all 3 types, [`prepend()`](/missing/link), [`append()`](/missing/link) and [`replaceChildren()`](/missing/link).
+#### `assertion.append()`
 
-#### `assertionTemplate.append()`
-
-Returns a new assertion template with the new children appended to the node's existing children.
+Returns a new assertion with the new children appended to the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult);
+.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
-#### `assertionTemplate.prepend()`
+#### `assertion.prepend()`
 
-Returns a new assertion template with the new children pre-pended to the node's existing children.
+Returns a new assertion with the new children pre-pended to the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult);
+.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
-#### `assertionTemplate.replaceChildren()`
+#### `assertion.replaceChildren()`
 
-Returns a new assertion template with the new children replacing the node's existing children.
+Returns a new assertion with the new children replacing the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult);
+.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
-#### `assertionTemplate.insertSiblings()`
+#### `assertion.insertSiblings()`
 
-Returns a new assertion template with the passed children inserted either `before` or `after` depending on the `type` passed.
+Returns a new assertion with the passed children inserted either `before` or `after` depending on the `type` passed.
 
 ```tsx
 .insertSiblings(
   wrapped: Wrapped,
   children: () => RenderResult,
   type: 'before' | 'after' = 'before'
-);`
+): AssertionResult;
 ```
 
-#### `assertionTemplate.insertBefore()`
+#### `assertion.insertBefore()`
 
-Returns a new assertion template with the passed children inserted before the existing node's children.
+Returns a new assertion with the passed children inserted before the existing node's children.
 
 ```tsx
-.insertBefore(wrapped: Wrapped, children: () => RenderResult);
+.insertBefore(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
-#### `assertionTemplate.insertAfter()`
+#### `assertion.insertAfter()`
 
-Returns a new assertion template with the passed children inserted after the existing node's children.
+Returns a new assertion with the passed children inserted after the existing node's children.
 
 ```tsx
-.insertAfter(wrapped: Wrapped, children: () => RenderResult);
+.insertAfter(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
-#### `assertionTemplate.replace()`
+#### `assertion.replace()`
 
-Returns a new assertion template replacing the existing node with the node that is passed. Note that if you need to interact with the new node in either assertion templates or the test renderer, it should be a wrapped test node.
+Returns a new assertion replacing the existing node with the node that is passed. Note that if you need to interact with the new node in either assertions or the test renderer, it should be a wrapped test node.
 
 ```tsx
-.replace(wrapped: Wrapped, node: DNode);
+.replace(wrapped: Wrapped, node: DNode): AssertionResult;
 ```
 
-#### `assertionTemplate.remove()`
+#### `assertion.remove()`
 
-Returns a new assertion template removing the target wrapped node completely.
+Returns a new assertion removing the target wrapped node completely.
 
 ```tsx
-.remove(wrapped: Wrapped);
+.remove(wrapped: Wrapped): AssertionResult;
 ```
 
-#### `assertionTemplate.setProperty()`
+#### `assertion.setProperty()`
 
-Returns a new assertion template with the updated property for the target wrapped node.
+Returns a new assertion with the updated property for the target wrapped node.
 
 ```tsx
 .setProperty<T, K extends keyof T['properties']>(
   wrapped: Wrapped<T>,
   property: K,
   value: T['properties'][K]
+): AssertionResult;
 ```
 
-#### `assertionTemplate.setProperties()`
+#### `assertion.setProperties()`
 
-Returns a new assertion template with the updated properties for the target wrapped node.
+Returns a new assertion with the updated properties for the target wrapped node.
 
 ```tsx
 .setProperties<T>(
   wrapped: Wrapped<T>,
   value: T['properties'] | PropertiesComparatorFunction<T['properties']>
-): AssertionTemplateResult;
+): AssertionResult;
 ```
 
 A function can be set in place of the properties object to return the expected properties based off the actual properties.
@@ -295,7 +294,7 @@ export const MyWidget = factory(function MyWidget({ properties, middleware: { ic
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate, wrap } from '@dojo/framework/testing/renderer';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import * as sinon from 'sinon';
 
 import MyWidget from './MyWidget';
@@ -305,7 +304,7 @@ const WrappedButton = wrap('button');
 
 const WrappedSpan = wrap('span');
 
-const baseAssertion = assertionTemplate(() => (
+const baseAssertion = assertion(() => (
     <div>
       <h1>Header</h1>
       <WrappedSpan>0</WrappedSpan>
@@ -327,11 +326,11 @@ describe('MyWidget', () => {
         // register a call to the button's onclick property
         r.property(WrappedButton, 'onclick');
 
-        // create a new template with the updated count
-        const counterTemplate = baseAssertion.setChildren(WrappedSpan, () => ['1']);
+        // create a new assertion with the updated count
+        const counterAssertion = baseAssertion.setChildren(WrappedSpan, () => ['1']);
 
-        // expect against the new template, the property will be called before the test render
-        r.expect(counterTemplate);
+        // expect against the new assertion, the property will be called before the test render
+        r.expect(counterAssertion);
 
         // once the assertion is complete, check that the stub property was called
         assert.isTrue(onClickStub.calledOnce);
@@ -345,7 +344,7 @@ Arguments for the function can be passed after the function name, for example `r
 
 To assert the output from functional children the test renderer needs to understand how to resolve the child render functions. This includes passing in any expected injected values.
 
-The test renderer `renderer.child()` function enables children to get resolved in order to include them in the assertion. Using the `.child()` function requires the widget with functional children to be wrapped when included in the assertion template, and the wrapped node gets passed to the `.child` function.
+The test renderer `renderer.child()` function enables children to get resolved in order to include them in the assertion. Using the `.child()` function requires the widget with functional children to be wrapped when included in the assertion, and the wrapped node gets passed to the `.child` function.
 
 > src/MyWidget.tsx
 
@@ -372,7 +371,7 @@ export const MyWidget = factory(function MyWidget() {
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { assertionTemplate, wrap } from '@dojo/framework/testing/renderer';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import MyWidgetWithChildren from './MyWidgetWithChildren';
 import MyWidget from './MyWidget';
@@ -380,7 +379,7 @@ import MyWidget from './MyWidget';
 // Create a wrapped node for the widget with functional children
 const WrappedMyWidgetWithChildren = wrap(MyWidgetWithChildren);
 
-const baseAssertion = assertionTemplate(() => (
+const baseAssertion = assertion(() => (
     <div>
       <h1>Header</h1>
       <WrappedMyWidgetWithChildren>{() => <div>Hello!</div>}</MyWidgetWithChildren>
@@ -409,13 +408,12 @@ compare(comparator: (actual) => boolean)
 ```
 
 ```tsx
-import { wrap, compare } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import { assertion, wrap, compare } from '@dojo/framework/testing/renderer';
 
 // create a wrapped node the `h1`
 const WrappedHeader = wrap('h1');
 
-const baseTemplate = assertionTemplate(() => (
+const baseAssertion = assertion(() => (
 	<div>
 		<WrappedHeader id={compare((actual) => typeof actual === 'string')}>Header!</WrappedHeader>
 	</div>
@@ -428,8 +426,7 @@ When dealing with widgets that render multiple items, for example a list it can 
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import renderer, { ignore } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, ignore } from '@dojo/framework/testing/renderer';
 
 const factory = create().properties<{ items: string[] }>();
 
@@ -444,7 +441,7 @@ const ListWidget = create(function ListWidget({ properties }) {
 
 const r = renderer(() => <ListWidget items={['a', 'b', 'c', 'd']} />);
 const IgnoredItem = ignore('li');
-const template = assertionTemplate(() => (
+const listAssertion = assertion(() => (
 	<div>
 		<ul>
 			<li>a</li>
@@ -454,7 +451,7 @@ const template = assertionTemplate(() => (
 		</ul>
 	</div>
 ));
-r.expect(template);
+r.expect(listAssertion);
 ```
 
 ## Mocking Middleware
@@ -522,8 +519,7 @@ To test that the `properties().fetchItems` method is called when the button is c
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import Action from '../../../src/widgets/Action';
 import * as css from '../../../src/widgets/Action.m.css';
@@ -537,7 +533,7 @@ describe('Action', () => {
 	const fetchItems = stub();
 	it('can fetch data on button click', () => {
 		const WrappedButton = wrap(Button);
-		const template = assertionTemplate(() => (
+		const baseAssertion = assertion(() => (
 			<div classes={[css.root]}>
 				<WrappedButton key="button" onClick={() => {}}>
 					Fetch
@@ -545,9 +541,9 @@ describe('Action', () => {
 			</div>
 		));
 		const r = renderer(() => <Action fetchItems={fetchItems} />);
-		r.expect(template);
+		r.expect(baseAssertion);
 		r.property(WrappedButton, 'onClick');
-		r.expect(template);
+		r.expect(baseAssertion);
 		assert.isTrue(fetchItems.calledOnce);
 	});
 });
@@ -596,8 +592,7 @@ By using the `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
 import Breakpoint from '../../src/Breakpoint';
@@ -606,7 +601,7 @@ describe('Breakpoint', () => {
 	it('resizes correctly', () => {
 		const WrappedHeader = wrap('h1');
 		const mockBreakpoint = createBreakpointMock();
-		const template = assertionTemplate(() => (
+		const baseAssertion = assertion(() => (
 			<div key="root">
 				<WrappedHeader>Header</WrappedHeader>
 				<div>Longer description</div>
@@ -615,11 +610,11 @@ describe('Breakpoint', () => {
 		const r = renderer(() => <Breakpoint />, {
 			middleware: [[breakpoint, mockBreakpoint]]
 		});
-		r.expect(template);
+		r.expect(baseAssertion);
 
 		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
 
-		r.expect(template.insertAfter(WrappedHeader, () => [<h2>Subtitle</h2>]);
+		r.expect(baseAssertion.insertAfter(WrappedHeader, () => [<h2>Subtitle</h2>]);
 	});
 });
 ```
@@ -657,8 +652,7 @@ By calling `focusMock(key: string | number, value: boolean)` the result of the `
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import focus from '@dojo/framework/core/middleware/focus';
 import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
 import * as css from './FormWidget.m.css';
@@ -667,7 +661,7 @@ describe('Focus', () => {
 	it('adds a "focused" class to the wrapper when the input is focused', () => {
 		const focusMock = createFocusMock();
 		const WrappedRoot = wrap('div');
-		const template = assertionTemplate(() => (
+		const baseAssertion = assertion(() => (
 			<WrappedRoot key="wrapper" classes={[css.root, null]}>
 				<input type="text" key="text" value="focus me" />
 			</WrappedRoot>
@@ -676,11 +670,11 @@ describe('Focus', () => {
 			middleware: [[focus, focusMock]]
 		});
 
-		r.expect(template);
+		r.expect(baseAssertion);
 
 		focusMock('text', true);
 
-		r.expect(template.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
+		r.expect(baseAssertion.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
 	});
 });
 ```
@@ -716,8 +710,7 @@ Testing the asynchronous result using the mock `icache` middleware is simple:
 
 ```tsx
 const { describe, it, afterEach } = intern.getInterface('bdd');
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import { tsx } from '@dojo/framework/core/vdom';
 import * as sinon from 'sinon';
 import global from '@dojo/framework/shim/global';
@@ -735,14 +728,14 @@ describe('MyWidget', () => {
 		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
 
 		const WrappedRoot = wrap('div');
-		const template = assertionTemplate(() => <WrappedRoot>Loading</WrappedRoot>);
+		const baseAssertion = assertion(() => <WrappedRoot>Loading</WrappedRoot>);
 		const mockICache = createICacheMock();
 		const r = renderer(() => <Home />, { middleware: [[icache, mockICache]] });
-		r.expect(template);
+		r.expect(baseAssertion);
 
 		// await the async method passed to the mock cache
 		await mockICache('users');
-		r.expect(template.setChildren(WrappedRoot, () => ['api data']));
+		r.expect(baseAssertion.setChildren(WrappedRoot, () => ['api data']));
 	});
 });
 ```
@@ -771,8 +764,7 @@ Using the mock `intersection` middleware:
 import { tsx } from '@dojo/framework/core/vdom';
 import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
 import intersection from '@dojo/framework/core/middleware/intersection';
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
@@ -784,18 +776,18 @@ describe('MyWidget', () => {
 		// replace the original middleware
 		const r = renderer(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
 		const WrappedRoot = wrap('div');
-		const assertionTemplate = assertionTemplate(() => (
+		const assertion = assertion(() => (
 			<WrappedRoot key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</WrappedRoot>
 		));
 		// call renderer.expect as usual, asserting the default response
-		r.expect(assertionTemplate);
+		r.expect(assertion);
 
 		// use the intersection mock to set the expected return
 		// of the intersection middleware by key
 		intersectionMock('root', { isIntersecting: true });
 
 		// assert again with the updated expectation
-		r.expect(assertionTemplate.setChildren(WrappedRoot, () => [`{"isIntersecting": true }`]));
+		r.expect(assertion.setChildren(WrappedRoot, () => [`{"isIntersecting": true }`]));
 	});
 });
 ```
@@ -848,8 +840,7 @@ Using the mock `resize` middleware:
 import { tsx } from '@dojo/framework/core/vdom';
 import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
 import resize from '@dojo/framework/core/middleware/resize';
-import renderer, { wrap } from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
@@ -862,17 +853,17 @@ describe('MyWidget', () => {
 		const r = renderer(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
 
 		const WrappedRoot = wrap('div');
-		const template = assertionTemplate(() => <div key="root">null</div>);
+		const baseAssertion = assertion(() => <div key="root">null</div>);
 
 		// call renderer.expect as usual
-		r.expect(template);
+		r.expect(baseAssertion);
 
 		// use the resize mock to set the expected return of the resize middleware
 		// by key
 		resizeMock('root', { width: 100 });
 
 		// assert again with the updated expectation
-		r.expect(template.setChildren(WrappedRoot, () [`{"width":100}`]);)
+		r.expect(baseAssertion.setChildren(WrappedRoot, () [`{"width":100}`]);)
 	});
 });
 ```
@@ -950,27 +941,27 @@ describe('MyWidget', () => {
          const r = renderer(() => <MyWidget {...properties} />, {
              middleware: [[store, mockStore]]
          });
-         r.expect(/* assertion template for `Loading`*/);
+         r.expect(/* assertion for `Loading`*/);
 
          // assert again the stubbed process
          expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
 
          mockStore((path) => [replace(path('isLoading', true)]);
-         r.expect(/* assertion template for `Loading`*/);
+         r.expect(/* assertion for `Loading`*/);
          expect(myProcessStub.calledOnce()).toBeTruthy();
 
          // use the mock store to apply operations to the store
          mockStore((path) => [replace(path('details', { id: 'id' })]);
          mockStore((path) => [replace(path('isLoading', true)]);
 
-         r.expect(/* assertion template for `ShowDetails`*/);
+         r.expect(/* assertion for `ShowDetails`*/);
 
          properties.id = 'other';
-         r.expect(/* assertion template for `Loading`*/);
+         r.expect(/* assertion for `Loading`*/);
          expect(myProcessStub.calledTwice()).toBeTruthy();
          expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
          mockStore((path) => [replace(path('details', { id: 'other' })]);
-         r.expect(/* assertion template for `ShowDetails`*/);
+         r.expect(/* assertion for `ShowDetails`*/);
      });
 });
 ```
@@ -1011,8 +1002,7 @@ Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import renderer from '@dojo/framework/testing/renderer';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 import validity from '@dojo/framework/core/middleware/validity';
 import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
 import * as css from './FormWidget.m.css';
@@ -1026,21 +1016,21 @@ describe('Validity', () => {
 		});
 
 		const WrappedRoot = wrap('div');
-		const template = assertionTemplate(() => (
+		const baseAssertion = assertion(() => (
 			<WrappedRoot key="root" classes={[css.root, null]}>
 				<input type="email" key="input" value="" onchange={() => {}} />
 			</WrappedRoot>
 		));
 
-		r.expect(template);
+		r.expect(baseAssertion);
 
 		validityMock('input', { valid: false, message: 'invalid message' });
 
-		const invalidTemplate = template
+		const invalidAssertion = baseAssertion
 			.append(WrappedRoot, () => [<p key="validityMessage">invalid message</p>])
 			.setProperty(WrappedRoot, 'classes', [css.root, css.invalid]);
 
-		r.expect(invalidTemplate);
+		r.expect(invalidAssertion);
 	});
 });
 ```

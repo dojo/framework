@@ -7,8 +7,7 @@ import Link from '../../../src/routing/Link';
 import ActiveLink from '../../../src/routing/ActiveLink';
 import { w, create, getRegistry } from '../../../src/core/vdom';
 
-import renderer, { wrap } from '../../../src/testing/renderer';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '../../../src/testing/renderer';
 
 const registry = new Registry();
 
@@ -69,7 +68,7 @@ describe('ActiveLink', () => {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
 		const WrappedLink = wrap(Link);
-		const template = assertionTemplate(() => w(WrappedLink, { classes: [], to: 'foo' }));
+		const template = assertion(() => w(WrappedLink, { classes: [], to: 'foo' }));
 		r.expect(template);
 		router.setPath('/foo');
 		r.expect(template.setProperty(WrappedLink, 'classes', ['foo', undefined, null]));
@@ -80,7 +79,7 @@ describe('ActiveLink', () => {
 		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'] }, ['hello']), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
+		const template = assertion(() => w(Link, { classes: ['foo'], to: 'foo' }, ['hello']));
 		r.expect(template);
 	});
 
@@ -95,7 +94,7 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		const template = assertionTemplate(() =>
+		const template = assertion(() =>
 			w(Link, { classes: ['foo'], to: 'query', params: { path: 'path', query: 'query' } }, ['hello'])
 		);
 		r.expect(template);
@@ -106,7 +105,7 @@ describe('ActiveLink', () => {
 		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], classes: 'bar' }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
+		const template = assertion(() => w(Link, { classes: ['bar', 'foo'], to: 'foo' }));
 		r.expect(template);
 	});
 
@@ -115,7 +114,7 @@ describe('ActiveLink', () => {
 		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo', 'qux'], classes: ['bar', 'baz'] }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
+		const template = assertion(() => w(Link, { classes: ['bar', 'baz', 'foo', 'qux'], to: 'foo' }));
 		r.expect(template);
 	});
 
@@ -127,7 +126,7 @@ describe('ActiveLink', () => {
 		const r = renderer(() => w(ActiveLink, properties), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => w(WrappedLink, { to: 'foo', classes: ['foo'] }));
+		const template = assertion(() => w(WrappedLink, { to: 'foo', classes: ['foo'] }));
 		r.expect(template);
 
 		properties = { to: 'other', activeClasses: ['foo'] };
@@ -155,9 +154,7 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		r1.expect(
-			assertionTemplate(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } }))
-		);
+		r1.expect(assertion(() => w(Link, { to: 'suffixed-param', classes: ['foo'], params: { suffix: 'one' } })));
 
 		const r2 = renderer(
 			() =>
@@ -172,7 +169,7 @@ describe('ActiveLink', () => {
 				middleware: [[getRegistry, mockGetRegistry]]
 			}
 		);
-		r2.expect(assertionTemplate(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } })));
+		r2.expect(assertion(() => w(Link, { to: 'suffixed-param', classes: [], params: { suffix: 'two' } })));
 	});
 
 	it('Should be able to check for an exact match', () => {
@@ -180,11 +177,11 @@ describe('ActiveLink', () => {
 		let r = renderer(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'] }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		r.expect(assertionTemplate(() => w(Link, { classes: ['foo'], to: 'param' })));
+		r.expect(assertion(() => w(Link, { classes: ['foo'], to: 'param' })));
 
 		r = renderer(() => w(ActiveLink, { to: 'param', activeClasses: ['foo'], isExact: true }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		r.expect(assertionTemplate(() => w(Link, { classes: [], to: 'param' })));
+		r.expect(assertion(() => w(Link, { classes: [], to: 'param' })));
 	});
 });

@@ -4,8 +4,7 @@ import { MemoryHistory as HistoryManager } from '../../../src/routing/history/Me
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { create, getRegistry, tsx } from '../../../src/core/vdom';
-import renderer, { wrap } from '../../../src/testing/renderer';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '../../../src/testing/renderer';
 import Outlet from '../../../src/routing/Outlet';
 
 let registry: Registry;
@@ -63,7 +62,7 @@ describe('Outlet', () => {
 
 	it('should match all routes for an outlet by default', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>overview</div>
 				<div>type</div>
@@ -86,7 +85,7 @@ describe('Outlet', () => {
 
 	it('should restrict matches using matcher property based on match details', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>type</div>
 			</virtual>
@@ -115,7 +114,7 @@ describe('Outlet', () => {
 		r.expect(template);
 		router.setPath('/widget/widget/overview');
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<virtual>
 					<div>overview</div>
 				</virtual>
@@ -125,7 +124,7 @@ describe('Outlet', () => {
 
 	it('should be able to use custom keys with a matcher property', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>custom</div>
 			</virtual>
@@ -152,7 +151,7 @@ describe('Outlet', () => {
 
 	it('should render function child if there is any route matches for the outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => <div>function</div>);
+		const template = assertion(() => <div>function</div>);
 		router.setPath('/widget/widget/overview/type');
 		const r = renderer(() => <Outlet id="main">{() => <div>function</div>}</Outlet>, {
 			middleware: [[getRegistry, mockGetRegistry]]
@@ -162,7 +161,7 @@ describe('Outlet', () => {
 
 	it('should be able to access match details in children functions', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>widget</div>
 				<div>widget</div>
@@ -185,7 +184,7 @@ describe('Outlet', () => {
 
 	it('should return null if no router has been registered', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => null);
+		const template = assertion(() => null);
 		router.setPath('/widget/widget/overview/type');
 		const r = renderer(() => (
 			<Outlet id="main">
@@ -200,7 +199,7 @@ describe('Outlet', () => {
 
 	it('should return null if no routes match for the outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => null);
+		const template = assertion(() => null);
 		router.setPath('/other/widget/overview/type');
 		const r = renderer(() => (
 			<Outlet id="main">
@@ -220,7 +219,7 @@ describe('Outlet', () => {
 			id: 'main'
 		};
 		const WrappedType = wrap('div');
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>overview</div>
 				<WrappedType>type</WrappedType>

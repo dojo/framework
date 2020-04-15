@@ -5,8 +5,7 @@ const { assert } = intern.getPlugin('chai');
 import { tsx, create } from '../../../../../src/core/vdom';
 import validity from '../../../../../src/core/middleware/validity';
 import createValidityMock from '../../../../../src/testing/mocks/middleware/validity';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('validity mock', () => {
 	it('should mock validity', () => {
@@ -19,11 +18,11 @@ describe('validity mock', () => {
 
 		validityMock('test', { valid: false, message: 'test message' });
 		let r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
-		r.expect(assertionTemplate(() => <div>test message</div>));
+		r.expect(assertion(() => <div>test message</div>));
 
 		validityMock('test', { valid: true, message: '' });
 		r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
-		r.expect(assertionTemplate(() => <div>valid</div>));
+		r.expect(assertion(() => <div>valid</div>));
 	});
 
 	it('defaults to a default return value', () => {
@@ -37,6 +36,6 @@ describe('validity mock', () => {
 		});
 
 		const r = renderer(() => <App />, { middleware: [[validity, validityMock]] });
-		r.expect(assertionTemplate(() => <div />));
+		r.expect(assertion(() => <div />));
 	});
 });

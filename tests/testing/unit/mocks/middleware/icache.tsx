@@ -2,8 +2,7 @@ const { it } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 import * as sinon from 'sinon';
 import { tsx, create } from '../../../../../src/core/vdom';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 import createICacheMock from '../../../../../src/testing/mocks/middleware/icache';
 import icache from '../../../../../src/core/middleware/icache';
 import global from '../../../../../src/shim/global';
@@ -24,8 +23,8 @@ describe('icache mock', () => {
 		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
 
 		const r = renderer(() => <App />, { middleware: [[icache, iCacheMock]] });
-		r.expect(assertionTemplate(() => <div>Loading</div>));
+		r.expect(assertion(() => <div>Loading</div>));
 		await iCacheMock('users');
-		r.expect(assertionTemplate(() => <div>api data</div>));
+		r.expect(assertion(() => <div>api data</div>));
 	});
 });

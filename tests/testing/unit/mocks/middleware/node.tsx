@@ -3,8 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 import createNodeMock from '../../../../../src/testing/mocks/middleware/node';
 import dimensions from '../../../../../src/core/middleware/dimensions';
 import { tsx, create, node } from '../../../../../src/core/vdom';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('node mock', () => {
 	it('should mock nodes', () => {
@@ -16,7 +15,7 @@ describe('node mock', () => {
 		});
 		const r = renderer(() => <App key="app" />, { middleware: [[node, nodeMock]] });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div key="root">{`{"client":{"height":0,"left":0,"top":0,"width":0},"offset":{"height":0,"left":0,"top":0,"width":0},"position":{"bottom":0,"left":0,"right":0,"top":0},"scroll":{"height":0,"left":0,"top":0,"width":0},"size":{"width":0,"height":0}}`}</div>
 			))
 		);
@@ -37,7 +36,7 @@ describe('node mock', () => {
 		};
 		nodeMock('root', domNode);
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div key="root">{`{"client":{"height":4,"left":1,"top":2,"width":3},"offset":{"height":10,"left":10,"top":10,"width":10},"position":{"bottom":10,"left":10,"right":10,"top":10},"scroll":{"height":10,"left":10,"top":10,"width":10},"size":{"width":10,"height":10}}`}</div>
 			))
 		);

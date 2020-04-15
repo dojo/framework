@@ -1,10 +1,9 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { renderer, wrap, ignore } from '../../../src/testing/renderer';
+import { renderer, wrap, ignore, assertion } from '../../../src/testing/renderer';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx, create } from '../../../src/core/vdom';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
 import { DNode } from '../../../src/core/interfaces';
 
 class MyWidget extends WidgetBase<{
@@ -50,7 +49,7 @@ const WrappedHeader = wrap('h2');
 const WrappedList = wrap('ul');
 const WrappedListItem = wrap('li');
 
-const baseAssertion = assertionTemplate(() =>
+const baseAssertion = assertion(() =>
 	v(WrappedRoot.tag, { classes: ['root'] }, [
 		v(WrappedHeader.tag, {}, ['hello']),
 		undefined,
@@ -69,7 +68,7 @@ class ListWidget extends WidgetBase {
 	}
 }
 
-const baseListAssertion = assertionTemplate(() => v('div', { classes: ['root'] }, [v(WrappedList.tag, [])]));
+const baseListAssertion = assertion(() => v('div', { classes: ['root'] }, [v(WrappedList.tag, [])]));
 
 class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 	render() {
@@ -88,12 +87,9 @@ class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 const WrappedFirst = wrap('div');
 const WrappedSecond = wrap('div');
 
-const baseMultiRootAssertion = assertionTemplate(() => [
-	v(WrappedFirst.tag, ['first']),
-	v(WrappedSecond.tag, ['last'])
-]);
+const baseMultiRootAssertion = assertion(() => [v(WrappedFirst.tag, ['first']), v(WrappedSecond.tag, ['last'])]);
 
-const tsxAssertion = assertionTemplate(() => (
+const tsxAssertion = assertion(() => (
 	<div classes={['root']}>
 		<h2>hello</h2>
 		<ul>
@@ -104,7 +100,7 @@ const tsxAssertion = assertionTemplate(() => (
 	</div>
 ));
 
-describe('new/assertionTemplate', () => {
+describe('new/assertion', () => {
 	it('can get a property', () => {
 		const classes = baseAssertion.getProperty(WrappedRoot, 'classes');
 		assert.deepEqual(classes, ['root']);
@@ -151,7 +147,7 @@ describe('new/assertionTemplate', () => {
 		});
 		const WrappedClassWidget = wrap(MyClassWidget);
 		const WrappedFunctionWidget = wrap(MyFunctionWidget);
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<div>
 				<WrappedClassWidget foo="bar" bar={2} />
 				<WrappedFunctionWidget foo="bar" bar={2} />
@@ -226,7 +222,7 @@ describe('new/assertionTemplate', () => {
 		const WrappedParent = wrap('div');
 		const WrappedChild = wrap('div');
 
-		const baseAssertion = assertionTemplate(() => v(WrappedParent.tag, { key: 'parent', classes: ['root'] }, []));
+		const baseAssertion = assertion(() => v(WrappedParent.tag, { key: 'parent', classes: ['root'] }, []));
 
 		const childAssertion = baseAssertion.setChildren(WrappedParent, () => [
 			<WrappedChild key="child">hello</WrappedChild>

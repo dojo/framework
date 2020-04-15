@@ -10,19 +10,16 @@ import {
 	VNodeProperties,
 	OptionalWNodeFactory,
 	WidgetBaseInterface,
-	DefaultChildrenWNodeFactory
+	DefaultChildrenWNodeFactory,
+	VNode
 } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
-import { invalidator, diffProperty, destroy, create, propertiesDiff, w, v } from '../core/vdom';
+import { invalidator, diffProperty, destroy, create, propertiesDiff, w, v, isVNode, isWNode } from '../core/vdom';
 import { uuid } from '../core/util';
 import decorate, { decorateNodes } from './decorate';
-import { AssertionTemplateResult } from './assertionTemplate';
-import { Wrapped, WidgetFactory, CompareFunc, Comparable } from './interfaces';
-
-export interface Expect {
-	(expectedRenderFunc: AssertionTemplateResult): void;
-}
+import { decorate as coreDecorate } from '../core/util';
+import { Wrapped, WidgetFactory, CompareFunc, Comparable, NonComparable } from './interfaces';
 
 export interface ChildInstruction {
 	type: 'child';
@@ -84,16 +81,268 @@ export interface Property {
 	): void;
 }
 
-export interface RendererAPI {
-	expect: Expect;
-	child: Child;
-	property: Property;
-}
-
 let middlewareId = 0;
 
 interface RendererOptions {
 	middleware?: [MiddlewareResultFactory<any, any, any, any>, MiddlewareResultFactory<any, any, any, any>][];
+}
+
+export type PropertiesComparatorFunction<T = any> = (actualProperties: T) => T;
+
+export type TemplateChildren<T = DNode[]> = () => T;
+
+export interface DecoratorResult<T> {
+	hasDeferredProperties: boolean;
+	nodes: T;
+}
+
+function isWrappedNode(value: any): value is (WNode & { id: string }) | (WNode & { id: string }) {
+	return Boolean(value && value.id && (isWNode(value) || isVNode(value)));
+}
+
+function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T): VNode | WNode {
+	renderResult = decorateNodes(renderResult).nodes;
+	let nodes = Array.isArray(renderResult) ? [...renderResult] : [renderResult];
+	while (nodes.length) {
+		let node = nodes.pop();
+		if (isWrappedNode(node)) {
+			if (node.id === wrapped.id) {
+				return node;
+			}
+		}
+		if (isVNode(node) || isWNode(node)) {
+			const children = node.children || [];
+			nodes = [...children, ...nodes];
+		}
+	}
+	throw new Error('Unable to find node');
+}
+
+export interface AssertionResult {
+	(): DNode | DNode[];
+	append<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	append<T extends WidgetFactory>(target: Wrapped<T>, children: TemplateChildren<T['children']>): AssertionResult;
+	prepend<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	prepend<T extends WidgetFactory>(target: Wrapped<T>, children: TemplateChildren<T['children']>): AssertionResult;
+	replaceChildren<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	replaceChildren<T extends WidgetFactory>(
+		target: Wrapped<T>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	insertBefore<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	insertBefore<T extends WidgetFactory>(
+		target: Wrapped<T>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	insertAfter<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	insertAfter<T extends WidgetFactory>(
+		target: Wrapped<T>,
+		children: TemplateChildren<T['children']>
+	): AssertionResult;
+	insertSiblings<T extends WidgetBaseInterface>(
+		target: T,
+		children: TemplateChildren,
+		type?: 'before' | 'after'
+	): AssertionResult;
+	setChildren<T extends WidgetFactory>(
+		target: Wrapped<T>,
+		children: TemplateChildren<T['children']>,
+		type?: 'prepend' | 'replace' | 'append'
+	): AssertionResult;
+	setChildren<T extends WidgetBaseInterface>(
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren<T['children']>,
+		type?: 'prepend' | 'replace' | 'append'
+	): AssertionResult;
+	setProperty<T extends WidgetBaseInterface, K extends keyof T['properties']>(
+		wrapped: Wrapped<Constructor<T>>,
+		property: K,
+		value: Exclude<T['properties'][K], CompareFunc<any>>
+	): AssertionResult;
+	setProperty<T extends WidgetFactory, K extends keyof T['properties']>(
+		wrapped: Wrapped<T>,
+		property: K,
+		value: Exclude<T['properties'][K], CompareFunc<any>>
+	): AssertionResult;
+	setProperties<T extends WidgetBaseInterface>(
+		wrapped: Wrapped<Constructor<T>>,
+		value: NonComparable<T['properties']> | PropertiesComparatorFunction<NonComparable<T['properties']>>
+	): AssertionResult;
+	setProperties<T extends WidgetFactory>(
+		wrapped: Wrapped<T>,
+		value: NonComparable<T['properties']> | PropertiesComparatorFunction<NonComparable<T['properties']>>
+	): AssertionResult;
+	getChildren<T extends WidgetBaseInterface>(target: Wrapped<Constructor<T>>): T['children'];
+	getChildren<T extends WidgetFactory>(target: Wrapped<T>): T['children'];
+	getProperty<T extends WidgetBaseInterface, K extends keyof T['properties']>(
+		target: Wrapped<Constructor<T>>,
+		property: K
+	): Exclude<T['properties'][K], CompareFunc<any>>;
+	getProperty<T extends WidgetFactory, K extends keyof T['properties']>(
+		target: Wrapped<T>,
+		property: K
+	): Exclude<T['properties'][K], CompareFunc<any>>;
+	getProperties<T extends WidgetBaseInterface>(target: Wrapped<Constructor<T>>): NonComparable<T['properties']>;
+	getProperties<T extends WidgetFactory>(target: Wrapped<T>): NonComparable<T['properties']>;
+	replace<T extends WidgetBaseInterface>(target: Wrapped<Constructor<T>>, node: DNode): AssertionResult;
+	replace<T extends WidgetFactory>(target: Wrapped<T>, node: DNode): AssertionResult;
+	remove<T extends WidgetBaseInterface>(target: Wrapped<Constructor<T>>): AssertionResult;
+	remove<T extends WidgetFactory>(target: Wrapped<T>): AssertionResult;
+}
+
+type NodeWithProperties = (VNode | WNode) & { properties: { [index: string]: any } };
+
+const replaceChildren = (
+	wrapped: Wrapped<any>,
+	render: DNode | DNode[],
+	modifyChildrenFn: (index: number, children: DNode[]) => DNode[]
+): DNode | DNode[] => {
+	const node = findNode(render, wrapped);
+	const parent: (VNode | WNode) & { children: DNode[] } | undefined = (node as any).parent;
+	const siblings = parent ? parent.children : Array.isArray(render) ? render : [render];
+	const newChildren = modifyChildrenFn(siblings.indexOf(node), [...siblings]);
+
+	if (!parent) {
+		return newChildren;
+	}
+
+	parent.children = newChildren;
+	return render;
+};
+
+export function assertion(renderFunc: () => DNode | DNode[]) {
+	const assertionResult: any = () => {
+		const render = renderFunc();
+		coreDecorate(render, (node) => {
+			if (isWNode(node) || isVNode(node)) {
+				delete (node as NodeWithProperties).properties['~key'];
+				delete (node as NodeWithProperties).properties['assertion-key'];
+			}
+		});
+		return render;
+	};
+	assertionResult.setProperty = (wrapped: Wrapped<any>, property: string, value: any) => {
+		return assertion(() => {
+			const render = renderFunc();
+			const node = findNode(render, wrapped);
+			node.properties[property] = value;
+			return render;
+		});
+	};
+	assertionResult.setProperties = (wrapped: Wrapped<any>, value: any | PropertiesComparatorFunction) => {
+		return assertion(() => {
+			const render = renderFunc();
+			const node = findNode(render, wrapped);
+			node.properties = value;
+			return render;
+		});
+	};
+	assertionResult.append = (wrapped: Wrapped<any>, children: TemplateChildren) => {
+		return assertionResult.setChildren(wrapped, children, 'append');
+	};
+	assertionResult.prepend = (wrapped: Wrapped<any>, children: TemplateChildren) => {
+		return assertionResult.setChildren(wrapped, children, 'prepend');
+	};
+	assertionResult.replaceChildren = (wrapped: Wrapped<any>, children: TemplateChildren) => {
+		return assertionResult.setChildren(wrapped, children, 'replace');
+	};
+	assertionResult.setChildren = (
+		wrapped: Wrapped<any>,
+		children: TemplateChildren,
+		type: 'prepend' | 'replace' | 'append' = 'replace'
+	) => {
+		return assertion(() => {
+			const render = renderFunc();
+			const node = findNode(render, wrapped);
+			node.children = node.children || [];
+			let childrenResult = children();
+			switch (type) {
+				case 'prepend':
+					node.children = [...childrenResult, ...node.children];
+					break;
+				case 'append':
+					node.children = [...node.children, ...childrenResult];
+					break;
+				case 'replace':
+					node.children = [...childrenResult];
+					break;
+			}
+			return render;
+		});
+	};
+	assertionResult.insertBefore = (wrapped: Wrapped<any>, children: TemplateChildren) => {
+		return assertionResult.insertSiblings(wrapped, children, 'before');
+	};
+	assertionResult.insertAfter = (wrapped: Wrapped<any>, children: TemplateChildren) => {
+		return assertionResult.insertSiblings(wrapped, children, 'after');
+	};
+	assertionResult.insertSiblings = (
+		wrapped: Wrapped<any>,
+		children: TemplateChildren,
+		type: 'before' | 'after' = 'after'
+	) => {
+		return assertion(() => {
+			const render = renderFunc();
+			const insertedChildren = typeof children === 'function' ? children() : children;
+			return replaceChildren(wrapped, render, (index, children) => {
+				if (type === 'after') {
+					children.splice(index + 1, 0, ...insertedChildren);
+				} else {
+					children.splice(index, 0, ...insertedChildren);
+				}
+				return children;
+			});
+		});
+	};
+	assertionResult.getProperty = (wrapped: Wrapped<any>, property: string) => {
+		const render = renderFunc();
+		const node = findNode(render, wrapped);
+		return node.properties[property];
+	};
+	assertionResult.getProperties = (wrapped: Wrapped<any>) => {
+		const render = renderFunc();
+		const node = findNode(render, wrapped);
+		return node.properties;
+	};
+	assertionResult.getChildren = (wrapped: Wrapped<any>) => {
+		const render = renderFunc();
+		const node = findNode(render, wrapped);
+		return node.children || [];
+	};
+	assertionResult.replace = (wrapped: Wrapped<any>, newNode: DNode) => {
+		return assertion(() => {
+			const render = renderFunc();
+			return replaceChildren(wrapped, render, (index, children) => {
+				children.splice(index, 1, newNode);
+				return children;
+			});
+		});
+	};
+	assertionResult.remove = (wrapped: Wrapped<any>) => {
+		return assertion(() => {
+			const render = renderFunc();
+			return replaceChildren(wrapped, render, (index, children) => {
+				children.splice(index, 1);
+				return children;
+			});
+		});
+	};
+	return assertionResult as AssertionResult;
 }
 
 export function wrap(
@@ -164,6 +413,16 @@ export function ignore(node: any): any {
 export function compare(compareFunc: (actual: unknown, expected: unknown) => boolean): CompareFunc<unknown> {
 	(compareFunc as any).type = 'compare';
 	return compareFunc as any;
+}
+
+export interface Expect {
+	(expectedRenderFunc: AssertionResult): void;
+}
+
+export interface RendererAPI {
+	expect: Expect;
+	child: Child;
+	property: Property;
 }
 
 const factory = create();
@@ -295,7 +554,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		}
 	}
 
-	function _expect(expectedRenderFunc: AssertionTemplateResult) {
+	function _expect(expectedRenderFunc: AssertionResult) {
 		if (expectedRenderResult && propertyInstructions.length > 0) {
 			propertyInstructions.forEach((instruction) => {
 				decorate(renderResult, expectedRenderResult, new Map([[instruction.id, instruction]]));
@@ -322,7 +581,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 			}
 			propertyInstructions.push({ id: wrapped.id, wrapped, params, type: 'property', key });
 		},
-		expect(expectedRenderFunc: AssertionTemplateResult) {
+		expect(expectedRenderFunc: AssertionResult) {
 			return _expect(expectedRenderFunc);
 		}
 	};

@@ -3,8 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 import createResizeMock from '../../../../../src/testing/mocks/middleware/resize';
 import resize from '../../../../../src/core/middleware/resize';
 import { tsx, create } from '../../../../../src/core/vdom';
-import renderer from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('resize mock', () => {
 	it('should mock resize middleware calls', () => {
@@ -15,11 +14,11 @@ describe('resize mock', () => {
 			return <div key="root">{JSON.stringify(rects)}</div>;
 		});
 		const r = renderer(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
-		r.expect(assertionTemplate(() => <div key="root">null</div>));
+		r.expect(assertion(() => <div key="root">null</div>));
 		resizeMock('root', { width: 100 });
-		r.expect(assertionTemplate(() => <div key="root">{`{"width":100}`}</div>));
+		r.expect(assertion(() => <div key="root">{`{"width":100}`}</div>));
 		resizeMock('root', { width: 101 });
-		r.expect(assertionTemplate(() => <div key="root">{`{"width":101}`}</div>));
+		r.expect(assertion(() => <div key="root">{`{"width":101}`}</div>));
 	});
 
 	it('should deal with multiple mocked keys', () => {
@@ -37,7 +36,7 @@ describe('resize mock', () => {
 		});
 		const r = renderer(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">null</div>
 					<div key="other">null</div>
@@ -46,7 +45,7 @@ describe('resize mock', () => {
 		);
 		resizeMock('root', { width: 100 });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">{`{"width":100}`}</div>
 					<div key="other">null</div>
@@ -56,7 +55,7 @@ describe('resize mock', () => {
 		resizeMock('root', { width: 101 });
 		resizeMock('other', { width: 100 });
 		r.expect(
-			assertionTemplate(() => (
+			assertion(() => (
 				<div>
 					<div key="root">{`{"width":101}`}</div>
 					<div key="other">{`{"width":100}`}</div>

@@ -7,8 +7,7 @@ import { Registry } from '../../../src/core/Registry';
 import { Link } from '../../../src/routing/Link';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
-import renderer, { wrap } from '../../../src/testing/renderer';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '../../../src/testing/renderer';
 
 const registry = new Registry();
 
@@ -73,21 +72,21 @@ describe('Link', () => {
 
 	it('Generate link component for basic outlet', () => {
 		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		r.expect(assertionTemplate(() => v('a', { href: 'foo', onclick: noop })));
+		r.expect(assertion(() => v('a', { href: 'foo', onclick: noop })));
 	});
 
 	it('Generate link component for outlet with specified params', () => {
 		const r = renderer(() => w(Link, { to: 'foo2', params: { foo: 'foo' } }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		r.expect(assertionTemplate(() => v('a', { href: 'foo/foo', onclick: noop })));
+		r.expect(assertion(() => v('a', { href: 'foo/foo', onclick: noop })));
 	});
 
 	it('Generate link component for fixed href', () => {
 		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		r.expect(assertionTemplate(() => v('a', { href: '#foo/static', onclick: noop })));
+		r.expect(assertion(() => v('a', { href: '#foo/static', onclick: noop })));
 	});
 
 	it('Set router path on click', () => {
@@ -95,7 +94,7 @@ describe('Link', () => {
 		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: '#foo/static', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: '#foo/static', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent());
 		r.expect(template);
@@ -115,7 +114,7 @@ describe('Link', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: 'foo', registry, onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', registry, onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent());
 		r.expect(template);
@@ -127,7 +126,7 @@ describe('Link', () => {
 		const r = renderer(() => w(Link, { to: 'foo', target: '_blank' }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent());
 		r.expect(template);
@@ -137,7 +136,7 @@ describe('Link', () => {
 	it('Does not set router path on right click', () => {
 		const WrappedAnchor = wrap('a');
 		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
 		r.expect(template);
@@ -147,7 +146,7 @@ describe('Link', () => {
 	it('Does not set router path on ctrl click', () => {
 		const WrappedAnchor = wrap('a');
 		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
 		r.expect(template);
@@ -157,7 +156,7 @@ describe('Link', () => {
 	it('Does not set router path on meta click', () => {
 		const WrappedAnchor = wrap('a');
 		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		const template = assertionTemplate(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
 		r.expect(template);

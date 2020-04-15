@@ -1,8 +1,7 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { renderer, wrap, compare } from '../../../src/testing/renderer';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import { renderer, wrap, compare, assertion } from '../../../src/testing/renderer';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, create, tsx, diffProperty, invalidator } from '../../../src/core/vdom';
 import Set from '../../../src/shim/Set';
@@ -64,7 +63,7 @@ class MyDeferredWidget extends WidgetBase {
 describe('test renderer', () => {
 	describe('widget with a single top level DNode', () => {
 		it('expect', () => {
-			const baseAssertion = assertionTemplate(() =>
+			const baseAssertion = assertion(() =>
 				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
 					v(
 						'span',
@@ -83,18 +82,18 @@ describe('test renderer', () => {
 
 		it('Should support deferred properties', () => {
 			const r = renderer(() => w(MyDeferredWidget, {}));
-			r.expect(assertionTemplate(() => v('div', { classes: ['root', 'other'], styles: { marginTop: '100px' } })));
+			r.expect(assertion(() => v('div', { classes: ['root', 'other'], styles: { marginTop: '100px' } })));
 		});
 
 		it('Should support widgets that have typed children', () => {
 			class WidgetWithTypedChildren extends WidgetBase<WidgetProperties, WNode<MyDeferredWidget>> {}
 			const r = renderer(() => w(WidgetWithTypedChildren, {}, [w(MyDeferredWidget, {})]));
-			r.expect(assertionTemplate(() => v('div', [w(MyDeferredWidget, {})])));
+			r.expect(assertion(() => v('div', [w(MyDeferredWidget, {})])));
 		});
 
 		it('trigger property of wrapped node', () => {
 			const WrappedDiv = wrap('div');
-			const baseTemplate = assertionTemplate(() =>
+			const baseTemplate = assertion(() =>
 				v(WrappedDiv.tag, { classes: ['root', 'other'], onclick: () => {} }, [
 					v(
 						'span',
@@ -111,7 +110,7 @@ describe('test renderer', () => {
 
 			r.property(WrappedDiv, 'onclick');
 			r.expect(
-				assertionTemplate(() =>
+				assertion(() =>
 					v(WrappedDiv.tag, { classes: ['root', 'other'], onclick: () => {} }, [
 						v(
 							'span',
@@ -126,7 +125,7 @@ describe('test renderer', () => {
 			);
 			r.property(WrappedDiv, 'onclick', [100]);
 			r.expect(
-				assertionTemplate(() =>
+				assertion(() =>
 					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
 						v(
 							'span',
@@ -143,7 +142,7 @@ describe('test renderer', () => {
 
 		it('trigger property of wrapped widget', () => {
 			const WrappedChild = wrap(ChildWidget);
-			const baseTemplate = assertionTemplate(() =>
+			const baseTemplate = assertion(() =>
 				v('div', { classes: ['root', 'other'], onclick: () => {} }, [
 					v(
 						'span',
@@ -159,7 +158,7 @@ describe('test renderer', () => {
 			r.expect(baseTemplate);
 			r.property(WrappedChild, 'func');
 			r.expect(
-				assertionTemplate(() =>
+				assertion(() =>
 					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
 						v(
 							'span',
@@ -174,7 +173,7 @@ describe('test renderer', () => {
 			);
 			r.property(WrappedChild, 'func');
 			r.expect(
-				assertionTemplate(() =>
+				assertion(() =>
 					v('div', { classes: ['root', 'other'], onclick: () => {} }, [
 						v(
 							'span',
@@ -225,7 +224,7 @@ describe('test renderer', () => {
 			const WrappedButton = wrap('button');
 			const WrappedSpan = wrap('span');
 
-			const template = assertionTemplate(() => (
+			const template = assertion(() => (
 				<div>
 					<WrappedButton disabled={true} onclick={() => {}}>
 						Update Name
@@ -311,7 +310,7 @@ describe('test renderer', () => {
 			r.child(WrappedNestedChildFunctionWidget, ['nested-function']);
 
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<WrappedChildObjectFactory>
 							{{ top: () => 'top', bottom: () => 'bottom' }}
@@ -340,7 +339,7 @@ describe('test renderer', () => {
 
 			assert.throws(() => {
 				r.expect(
-					assertionTemplate(() => (
+					assertion(() => (
 						<div>
 							<WrappedChildObjectFactory>
 								{{ top: () => 'top', bottom: () => 'bottom' }}
@@ -405,7 +404,7 @@ describe('test renderer', () => {
 
 			const WrappedWidget = wrap(Widget);
 			const WrappedButton = wrap('button');
-			const baseAssertion = assertionTemplate(() => (
+			const baseAssertion = assertion(() => (
 				<div>
 					<WrappedWidget key="widget">{{ leading: [], trailing: () => [] }}</WrappedWidget>
 					<WrappedButton key="clicker" onclick={() => undefined}>
@@ -441,7 +440,7 @@ describe('test renderer', () => {
 			});
 			const r = renderer(() => <MyWidget />);
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<WrappedSpan id={compare((actual) => typeof actual === 'string')} />
 					</div>
@@ -462,7 +461,7 @@ describe('test renderer', () => {
 			const r = renderer(() => <MyWidget />);
 			assert.throws(() => {
 				r.expect(
-					assertionTemplate(() => (
+					assertion(() => (
 						<div>
 							<WrappedSpan id={compare((actual) => typeof actual !== 'string')} />
 						</div>
@@ -484,7 +483,7 @@ describe('test renderer', () => {
 			const foo = new Map();
 			foo.set('a', 'a');
 			const r = renderer(() => w(Foo, { foo, bar }));
-			r.expect(assertionTemplate(() => w(Bar, { foo, bar })));
+			r.expect(assertion(() => w(Bar, { foo, bar })));
 		});
 
 		it('should throw error if wrapped test node is used more than once', () => {
@@ -501,7 +500,7 @@ describe('test renderer', () => {
 			const r = renderer(() => <MyWidget />);
 			assert.throws(() => {
 				r.expect(
-					assertionTemplate(() => (
+					assertion(() => (
 						<div>
 							<WrappedSpan>hello</WrappedSpan>
 							<WrappedSpan>world</WrappedSpan>
@@ -533,7 +532,7 @@ describe('test renderer', () => {
 			const WrappedButton = wrap('button');
 			const r = renderer(() => <App />);
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<WrappedButton key="click-me" onclick={() => {}}>
 							Click Me 0
@@ -543,7 +542,7 @@ describe('test renderer', () => {
 			);
 			r.property(WrappedButton, 'onclick');
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me" onclick={() => {}}>
 							Click Me 1
@@ -562,7 +561,7 @@ describe('test renderer', () => {
 					<Foo />
 				</div>
 			));
-			const template = assertionTemplate(() => (
+			const template = assertion(() => (
 				<div>
 					<Bar />
 				</div>
@@ -590,7 +589,7 @@ describe('test renderer', () => {
 			const r = renderer(() => <App />);
 
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me">Click Me 0</button>
 					</div>
@@ -598,14 +597,14 @@ describe('test renderer', () => {
 			);
 
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me">Click Me 1</button>
 					</div>
 				))
 			);
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me">Click Me 2</button>
 					</div>
@@ -631,14 +630,14 @@ describe('test renderer', () => {
 			});
 			const r = renderer(() => <App key="app" />);
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me">app 0</button>
 					</div>
 				))
 			);
 			r.expect(
-				assertionTemplate(() => (
+				assertion(() => (
 					<div>
 						<button key="click-me">app 1</button>
 					</div>

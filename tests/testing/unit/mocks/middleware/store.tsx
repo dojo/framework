@@ -3,8 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import createStoreMock from '../../../../../src/testing/mocks/middleware/store';
 import { createStoreMiddleware } from '../../../../../src/core/middleware/store';
 import { tsx, create } from '../../../../../src/core/vdom';
-import renderer, { wrap } from '../../../../../src/testing/renderer';
-import assertionTemplate from '../../../../../src/testing/assertionTemplate';
+import renderer, { wrap, assertion } from '../../../../../src/testing/renderer';
 import { createProcess } from '../../../../../src/stores/process';
 import { stub } from 'sinon';
 import { replace } from '../../../../../src/stores/state/operations';
@@ -53,7 +52,7 @@ describe('store mock', () => {
 		const WrappedButton = wrap('button');
 		const WrappedOtherButton = wrap('button');
 		const WrappedSpan = wrap('span');
-		const template = assertionTemplate(() => {
+		const template = assertion(() => {
 			return (
 				<div>
 					<WrappedButton key="button" onclick={() => {}} />
