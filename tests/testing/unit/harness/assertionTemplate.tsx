@@ -2,10 +2,10 @@ const { describe, it, after, afterEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import { harness } from '../../../src/testing/harness';
-import { WidgetBase } from '../../../src/core/WidgetBase';
-import { v, w, tsx, create } from '../../../src/core/vdom';
-import assertionTemplate, { Ignore } from '../../../src/testing/assertionTemplate';
+import { harness } from '../../../../src/testing/harness/harness';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { v, w, tsx, create } from '../../../../src/core/vdom';
+import assertionTemplate, { Ignore } from '../../../../src/testing/harness/assertionTemplate';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;

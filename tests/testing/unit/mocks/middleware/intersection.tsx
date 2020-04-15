@@ -1,7 +1,7 @@
 const { it } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 import { tsx, create } from '../../../../../src/core/vdom';
-import harness from '../../../../../src/testing/harness';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 import createIntersectionMock from '../../../../../src/testing/mocks/middleware/intersection';
 import intersection from '../../../../../src/core/middleware/intersection';
 
@@ -13,11 +13,11 @@ describe('intersection mock', () => {
 			const details = intersection.get('root');
 			return <div key="root">{JSON.stringify(details)}</div>;
 		});
-		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
-		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
+		const r = renderer(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+		r.expect(assertion(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>));
 		intersectionMock('root', { isIntersecting: true });
-		h.expect(() => <div key="root">{`{"isIntersecting":true}`}</div>);
+		r.expect(assertion(() => <div key="root">{`{"isIntersecting":true}`}</div>));
 		intersectionMock('root', { isIntersecting: false });
-		h.expect(() => <div key="root">{`{"isIntersecting":false}`}</div>);
+		r.expect(assertion(() => <div key="root">{`{"isIntersecting":false}`}</div>));
 	});
 });

@@ -3508,7 +3508,6 @@ jsdomDescribe('vdom', () => {
 				const root = document.createElement('div');
 				const r = renderer(() => App({}));
 				r.mount({ domNode: root });
-				console.log(root.innerHTML);
 				assert.strictEqual(root.innerHTML, '<div><button></button><div>0</div></div>');
 				properties.count = 1;
 				(root.children[0].children[0] as any).click();
@@ -3867,7 +3866,6 @@ jsdomDescribe('vdom', () => {
 					}
 
 					const currentStart = icache.getOrSet('currentStart', 1);
-					console.log(currentStart, start);
 
 					const nodes = [<div key="prev">p</div>];
 					for (let i = currentStart; i < 10; i++) {

@@ -7,7 +7,7 @@ import { Route } from '../../../src/routing/Route';
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { w, create, getRegistry } from '../../../src/core/vdom';
-import harness from '../../../src/testing/harness';
+import renderer, { assertion } from '../../../src/testing/renderer';
 
 class Widget extends WidgetBase {
 	render() {
@@ -54,7 +54,7 @@ describe('Route', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
 		router.setPath('/foo');
-		const h = harness(
+		const r = renderer(
 			() =>
 				w(Route, {
 					id: 'foo',
@@ -64,14 +64,14 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(() => w(Widget, {}, []));
+		r.expect(assertion(() => w(Widget, {}, [])));
 	});
 
 	it('Should set the type as index for exact matches', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
-		const h = harness(
+		const r = renderer(
 			() =>
 				w(Route, {
 					id: 'foo',
@@ -82,7 +82,7 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(() => null);
+		r.expect(assertion(() => null));
 		assert.strictEqual(matchType, 'index');
 	});
 
@@ -90,7 +90,7 @@ describe('Route', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo/other');
-		const h = harness(
+		const r = renderer(
 			() =>
 				w(Route, {
 					id: 'foo',
@@ -101,7 +101,7 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(() => null);
+		r.expect(assertion(() => null));
 		assert.strictEqual(matchType, 'error');
 	});
 
@@ -116,7 +116,7 @@ describe('Route', () => {
 
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/other');
-		const h = harness(
+		const r = renderer(
 			() =>
 				w(Route, {
 					id: 'foo',
@@ -128,6 +128,6 @@ describe('Route', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(() => null);
+		r.expect(assertion(() => null));
 	});
 });

@@ -1,13 +1,13 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { harness } from '../../../src/testing/harness';
-import { WidgetBase } from '../../../src/core/WidgetBase';
-import { v, w, isVNode, tsx, create, diffProperty, invalidator } from '../../../src/core/vdom';
-import Set from '../../../src/shim/Set';
-import Map from '../../../src/shim/Map';
-import { VNode, WNode, WidgetProperties } from '../../../src/core/interfaces';
-import icache from '../../../src/core/middleware/icache';
+import { harness } from '../../../../src/testing/harness/harness';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { v, w, isVNode, tsx, create, diffProperty, invalidator } from '../../../../src/core/vdom';
+import Set from '../../../../src/shim/Set';
+import Map from '../../../../src/shim/Map';
+import { VNode, WNode, WidgetProperties } from '../../../../src/core/interfaces';
+import icache from '../../../../src/core/middleware/icache';
 
 const noop: any = () => {};
 

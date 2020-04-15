@@ -1,9 +1,9 @@
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
-import { harness } from '../../../src/testing/harness';
-import { WidgetBase } from '../../../src/core/WidgetBase';
-import { tsx, fromRegistry } from '../../../src/core/vdom';
+import { harness } from '../../../../src/testing/harness/harness';
+import { WidgetBase } from '../../../../src/core/WidgetBase';
+import { tsx, fromRegistry } from '../../../../src/core/vdom';
 
 class ChildWidget extends WidgetBase<any> {}
 const RegistryWidget = fromRegistry<any>('registry-item');

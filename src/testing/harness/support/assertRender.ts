@@ -1,10 +1,10 @@
-import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../core/interfaces';
+import { DNode, WNode, VNode, DefaultWidgetBaseInterface, Constructor } from '../../../core/interfaces';
 import * as diff from 'diff';
-import WeakMap from '../../shim/WeakMap';
-import Set from '../../shim/Set';
-import Map from '../../shim/Map';
-import { from as arrayFrom } from '../../shim/array';
-import { isVNode, isWNode } from '../../core/vdom';
+import WeakMap from '../../../shim/WeakMap';
+import Set from '../../../shim/Set';
+import Map from '../../../shim/Map';
+import { from as arrayFrom } from '../../../shim/array';
+import { isVNode, isWNode } from '../../../core/vdom';
 import { Ignore } from '../assertionTemplate';
 
 let widgetClassCounter = 0;

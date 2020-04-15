@@ -414,6 +414,10 @@ export function v(
 	let properties: VNodeProperties | DeferredVirtualProperties = propertiesOrChildren;
 	let deferredPropertiesCallback;
 
+	if (typeof (tag as any).tag === 'function') {
+		return (tag as any).tag(properties, children);
+	}
+
 	if (Array.isArray(propertiesOrChildren)) {
 		children = propertiesOrChildren;
 		properties = {};

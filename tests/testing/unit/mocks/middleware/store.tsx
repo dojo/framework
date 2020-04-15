@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 import createStoreMock from '../../../../../src/testing/mocks/middleware/store';
 import { createStoreMiddleware } from '../../../../../src/core/middleware/store';
 import { tsx, create } from '../../../../../src/core/vdom';
-import harness from '../../../../../src/testing/harness';
+import renderer, { wrap, assertion } from '../../../../../src/testing/renderer';
 import { createProcess } from '../../../../../src/stores/process';
 import { stub } from 'sinon';
 import { replace } from '../../../../../src/stores/state/operations';
@@ -48,40 +48,28 @@ describe('store mock', () => {
 				</div>
 			);
 		});
-		const h = harness(() => <App key="app" />, { middleware: [[store, storeMock]] });
-		h.expect(() => {
+		const r = renderer(() => <App key="app" />, { middleware: [[store, storeMock]] });
+		const WrappedButton = wrap('button');
+		const WrappedOtherButton = wrap('button');
+		const WrappedSpan = wrap('span');
+		const template = assertion(() => {
 			return (
 				<div>
-					<button key="button" onclick={() => {}} />
-					<button key="other" onclick={() => {}} />
-					<span />
+					<WrappedButton key="button" onclick={() => {}} />
+					<WrappedOtherButton key="other" onclick={() => {}} />
+					<WrappedSpan />
 				</div>
 			);
 		});
+		r.expect(template);
 		assert.isTrue(processStub.notCalled);
-		h.trigger('@button', 'onclick');
-		h.trigger('@other', 'onclick');
-		assert.isTrue(processStub.calledOnce);
+		r.property(WrappedButton, 'onclick');
+		r.property(WrappedOtherButton, 'onclick');
 		storeMock((path) => [replace(path('foo'), 'foo')]);
-		h.expect(() => {
-			return (
-				<div>
-					<button key="button" onclick={() => {}} />
-					<button key="other" onclick={() => {}} />
-					<span>foo</span>
-				</div>
-			);
-		});
+		const fooTemplate = template.setChildren(WrappedSpan, () => ['foo']);
+		r.expect(fooTemplate);
+		assert.isTrue(processStub.calledOnce);
 		storeMock((path) => [replace(path('bar'), { qux: 1 })]);
-		h.expect(() => {
-			return (
-				<div>
-					<button key="button" onclick={() => {}} />
-					<button key="other" onclick={() => {}} />
-					<span>foo</span>
-					<span>1</span>
-				</div>
-			);
-		});
+		r.expect(fooTemplate.insertAfter(WrappedSpan, () => [<span>1</span>]));
 	});
 });

@@ -1,8 +1,8 @@
 import select from './support/selector';
-import { VNode, WNode, DNode } from '../core/interfaces';
-import { isWNode, isVNode } from '../core/vdom';
-import { decorate } from '../core/util';
-import WidgetBase from '../core/WidgetBase';
+import { VNode, WNode, DNode } from '../../core/interfaces';
+import { isWNode, isVNode } from '../../core/vdom';
+import { decorate } from '../../core/util';
+import WidgetBase from '../../core/WidgetBase';
 
 export type PropertiesComparatorFunction = (actualProperties: any) => any;
 

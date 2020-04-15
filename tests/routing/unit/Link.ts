@@ -7,7 +7,7 @@ import { Registry } from '../../../src/core/Registry';
 import { Link } from '../../../src/routing/Link';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory } from '../../../src/routing/history/MemoryHistory';
-import harness from '../../../src/testing/harness';
+import renderer, { assertion, wrap } from '../../../src/testing/renderer';
 
 const registry = new Registry();
 
@@ -37,7 +37,7 @@ function createMockEvent(
 		metaKey: false,
 		ctrlKey: false
 	}
-) {
+): MouseEvent {
 	const { ctrlKey = false, metaKey = false, isRightClick = false } = options;
 
 	return {
@@ -48,7 +48,7 @@ function createMockEvent(
 		button: isRightClick ? undefined : 0,
 		metaKey,
 		ctrlKey
-	};
+	} as any;
 }
 
 const noop: any = () => {};
@@ -71,35 +71,39 @@ describe('Link', () => {
 	});
 
 	it('Generate link component for basic outlet', () => {
-		const h = harness(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		h.expect(() => v('a', { href: 'foo', onclick: noop }));
+		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
+		r.expect(assertion(() => v('a', { href: 'foo', onclick: noop })));
 	});
 
 	it('Generate link component for outlet with specified params', () => {
-		const h = harness(() => w(Link, { to: 'foo2', params: { foo: 'foo' } }), {
+		const r = renderer(() => w(Link, { to: 'foo2', params: { foo: 'foo' } }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => v('a', { href: 'foo/foo', onclick: noop }));
+		r.expect(assertion(() => v('a', { href: 'foo/foo', onclick: noop })));
 	});
 
 	it('Generate link component for fixed href', () => {
-		const h = harness(() => w(Link, { to: '#foo/static', isOutlet: false }), {
+		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => v('a', { href: '#foo/static', onclick: noop }));
+		r.expect(assertion(() => v('a', { href: '#foo/static', onclick: noop })));
 	});
 
 	it('Set router path on click', () => {
-		const h = harness(() => w(Link, { to: '#foo/static', isOutlet: false }), {
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => v('a', { href: '#foo/static', onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent());
+		const template = assertion(() => v(WrappedAnchor.tag, { href: '#foo/static', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent());
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.calledWith('#foo/static'));
 	});
 
 	it('Custom onClick handler can prevent default', () => {
-		const h = harness(
+		const WrappedAnchor = wrap('a');
+		const r = renderer(
 			() =>
 				w(Link, {
 					to: 'foo',
@@ -110,44 +114,58 @@ describe('Link', () => {
 				}),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(() => v('a', { href: 'foo', registry, onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent());
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', registry, onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent());
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path when target attribute is set', () => {
-		const h = harness(() => w(Link, { to: 'foo', target: '_blank' }), {
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: 'foo', target: '_blank' }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(() => v('a', { href: 'foo', onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent());
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent());
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on right click', () => {
-		const h = harness(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		h.expect(() => v('a', { href: 'foo', onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent({ isRightClick: true }));
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on ctrl click', () => {
-		const h = harness(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		h.expect(() => v('a', { href: 'foo', onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent({ ctrlKey: true }));
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('Does not set router path on meta click', () => {
-		const h = harness(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
-		h.expect(() => v('a', { href: 'foo', onclick: noop }));
-		h.trigger('a', 'onclick', createMockEvent({ metaKey: true }));
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: 'foo' }), { middleware: [[getRegistry, mockGetRegistry]] });
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
+		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
 
 	it('throw error if the injected router cannot be found with the router key', () => {
 		try {
-			harness(() => w(Link, { to: '#foo/static', isOutlet: false, routerKey: 'fake-key' }), {
+			renderer(() => w(Link, { to: '#foo/static', isOutlet: false, routerKey: 'fake-key' }), {
 				middleware: [[getRegistry, mockGetRegistry]]
 			});
 			assert.fail('Should throw an error when the injected router cannot be found with the routerKey');

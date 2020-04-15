@@ -4,8 +4,7 @@ import { MemoryHistory as HistoryManager } from '../../../src/routing/history/Me
 import { Registry } from '../../../src/core/Registry';
 import { registerRouterInjector } from '../../../src/routing/RouterInjector';
 import { create, getRegistry, tsx } from '../../../src/core/vdom';
-import harness from '../../../src/testing/harness';
-import assertionTemplate from '../../../src/testing/assertionTemplate';
+import renderer, { assertion, wrap } from '../../../src/testing/renderer';
 import Outlet from '../../../src/routing/Outlet';
 
 let registry: Registry;
@@ -63,14 +62,14 @@ describe('Outlet', () => {
 
 	it('should match all routes for an outlet by default', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>overview</div>
 				<div>type</div>
 			</virtual>
 		));
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(
+		const r = renderer(
 			() => (
 				<Outlet id="main">
 					{{
@@ -81,18 +80,18 @@ describe('Outlet', () => {
 			),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should restrict matches using matcher property based on match details', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>type</div>
 			</virtual>
 		));
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(
+		const r = renderer(
 			() => (
 				<Outlet
 					id="main"
@@ -112,10 +111,10 @@ describe('Outlet', () => {
 			),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(template);
+		r.expect(template);
 		router.setPath('/widget/widget/overview');
-		h.expect(
-			assertionTemplate(() => (
+		r.expect(
+			assertion(() => (
 				<virtual>
 					<div>overview</div>
 				</virtual>
@@ -125,13 +124,13 @@ describe('Outlet', () => {
 
 	it('should be able to use custom keys with a matcher property', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>custom</div>
 			</virtual>
 		));
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(
+		const r = renderer(
 			() => (
 				<Outlet
 					id="main"
@@ -147,29 +146,29 @@ describe('Outlet', () => {
 			),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should render function child if there is any route matches for the outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => <div>function</div>);
+		const template = assertion(() => <div>function</div>);
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(() => <Outlet id="main">{() => <div>function</div>}</Outlet>, {
+		const r = renderer(() => <Outlet id="main">{() => <div>function</div>}</Outlet>, {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should be able to access match details in children functions', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => (
+		const template = assertion(() => (
 			<virtual>
 				<div>widget</div>
 				<div>widget</div>
 			</virtual>
 		));
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(
+		const r = renderer(
 			() => (
 				<Outlet id="main">
 					{{
@@ -180,14 +179,14 @@ describe('Outlet', () => {
 			),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should return null if no router has been registered', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => null);
+		const template = assertion(() => null);
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(() => (
+		const r = renderer(() => (
 			<Outlet id="main">
 				{{
 					overview: ({ params: { widget } }) => <div>{widget}</div>,
@@ -195,14 +194,14 @@ describe('Outlet', () => {
 				}}
 			</Outlet>
 		));
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should return null if no routes match for the outlet', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
-		const template = assertionTemplate(() => null);
+		const template = assertion(() => null);
 		router.setPath('/other/widget/overview/type');
-		const h = harness(() => (
+		const r = renderer(() => (
 			<Outlet id="main">
 				{{
 					overview: ({ params: { widget } }) => <div>{widget}</div>,
@@ -210,7 +209,7 @@ describe('Outlet', () => {
 				}}
 			</Outlet>
 		));
-		h.expect(template);
+		r.expect(template);
 	});
 
 	it('should be able to use a custom router key', () => {
@@ -219,14 +218,15 @@ describe('Outlet', () => {
 		const properties: any = {
 			id: 'main'
 		};
-		const template = assertionTemplate(() => (
+		const WrappedType = wrap('div');
+		const template = assertion(() => (
 			<virtual>
 				<div>overview</div>
-				<div assertion-key="type">type</div>
+				<WrappedType>type</WrappedType>
 			</virtual>
 		));
 		router.setPath('/widget/widget/overview/type');
-		const h = harness(
+		const r = renderer(
 			() => (
 				<Outlet {...properties}>
 					{{
@@ -237,13 +237,13 @@ describe('Outlet', () => {
 			),
 			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
-		h.expect(template);
+		r.expect(template);
 		const customRouter = registerRouterInjector(routeConfig, registry, { HistoryManager, key: 'custom' });
 		properties.routerKey = 'custom';
 		customRouter.setPath('/widget/widget/overview');
-		h.expect(template.remove('@type'));
+		r.expect(template.remove(WrappedType));
 		properties.routerKey = undefined;
 		router.setPath('/widget/widget/overview/type');
-		h.expect(template);
+		r.expect(template);
 	});
 });

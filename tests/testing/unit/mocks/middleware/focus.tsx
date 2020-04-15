@@ -3,7 +3,7 @@ const { describe } = intern.getPlugin('jsdom');
 import createFocusMock from '../../../../../src/testing/mocks/middleware/focus';
 import focus from '../../../../../src/core/middleware/focus';
 import { tsx, create } from '../../../../../src/core/vdom';
-import harness from '../../../../../src/testing/harness';
+import renderer, { assertion } from '../../../../../src/testing/renderer';
 
 describe('focus mock', () => {
 	it('should mock focus of a node', () => {
@@ -12,12 +12,12 @@ describe('focus mock', () => {
 		const App = factory(({ middleware: { focus } }) => {
 			return <div key="root">{focus.isFocused('root') ? 'focus' : 'no focus'}</div>;
 		});
-		const h = harness(() => <App />, { middleware: [[focus, focusMock]] });
+		const r = renderer(() => <App />, { middleware: [[focus, focusMock]] });
 
 		focusMock('root', false);
-		h.expect(() => <div key="root">no focus</div>);
+		r.expect(assertion(() => <div key="root">no focus</div>));
 
 		focusMock('root', true);
-		h.expect(() => <div key="root">focus</div>);
+		r.expect(assertion(() => <div key="root">focus</div>));
 	});
 });

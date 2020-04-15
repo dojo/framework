@@ -1,9 +1,17 @@
 import assertRender from './support/assertRender';
 import { decorateNodes, select } from './support/selector';
-import { WNode, DNode, Constructor, VNode, Callback, RenderResult, MiddlewareResultFactory } from '../core/interfaces';
-import { WidgetBase } from '../core/WidgetBase';
-import { isWidgetFunction } from '../core/Registry';
-import { invalidator, diffProperty, destroy, create, propertiesDiff } from '../core/vdom';
+import {
+	WNode,
+	DNode,
+	Constructor,
+	VNode,
+	Callback,
+	RenderResult,
+	MiddlewareResultFactory
+} from '../../core/interfaces';
+import { WidgetBase } from '../../core/WidgetBase';
+import { isWidgetFunction } from '../../core/Registry';
+import { invalidator, diffProperty, destroy, create, propertiesDiff } from '../../core/vdom';
 
 export interface CustomComparator {
 	selector: string;
