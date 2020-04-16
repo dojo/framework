@@ -1,4 +1,5 @@
 import { create, v } from '../core/vdom';
+import has from '../core/has';
 import injector from '../core/middleware/injector';
 import { VNodeProperties } from '../core/interfaces';
 import { Params } from './interfaces';
@@ -29,8 +30,10 @@ export const Link = factory(function Link({ middleware: { injector }, properties
 			onClick && onClick(event);
 
 			if (!event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !target) {
-				event.preventDefault();
-				href !== undefined && router.setPath(href);
+				if (!has('build-serve') || !has('build-time-rendered')) {
+					event.preventDefault();
+					href !== undefined && router.setPath(href);
+				}
 			}
 		};
 		linkProps = { ...props, onclick, href };

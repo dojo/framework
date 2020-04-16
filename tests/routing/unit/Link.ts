@@ -2,6 +2,7 @@ const { beforeEach, afterEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { spy, SinonSpy } from 'sinon';
 
+import { add } from '../../../src/core/has';
 import { v, w, create, getRegistry } from '../../../src/core/vdom';
 import { Registry } from '../../../src/core/Registry';
 import { Link } from '../../../src/routing/Link';
@@ -68,6 +69,8 @@ describe('Link', () => {
 
 	afterEach(() => {
 		routerSetPathSpy.restore();
+		add('build-serve', false, true);
+		add('build-time-rendered', false, true);
 	});
 
 	it('Generate link component for basic outlet', () => {
@@ -159,6 +162,20 @@ describe('Link', () => {
 		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent({ isRightClick: true }));
+		r.expect(template);
+		assert.isTrue(routerSetPathSpy.notCalled);
+	});
+
+	it('does not call router when build serve and build time rendered is detected', () => {
+		add('build-serve', true, true);
+		add('build-time-rendered', true, true);
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		const template = assertion(() => v(WrappedAnchor.tag, { href: '#foo/static', onclick: noop }));
+		r.expect(template);
+		r.property(WrappedAnchor, 'onclick', createMockEvent());
 		r.expect(template);
 		assert.isTrue(routerSetPathSpy.notCalled);
 	});
