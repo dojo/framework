@@ -168,7 +168,7 @@ describe('Profile', () => {
 });
 ```
 
-To work with assertion, wrapped nodes can get created using `@dojo/framework/testing/renderer#wrap` in order to use the assertion API. Note: when using wrapped `VNode`s with `v()`, the `.tag` property needs to get used, for example `v(WrappedDiv.tag, {} [])`.
+Wrapped test nodes, created using `@dojo/framework/testing/renderer#wrap` need to be specified in the assertion's expected output in place of the standard widget to interact with assertion's API. Note: when using wrapped `VNode`s with `v()`, the `.tag` property needs to get used, for example `v(WrappedDiv.tag, {} [])`.
 
 > tests/unit/widgets/Profile.tsx
 
