@@ -1,6 +1,6 @@
 # Version 7 Migration Guide
 
-Dojo version 7 contains several some breaking changes to be aware of when migrating from version 6. As much as possible, these updates are automated by using the `@dojo/cli-upgrade-app` CLI command. When the upgrade command cannot automate the upgrade, helpful hints and information are provided in the output to guide you through the manual upgrade process for these changes.
+Dojo version 7 contains a few breaking changes to be aware of when migrating from version 6. As much as possible, these updates are automated by using the `@dojo/cli-upgrade-app` CLI command. When the upgrade command cannot automate the upgrade, helpful hints and information are provided in the output to guide you through the manual upgrade process for these changes.
 
 To install the upgrade command, run the following from the project root:
 
