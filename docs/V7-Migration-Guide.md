@@ -1,4 +1,4 @@
-# Version 6.0.0 Migration Guide
+# Version 7 Migration Guide
 
 Dojo version 7 contains several some breaking changes to be aware of when migrating from version 6. As much as possible, these updates are automated by using the `@dojo/cli-upgrade-app` CLI command. When the upgrade command cannot automate the upgrade, helpful hints and information are provided in the output to guide you through the manual upgrade process for these changes.
 
@@ -17,7 +17,7 @@ dojo upgrade app
 If you are upgrading from a version before 6.0.0, please first see the [previous migration guides](./V6-Migration-Guide) for more details.
 
 -   The `@dojo/cli` should be updated to version 7.0.0, along with all the commands used by the project.
--   If your project is using `@dojo/widgets` and `@dojo/interop`, these packages also require upgrading to version 7.0.0 and see the [Dojo Widget migration guide](https://github.com/dojo/widgets) for specific widget details.
+-   If your project is using `@dojo/widgets` and `@dojo/interop`, these packages also require upgrading to version 7.0.0 and see the [Dojo Widget migration guide](https://github.com/dojo/widgets/blob/master/docs/V7-Migration-Guide.md) for specific widget details.
 
 **Note:** The migration tool may create line lengths that violate your projects linting rules, be sure to run your linter and manually fix any linting rule violations.
 
