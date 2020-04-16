@@ -19,7 +19,7 @@ If you are upgrading from a version before 6.0.0, please first see the [previous
 -   The `@dojo/cli` should be updated to version 7.0.0, along with all the commands used by the project.
 -   If your project is using `@dojo/widgets` and `@dojo/interop`, these packages also require upgrading to version 7.0.0 and see the [Dojo Widget migration guide](https://github.com/dojo/widgets/blob/master/docs/V7-Migration-Guide.md) for specific widget details.
 
-**Note:** The migration tool may create line lengths that violate your projects linting rules, be sure to run your linter and manually fix any linting rule violations.
+**Note:** The migration tool may create line lengths that violate your project's linting rules; be sure to run your linter and manually fix any linting rule violations.
 
 ### Breaking Changes:
 
