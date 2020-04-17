@@ -304,7 +304,7 @@ const total = getTotal(getOptions());
 
 ### isLoading
 
-The `isLoading` function takes an `Options` object and returns a `boolean` to indicate if there is a in flight read in progress for the current `Options`.
+The `isLoading` function takes an `Options` object and returns a `boolean` to indicate if there is a in-flight read underway for the current `Options`.
 
 ```ts
 const { getOptions, isLoading } = data();
@@ -322,11 +322,11 @@ const { getOptions, isFailed } = data();
 const failed = isFailed(getOptions());
 ```
 
-## Data Initialiser Options
+## Data initializer options
 
 ### Passed-in resource
 
-Where the `resource` is passed via a different property or there are multiple resources passed, you can pass the resource directly to the `data` initialiser.
+If the `resource` is passed in via a different property, or multiple resources need to be provided, these can be given directly to the `data` initializer.
 
 ```ts
 const { namedResource } = properties();
@@ -335,7 +335,7 @@ const { getOptions } = data({ resource: namedResource });
 
 ### Reset resource
 
-Where a widget does not wish to share a resource and wants to ensure it always gets it's own set of `Options`, a reset initialiser is available. This may be appropriate when creating a typeahead or other such filtering component. You may not want to risk changing the data query used elsewhere in the application to the `reset` option should be used. This option even creates a new `Options` object when your widget has been passed a `shared` resource.
+Widgets that do not want to share a resource and need to ensure their resource always gets its own set of `Options` can indicate so with the `reset` initializer. This may be appropriate when creating a typeahead or other such filtering component, where a data query may be shared between multiple locations within an application. Each widget instance should ideally require its own unique copy to avoid inadvertently changing data elsewhere in the application. This option will also create a new `Options` object for widgets that have been passed a `shared` resource.
 
 ```ts
 const { getOptions } = data({ reset: true });
@@ -343,7 +343,7 @@ const { getOptions } = data({ reset: true });
 
 ### Resource key
 
-When a widget works with multiple sets of resource `Optiona` at the same time, a `key` should be passed for each to the middleware initialiser. This enables the data middleware to differentiate between each of the `Options` objects it is dealing with.
+When a widget needs to work with multiple sets of resource `Options` at the same time, a unique `key` should be passed  to the middleware initializer for each `Options` set. This enables the data middleware to correctly differentiate between multiple resource options.
 
 ```ts
 const { getOptions: getOptionsAlpha } = data({ key: 'alpha' });
