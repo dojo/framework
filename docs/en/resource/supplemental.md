@@ -1,15 +1,15 @@
-# Data Templates
+# Data templates
 
-Data templates tell the resource how to read data and can accept a generic which is used to type the transformer.
+Data templates tell a resource how to read data, and can accept a generic which is used to type the transformer.
 The template's `read` function receives three paramaters.
 
--   options: This is a `ReadOptions` object consisting of the current `query`, the read `offset` and the page `size` to request.
--   put: This is a function that can be used to side-load data into the resource. This could be used by the template to pre-fetch data or to load the full data payload in a memory template. This function takes two parameters, an `offset` to place the data and the array of `data` to load. It is pre-configured to use the current `ReadOption` query when setting data.
--   get: This function can be used to query the current data in the resource. This function accepts a single parameter of the `query` string you wish to use.
+-   `options`: A `ReadOptions` object consisting of the current `query`, the read `offset` and the page `size` to request.
+-   `put`: A function used to sideload data into the resource. The template can use this to pre-fetch data or to load the full data payload into a memory template. This function takes two parameters, an `offset` at which the data should be set, and the array of `data` to set. It is pre-configured to use the current `ReadOption` query when setting data.
+-   `get`: A function used to query the current data in the resource. This function accepts a single parameter, a `query` string used to identify the data to fetch.
 
 ## Creating a template
 
-A template is a simple object containing a `read` function. The read function recieves the params documented above which enable it to fetch and return the appropriate data. The read function should return both the `data` requested and the `total` number of results.
+A template is an object containing a `read` function. The read function receives the `ReadOptions` documented above which enable it to fetch and return the appropriate data. The `read` function should return both the `data` requested and the `total` number of results.
 
 > main.ts
 

@@ -1,20 +1,20 @@
-# Resource
+# Introduction
 
 Dojo **resource** provides a consistent means to make widgets data aware.
 
-A Dojo resource is initialised with a `DataTemplate` that describes how to read data and enables you to create a single store of data which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source agnostic data access for your widgets without them being aware of the underlying data fetching implementation or the raw data format being used as these are abstracted away by both the template read mechanism and the resource.
+A Dojo resource is initialized with a `DataTemplate` that describes how to read data, and enables creation of a single data store which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets being aware of the underlying data fetching implementation or the raw data format being used, as these are abstracted away by both the template read mechanism and the resource.
 
 | Feature                                   | Description                                                                                                                                                                  |
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Single data source**                    | Resources allows you to create a single resource for a given template and share it with multiple widgets via the data middleware.                                            |
-| **Data transforms**                       | A data tranform mechanism allows you to specify the data form that your widget requires and transforms the data transparently                                                |
-| **Support for async and sync data reads** | The resource template can read data in any way it sees fit, the data middleware uses a reactive API to invalidate widgets when data becomes available.                       |
+| **Single data source**                    | Resources allow creation of a single source of data for a given template that can be shared between multiple widgets using the data middleware.                                            |
+| **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume                                                |
+| **Support for async and sync data reads** | Resource templates can read data in any way they like - once data becomes available, the data middleware reactively invalidates any affected widgets.                       |
 | **Consistent Resource Options**           | Resource options objects are passed to all api functions ensuring that all api functions are pure and provide only the data that was requested                               |
-| **Sharable Resource Options**             | Resource options can be shared between widgets via the data middleware. This allows multiple widgets to react to changes to the resource options, ie. query, page number etc |
+| **Sharable Resource Options**             | Resource options can be shared between widgets via the data middleware, allowing multiple widgets to react to any changes such as modifying a query, moving to a different page number, etc. |
 
-# Basic Usage
+# Basic usage
 
-Dojo resource is comprised of a resource which you create to get and read data and a data middleware which you use within your widgets to access the resource.
+A Dojo resource can be created to fetch data in some way, and widgets are then able to access data from the resource through the data middleware.
 
 ## Creating a resource
 
@@ -33,9 +33,9 @@ const template: DataTemplate = {
 const resource = createResource(template);
 ```
 
-When a call is made to the resource api which requires data to be read, the read function will be called with the readoptions, a put function and a get function. These two helper functions can be used to side load data or to read existing data from the resource. More information on this can be found in the [supplemental docs](/learn/resource/data-templates).
+When a call is made to the resource api which requires data to be read, the `read` function will be called with the `readoptions`, a `put` function and a `get` function. These two helper functions can be used to sideload data or to read existing data from the resource. More information on this can be found in the [supplemental documentation](/learn/resource/data-templates).
 
-## Transforming Data
+## Transforming data
 
 Resources provides a `createTransformer` function which can be used to create a type safe transform object. In order to correctly type the transform source values, a generic must be passed to the `DataTemplate` to type the `read` return type. When used with the `createTransformer` function, this ensures that only return values from the read function can be used as source values.
 
@@ -57,7 +57,7 @@ const transformer = createTransformer(template, {
 
 The transformer can be passed to a widget which uses the data middleware to ensure that the data it receives from the resource is correct.
 
-## Passing a Resource to a Widget
+## Passing a resource to a widget
 
 A widget that uses the data middleware can be passed a `resource` to use.
 
@@ -98,4 +98,4 @@ export const List = factory(function Select({ middleware: { data } }) {
 });
 ```
 
-As you can see in the above example, `getOrRead` is being called with the result of `getOptions`. This is a reactive api and will return data if it is available or invalidate the widget when a read is complete and the data becomes available.
+As this example shows, `getOrRead` is being called with the result of `getOptions`. This is a reactive api and will return data if it is available or invalidate the widget when a read is complete and the data becomes available.
