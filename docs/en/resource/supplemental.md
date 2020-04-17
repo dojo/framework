@@ -107,6 +107,20 @@ export const DataAwareWidget = factory(function DataAwareWidget({
 }
 ```
 
+## Creating a typed data middleware
+
+In order to type the data returned by the data middleware, a `createDataMiddleware` function is provided. This function takes a generic that defines both the return types from the `get` / `getOrRead` functions and the keys that must be provided by the `transform` property.
+When using `createDataMiddleware` in a widget, the `transform` property becomes required. More information about data transforms can be found [here](/learn/resource/data-middlware#the-transform-prperty).
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+
+// create the middleware with a generic
+const data = createDataMiddleware<{ value: string }>();
+const factory = create({ data });
+```
+
 ## API
 
 The data middleware API provides the widget with access to the resource data.
