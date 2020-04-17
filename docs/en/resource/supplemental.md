@@ -31,12 +31,12 @@ const template: DataTemplate = {
 };
 ```
 
-## Creating a memory template
+## Memory templates
 
-Sometimes we may want to create a template that works off of a local in-memory array rather than via an async endpoint. When creating this type of template, the same approach is taken but we have a couple of things to consider.
+Templates that work off of a local in-memory array can also be used as a data source. These types of template use the same creation mechanism as any other template, but with a few extra considerations, namely:
 
--   We should cater for filering via the query option.
--   We can side load the full data set using the `put` param. This will allow data-aware widgets access to the full data set up front and is useful for widgets such as `select` which need to skip to content related to a given keypress etc...
+-   Filtering should be catered for through the `query` parameter.
+-   The full data set can be sideloaded using the `put` parameter. This gives data-aware widgets access to the full data set up front, and is useful for widgets such as `select` which need to skip to specific content related to a given keypress, for example.
 
 ```ts
 import USStates from './states';
@@ -56,7 +56,7 @@ const memoryTemplate: DataTemplate = {
 
 ## Initialising a resource with local data
 
-When the local data you're using may change or is generated, an alternative approach is required to set up a memory template and pass data to the widget.
+When the local data being used can change over time, for example if it is dynamically generated, an alternative approach is required to set up a memory template and pass such dynamic data to a widget.
 
 ```ts
 const memoryTemplate: DataTemplate = {
@@ -88,11 +88,11 @@ export default factory(function() {
 });
 ```
 
-The above approach will allow the `data` to be changed at any time causing the resource to be cleared and the new data sideloaded again. This is the approach that should be used in most in memory data array scenarios and can be seen being used within our `TimePicker` widget when time options are generated and passed to the `Select`.
+This approach allows the `data` to be changed at any time, causing the resource to be cleared and the new data sideloaded again. This approach should be used for most in-memory data array scenarios - a good example is [Dojo's `TimePicker` widget](https://github.com/dojo/widgets/tree/master/src/time-picker), where time options are generated and passed to the underlying `Select`.
 
-# Data Middleware
+# Data middleware
 
-The data middleware provides a widget with access to the underlying resource via the data middleware which offers an api to initialise and share the resource and functions to interact with it. The middleware should be imported and passed to the widgets `create` function the same as other middlwares. It will add two extra properties to your widget; `resource` and `transform`.
+The data middleware provides a widget access to the underlying resource and its data. It is comprised of an api to initialize and share the resource, as well as functions to interact with it. The data middleware should be imported and passed to a widget's `create` function in the same as any other middleware - when added to a widget, it exposes two extra widget properties - `resource` and `transform`.
 
 ```ts
 import { create } from '@dojo/framework/core/vdom';
