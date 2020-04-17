@@ -100,20 +100,20 @@ import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
 
 const factory = create({ data });
 
-export const DataAwareWidget = factory(function ({
+export const DataAwareWidget = factory(function DataAwareWidget({
 	middleware: { data }
 }) {
 	const api = data();
 }
 ```
 
-## The Resource Property
+## The resource property
 
-The resource property added to a widget can be used to pass a resource, a resource factory and data to initialise the resource with or a resource wrapper.
+The `resource` widget property can be used to pass a resource, a resource factory and data to initialize the resource with, or a resource wrapper.
 
-### resource
+### Passing a resource
 
-A resource is the result of the `createResource` function. It is a new resource and does not have any `ResourceOptions` or data middleware connections associated to it. This is how you will pass a resource into a widget in most cases pertaining to a remote data source.
+A resource is the result of the `createResource` function without any `ResourceOptions` or data middleware connections associated to it. This is how a resource is passed into a widget in most cases pertaining to a remote data source.
 
 ```tsx
 import { DataTemplate, createResource } from '@dojo/framework/core/resource';
@@ -131,9 +131,9 @@ export default factory(function() {
 });
 ```
 
-### resource factory with data
+### Passing a resource factory with data
 
-A resource factory with data is the approach you would use when you wish to side load data into the resource. This will commonly be used when working in an in memory data array and a memory template as it allows the resource data to be reloaded when the data passed is changed.
+A resource factory with data is the approach used when data needs to be sideloaded into the resource. This will commonly be used when working with an in-memory data array and a memory template, as it allows the resource data to be reloaded when the provided data is changed.
 
 ```tsx
 import { DataTemplate, createResource } from '@dojo/framework/core/resource';
@@ -160,9 +160,9 @@ export default factory(function() {
 });
 ```
 
-### resource wrapper
+### Passing in a resource wrapper
 
-The resource wrapper is obtained from the data middleware. It is used inside widgets when they wish to pass the resource onto a child widget either as a new wrapper with it's own `Options` or as a `shared` wrapper with a common set of `Options`.
+A resource wrapper is obtained from the data middleware. It is used inside widgets when they wish to pass their resource into a child widget either as a new wrapper with it's own `Options`, or as a `shared` wrapper with a common set of `Options`.
 
 ```tsx
 import { create } from '@dojo/framework/core/vdom';
@@ -188,9 +188,9 @@ export const DataAwareWidget = factory(function ({
 }
 ```
 
-This shared approach is used within our typeahead widget to share the query between the text input and the list of options. See more information on this in the `sharing` section below.
+This approach is used within [Dojo's `Typeahead` widget](https://github.com/dojo/widgets/tree/master/src/typeahead) to share the query between the text input and the list of options. [More information on this is available in the sharing section below](#sharing).
 
-## The Transform Property
+## The transform property
 
 The `transform` property is used to convert data returned by the `read` function into the format expected by the widget. When a widget uses the standard `data` middleware, `transform` is an optional property. However, when a widget creates a typed middleware using the `createDataMiddleware` function, it becomes a required property and is typed via a generic to ensure that the correct data format is created by the transform configuration.
 
