@@ -33,7 +33,7 @@ const template: DataTemplate = {
 const resource = createResource(template);
 ```
 
-When a call is made to the resource api which requires data to be read, the read function will be called with the readoptions, a put function and a get function. These two helper functions can be used to side load data or to read existing data from the resource. More information on this can be found in the supplemental docs.
+When a call is made to the resource api which requires data to be read, the read function will be called with the readoptions, a put function and a get function. These two helper functions can be used to side load data or to read existing data from the resource. More information on this can be found in the [supplemental docs](/learn/resource/data-templates).
 
 ## Transforming Data
 
