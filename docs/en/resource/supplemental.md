@@ -324,7 +324,7 @@ const failed = isFailed(getOptions());
 
 ## Data Initialiser Options
 
-### Pass in resource
+### Passed-in resource
 
 Where the `resource` is passed via a different property or there are multiple resources passed, you can pass the resource directly to the `data` initialiser.
 
