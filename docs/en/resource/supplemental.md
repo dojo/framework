@@ -192,7 +192,7 @@ This shared approach is used within our typeahead widget to share the query betw
 
 ## The Transform Property
 
-The `transform` property is used to convert the data returned by the `read` function to the format expected by the widget. When a widget uses the standard `data` middleware, `transform` is an optional property. However, when a widget creates a typed middleware using the `createDataMiddleware` function, it becomes a required property and is typed via a generic to ensure that the correct data format is created by the transform config.
+The `transform` property is used to convert data returned by the `read` function into the format expected by the widget. When a widget uses the standard `data` middleware, `transform` is an optional property. However, when a widget creates a typed middleware using the `createDataMiddleware` function, it becomes a required property and is typed via a generic to ensure that the correct data format is created by the transform configuration.
 
 The transform is transparent and occurs in the middleware before data is returned to the widget. When performing queries on the resource, a reverse transform is used to convert the widget values back to the source values provided.
 
@@ -209,7 +209,7 @@ const transform = {
 const transformedData = [{ value: 'joe' }, { value: 'jane' }];
 ```
 
-Transforms can also be used to join source keys together to create composite fields. For example, with the same resource data as above
+Transforms can also be used to join source keys together to create composite fields. For example, with the same resource data as above:
 
 ```ts
 // with a transform of
@@ -221,7 +221,7 @@ const transform = {
 const transformedData = [{ value: 'joe bloggs' }, { value: 'jane doe' }];
 ```
 
-### using a typed transform
+### Using a typed transform
 
 ```tsx
 import { create } from '@dojo/framework/core/vdom';
@@ -254,13 +254,13 @@ export const DataAwareWidget = factory(function ({
 
 The data middleware API provides the widget with access to the resource data.
 
-### get options
+### getOptions
 
-`getOptions` returns the current `Options` object. The result of this function should be passed to each of the `get` api functions. It is important to use `getOptions` rather than constructing a new `Options` object in order to ensure that shared resources etc work as expected.
+`getOptions` returns the current `Options` object. The result of this function should be passed to each of the `get` api functions. It is important to use `getOptions` rather than constructing a new `Options` object in order to ensure that shared resources work as expected.
 
-### set options
+### setOptions
 
-`setOptions` is used to update the current `Options` on the resource wrapper. This will reflect in any other widget using the shared resource.
+`setOptions` is used to update the current `Options` on the resource wrapper. This will reflect in any other widget using the same shared resource.
 
 ```ts
 const { getOptions, setOptions } = data();
@@ -281,9 +281,9 @@ const { getOptions, get } = data();
 const data = get(getOptions());
 ```
 
-### getorread
+### getOrRead
 
-The `getOrRead` function takes an `Options` object and returns the data requested. If it is not already availablee, it will perform a `read`. When the data is available the widget will be invalidated so it can be used in a reactive manner.
+The `getOrRead` function takes an `Options` object and returns the requested data. If the data is not already available, it will perform a `read`. Once the data is available, the widget will be invalidated in a reactive manner.
 
 ```ts
 const { getOptions, getOrRead } = data();
@@ -291,7 +291,7 @@ const { getOptions, getOrRead } = data();
 const data = getOrRead(getOptions());
 ```
 
-### gettotal
+### getTotal
 
 The `getTotal` function takes an `Options` object and returns the current total for the given `query`.
 When the total changes or becomes available, the widget will be invalidated.
