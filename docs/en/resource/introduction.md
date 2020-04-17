@@ -4,12 +4,12 @@ Dojo **resource** provides a consistent means to make widgets data aware.
 
 A Dojo resource is initialized with a `DataTemplate` that describes how to read data, and enables creation of a single data store which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets being aware of the underlying data fetching implementation or the raw data format being used, as these are abstracted away by both the template read mechanism and the resource.
 
-| Feature                                   | Description                                                                                                                                                                  |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Single data source**                    | Resources allow creation of a single source of data for a given template that can be shared between multiple widgets using the data middleware.                                            |
-| **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume                                                |
-| **Support for async and sync data reads** | Resource templates can read data in any way they like - once data becomes available, the data middleware reactively invalidates any affected widgets.                       |
-| **Consistent Resource Options**           | Resource options objects are passed to all api functions ensuring that all api functions are pure and provide only the data that was requested                               |
+| Feature                                   | Description                                                                                                                                                                                  |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Single data source**                    | Resources allow creation of a single source of data for a given template that can be shared between multiple widgets using the data middleware.                                              |
+| **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume                                 |
+| **Support for async and sync data reads** | Resource templates can read data in any way they like - once data becomes available, the data middleware reactively invalidates any affected widgets.                                        |
+| **Consistent Resource Options**           | Resource options objects are passed to all api functions ensuring that all api functions are pure and provide only the data that was requested                                               |
 | **Sharable Resource Options**             | Resource options can be shared between widgets via the data middleware, allowing multiple widgets to react to any changes such as modifying a query, moving to a different page number, etc. |
 
 # Basic usage
@@ -24,16 +24,25 @@ A basic resource requires only a `DataTemplate` to be created which specifies a 
 
 ```ts
 import { DataTemplate, createResource } from '@dojo/framework/core/resource';
-import { fetcher } from './personfetcher';
-
 const template: DataTemplate = {
-	read: fetcher
+	read: async (options: ReadOptions) => {
+		const { offset, size } = options;
+		let url = `https://my.endpoint.com?offset=${offset}&size=${size}`;
+
+		const response = await fetch(url);
+		const data = await response.json();
+
+		return {
+			data: data.data,
+			total: data.total
+		};
+	}
 };
 
 const resource = createResource(template);
 ```
 
-When a call is made to the resource api which requires data to be read, the `read` function will be called with the `readoptions`, a `put` function and a `get` function. These two helper functions can be used to sideload data or to read existing data from the resource. More information on this can be found in the [supplemental documentation](/learn/resource/data-templates).
+When a call is made to the resource api which requires data to be read, the `read` function will be called with the `ReadOptions`, a `put` function and a `get` function. The `ReadOptions` consist of the `offset`, the requested page `size` and a `query` for filtering. The two helper functions can be used to sideload data or to read existing data from the resource. More information on this can be found in the [supplemental documentation](/learn/resource/data-templates).
 
 ## Transforming data
 

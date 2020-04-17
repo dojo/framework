@@ -96,7 +96,7 @@ The data middleware provides a widget access to the underlying resource and its 
 
 ```ts
 import { create } from '@dojo/framework/core/vdom';
-import { createDataMiddleware } from '@dojo/framework/core/middleware/data';
+import data from '@dojo/framework/core/middleware/data';
 
 const factory = create({ data });
 
@@ -105,6 +105,106 @@ export const DataAwareWidget = factory(function DataAwareWidget({
 }) {
 	const api = data();
 }
+```
+
+## API
+
+The data middleware API provides the widget with access to the resource data.
+
+### getOptions
+
+`getOptions` returns the current `Options` object. The result of this function should be passed to each of the `get` api functions. It is important to use `getOptions` rather than constructing a new `Options` object in order to ensure that shared resources work as expected.
+
+### setOptions
+
+`setOptions` is used to update the current `Options` on the resource wrapper. This will reflect in any other widget using the same shared resource.
+
+```ts
+const { getOptions, setOptions } = data();
+
+setOptions({
+	...getOptions(),
+	pageNumber: 1
+});
+```
+
+### get
+
+The `get` function takes an `Options` object and returns data as requested if it is already available on the resource. It will not perform a `read`.
+
+```ts
+const { getOptions, get } = data();
+
+const data = get(getOptions());
+```
+
+### getOrRead
+
+The `getOrRead` function takes an `Options` object and returns the requested data. If the data is not already available, it will perform a `read`. Once the data is available, the widget will be invalidated in a reactive manner.
+
+```ts
+const { getOptions, getOrRead } = data();
+
+const data = getOrRead(getOptions());
+```
+
+### getTotal
+
+The `getTotal` function takes an `Options` object and returns the current total for the given `query`.
+When the total changes or becomes available, the widget will be invalidated.
+
+```ts
+const { getOptions, getTotal } = data();
+
+const total = getTotal(getOptions());
+```
+
+### isLoading
+
+The `isLoading` function takes an `Options` object and returns a `boolean` to indicate if there is a in-flight read underway for the current `Options`.
+
+```ts
+const { getOptions, isLoading } = data();
+
+const loading = isLoading(getOptions());
+```
+
+### isFailed
+
+The `isFailed` function takes an `Options` object and returns a `boolean` to indicate if a read with the current `Options` has failed.
+
+```ts
+const { getOptions, isFailed } = data();
+
+const failed = isFailed(getOptions());
+```
+
+## Data initializer options
+
+### Passed-in resource
+
+If the `resource` is passed in via a different property, or multiple resources need to be provided, these can be given directly to the `data` initializer.
+
+```ts
+const { namedResource } = properties();
+const { getOptions } = data({ resource: namedResource });
+```
+
+### Reset resource
+
+Widgets that do not want to share a resource and need to ensure their resource always gets its own set of `Options` can indicate so with the `reset` initializer. This may be appropriate when creating a typeahead or other such filtering component, where a data query may be shared between multiple locations within an application. Each widget instance should ideally require its own unique copy to avoid inadvertently changing data elsewhere in the application. This option will also create a new `Options` object for widgets that have been passed a `shared` resource.
+
+```ts
+const { getOptions } = data({ reset: true });
+```
+
+### Resource key
+
+When a widget needs to work with multiple sets of resource `Options` at the same time, a unique `key` should be passed to the middleware initializer for each `Options` set. This enables the data middleware to correctly differentiate between multiple resource options.
+
+```ts
+const { getOptions: getOptionsAlpha } = data({ key: 'alpha' });
+const { getOptions: getOptionsBravo } = data({ key: 'bravo' });
 ```
 
 ## The resource property
@@ -117,11 +217,21 @@ A resource is the result of the `createResource` function without any `ResourceO
 
 ```tsx
 import { DataTemplate, createResource } from '@dojo/framework/core/resource';
-import { fetcher } from './personfetcher';
 import { List } from './List';
 
 const template: DataTemplate = {
-	read: fetcher
+	read: async (options: ReadOptions) => {
+		const { offset, size } = options;
+		let url = `https://my.endpoint.com?offset=${offset}&size=${size}`;
+
+		const response = await fetch(url);
+		const data = await response.json();
+
+		return {
+			data: data.data,
+			total: data.total
+		};
+	}
 };
 
 const resource = createResource(template);
@@ -248,104 +358,4 @@ export const DataAwareWidget = factory(function ({
 <List resource={resource} transform={{ value: ['firstname', 'lastname']}}>
 // if a key other than `value` was passed in the transform or no transform at all
 // was passed, a type error would occur
-```
-
-## API
-
-The data middleware API provides the widget with access to the resource data.
-
-### getOptions
-
-`getOptions` returns the current `Options` object. The result of this function should be passed to each of the `get` api functions. It is important to use `getOptions` rather than constructing a new `Options` object in order to ensure that shared resources work as expected.
-
-### setOptions
-
-`setOptions` is used to update the current `Options` on the resource wrapper. This will reflect in any other widget using the same shared resource.
-
-```ts
-const { getOptions, setOptions } = data();
-
-setOptions({
-	...getOptions(),
-	pageNumber: 1
-});
-```
-
-### get
-
-The `get` function takes an `Options` object and returns data as requested if it is already available on the resource. It will not perform a `read`.
-
-```ts
-const { getOptions, get } = data();
-
-const data = get(getOptions());
-```
-
-### getOrRead
-
-The `getOrRead` function takes an `Options` object and returns the requested data. If the data is not already available, it will perform a `read`. Once the data is available, the widget will be invalidated in a reactive manner.
-
-```ts
-const { getOptions, getOrRead } = data();
-
-const data = getOrRead(getOptions());
-```
-
-### getTotal
-
-The `getTotal` function takes an `Options` object and returns the current total for the given `query`.
-When the total changes or becomes available, the widget will be invalidated.
-
-```ts
-const { getOptions, getTotal } = data();
-
-const total = getTotal(getOptions());
-```
-
-### isLoading
-
-The `isLoading` function takes an `Options` object and returns a `boolean` to indicate if there is a in-flight read underway for the current `Options`.
-
-```ts
-const { getOptions, isLoading } = data();
-
-const loading = isLoading(getOptions());
-```
-
-### isFailed
-
-The `isFailed` function takes an `Options` object and returns a `boolean` to indicate if a read with the current `Options` has failed.
-
-```ts
-const { getOptions, isFailed } = data();
-
-const failed = isFailed(getOptions());
-```
-
-## Data initializer options
-
-### Passed-in resource
-
-If the `resource` is passed in via a different property, or multiple resources need to be provided, these can be given directly to the `data` initializer.
-
-```ts
-const { namedResource } = properties();
-const { getOptions } = data({ resource: namedResource });
-```
-
-### Reset resource
-
-Widgets that do not want to share a resource and need to ensure their resource always gets its own set of `Options` can indicate so with the `reset` initializer. This may be appropriate when creating a typeahead or other such filtering component, where a data query may be shared between multiple locations within an application. Each widget instance should ideally require its own unique copy to avoid inadvertently changing data elsewhere in the application. This option will also create a new `Options` object for widgets that have been passed a `shared` resource.
-
-```ts
-const { getOptions } = data({ reset: true });
-```
-
-### Resource key
-
-When a widget needs to work with multiple sets of resource `Options` at the same time, a unique `key` should be passed  to the middleware initializer for each `Options` set. This enables the data middleware to correctly differentiate between multiple resource options.
-
-```ts
-const { getOptions: getOptionsAlpha } = data({ key: 'alpha' });
-const { getOptions: getOptionsBravo } = data({ key: 'bravo' });
 ```
