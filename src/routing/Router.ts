@@ -201,7 +201,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				score: parentRoute ? parentRoute.score : 0
 			};
 			if (defaultRoute) {
-				this._defaultRoute = outlet;
+				this._defaultRoute = id;
 			}
 			for (let i = 0; i < segments.length; i++) {
 				const segment = segments[i];
