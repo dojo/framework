@@ -148,6 +148,27 @@ describe('icache middleware', () => {
 		assert.isTrue(icache.has('test'));
 	});
 
+	it('should inject current value into function', () => {
+		const icache = callback({
+			id: 'test',
+			middleware: {
+				destroy: sb.stub(),
+				invalidator: invalidatorStub
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		let value = icache.set('test', (value) => {
+			return `${value}-next`;
+		});
+		assert.strictEqual(value, 'undefined-next');
+		value = icache.set('test', (value) => {
+			return `${value}-next`;
+		});
+		assert.strictEqual(value, 'undefined-next-next');
+		assert.strictEqual(icache.get('test'), 'undefined-next-next');
+	});
+
 	it('should remove value for the specified key from the cache', () => {
 		const icache = callback({
 			id: 'test',
@@ -228,6 +249,28 @@ describe('icache middleware', () => {
 			await promise;
 			assert.strictEqual(icache.get('foo'), 'hello, typed world!');
 			assert.strictEqual(icache.get('bar'), 34);
+		});
+
+		it('should inject current value into function', () => {
+			const typedICache = createICacheMiddleware<CacheContents>();
+			const icache = typedICache().callback({
+				id: 'test',
+				middleware: {
+					destroy: sb.stub(),
+					invalidator: invalidatorStub
+				},
+				properties: () => ({}),
+				children: () => []
+			});
+			let value = icache.set('bar', (value) => {
+				return value === undefined ? 0 : value + 1;
+			});
+			assert.strictEqual(value, 0);
+			value = icache.set('bar', (value) => {
+				return value === undefined ? 0 : value + 1;
+			});
+			assert.strictEqual(value, 1);
+			assert.strictEqual(icache.get('bar'), 1);
 		});
 	});
 });
