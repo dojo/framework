@@ -49,7 +49,7 @@ const routeConfigNoRoot = [
 const routeConfigDefaultRoute = [
 	{
 		path: '/foo/{bar}',
-		outlet: 'foo',
+		outlet: 'main',
 		id: 'foo',
 		defaultRoute: true,
 		defaultParams: {
@@ -58,7 +58,7 @@ const routeConfigDefaultRoute = [
 		children: [
 			{
 				path: 'bar/{foo}',
-				outlet: 'bar',
+				outlet: 'main',
 				id: 'bar',
 				defaultParams: {
 					foo: 'defaultFoo'
@@ -71,7 +71,7 @@ const routeConfigDefaultRoute = [
 const routeConfigDefaultRouteNoDefaultParams = [
 	{
 		path: '/foo/{bar}',
-		outlet: 'foo',
+		outlet: 'main',
 		id: 'foo',
 		defaultRoute: true
 	}
