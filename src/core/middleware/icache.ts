@@ -33,19 +33,19 @@ export interface ICacheResult<S = void> {
 	set: {
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => Promise<T> : () => Promise<S[T]>,
+			value: void extends S ? (value: T | undefined) => Promise<T> : (value: S[T] | undefined) => Promise<S[T]>,
 			invalidate?: boolean
-		): void;
+		): void extends S ? T | undefined : S[T] | undefined;
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
-			value: void extends S ? () => T : () => S[T],
+			value: void extends S ? (value: T | undefined) => T : (value: S[T] | undefined) => S[T],
 			invalidate?: boolean
-		): void;
+		): void extends S ? T : S[T];
 		<T extends void extends S ? any : keyof S>(
 			key: void extends S ? any : T,
 			value: void extends S ? T : S[T],
 			invalidate?: boolean
-		): void;
+		): void extends S ? T : S[T];
 	};
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
 	delete<T extends void extends S ? any : keyof S>(key: void extends S ? any : T, invalidate?: boolean): void;
@@ -78,9 +78,10 @@ export function createICacheMiddleware<S = void>() {
 					}
 					return cachedValue.value;
 				},
-				set(key: any, value: any, invalidate = true): void {
+				set(key: any, value: any, invalidate = true): any {
+					const current = this.get(key);
 					if (typeof value === 'function') {
-						value = value();
+						value = value(current);
 						if (value && typeof value.then === 'function') {
 							cacheMap.set(key, {
 								status: 'pending',
@@ -96,7 +97,7 @@ export function createICacheMiddleware<S = void>() {
 									invalidate && invalidator();
 								}
 							});
-							return;
+							return undefined;
 						}
 					}
 					cacheMap.set(key, {
@@ -104,6 +105,7 @@ export function createICacheMiddleware<S = void>() {
 						value
 					});
 					invalidate && invalidator();
+					return value;
 				},
 				has(key: any) {
 					return cacheMap.has(key);

@@ -14,7 +14,7 @@ export function createICacheMock() {
 			properties,
 			children
 		});
-		const setter = icacheMiddleware.set;
+		const setter = icacheMiddleware.set.bind(icacheMiddleware);
 
 		icacheMiddleware.set = (key: any, value: any) => {
 			if (typeof value === 'function') {

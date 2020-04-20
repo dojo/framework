@@ -379,7 +379,9 @@ describe('test renderer', () => {
 						<Widget key="widget">{{ leading: strings, trailing: () => strings }}</Widget>
 						<button
 							key="clicker"
-							onclick={() => icache.set('strings', [...(icache.get<any[]>('strings') || []), 'string'])}
+							onclick={() => {
+								icache.set('strings', [...(icache.get<any[]>('strings') || []), 'string']);
+							}}
 						>
 							Add String
 						</button>
