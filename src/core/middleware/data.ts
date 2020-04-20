@@ -28,12 +28,12 @@ interface ResourceWithData {
 export type ResourceOrResourceWrapper = Resource | ResourceWrapper | ResourceWithData;
 
 export interface DataProperties {
-	resource: ResourceOrResourceWrapper | any[];
+	resource: ResourceOrResourceWrapper;
 }
 
 export interface DataTransformProperties<T = void> {
 	transform: TransformConfig<T>;
-	resource: ResourceOrResourceWrapper | T[];
+	resource: ResourceOrResourceWrapper;
 }
 
 export interface DataInitialiserOptions {
