@@ -41,6 +41,24 @@ The existing `icache` has been deprecated in favour of always using `icache`, th
 
 For rare occasions when you need to set items in a cache but not invalidate an additional third parameter of `false` can be passed.
 
+#### [Return cache value from `icache.set()`](https://github.com/dojo/framework/pull/741)
+
+When calling `icache.set()` the value that is set is returned, in some scenarios this could cause a compilation error, for example when using `icache.set()` in an event handler.
+
+```tsx
+// will cause an error as the return type is no longer correct
+<div onclick={() => icache.set('key', 'value')}/>
+
+// Change the handler to no return the value from icache
+<div onclick={() => {
+    icache.set('key', 'value');
+}}/>
+```
+
+#### [`.dojorc` configuration validation](https://github.com/dojo/cli-build-app/pull/324)
+
+Validation has been added for the `.dojorc`, this will report errors to the console if there is pre-existing unsupported / invalid value in an application's configuration.
+
 #### [Remove `Projector` mixin](https://github.com/dojo/framework/pull/549)
 
 The legacy `Projector` mixin has been removed, for more information on how mount a Dojo application please see the [Creating Widgets reference guide](https://dojo.io/learn/creating-widgets/introduction#rendering-to-the-dom)
