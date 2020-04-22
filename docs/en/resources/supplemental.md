@@ -312,7 +312,7 @@ export const DataAwareWidget = factory(function ({
 }
 ```
 
-This approach is used within [Dojo's `Typeahead` widget](https://github.com/dojo/widgets/tree/master/src/typeahead) to share the query between the text input and the list of options. [More information on this is available in the sharing section below](#sharing).
+This approach is used within [Dojo's `Typeahead` widget](https://github.com/dojo/widgets/tree/master/src/typeahead) to share the query between the text input and the list of options.
 
 ## The transform property
 
