@@ -5,16 +5,19 @@ import {
 	Constructor,
 	SupportedClassName,
 	ThemeWithVariant,
-	ThemeWithVariants,
-	Variant
+	ThemeWithVariants
 } from './../interfaces';
 import { Registry } from './../Registry';
-import { Injector } from './../Injector';
 import { inject } from './../decorators/inject';
 import { WidgetBase } from './../WidgetBase';
 import { handleDecorator } from './../decorators/handleDecorator';
 import { diffProperty } from './../decorators/diffProperty';
-import { ThemeInjector } from '../ThemeInjector';
+import {
+	ThemeInjector,
+	isThemeWithVariant,
+	isThemeWithVariants,
+	isThemeInjectorPayloadWithVariant
+} from '../ThemeInjector';
 
 export { Theme, Classes, ClassNames } from './../interfaces';
 
@@ -33,18 +36,6 @@ export interface ThemedProperties<T = ClassNames> {
 export const THEME_KEY = ' _key';
 
 export const INJECTED_THEME_KEY = '__theme_injector';
-
-function isThemeVariant(theme: Theme | ThemeWithVariant): theme is ThemeWithVariant {
-	return theme.hasOwnProperty('variant');
-}
-
-function isThemeVariantConfig(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariants {
-	return theme.hasOwnProperty('variants');
-}
-
-function isVariantModule(variant: string | Variant): variant is Variant {
-	return typeof variant !== 'string';
-}
 
 /**
  * Interface for the ThemedMixin
@@ -114,9 +105,13 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 ): Constructor<ThemedMixin<E>> & T {
 	@inject({
 		name: INJECTED_THEME_KEY,
-		getProperties: (theme: Injector<Theme>, properties: ThemedProperties): ThemedProperties => {
+		getProperties: (theme: ThemeInjector, properties: ThemedProperties): ThemedProperties => {
 			if (!properties.theme) {
-				return { theme: theme.get() };
+				const payload = theme.get();
+				if (isThemeInjectorPayloadWithVariant(payload)) {
+					return { theme: payload };
+				}
+				return { theme: payload.theme };
 			}
 			return {};
 		}
@@ -169,10 +164,8 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 		public variant() {
 			const { theme } = this.properties;
 
-			if (theme && isThemeVariant(theme)) {
-				if (isVariantModule(theme.variant)) {
-					return theme.variant.root;
-				}
+			if (theme && isThemeWithVariant(theme)) {
+				return theme.variant.variant.root;
 			}
 		}
 
@@ -238,8 +231,8 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			let { theme: themeProp = {}, classes = {} } = this.properties;
 			let theme: Theme;
 
-			if (isThemeVariant(themeProp)) {
-				theme = isThemeVariantConfig(themeProp.theme) ? themeProp.theme.theme : themeProp.theme;
+			if (isThemeWithVariant(themeProp)) {
+				theme = isThemeWithVariants(themeProp.theme) ? themeProp.theme.theme : themeProp.theme;
 			} else {
 				theme = themeProp;
 			}

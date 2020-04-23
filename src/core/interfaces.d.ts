@@ -130,9 +130,14 @@ export interface Variant {
 	root: string;
 }
 
+export interface NamedVariant {
+	name: string;
+	variant: Variant;
+}
+
 export interface ThemeWithVariant {
-	theme: Theme | ThemeWithVariants;
-	variant: Variant | string;
+	theme: ThemeWithVariants;
+	variant: NamedVariant;
 }
 
 export interface ThemeWithVariants {

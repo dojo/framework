@@ -20,7 +20,7 @@ import testTheme1 from './../../support/styles/theme1.css';
 import testTheme2 from './../../support/styles/theme2.css';
 import testTheme3 from './../../support/styles/theme3.css';
 import { VNode } from '../../../../src/core/interfaces';
-import Injector from '../../../../src/core/Injector';
+import ThemeInjector from '../../../../src/core/ThemeInjector';
 
 (baseThemeClasses1 as any)[' _key'] = 'testPath1';
 (baseThemeClasses2 as any)[' _key'] = 'testPath2';
@@ -239,7 +239,7 @@ registerSuite('ThemedMixin', {
 		},
 		'injecting a theme': {
 			'theme can be injected by defining a ThemeInjector with registry'() {
-				const injector = () => () => new Injector(testTheme1);
+				const injector = () => () => new ThemeInjector(testTheme1);
 				testRegistry.defineInjector(INJECTED_THEME_KEY, injector);
 				class InjectedTheme extends TestWidget {
 					render() {
@@ -356,14 +356,25 @@ registerSuite('ThemedMixin', {
 		},
 		variants: {
 			'theme variant can be injected via a registry'() {
-				const themeWithVariant = {
+				const themeWithVariants = {
 					theme: {
 						'test-key': {
-							root: 'themed-root'
+							root: 'variant-themed-root'
 						}
 					},
+					variants: {
+						default: {
+							root: 'default-variant-root'
+						}
+					}
+				};
+				const themeWithVariant = {
+					theme: themeWithVariants,
 					variant: {
-						root: 'default-variant-root'
+						name: 'default',
+						variant: {
+							root: 'default-variant-root'
+						}
 					}
 				};
 
@@ -388,12 +399,22 @@ registerSuite('ThemedMixin', {
 
 				const themeWithVariant = {
 					theme: {
-						'test-key': {
-							root: 'variant-themed-root'
+						theme: {
+							'test-key': {
+								root: 'variant-themed-root'
+							}
+						},
+						variants: {
+							default: {
+								root: 'variant-root'
+							}
 						}
 					},
 					variant: {
-						root: 'variant-root'
+						name: 'default',
+						variant: {
+							root: 'variant-root'
+						}
 					}
 				};
 
@@ -478,12 +499,22 @@ registerSuite('ThemedMixin', {
 			'theme variant can be set at the widget level'() {
 				const themeWithVariant = {
 					theme: {
-						'test-key': {
-							root: 'themed-root'
+						theme: {
+							'test-key': {
+								root: 'variant-themed-root'
+							}
+						},
+						variants: {
+							default: {
+								root: 'variant-root'
+							}
 						}
 					},
 					variant: {
-						root: 'variant-root'
+						name: 'default',
+						variant: {
+							root: 'variant-root'
+						}
 					}
 				};
 
@@ -503,23 +534,43 @@ registerSuite('ThemedMixin', {
 			'theme property overrides injected property'() {
 				const themeWithVariant = {
 					theme: {
-						'test-key': {
-							root: 'themed-root'
+						theme: {
+							'test-key': {
+								root: 'variant-themed-root'
+							}
+						},
+						variants: {
+							default: {
+								root: 'variant-root'
+							}
 						}
 					},
 					variant: {
-						root: 'variant-root'
+						name: 'default',
+						variant: {
+							root: 'variant-root'
+						}
 					}
 				};
 
 				const secondThemeWithVariant = {
 					theme: {
-						'test-key': {
-							root: 'themed-root'
+						theme: {
+							'test-key': {
+								root: 'themed-root'
+							}
+						},
+						variants: {
+							default: {
+								root: 'variant-root'
+							}
 						}
 					},
 					variant: {
-						root: 'second-variant-root'
+						name: 'custom',
+						variant: {
+							root: 'second-variant-root'
+						}
 					}
 				};
 
@@ -553,7 +604,10 @@ registerSuite('ThemedMixin', {
 						}
 					},
 					variant: {
-						root: 'variant-root'
+						name: 'custom',
+						variant: {
+							root: 'variant-root'
+						}
 					}
 				};
 
