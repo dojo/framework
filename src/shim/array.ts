@@ -46,6 +46,111 @@ export interface From {
 	<T>(source: ArrayLike<T> | Iterable<T>): Array<T>;
 }
 
+export interface Flat {
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][][][]>
+			| ReadonlyArray<ReadonlyArray<U[][][]>>
+			| ReadonlyArray<ReadonlyArray<U[][]>[]>
+			| ReadonlyArray<ReadonlyArray<U[]>[][]>
+			| ReadonlyArray<ReadonlyArray<U>[][][]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[][]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[][]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[][]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>>>,
+		depth: 4
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][][]>
+			| ReadonlyArray<ReadonlyArray<U>[][]>
+			| ReadonlyArray<ReadonlyArray<U[]>[]>
+			| ReadonlyArray<ReadonlyArray<U[][]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>>,
+		depth: 3
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][]>
+			| ReadonlyArray<ReadonlyArray<U[]>>
+			| ReadonlyArray<ReadonlyArray<U>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>,
+		depth: 2
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: ReadonlyArray<U[]> | ReadonlyArray<ReadonlyArray<U>>, depth?: 1): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: ReadonlyArray<U>, depth: 0): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth. If no depth is provided, flat method defaults to the depth of 1.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: any[], depth?: number): any[];
+}
+
+export interface FlatMap {
+	/**
+	 * Calls a defined callback function on each element of an array. Then, flattens the result into
+	 * a new array.
+	 * This is identical to a map followed by flat with depth 1.
+	 *
+	 * @param callback A function that accepts up to three arguments. The flatMap method calls the
+	 * callback function one time for each element in the array.
+	 * @param thisArg An object to which the this keyword can refer in the callback function. If
+	 * thisArg is omitted, undefined is used as the this value.
+	 */
+	<U, T extends any, This = undefined>(
+		arr: T[],
+		callback: (this: This, value: T, index: number, array: T[]) => U | ReadonlyArray<U>,
+		thisArg?: This
+	): U[];
+}
+
 export let from: From;
 
 /**
@@ -112,6 +217,16 @@ export let findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thisA
  * @return `true` if the array includes the element, otherwise `false`
  */
 export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean;
+
+/**
+ * Flattens arrays to the depth specified
+ *
+ * @param target An array-like object
+ * @param depth The depth to flatten too, defaults to 1.
+ */
+export let flat: Flat;
+
+export let flatMap: FlatMap;
 
 // Util functions for filled implementations
 
@@ -320,11 +435,25 @@ if (!has('es7-array')) {
 	};
 }
 
+if (!has('es2019-array')) {
+	Array.prototype.flat = function flat(depth: number = 1) {
+		return depth > 0
+			? this.reduce((acc, val) => acc.concat(Array.isArray(val) ? val.flat(depth - 1) : val), [])
+			: this.slice();
+	};
+
+	Array.prototype.flatMap = function flatMap(callback: any) {
+		return this.map(callback).flat();
+	};
+}
+
 from = Array.from;
 of = Array.of;
 copyWithin = wrapNative(Array.prototype.copyWithin);
 fill = wrapNative(Array.prototype.fill);
 find = wrapNative(Array.prototype.find);
+flat = wrapNative(Array.prototype.flat) as any;
+flatMap = wrapNative(Array.prototype.flatMap) as any;
 findIndex = wrapNative(Array.prototype.findIndex);
 includes = wrapNative(Array.prototype.includes);
 

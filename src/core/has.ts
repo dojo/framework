@@ -223,6 +223,8 @@ add(
 
 add('es7-array', () => 'includes' in global.Array.prototype, true);
 
+add('es2019-array', () => 'flat' in global.Array.prototype, true);
+
 /* Map */
 add(
 	'es6-map',
