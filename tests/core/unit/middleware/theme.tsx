@@ -112,19 +112,19 @@ jsdomDescribe('theme middleware', () => {
 		resolvers.resolve();
 		assert.strictEqual(
 			root.outerHTML,
-			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"default","variant":{"root":"default root"}}}</div></div></div>'
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"default","value":{"root":"default root"}}}</div></div></div>'
 		);
 		(root.children[0].children[2] as HTMLButtonElement).click();
 		resolvers.resolve();
 		assert.strictEqual(
 			root.outerHTML,
-			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"light","variant":{"root":"light root"}}}</div></div></div>'
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"light","value":{"root":"light root"}}}</div></div></div>'
 		);
 		(root.children[0].children[3] as HTMLButtonElement).click();
 		resolvers.resolve();
 		assert.strictEqual(
 			root.outerHTML,
-			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"custom","variant":{"root":"custom variant"}}}</div></div></div>'
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"custom","value":{"root":"custom variant"}}}</div></div></div>'
 		);
 	});
 
