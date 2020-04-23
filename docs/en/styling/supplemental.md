@@ -236,7 +236,8 @@ export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 				/* requirement 3: */
 				root,
 				myWidgetExtraThemeableClass,
-				css.myWidgetExtraThemeableClass
+				css.myWidgetExtraThemeableClass,
+				theme.variant()
 			]}
 		>
 			Hello from a themed Dojo widget!
@@ -275,7 +276,11 @@ const factory = create({ theme });
 export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 	const { root } = theme.classes(css);
 	const { commonBase } = theme.classes(commonCss);
-	return <div classes={[root, commonBase, css.myWidgetExtraThemeableClass]}>Hello from a themed Dojo widget!</div>;
+	return (
+		<div classes={[root, commonBase, css.myWidgetExtraThemeableClass, theme.variant()]}>
+			Hello from a themed Dojo widget!
+		</div>
+	);
 });
 ```
 
