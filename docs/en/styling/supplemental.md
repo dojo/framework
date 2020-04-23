@@ -73,7 +73,7 @@ Dojo allows use of modern CSS features such as [custom properties and `var()`](h
 
 Rather than having to specify the same values for colors or fonts in every widget's CSS module, abstract custom properties can instead be referenced by name, with values then provided as a theme `variant` within a `.root` class. This separation allows for much simpler maintenance of common styling concerns across an entire application and for theme variants to be created by changing variables.
 
-Note: You should not import the theme variant file into your widget csss module, it is handled at run time via the `theme.variant()` class.
+Note: do not import the theme variant file into a widget's css module; this is handled instead at run time via the `theme.variant()` class.
 
 For example:
 
@@ -187,7 +187,7 @@ theme.classes<T extends ClassNames>(css: T): T;
     -   described in the [Passing extra classes to widgets](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets) section.
 -   `variant` (optional)
     -   returns the `root` class from the current theme variant.
-    -   should be applied to the root of your widget
+    -   should be applied to the widget's root
 
 ### Themeable widget example
 

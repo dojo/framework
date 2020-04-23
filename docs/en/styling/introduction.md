@@ -78,8 +78,8 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 
 ## Using a theme variant within a widget
 
--   Set the `theme.variant` class on your widget `root`.
--   css-properties get applied at the correct dom level and do not leak out of your widget dom.
+-   Set the `theme.variant` class on the widget's `root`.
+-   css-properties get applied at the correct DOM level and do not leak out of the widget's DOM.
 
 > src/widgets/MyWidget.tsx
 
@@ -192,7 +192,7 @@ export default factory(function App({ middleware: { theme }}) {
 
 ## Setting the theme variant
 
-If using a theme with `variants`, the `default` variant will be selected automatically. If you wish to set a different variant, you can do that via the `theme.set` function. The variant name passed must be a key of the themes exported `variants`.
+If using a theme with `variants`, the `default` variant will be selected automatically. Use the `theme.set` function to set a different variant - the variant name passed must be a key of the theme's exported `variants`.
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
