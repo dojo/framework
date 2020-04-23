@@ -13,7 +13,7 @@
 			"es2015.symbol",
 			"es2015.symbol.wellknown",
 			"es2015.proxy",
-			"ESNext.Array"
+			"ES2019.Array"
 		]
 	},
 	"include": [

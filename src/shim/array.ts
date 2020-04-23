@@ -133,6 +133,24 @@ export interface Flat {
 	<U>(arr: any[], depth?: number): any[];
 }
 
+export interface FlatMap {
+	/**
+	 * Calls a defined callback function on each element of an array. Then, flattens the result into
+	 * a new array.
+	 * This is identical to a map followed by flat with depth 1.
+	 *
+	 * @param callback A function that accepts up to three arguments. The flatMap method calls the
+	 * callback function one time for each element in the array.
+	 * @param thisArg An object to which the this keyword can refer in the callback function. If
+	 * thisArg is omitted, undefined is used as the this value.
+	 */
+	<U, T extends any, This = undefined>(
+		arr: T[],
+		callback: (this: This, value: T, index: number, array: T[]) => U | ReadonlyArray<U>,
+		thisArg?: This
+	): U[];
+}
+
 export let from: From;
 
 /**
@@ -207,6 +225,8 @@ export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: num
  * @param depth The depth to flatten too, defaults to 1.
  */
 export let flat: Flat;
+
+export let flatMap: FlatMap;
 
 // Util functions for filled implementations
 
@@ -421,6 +441,10 @@ if (!has('es7-array')) {
 			? this.reduce((acc, val) => acc.concat(Array.isArray(val) ? val.flat(depth - 1) : val), [])
 			: this.slice();
 	};
+
+	Array.prototype.flatMap = function flatMap(callback: any) {
+		return this.map(callback).flat();
+	};
 }
 
 from = Array.from;
@@ -429,6 +453,7 @@ copyWithin = wrapNative(Array.prototype.copyWithin);
 fill = wrapNative(Array.prototype.fill);
 find = wrapNative(Array.prototype.find);
 flat = wrapNative(Array.prototype.flat) as any;
+flatMap = wrapNative(Array.prototype.flatMap) as any;
 findIndex = wrapNative(Array.prototype.findIndex);
 includes = wrapNative(Array.prototype.includes);
 

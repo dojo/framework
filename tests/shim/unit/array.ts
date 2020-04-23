@@ -581,6 +581,30 @@ registerSuite('array', {
 		})()
 	),
 
+	'#flatMap': createNativeAndDojoArrayTests(
+		'es7-array',
+		(function() {
+			let arr: any[];
+			return {
+				beforeEach() {
+					arr = [1, 2, 3, 4];
+				},
+
+				'maps and flattens'() {
+					const flatMapped = array.flatMap(arr, (x) => [x * 2]);
+					assert.deepEqual(flatMapped, [2, 4, 6, 8]);
+					assert.deepEqual(arr, [1, 2, 3, 4]);
+				},
+
+				'only flattens to depth of 1'() {
+					const flatMapped = array.flatMap(arr, (x) => [[x * 2]]);
+					assert.deepEqual(flatMapped, [[2], [4], [6], [8]]);
+					assert.deepEqual(arr, [1, 2, 3, 4]);
+				}
+			};
+		})()
+	),
+
 	'extension support': createDojoTests('es6-array', {
 		'.from()': function() {
 			let actual = MyArray.from([1, 2, 3]);
