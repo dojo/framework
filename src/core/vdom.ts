@@ -3,6 +3,7 @@ import has from '../core/has';
 import WeakMap from '../shim/WeakMap';
 import Set from '../shim/Set';
 import Map from '../shim/Map';
+import { flat } from '../shim/array';
 import {
 	WNode,
 	VNode,
@@ -486,16 +487,8 @@ export function fromRegistry<P>(tag: string): Constructor<FromRegistry<P>> {
 	};
 }
 
-function spreadChildren(children: any[], child: any): any[] {
-	if (Array.isArray(child)) {
-		return child.reduce(spreadChildren, children);
-	} else {
-		return [...children, child];
-	}
-}
-
 export function tsx(tag: any, properties = {}, ...children: any[]): DNode {
-	children = children.reduce(spreadChildren, []);
+	children = flat(children, Infinity);
 	properties = properties === null ? {} : properties;
 	if (typeof tag === 'string') {
 		return v(tag, properties, children);

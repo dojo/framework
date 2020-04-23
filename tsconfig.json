@@ -12,7 +12,8 @@
 			"es2015.promise",
 			"es2015.symbol",
 			"es2015.symbol.wellknown",
-			"es2015.proxy"
+			"es2015.proxy",
+			"ESNext.Array"
 		]
 	},
 	"include": [

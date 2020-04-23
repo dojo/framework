@@ -551,6 +551,36 @@ registerSuite('array', {
 		})()
 	),
 
+	'#flat': createNativeAndDojoArrayTests(
+		'es7-array',
+		(function() {
+			let arr: any[];
+			return {
+				beforeEach() {
+					arr = [1, '2', NaN, [3], [4, [5, [6]]], 7];
+				},
+
+				'flatten to default depth of 1'() {
+					const flattened = array.flat(arr);
+					assert.deepEqual(flattened, [1, '2', NaN, 3, 4, [5, [6]], 7]);
+					assert.deepEqual(arr, [1, '2', NaN, [3], [4, [5, [6]]], 7]);
+				},
+
+				'flatten to specific depth'() {
+					const flattened = array.flat(arr, 2);
+					assert.deepEqual(flattened, [1, '2', NaN, 3, 4, 5, [6], 7]);
+					assert.deepEqual(arr, [1, '2', NaN, [3], [4, [5, [6]]], 7]);
+				},
+
+				'flatten recursively'() {
+					const flattened = array.flat(arr, Infinity);
+					assert.deepEqual(flattened, [1, '2', NaN, 3, 4, 5, 6, 7]);
+					assert.deepEqual(arr, [1, '2', NaN, [3], [4, [5, [6]]], 7]);
+				}
+			};
+		})()
+	),
+
 	'extension support': createDojoTests('es6-array', {
 		'.from()': function() {
 			let actual = MyArray.from([1, 2, 3]);

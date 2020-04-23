@@ -113,6 +113,14 @@ export let findIndex: <T>(target: ArrayLike<T>, callback: FindCallback<T>, thisA
  */
 export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: number) => boolean;
 
+/**
+ * Flattens arrays to the depth specified
+ *
+ * @param target An array-like object
+ * @param depth The depth to flatten too, defaults to 1.
+ */
+export let flat: (target: ArrayLike<any>, depth?: number) => any[];
+
 // Util functions for filled implementations
 
 let toLength: any;
@@ -320,11 +328,20 @@ if (!has('es7-array')) {
 	};
 }
 
+if (!has('es7-array')) {
+	Array.prototype.flat = function flat(depth: number = 1) {
+		return depth > 0
+			? this.reduce((acc, val) => acc.concat(Array.isArray(val) ? val.flat(depth - 1) : val), [])
+			: this.slice();
+	};
+}
+
 from = Array.from;
 of = Array.of;
 copyWithin = wrapNative(Array.prototype.copyWithin);
 fill = wrapNative(Array.prototype.fill);
 find = wrapNative(Array.prototype.find);
+flat = wrapNative(Array.prototype.flat);
 findIndex = wrapNative(Array.prototype.findIndex);
 includes = wrapNative(Array.prototype.includes);
 
