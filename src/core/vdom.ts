@@ -1393,7 +1393,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				let domNode = nextSibling.domNode;
 				if (isWNodeWrapper(nextSibling) || isVirtualWrapper(nextSibling)) {
 					if (!nextSibling.childDomWrapperId) {
-						nextSibling.childDomWrapperId = findDomNodeOnParentWrapper(nextSibling);
+						nextSibling.childDomWrapperId = findDomNodeOnParentWrapper(nextSibling.id);
 					}
 					if (nextSibling.childDomWrapperId) {
 						const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
@@ -1746,10 +1746,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let item: DetachApplication | AttachApplication | ProcessItem | undefined;
 		while ((item = _processQueue.pop())) {
 			if (isAttachApplication(item)) {
-				item.type === 'attach' && setDomNodeOnParentWrapper(item.id);
-				if (item.instance) {
-					_applicationQueue.push(item as any);
-				}
+				item.instance && _applicationQueue.push(item as any);
 			} else {
 				const { current, next, meta } = item;
 				_process(current || EMPTY_ARRAY, next || EMPTY_ARRAY, meta);
@@ -2178,7 +2175,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let currentChildren = _idToChildrenWrappers.get(current.id);
 		next.hasAnimations = hasAnimations;
 		next.id = id;
-		next.childDomWrapperId = current.childDomWrapperId;
 		next.properties = { ...next.node.properties };
 		_wrapperSiblingMap.delete(current);
 		if (domNode && domNode.parentNode) {
@@ -2275,27 +2271,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		return processResult;
 	}
 
-	function findDomNodeOnParentWrapper(wrapper: DNodeWrapper): string | undefined {
-		let children = [...(_idToChildrenWrappers.get(wrapper.id) || [])];
-		let child: DNodeWrapper | undefined;
-		while (children.length && !wrapper.domNode) {
-			child = children.shift();
-			if (child) {
-				if (child.domNode) {
-					return child.id;
-				}
-				let nextChildren = _idToChildrenWrappers.get(child.id);
-				if (nextChildren) {
-					children = [...nextChildren, ...children];
-				}
+	function findDomNodeOnParentWrapper(id: string): string | undefined {
+		const children = _idToChildrenWrappers.get(id) || [];
+		for (let i = 0; i < children.length; i++) {
+			const child = children[i];
+			if (child.domNode) {
+				return child.id;
 			}
-		}
-	}
-
-	function setDomNodeOnParentWrapper(id: string) {
-		let wrapper = _idToWrapperMap.get(id);
-		if (wrapper) {
-			wrapper.childDomWrapperId = findDomNodeOnParentWrapper(wrapper);
+			const childId = findDomNodeOnParentWrapper(child.id);
+			if (childId) {
+				return childId;
+			}
 		}
 	}
 
