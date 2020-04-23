@@ -132,7 +132,7 @@ export interface Variant {
 
 export interface NamedVariant {
 	name: string;
-	variant: Variant;
+	value: Variant;
 }
 
 export interface ThemeWithVariant {

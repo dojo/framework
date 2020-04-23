@@ -372,7 +372,7 @@ registerSuite('ThemedMixin', {
 					theme: themeWithVariants,
 					variant: {
 						name: 'default',
-						variant: {
+						value: {
 							root: 'default-variant-root'
 						}
 					}
@@ -412,7 +412,7 @@ registerSuite('ThemedMixin', {
 					},
 					variant: {
 						name: 'default',
-						variant: {
+						value: {
 							root: 'variant-root'
 						}
 					}
@@ -512,7 +512,7 @@ registerSuite('ThemedMixin', {
 					},
 					variant: {
 						name: 'default',
-						variant: {
+						value: {
 							root: 'variant-root'
 						}
 					}
@@ -547,7 +547,7 @@ registerSuite('ThemedMixin', {
 					},
 					variant: {
 						name: 'default',
-						variant: {
+						value: {
 							root: 'variant-root'
 						}
 					}
@@ -568,7 +568,7 @@ registerSuite('ThemedMixin', {
 					},
 					variant: {
 						name: 'custom',
-						variant: {
+						value: {
 							root: 'second-variant-root'
 						}
 					}
@@ -605,7 +605,7 @@ registerSuite('ThemedMixin', {
 					},
 					variant: {
 						name: 'custom',
-						variant: {
+						value: {
 							root: 'variant-root'
 						}
 					}

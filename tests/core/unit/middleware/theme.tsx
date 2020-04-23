@@ -94,7 +94,7 @@ jsdomDescribe('theme middleware', () => {
 					/>
 					<button
 						onclick={() => {
-							theme.set(widgetTheme, { name: 'custom', variant: { root: 'custom variant' } });
+							theme.set(widgetTheme, { name: 'custom', value: { root: 'custom variant' } });
 						}}
 					/>
 					<div>{JSON.stringify(theme.get())}</div>
@@ -247,7 +247,7 @@ jsdomDescribe('theme middleware', () => {
 			},
 			variant: {
 				name: 'default',
-				variant: {
+				value: {
 					root: 'variant-root'
 				}
 			}
@@ -361,7 +361,7 @@ jsdomDescribe('theme middleware', () => {
 		const root = document.createElement('div');
 		const r = renderer(() => (
 			<App
-				theme={{ theme: themeWithVariants, variant: { name: 'foo', variant: themeWithVariants.variants.foo } }}
+				theme={{ theme: themeWithVariants, variant: { name: 'foo', value: themeWithVariants.variants.foo } }}
 			/>
 		));
 		r.mount({ domNode: root });
@@ -393,7 +393,7 @@ jsdomDescribe('theme middleware', () => {
 		const root = document.createElement('div');
 		const r = renderer(() => (
 			<App
-				theme={{ theme: themeWithVariants, variant: { name: 'bar', variant: themeWithVariants.variants.bar } }}
+				theme={{ theme: themeWithVariants, variant: { name: 'bar', value: themeWithVariants.variants.bar } }}
 			/>
 		));
 		r.mount({ domNode: root });

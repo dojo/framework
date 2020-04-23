@@ -140,7 +140,7 @@ export const theme = factory(
 			variant() {
 				const { theme } = properties();
 				if (theme && isThemeWithVariant(theme)) {
-					return theme.variant.variant.root;
+					return theme.variant.value.root;
 				}
 			},
 			set,

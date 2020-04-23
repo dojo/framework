@@ -36,7 +36,7 @@ function createThemeInjectorPayload(
 		if (typeof theme.variant === 'string') {
 			return {
 				theme: theme.theme,
-				variant: { name: theme.variant, variant: theme.theme.variants[theme.variant] }
+				variant: { name: theme.variant, value: theme.theme.variants[theme.variant] }
 			};
 		}
 		return { theme: theme.theme, variant: theme.variant };
@@ -46,7 +46,7 @@ function createThemeInjectorPayload(
 			return { theme, variant };
 		}
 
-		return { theme: theme, variant: { name: variant, variant: theme.variants[variant] } };
+		return { theme: theme, variant: { name: variant, value: theme.variants[variant] } };
 	}
 	return { theme };
 }
