@@ -552,7 +552,7 @@ registerSuite('array', {
 	),
 
 	'#flat': createNativeAndDojoArrayTests(
-		'es7-array',
+		'es2019-array',
 		(function() {
 			let arr: any[];
 			return {
@@ -582,7 +582,7 @@ registerSuite('array', {
 	),
 
 	'#flatMap': createNativeAndDojoArrayTests(
-		'es7-array',
+		'es2019-array',
 		(function() {
 			let arr: any[];
 			return {

@@ -435,7 +435,7 @@ if (!has('es7-array')) {
 	};
 }
 
-if (!has('es7-array')) {
+if (!has('es2019-array')) {
 	Array.prototype.flat = function flat(depth: number = 1) {
 		return depth > 0
 			? this.reduce((acc, val) => acc.concat(Array.isArray(val) ? val.flat(depth - 1) : val), [])
