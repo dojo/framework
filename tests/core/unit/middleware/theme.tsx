@@ -52,7 +52,79 @@ jsdomDescribe('theme middleware', () => {
 		resolvers.resolve();
 		assert.strictEqual(
 			root.outerHTML,
-			'<div><div><div class="themed-root"></div><button></button><div>{"test-key":{"root":"themed-root"}}</div></div></div>'
+			'<div><div><div class="themed-root"></div><button></button><div>{"theme":{"test-key":{"root":"themed-root"}}}</div></div></div>'
+		);
+	});
+
+	it('should allow theme with variant to be set and return details in get', () => {
+		const factory = create({ theme });
+		const css = {
+			' _key': 'test-key',
+			root: 'root'
+		};
+		const widgetTheme = {
+			theme: {
+				'test-key': {
+					root: 'themed-root'
+				}
+			},
+			variants: {
+				default: {
+					root: 'default root'
+				},
+				light: {
+					root: 'light root'
+				}
+			}
+		};
+		const App = factory(function App({ middleware: { theme } }) {
+			const themedCss = theme.classes(css);
+			return (
+				<div>
+					<div classes={themedCss.root} />
+					<button
+						onclick={() => {
+							theme.set(widgetTheme);
+						}}
+					/>
+					<button
+						onclick={() => {
+							theme.set(widgetTheme, 'light');
+						}}
+					/>
+					<button
+						onclick={() => {
+							theme.set(widgetTheme, { name: 'custom', value: { root: 'custom variant' } });
+						}}
+					/>
+					<div>{JSON.stringify(theme.get())}</div>
+				</div>
+			);
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.outerHTML,
+			'<div><div><div class="root"></div><button></button><button></button><button></button><div></div></div></div>'
+		);
+		(root.children[0].children[1] as HTMLButtonElement).click();
+		resolvers.resolve();
+		assert.strictEqual(
+			root.outerHTML,
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"default","value":{"root":"default root"}}}</div></div></div>'
+		);
+		(root.children[0].children[2] as HTMLButtonElement).click();
+		resolvers.resolve();
+		assert.strictEqual(
+			root.outerHTML,
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"light","value":{"root":"light root"}}}</div></div></div>'
+		);
+		(root.children[0].children[3] as HTMLButtonElement).click();
+		resolvers.resolve();
+		assert.strictEqual(
+			root.outerHTML,
+			'<div><div><div class="themed-root"></div><button></button><button></button><button></button><div>{"theme":{"theme":{"test-key":{"root":"themed-root"}},"variants":{"default":{"root":"default root"},"light":{"root":"light root"}}},"variant":{"name":"custom","value":{"root":"custom variant"}}}</div></div></div>'
 		);
 	});
 
@@ -154,7 +226,7 @@ jsdomDescribe('theme middleware', () => {
 		resolvers.resolve();
 		assert.strictEqual(
 			root.outerHTML,
-			'<div><div><div class="themed-root classes-root"></div><button></button><div>{"test-key":{"root":"themed-root"}}</div></div></div>'
+			'<div><div><div class="themed-root classes-root"></div><button></button><div>{"theme":{"test-key":{"root":"themed-root"}}}</div></div></div>'
 		);
 	});
 
@@ -162,12 +234,22 @@ jsdomDescribe('theme middleware', () => {
 		const factory = create({ theme });
 		const themeWithVariant = {
 			theme: {
-				'test-key': {
-					root: 'themed-root'
+				theme: {
+					'test-key': {
+						root: 'themed-root'
+					}
+				},
+				variants: {
+					default: {
+						root: 'variant-root'
+					}
 				}
 			},
 			variant: {
-				root: 'variant-root'
+				name: 'default',
+				value: {
+					root: 'variant-root'
+				}
 			}
 		};
 
@@ -277,7 +359,11 @@ jsdomDescribe('theme middleware', () => {
 			return <div classes={variantRoot} />;
 		});
 		const root = document.createElement('div');
-		const r = renderer(() => <App theme={{ theme: themeWithVariants, variant: themeWithVariants.variants.foo }} />);
+		const r = renderer(() => (
+			<App
+				theme={{ theme: themeWithVariants, variant: { name: 'foo', value: themeWithVariants.variants.foo } }}
+			/>
+		));
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, '<div class="foo-variant-root"></div>');
 	});
@@ -305,7 +391,11 @@ jsdomDescribe('theme middleware', () => {
 			return <div classes={variantRoot} />;
 		});
 		const root = document.createElement('div');
-		const r = renderer(() => <App theme={{ theme: themeWithVariants, variant: 'bar' }} />);
+		const r = renderer(() => (
+			<App
+				theme={{ theme: themeWithVariants, variant: { name: 'bar', value: themeWithVariants.variants.bar } }}
+			/>
+		));
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, '<div class="bar-variant-root"></div>');
 	});

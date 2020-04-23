@@ -1,37 +1,70 @@
-import { Theme, ThemeWithVariants, ThemeWithVariant, Variant } from './interfaces';
+import { Theme, ThemeWithVariants, ThemeWithVariant, NamedVariant } from './interfaces';
 import Injector from './Injector';
 
-function isThemeVariantConfig(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariants {
-	return theme.hasOwnProperty('variants');
+export interface ThemeWithVariantsInjectorPayload {
+	theme: ThemeWithVariants;
+	variant: NamedVariant;
 }
 
-function isVariantModule(variant: string | Variant): variant is Variant {
+export interface ThemeInjectorPayload {
+	theme: Theme;
+}
+
+export function isVariantModule(variant: string | NamedVariant): variant is NamedVariant {
 	return typeof variant !== 'string';
 }
 
-function createThemeInjectorPayload(theme: Theme | ThemeWithVariants | ThemeWithVariant, variant?: string | Variant) {
-	if (isThemeVariantConfig(theme)) {
+export function isThemeWithVariant(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariant {
+	return theme && theme.hasOwnProperty('variant');
+}
+
+export function isThemeWithVariants(theme: Theme | ThemeWithVariants | ThemeWithVariant): theme is ThemeWithVariants {
+	return theme && theme.hasOwnProperty('variants');
+}
+
+export function isThemeInjectorPayloadWithVariant(
+	theme: ThemeInjectorPayload | ThemeWithVariantsInjectorPayload
+): theme is ThemeWithVariantsInjectorPayload {
+	return theme && theme.hasOwnProperty('variant');
+}
+
+function createThemeInjectorPayload(
+	theme: Theme | ThemeWithVariants | ThemeWithVariant,
+	variant?: string | NamedVariant
+): ThemeWithVariantsInjectorPayload | ThemeInjectorPayload {
+	if (isThemeWithVariant(theme)) {
+		if (typeof theme.variant === 'string') {
+			return {
+				theme: theme.theme,
+				variant: { name: theme.variant, value: theme.theme.variants[theme.variant] }
+			};
+		}
+		return { theme: theme.theme, variant: theme.variant };
+	} else if (isThemeWithVariants(theme)) {
 		variant = variant || 'default';
 		if (isVariantModule(variant)) {
-			return { theme: theme.theme, variant };
+			return { theme, variant };
 		}
 
-		return { theme: theme.theme, variant: theme.variants[variant] };
+		return { theme: theme, variant: { name: variant, value: theme.variants[variant] } };
 	}
-	return theme;
+	return { theme };
 }
 
 export class ThemeInjector extends Injector {
 	constructor(theme?: Theme | ThemeWithVariants | ThemeWithVariant) {
-		theme = theme ? createThemeInjectorPayload(theme) : theme;
-		super(theme);
+		super(theme ? createThemeInjectorPayload(theme) : theme);
 	}
 
-	set<T extends ThemeWithVariants>(theme: T, variant?: keyof T['variants'] | Variant): void;
+	set<T extends ThemeWithVariants>(theme: T, variant?: keyof T['variants'] | NamedVariant): void;
 	set(theme: ThemeWithVariant): void;
 	set(theme: Theme): void;
-	set(theme: Theme | ThemeWithVariants | ThemeWithVariant, variant?: string | Variant) {
+	set(theme: Theme | ThemeWithVariants | ThemeWithVariant, variant?: string | NamedVariant) {
 		super.set(createThemeInjectorPayload(theme, variant));
+	}
+
+	get(): ThemeWithVariantsInjectorPayload | ThemeInjectorPayload {
+		return super.get();
 	}
 }
 
