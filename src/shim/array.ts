@@ -46,6 +46,93 @@ export interface From {
 	<T>(source: ArrayLike<T> | Iterable<T>): Array<T>;
 }
 
+export interface Flat {
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][][][]>
+			| ReadonlyArray<ReadonlyArray<U[][][]>>
+			| ReadonlyArray<ReadonlyArray<U[][]>[]>
+			| ReadonlyArray<ReadonlyArray<U[]>[][]>
+			| ReadonlyArray<ReadonlyArray<U>[][][]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[][]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[][]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[][]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>>>,
+		depth: 4
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][][]>
+			| ReadonlyArray<ReadonlyArray<U>[][]>
+			| ReadonlyArray<ReadonlyArray<U[]>[]>
+			| ReadonlyArray<ReadonlyArray<U[][]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U[]>>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>[]>>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>>,
+		depth: 3
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(
+		arr:
+			| ReadonlyArray<U[][]>
+			| ReadonlyArray<ReadonlyArray<U[]>>
+			| ReadonlyArray<ReadonlyArray<U>[]>
+			| ReadonlyArray<ReadonlyArray<ReadonlyArray<U>>>,
+		depth: 2
+	): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: ReadonlyArray<U[]> | ReadonlyArray<ReadonlyArray<U>>, depth?: 1): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: ReadonlyArray<U>, depth: 0): U[];
+
+	/**
+	 * Returns a new array with all sub-array elements concatenated into it recursively up to the
+	 * specified depth. If no depth is provided, flat method defaults to the depth of 1.
+	 *
+	 * @param depth The maximum recursion depth
+	 */
+	<U>(arr: any[], depth?: number): any[];
+}
+
 export let from: From;
 
 /**
@@ -119,7 +206,7 @@ export let includes: <T>(target: ArrayLike<T>, searchElement: T, fromIndex?: num
  * @param target An array-like object
  * @param depth The depth to flatten too, defaults to 1.
  */
-export let flat: (target: ArrayLike<any>, depth?: number) => any[];
+export let flat: Flat;
 
 // Util functions for filled implementations
 
@@ -341,7 +428,7 @@ of = Array.of;
 copyWithin = wrapNative(Array.prototype.copyWithin);
 fill = wrapNative(Array.prototype.fill);
 find = wrapNative(Array.prototype.find);
-flat = wrapNative(Array.prototype.flat);
+flat = wrapNative(Array.prototype.flat) as any;
 findIndex = wrapNative(Array.prototype.findIndex);
 includes = wrapNative(Array.prototype.includes);
 
