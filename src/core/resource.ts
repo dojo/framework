@@ -11,7 +11,7 @@ export interface ResourceOptions {
 export type ResourceQuery = { keys: string[]; value: string | undefined };
 
 export interface Resource<S = any> {
-	(data: S): { resource: Resource<S>; data: S };
+	(data: S[]): { resource: Resource<S>; data: S[] };
 	getOrRead(options: ResourceOptions): any;
 	get(options: ResourceOptions): any;
 	getTotal(options: ResourceOptions): number | undefined;
@@ -56,7 +56,37 @@ function isAsyncResponse<S>(response: DataResponsePromise<S> | DataResponse<S>):
 	return (response as any).then !== undefined;
 }
 
-export function createResource<S>(config: DataTemplate<S>): Resource<S> {
+export function defaultFilter(query: ResourceQuery[], v: any) {
+	let filterValue = '';
+
+	query.forEach((q) => {
+		if (q.keys.indexOf('value') >= -1) {
+			filterValue = q.value || '';
+		}
+	});
+
+	if (!filterValue) {
+		return true;
+	}
+
+	let filterText = v.label || v.value;
+	return filterText.toLocaleLowerCase().indexOf(filterValue.toLocaleLowerCase()) >= 0;
+}
+
+export function createMemoryTemplate<S = void>({
+	filter
+}: { filter?: (query: ResourceQuery[], v: S) => boolean } = {}): DataTemplate<S> {
+	return {
+		read: ({ query }, put, get) => {
+			let data: any[] = get();
+			const filteredData = filter && query ? data.filter((i) => filter(query, i)) : data;
+			put(0, filteredData);
+			return { data: filteredData, total: filteredData.length };
+		}
+	};
+}
+
+export function createResource<S>(config: DataTemplate<S> = createMemoryTemplate<S>()): Resource<S> {
 	const { read } = config;
 	let queryMap = new Map<string, S[]>();
 	let statusMap = new Map<string, { [key: string]: Status }>();
