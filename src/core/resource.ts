@@ -10,7 +10,7 @@ export interface ResourceOptions {
 
 export type ResourceQuery = { keys: string[]; value: string | undefined };
 
-export interface Resource {
+export interface Resource<S = any> {
 	getOrRead(options: ResourceOptions): any;
 	get(options: ResourceOptions): any;
 	getTotal(options: ResourceOptions): number | undefined;
@@ -18,7 +18,7 @@ export interface Resource {
 	isFailed(options: ResourceOptions): boolean;
 	subscribe(type: SubscriptionType, options: ResourceOptions, invalidator: Invalidator): void;
 	unsubscribe(invalidator: Invalidator): void;
-	set(data: any[]): void;
+	set(data: S[]): void;
 }
 
 export type TransformConfig<T, S = void> = { [P in keyof T]: (S extends void ? string : keyof S)[] };
@@ -55,7 +55,7 @@ function isAsyncResponse<S>(response: DataResponsePromise<S> | DataResponse<S>):
 	return (response as any).then !== undefined;
 }
 
-export function createResource<S>(config: DataTemplate<S>): Resource {
+export function createResource<S>(config: DataTemplate<S>): Resource<S> {
 	const { read } = config;
 	let queryMap = new Map<string, S[]>();
 	let statusMap = new Map<string, { [key: string]: Status }>();
