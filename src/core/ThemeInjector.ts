@@ -23,9 +23,9 @@ export function isThemeWithVariants(theme: Theme | ThemeWithVariants | ThemeWith
 }
 
 export function isThemeInjectorPayloadWithVariant(
-	theme: ThemeInjectorPayload | ThemeWithVariantsInjectorPayload
+	theme: ThemeInjectorPayload | ThemeWithVariantsInjectorPayload | undefined
 ): theme is ThemeWithVariantsInjectorPayload {
-	return theme && theme.hasOwnProperty('variant');
+	return !!theme && theme.hasOwnProperty('variant');
 }
 
 function createThemeInjectorPayload(
@@ -63,7 +63,7 @@ export class ThemeInjector extends Injector {
 		super.set(createThemeInjectorPayload(theme, variant));
 	}
 
-	get(): ThemeWithVariantsInjectorPayload | ThemeInjectorPayload {
+	get(): ThemeWithVariantsInjectorPayload | ThemeInjectorPayload | undefined {
 		return super.get();
 	}
 }
