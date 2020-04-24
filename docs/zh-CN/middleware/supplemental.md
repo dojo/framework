@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/middleware/supplemental.md
-commit 49968a31324a1a6f461b02cb34339dfc0a5f91f3
+commit 83414e32b356e67f9f7dac0567c0ebd13548b720
 -->
 
 Dojo 提供了渲染中间件的概念，以帮助衔接响应式、函数部件与底层的命令式 DOM 结构。
@@ -397,6 +397,101 @@ const myCustomBreakpoint = createBreakpointMiddleware({ Narrow: 0, Wide: 500 });
 export default myCustomBreakpoint;
 ```
 
+## `inert`
+
+支持通过 `key` 为节点设置 [`inert`](https://html.spec.whatwg.org/multipage/interaction.html#inert) 属性。这将确保相关节点不会响应聚焦、鼠标事件等操作。对于一些场景，如隶属于 `document.body` 的对话框，`inert` 会被倒转设置到 `key` 节点的所有兄弟节点上。
+
+**API:**
+
+```ts
+import inert from '@dojo/framework/core/middleware/inert';
+```
+
+-   `inert.set(key: string | number, enable: boolean, invert: boolean = false): void;`
+    -   为节点设置 inert 值。如果传入 `invert`，则会将值设置给节点的所有兄弟节点。
+
+> src/widgets/Dialog.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import inert from '@dojo/framework/core/middleware/inert';
+import icache from '@dojo/framework/core/middleware/icache';
+
+import * as css from './App.m.css';
+
+const dialogFactory = create({ inert, icache }).properties<{
+	open: boolean;
+	onRequestClose: () => void;
+}>();
+
+const Dialog = dialogFactory(function Dialog({ children, properties, middleware: { inert } }) {
+	const { open } = properties();
+
+	inert.set('dialog', open, true);
+
+	if (!open) {
+		return null;
+	}
+
+	return (
+		<body>
+			<div
+				key="dialog"
+				styles={{
+					background: 'red',
+					width: '400px',
+					height: '400px',
+					marginLeft: '-200px',
+					marginTop: '-200px',
+					position: 'absolute',
+					left: '50%',
+					top: '50%'
+				}}
+			>
+				<button
+					onclick={() => {
+						properties().onRequestClose();
+					}}
+				>
+					Close
+				</button>
+				{children()}
+			</div>
+		</body>
+	);
+});
+
+const factory = create({ icache });
+
+export default factory(function App({ middleware: { icache } }) {
+	return (
+		<div classes={[css.root]}>
+			<input />
+			<button
+				onclick={() => {
+					icache.set('open', true);
+				}}
+			>
+				Open
+			</button>
+			<Dialog
+				open={icache.getOrSet('open', false)}
+				onRequestClose={() => {
+					icache.set('open', false);
+				}}
+			>
+				<div>
+					<input />
+					<input />
+					<button>button</button>
+					Content
+				</div>
+			</Dialog>
+		</div>
+	);
+});
+```
+
 ## `store`
 
 当使用 Dojo store 组件时，部件能访问外部的状态。
@@ -519,6 +614,26 @@ export default factory(function FocusableWidget({ middleware: { focus, icache } 
 });
 ```
 
+## `validity`
+
+Allows retrieving information specifically about a node's [validity state](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) which is useful for using the browser's built-in methods for validating form inputs and providing locale-based error messages.
+专用于获取节点的 [有效性状态（validity state）](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) 信息，当使用浏览器内置的方法来校验表单输入和提供本地的错误信息时，这将非常有用。
+
+**API:**
+
+```ts
+import validity from '@dojo/framework/core/middleware/validity';
+```
+
+-   `validity.get(key: string, value: string)` - 返回由节点的 `key` 属性确定的 DOM 元素的有效性状态。如果当前部件中不存在指定的 DOM 元素，则返回 `{ valid: undefined, message: '' }`；否则返回一个 `ValidityState` 对象。
+
+`ValidityState` 对象包含以下属性：
+
+| 属性                | 类型      | 描述                                                               |
+| ------------------- | --------- | ------------------------------------------------------------------ |
+| `valid`             | `boolean` | 节点的 `validity.valid` 属性值，说明节点的值是否满足所有验证约束。 |
+| `validationMessage` | `string`  | 节点的 `validationMessage` 属性值，节点值违反约束时的本地化消息。  |
+
 ## `injector`
 
 允许从 Dojo 注册表中获取注入器（injector），然后将其分配给失效的回调函数。
@@ -583,9 +698,11 @@ import node from '@dojo/framework/core/vdom';
 
 ## `diffProperty`
 
-通过为指定的属性注册自己的 diff 函数，以允许部件对差异检测进行细粒度控制。当尝试重新渲染部件时，框架将调用该函数，以确定是否发生了变化，从而需要进行完全的重新渲染。如果在部件的属性集中没有检测到差异，将跳过更新，并且现有的所有 DOM 节点都保持原样。
+通过为指定的属性注册自己的 diff 函数，以允许部件对差异检测进行细粒度控制。当尝试重新渲染部件时，框架将调用该函数，以确定是否发生了变化，从而需要进行完全的重新渲染。如果在部件的属性集里没有检测到差异，将跳过更新，并且现有的所有 DOM 节点都保持原样。
 
 编写自定义的 diff 函数时，通常需要与 [`invalidator`](/learn/middleware/核心渲染中间件#invalidator) 中间件组合使用，以便需要更新部件的 DOM 节点时，将当前部件标记为无效。
+
+`diffProperty` 的另一种用法是，将返回一个可供部件属性使用的值。从 `callback` 返回的值会替换掉对应的部件属性值。
 
 **注意：** 在组合部件或中间件的生命周期中，只能为指定的属性注册一个 diff 函数，后续的调用将被忽略。渲染引擎有一套默认算法，该算法对对象和数组进行 shallow 对比，忽略函数，而对其他所有属性进行相等检查。为属性设置了自定义的 diff 函数后，将会覆盖 Dojo 默认的差异检测策略。
 
@@ -595,8 +712,27 @@ import node from '@dojo/framework/core/vdom';
 import diffProperty from '@dojo/framework/core/vdom';
 ```
 
--   `diffProperty(propertyName: string, diff: (current: any, next: any) => void)`
-    -   注册指定的 `diff` 函数，该函数用于确定部件的 `propertyName` 属性的 `current` 和 `next` 值之间是否存在差异。
+-   `diffProperty(propertyName: string, properties: () => WidgetProperties, diff: (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
+    -   注册指定的 `diff` 函数，该函数用于确定部件的 `propertyName` 属性的 `current` 和 `next` 值之间是否存在差异。函数使用 `properties` 函数来确定可用的属性和回调的类型信息，包括参数和返回值。
+
+**示例：**
+
+> src/customMiddleware.tsx
+
+````tsx
+import { create, diffProperty } from '@dojo/framework/core/vdom';
+
+const factory = create({ diffProperty }).properties<{ foo?: string }>;
+
+export const customMiddleware = factory(({ properties, middleware: { diffProperty } }) => {
+	diffProperty('foo', properties, (current, next) => {
+		if (!next.foo) {
+			return 'default foo';
+		}
+	});
+	// The rest of the custom middleware that defines the API
+});
+```
 
 ## `destroy`
 
@@ -642,3 +778,4 @@ import defer from '@dojo/framework/core/vdom';
     -   暂停当前部件的进一步渲染，直到标记为恢复。
 -   `defer.resume()`
     -   恢复部件的渲染。
+````

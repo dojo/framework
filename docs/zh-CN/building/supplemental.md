@@ -1,9 +1,49 @@
-# 创建包
+# 应用程序的根路径
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/building/supplemental.md
-commit b8e0228c4025cb803d1c56521b054f6d5e6dfdb2
+commit e19c12a6d4b6867e4d653e35218f936d5da6eace
 -->
+
+应用程序中的超链接、图片和资源都是从应用程序的根路径向外提供的。根路径默认为 `/`，但可以在 `.dojorc` 中添加 `base` 选项来配置根路径。
+
+> .dojorc
+
+```json
+{
+	"build-app": {
+		"base": "./some-directory/"
+	}
+}
+```
+
+## 不是从根路径开始托管
+
+如果 Dojo 应用程序不是托管在 web 服务器的根路径下，则可能需要修改根路径。例如，一个应用是通过 ``http://example.com/incredible-app` 访问的，则需要将根路径设置为 `/incredible-app/`。
+
+## 本地构建
+
+根据环境的不同，如可能为开发环境构建时需要修改根路径，但是为生产环境构建时需要使用默认的根路径（或者使用其他根路径）。假如在开发服务器上，所有内容都放在 `/var/www/html` 目录下，但该目录下存在多个项目，因此每个项目都存放在不同的子目录下。因此在本地环境中，运行 `/var/www/html/incredible-app/output/dev` 下的应用是完全有可能的。
+
+要实现此类配置，需创建一个开发环境专用的 `.dojorc` 文件。
+
+> .dojorc.local
+
+```json
+{
+	"build-app": {
+		"base": "incredible-app/output/dev/"
+	}
+}
+```
+
+将这个专用于本地开发的配置文件放到合适的位置，然后在构建时使用该配置。
+
+```shell
+dojo build app --dojorc .dojorc.local -m dev
+```
+
+# 创建包
 
 一个包就是一部分代码，它用于表示一部分功能。可以按需异步、并行加载包。与不使用任何代码拆分技术的应用程序相比，合理分包的应用程序可以显著提高响应速度，需要请求的字节数更少，加载的时间更短。在处理大型应用程序时，这一点尤其重要，因为这类应用程序的大部分表现层逻辑在初始化时是不需要加载的。
 
@@ -319,11 +359,17 @@ Dojo 提供了一个 block 系统，在构建阶段的渲染过程中会执行 N
 
 例如，Dojo 的 block 模块可以读取一组 markdown 文件，将其转换为 VNode，并使它们可以在应用程序中渲染，所有这些都可在构建时执行。然后 Dojo block 模块的构建结果会缓存在应用程序的包中，以便在运行时在浏览器中使用。
 
-Dojo block 模块的用法与在 Dojo 部件中使用其它 meta 的用法类似。因此无需大量的配置或其他编写模式。
+Dojo block 模块的用法与在 Dojo 部件中使用中间件或 meta 类似。为了让 Dojo 构建系统能识别并运行 block 模块，必须满足以下三个条件：
+
+1.  模块名必须使用 `.block` 后缀，如 `src/readFile.block.ts`
+2.  Block 模块只能有一个默认导出
+3.  Block 中返回的内容（不论是从 promise 中解析，还是直接返回）必须能被序列化为 json
+
+除此之外，无需扩展配置或其他编写模式。
 
 例如，block 模块读取一个文本文件，然后将内容返回给应用程序。
 
-> src/blocks/read-file.ts
+> src/readFile.block.ts
 
 ```ts
 import * as fs from 'fs';
@@ -338,21 +384,19 @@ export default (path: string) => {
 > src/widgets/MyBlockWidget.tsx
 
 ```tsx
-import Block from '@dojo/framework/core/meta/Block';
-import WidgetBase from '@dojo/framework/core/WidgetBase';
-import { v } from '@dojo/framework/core/vdom';
+import { create, tsx } from '@dojo/framework/core/vdom';
+import block from '@dojo/framework/core/middleware/block';
 
-import readFile from '../blocks/read-file';
+import readFile from '../readFile.block';
 
-export default class MyBlockWidget extends WidgetBase {
-	protected render() {
-		const message = this.meta(Block).run(readFile)('../content/hello-dojo-blocks.txt');
-		return v('div', [message]);
-	}
-}
+const factory = create({ block });
+export default factory(function MyBlockWidget({ middleware: { block } }) {
+	const message = block(readFile)('../content/hello-dojo-blocks.txt');
+	return <div>{message}</div>;
+});
 ```
 
-这个部件会在构建阶段运行 `src/blocks/read-file.ts` 模块来读取指定文件的内容。然后将内容作为文本节点，用作部件 VDOM 输出的子节点。
+这个部件会在构建阶段运行 `src/readFile.block.ts` 模块来读取指定文件的内容，然后在部件渲染时输出该内容。
 
 # 按条件选取代码
 

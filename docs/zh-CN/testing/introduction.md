@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/introduction.md
-commit 342509c24198b8b957eed853ca8daeb0a074a480
+commit f154baaf15a0e1eb69721ec7651fdf507a398475
 -->
 
 Dojo 的 `@dojo/cli-test-intern` 提供了一个健壮的测试框架。它能高效地测试小部件的输出并确认是否如你所愿。
@@ -12,7 +12,7 @@ Dojo 的 `@dojo/cli-test-intern` 提供了一个健壮的测试框架。它能�
 | **极简 API** | 用于测试和断言 Dojo 部件预期的虚拟 DOM 和行为的精简 API。                  |
 | **单元测试** | 单元测试是指运行在 node 和浏览器上的测试，用于测试独立的代码块。           |
 | **功能测试** | 功能测试通过 Selenium 运行在浏览器中，模拟用户与软件的交互来测试整体功能。 |
-| **断言模板** | 断言模板能构建期望的渲染函数，以验证部件的输出。                           |
+| **断言**     | 断言能构建期望的渲染函数，以验证部件的输出。                               |
 
 # 基本用法
 
@@ -46,7 +46,7 @@ dojo test --functional --config local
 
 ## 编写单元测试
 
--   使用 Dojo 的 [`harness` API](/learn/testing/dojo-test-harness#harness-api) API 为部件编写单元测试。
+-   使用 Dojo 的 [test `renderer` API](/learn/testing/test-renderer) API 为部件编写单元测试。
 
 > src/widgets/Home.tsx
 
@@ -68,23 +68,22 @@ export default Home;
 ```ts
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 
 import Home from '../../../src/widgets/Home';
 import * as css from '../../../src/widgets/Home.m.css';
 
-const baseTemplate = assertionTemplate(() => <h1 classes={[css.root]}>Home Page</h1>);
+const baseAssertion = assertion(() => <h1 classes={[css.root]}>Home Page</h1>);
 
 describe('Home', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => <Home />);
-		h.expect(baseTemplate);
+		const r = renderer(() => <Home />);
+		r.expect(baseAssertion);
 	});
 });
 ```
 
-`harness` API 能让你核实渲染部件的输出是否如你所愿。
+`renderer` API 能让你核实渲染部件的输出是否如你所愿。
 
 -   它是否按预期渲染?
 -   事件处理器是否按预期工作?
@@ -123,9 +122,9 @@ describe('routing', () => {
 });
 ```
 
-## 使用断言模板
+## 使用断言
 
-断言模板提供了一种创建基本断言的方法，该方法允许你在每个测试间修改期望输出中的部分内容。
+断言提供了一种创建基本断言的方法，该方法允许你在每个测试间修改期望输出中的部分内容。
 
 -   一个部件可根据属性值的不同渲染不同的内容:
 
@@ -150,57 +149,68 @@ const Profile = factory(function Profile({ properties }) {
 export default Profile;
 ```
 
--   使用 `@dojo/framework/testing/assertionTemplate` 创建一个断言模板
+-   使用 `@dojo/framework/testing/renderer#assertion` 创建一个断言
 
 > tests/unit/widgets/Profile.tsx
 
-```ts
+```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import harness from '@dojo/framework/testing/harness';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
 
 import Profile from '../../../src/widgets/Profile';
 import * as css from '../../../src/widgets/Profile.m.css';
 
 // 创建一个断言
-const profileAssertion = assertionTemplate(() => (
-	<h1 classes={[css.root]} assertion-key="welcome">
-		Welcome Stranger!
-	</h1>
+const profileAssertion = assertion(() => <h1 classes={[css.root]}>Welcome Stranger!</h1>);
+
+describe('Profile', () => {
+	it('default renders correctly', () => {
+		const r = renderer(() => <Profile />);
+		// 基于基本断言测试
+		r.expect(profileAssertion);
+	});
+});
+```
+
+包装后的测试节点，是使用 `@dojo/framework/testing/renderer#wrap` 创建的，然后将其传给断言方法，作为期望输出，以代替与断言 API 交互的标准部件。注意：当在 `v()` 中使用包装的 `VNode` 时，需要使用包装节点的 `.tag` 属性，如 `v(WrappedDiv.tag, {} [])`。
+
+> tests/unit/widgets/Profile.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer { wrap, assertion } from '@dojo/framework/testing/renderer';
+
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/Profile.m.css';
+
+// Create a wrapped test node
+const WrappedHeader = wrap('h1');
+
+// Create an assertion
+const profileAssertion = assertion(() => (
+	// Use the wrapped node in place of the normal node
+	<WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>
 ));
 
 describe('Profile', () => {
 	it('default renders correctly', () => {
-		const h = harness(() => <Profile />);
-		// 基于基本断言测试
-		h.expect(profileAssertion);
-	});
-});
-```
-
-使用在断言模板中定义的 `assertion-key` 属性，可为任何要测试的虚拟 DOM 提供一个值。注意：当使用的是 `@dojo/framework/core/vdom` 中的 `v()` 和 `w()` 时，`~key` 属性可实现相同功能。
-
-> tests/unit/widgets/Profile.tsx
-
-```ts
-describe('Profile', () => {
-	it('default renders correctly', () => {
-		const h = harness(() => <Profile />);
-		// 重新测试基本断言
-		h.expect(profileAssertion);
+		const r = renderer(() => <Profile />);
+		// Test against my base assertion
+		r.expect(profileAssertion);
 	});
 
 	it('renders given username correctly', () => {
-		// 使用给定的用户名更新期望的结果
-		const namedAssertion = profileAssertion.setChildren('~welcome', () => ['Welcome Kel Varnsen!']);
-		const h = harness(() => <Profile username="Kel Varnsen" />);
-		h.expect(namedAssertion);
+		// update the expected result with a given username
+		const namedAssertion = profileAssertion.setChildren(WrappedHeader, () => ['Welcome Kel Varnsen!']);
+		const r = renderer(() => <Profile username="Kel Varnsen" />);
+		r.expect(namedAssertion);
 	});
 });
 ```
 
-使用断言模板的 `setChildren` 方法，传入指定的 `assertion-key` 来定位一个虚拟 DOM（在本示例中是 ~welcome）并修改该虚拟 DOM 的结构，然后返回更新的断言模板。就可以使用返回的断言模板测试部件的输出。
+使用断言的 `setChildren` 方法，传入包装的测试节点，此示例中为 `WrappedHeader`，将返回一个更新了虚拟 DOM 结构的断言（assertion）对象。就可以使用返回的断言测试部件的输出。
 
 [dojo cli]: https://github.com/dojo/cli
 [intern]: https://theintern.io/
