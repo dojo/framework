@@ -110,8 +110,9 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 				const payload = theme.get();
 				if (isThemeInjectorPayloadWithVariant(payload)) {
 					return { theme: payload };
+				} else if (payload) {
+					return { theme: payload.theme };
 				}
-				return { theme: payload.theme };
 			}
 			return {};
 		}
