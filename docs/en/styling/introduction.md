@@ -9,7 +9,7 @@ Dojo promotes encapsulated structural styling of individual widgets for maximum 
 | **Per-widget stylesheets**                | [CSS Modules](https://github.com/css-modules/css-modules) can be used to define stylesheets that are scoped to individual widgets, avoiding potential cross-contamination and style name clashes. A widget can refer to its exact CSS class names via typed CSS module imports and IDE autocompletion.                                                                                                 |
 | **Robust theming support**                | Themeable widgets can easily be developed that allow for simplified and centralized whole-application theming, as well as single-instance, targeted style tweaking and overriding, if required. [CLI tooling is available](https://github.com/dojo/cli-build-theme) to support distributing custom themes.                                                                                             |
 | **Reactive theme change response**        | Similar to other reactive state changes within a Dojo application, only the affected widgets will be re-rendered when a theme change is made at either a widget level or across an entire application.                                                                                                                                                                                                 |
-| **Abstracted CSS properties**             | Individual CSS modules can refer to a set of centrally-defined `:root` style variables through [CSS custom properties and `var()`](https://www.w3.org/TR/css-variables/).                                                                                                                                                                                                                              |
+| **CSS properties**                        | CSS modules can use [CSS custom properties and `var()`](https://www.w3.org/TR/css-variables/) to utilise theme variant properties and colours.                                                                                                                                                                                                                                                         |
 | **Simplified third-party widget theming** | Applications can easily extend their themes to cover third-party widgets, such as those from Dojo's native [widget library](https://github.com/dojo/widgets), and Dojo also provides [out-the-box themes](https://github.com/dojo/themes) which applications can base their own on. [CLI tooling is available](https://github.com/dojo/cli-create-theme) to streamline theme creation and composition. |
 
 # Basic usage
@@ -76,6 +76,28 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
+## Using a theme variant within a widget
+
+-   Set the `theme.variant` class on the widget's `root`.
+-   css-properties get applied at the correct DOM level and do not leak out of the widget's DOM.
+
+> src/widgets/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import * as css from '../styles/MyWidget.m.css';
+
+const factory = create({ theme });
+
+export default factory(function MyWidget({ middleware: { theme } }) {
+	const { root } = theme.classes(css);
+	const variantRoot = theme.variant();
+	return <div classes={[root, variantRoot]}>My Widget</div>;
+});
+```
+
 ## Creating a theme
 
 -   Overriding a widget's default CSS class with custom theme style properties
@@ -100,15 +122,17 @@ export default {
 };
 ```
 
-## Abstracting common theme properties
+## Creating theme variants
 
--   Importing a central `variables.css` regular CSS file that defines [CSS custom properties](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)
+-   Placing theme variables into a `variant` module as [CSS custom properties](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)
 -   Referring to the custom properties via `var()`
+-   Not relying on local variables or a common `variables.css` file.
 
-> src/themes/variables.css
+> src/themes/variants/default.m.css
 
 ```css
-:root {
+/* single root class */
+.root {
 	--foreground: hotpink;
 	--background: slategray;
 }
@@ -117,12 +141,26 @@ export default {
 > src/themes/MyTheme/MyWidget.m.css
 
 ```css
-@import '../variables.css';
-
 .root {
 	color: var(--foreground);
 	background-color: var(--background);
 }
+```
+
+> src/themes/MyTheme/index.tsx
+
+```tsx
+import * as defaultVariant from './variants/default.m.css';
+import * as myWidgetCss from './MyWidget.m.css';
+
+export default {
+	theme: {
+		'my-app/MyWidget': myWidgetCss
+	},
+	variants: {
+		default: defaultVariant
+	}
+};
 ```
 
 ## Specifying a default application theme
@@ -151,6 +189,29 @@ export default factory(function App({ middleware: { theme }}) {
 ```
 
 **Note:** When using both function-based and class-based widgets, the theme needs to be registered with the application registry. This is true when using any class-based widget dependencies such as `@dojo/widgets`. Please see the [class-based theming section]() for more details.
+
+## Setting the theme variant
+
+If using a theme with `variants`, the `default` variant will be selected automatically. Use the `theme.set` function to set a different variant - the variant name passed must be a key of the theme's exported `variants`.
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import myTheme from '../themes/MyTheme/theme';
+
+const factory = create({ theme });
+
+export default factory(function App({ middleware: { theme }}) {
+	// if the theme isn't set, set the default theme
+	if (!theme.get()) {
+		theme.set(myTheme, 'variant-name');
+	}
+	return (
+		// the application's widgets
+	);
+});
+```
 
 ## Changing the theme within an application
 

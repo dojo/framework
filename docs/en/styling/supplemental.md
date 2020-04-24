@@ -15,7 +15,7 @@ Dojo differentiates between several types of styling, each representing a differ
         -   Providing [an application-wide theme](/learn/styling/theming-a-dojo-application#making-themeable-applications)
         -   [Specifying per-widget themes](/learn/styling/theming-a-dojo-application#overriding-the-theme-of-specific-widget-instances)
         -   [Passing extra classes to a widget](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets)
-        -   Using [a centralized `variables.css` file](/learn/styling/theming-a-dojo-application#css-custom-properties) that other stylesheets can import and reference
+        -   Defining [css properties](/learn/styling/theming-a-dojo-application#css-custom-properties) within a variant module and using them throughout widget stylesheets to aid consistency and theme variant creation
         -   [Composing classes](/learn/styling/theming-a-dojo-application#css-module-composition) within a CSS module.
         -   [Using several CSS modules](/learn/styling/theming-a-dojo-application#using-several-css-modules) within a widget.
 
@@ -71,18 +71,16 @@ These obfuscated class names are localized to `MyWidget` elements, and are deter
 
 Dojo allows use of modern CSS features such as [custom properties and `var()`](https://www.w3.org/TR/css-variables/) to help abstract and centralize common styling properties within an application.
 
-Rather than having to specify the same values for colors or fonts in every widget's CSS module, abstract custom properties can instead be referenced by name, with values then provided in a centralized CSS `:root` pseudo-class. This separation allows for much simpler maintenance of common styling concerns across an entire application.
+Rather than having to specify the same values for colors or fonts in every widget's CSS module, abstract custom properties can instead be referenced by name, with values then provided as a theme `variant` within a `.root` class. This separation allows for much simpler maintenance of common styling concerns across an entire application and for theme variants to be created by changing variables.
+
+Note: do not import the theme variant file into a widget's css module; this is handled instead at run time via the `theme.variant()` class.
 
 For example:
 
-> src/themes/variables.css
+> src/themes/MyTheme/variants/default.m.css
 
 ```css
-:root {
-	/* different sets of custom properties can be used if an application supports more than one possible theme */
-	--light-background: lightgray;
-	--light-foreground: black;
-
+.root {
 	--dark-background: black;
 	--dark-foreground: lightgray;
 
@@ -90,11 +88,9 @@ For example:
 }
 ```
 
-> src/themes/myDarkTheme/MyWidget.m.css
+> src/themes/MyTheme/MyWidget.m.css
 
 ```css
-@import '../variables.css';
-
 .root {
 	margin: var(--padding);
 
@@ -102,8 +98,6 @@ For example:
 	background: var(--dark-background);
 }
 ```
-
-Note that the `:root` pseudo-class is global within a webpage, but through Dojo's use of CSS modules, `:root` properties could potentially be specified in many locations across an application. However, Dojo does not guarantee the order in which CSS modules are processed, so to ensure consistency of which properties appear in `:root`, it is recommended that applications use a single `:root` definition within a centralized `variables.css` file in the application's codebase. This centralized variables file is a regular CSS file (not a CSS module) and can be `@import`ed as such in any CSS modules that require custom property values.
 
 Dojo's default build process propagates custom properties as-is into the application's output stylesheets. This is fine when only targeting evergreen browsers, but can be problematic when also needing to target browsers that do not implement the CSS custom properties standard (such as IE). To get around this, applications can be built in legacy mode (`dojo build app --legacy`), in which case Dojo will resolve the values of custom properties at build time and duplicate them in the output stylesheets. One value will contain the original `var()` reference, and the second will be the resolved value that legacy browsers can fall back to when they are unable to process the `var()` values.
 
@@ -191,6 +185,9 @@ theme.classes<T extends ClassNames>(css: T): T;
     -   If specified, [the provided theme](/learn/styling/working-with-themes#writing-a-theme) will act as an override for any theme that the widget may use, and will take precedence over [the application's default theme](/learn/styling/theming-a-dojo-application#making-themeable-applications) as well as [any other theme changes made in the application](/learn/styling/theming-a-dojo-application#changing-the-currently-active-theme).
 -   `classes` (optional)
     -   described in the [Passing extra classes to widgets](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets) section.
+-   `variant` (optional)
+    -   returns the `root` class from the current theme variant.
+    -   should be applied to the widget's root
 
 ### Themeable widget example
 
@@ -239,7 +236,8 @@ export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 				/* requirement 3: */
 				root,
 				myWidgetExtraThemeableClass,
-				css.myWidgetExtraThemeableClass
+				css.myWidgetExtraThemeableClass,
+				theme.variant()
 			]}
 		>
 			Hello from a themed Dojo widget!
@@ -278,7 +276,11 @@ const factory = create({ theme });
 export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 	const { root } = theme.classes(css);
 	const { commonBase } = theme.classes(commonCss);
-	return <div classes={[root, commonBase, css.myWidgetExtraThemeableClass]}>Hello from a themed Dojo widget!</div>;
+	return (
+		<div classes={[root, commonBase, css.myWidgetExtraThemeableClass, theme.variant()]}>
+			Hello from a themed Dojo widget!
+		</div>
+	);
 });
 ```
 
@@ -642,32 +644,3 @@ If attempting to use the themes in custom elements, after installing `@dojo/them
     ```html
     <script src="node_modules/@dojo/themes/dojo/dojo-{version}.js"></script>
     ```
-
-### Composing off Dojo themes
-
-Once `@dojo/themes` is installed in a project, it can be used as the basis for an extended application theme by including relevant components with [CSS modules' composes functionality](/learn/styling/styling-and-theming-in-dojo#css-module-composition) in the new theme.
-
-`@dojo/themes` also includes its own [`:root` `variables.css` file](/learn/styling/styling-and-theming-in-dojo#css-custom-properties) which can be imported if the extended application theme would like to reference Dojo-specified properties elsewhere in the new theme.
-
-The following is an example of a new theme for the `@dojo/widgets/button` widget that extends off `@dojo/themes`, and changes the button's background to green while retaining all other button theme style properties:
-
-> src/themes/myTheme/theme.ts
-
-```ts
-import * as myButton from './myButton.m.css';
-
-export default {
-	'@dojo/widgets/button': myButton
-};
-```
-
-> src/themes/myTheme/myButton.m.css
-
-```css
-@import '@dojo/themes/dojo/variables.css';
-
-.root {
-	composes: root from '@dojo/themes/dojo/button.m.css';
-	background-color: var(--dojo-green);
-}
-```
