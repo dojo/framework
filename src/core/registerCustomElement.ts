@@ -107,10 +107,15 @@ function registerThemeInjector(theme: any, themeRegistry: Registry): ThemeInject
 }
 
 export function create(descriptor: any, WidgetConstructor: any): any {
-	const { attributes = [], registryFactory = () => new Registry() } = descriptor;
+	const { attributes = [], properties = [], registryFactory = () => new Registry() } = descriptor;
 	const attributeMap: any = {};
 
 	attributes.forEach((propertyName: string) => {
+		const attributeName = propertyName.toLowerCase();
+		attributeMap[attributeName] = propertyName;
+	});
+
+	properties.forEach((propertyName: string) => {
 		const attributeName = propertyName.toLowerCase();
 		attributeMap[attributeName] = propertyName;
 	});
@@ -164,7 +169,10 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			const domProperties: any = {};
 			const { properties = [], events = [] } = descriptor;
 
-			this._properties = { ...this._properties, ...this._attributesToProperties(attributes) };
+			this._properties = {
+				...this._propertiesWithAttributes(properties),
+				...this._attributesToProperties(attributes)
+			};
 
 			[...attributes, ...properties].forEach((propertyName: string) => {
 				const isReservedProp = RESERVED_PROPS.indexOf(propertyName) !== -1;
@@ -367,7 +375,17 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 		public attributeChangedCallback(name: string, oldValue: string | null, value: string | null) {
 			const propertyName = attributeMap[name];
-			this._setProperty(propertyName, value);
+
+			if (attributes.indexOf(propertyName) >= 0) {
+				this._setProperty(propertyName, value);
+			} else {
+				try {
+					const parsedValue = value ? JSON.parse(value) : null;
+					this._setProperty(propertyName, parsedValue);
+				} catch (e) {
+					// if json parsing error, we do not set the property
+				}
+			}
 		}
 
 		private _setEventProperty(propertyName: string, value: any) {
@@ -385,6 +403,21 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 		private _getProperty(propertyName: string) {
 			return this._properties[propertyName];
+		}
+
+		private _propertiesWithAttributes(properties: string[]) {
+			return properties.reduce((properties: any, propertyName: string) => {
+				const attributeName = propertyName.toLowerCase();
+				const value = this.getAttribute(attributeName);
+				if (value !== null) {
+					try {
+						properties[propertyName] = JSON.parse(value);
+					} catch (e) {
+						// invalid json values do not get set
+					}
+				}
+				return properties;
+			}, {});
 		}
 
 		private _attributesToProperties(attributes: string[]) {

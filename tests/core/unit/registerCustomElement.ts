@@ -1003,4 +1003,98 @@ describe('registerCustomElement', () => {
 		assert.isTrue(child.getAttribute('slot') === 'foo');
 		assert.isTrue(child.innerHTML === '<label>i am a child</label>');
 	});
+
+	it('parses initial properties as attributes', () => {
+		@customElement({
+			tag: 'attribute-properties-initial',
+			properties: ['bar'],
+			attributes: ['foo'],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				return v('div', {}, [JSON.stringify(this.properties.foo), JSON.stringify(this.properties.bar)]);
+			}
+		}
+
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('attribute-properties-initial', CustomElementParent);
+
+		const element = document.createElement('attribute-properties-initial');
+		element.setAttribute('foo', '[1,2,3]');
+		element.setAttribute('bar', '[1,2,3]');
+
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.deepEqual(element.innerHTML, '<div>"[1,2,3]"[1,2,3]</div>');
+	});
+
+	it('parses observed property attributes', () => {
+		@customElement({
+			tag: 'attribute-properties-observed',
+			properties: ['bar'],
+			attributes: ['foo'],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				return v('div', {}, [
+					JSON.stringify(this.properties.foo),
+					JSON.stringify(this.properties.bar || false)
+				]);
+			}
+		}
+
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('attribute-properties-observed', CustomElementParent);
+
+		const element = document.createElement('attribute-properties-observed');
+		element.setAttribute('foo', '[1,2,3]');
+
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.deepEqual(element.innerHTML, '<div>"[1,2,3]"false</div>');
+
+		element.setAttribute('bar', '[1,2,3]');
+		resolvers.resolve();
+
+		assert.deepEqual(element.innerHTML, '<div>"[1,2,3]"[1,2,3]</div>');
+	});
+
+	it('ignores improper json in property parsing', () => {
+		@customElement({
+			tag: 'attribute-properties-invalid',
+			properties: ['bar'],
+			events: []
+		})
+		class WidgetA extends WidgetBase<any> {
+			render() {
+				return v('div', {}, [JSON.stringify(this.properties.bar || false)]);
+			}
+		}
+
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+
+		customElements.define('attribute-properties-invalid', CustomElementParent);
+
+		const element = document.createElement('attribute-properties-invalid');
+		element.setAttribute('bar', 'invalid');
+
+		document.body.appendChild(element);
+
+		resolvers.resolve();
+
+		assert.deepEqual(element.innerHTML, '<div>false</div>');
+
+		element.setAttribute('bar', '[1,2,3');
+		resolvers.resolve();
+
+		assert.deepEqual(element.innerHTML, '<div>false</div>');
+	});
 });
