@@ -717,7 +717,7 @@ An additional use for `diffProperty` is to be able to return a value that will b
 import diffProperty from '@dojo/framework/core/vdom';
 ```
 
--   `diffProperty(propertyName: string, properties: () => WidgetProperties (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
+-   `diffProperty(propertyName: string, properties: () => WidgetProperties, diff: (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
     -   Registers the specified `diff` function that is called to determine if any differences exist between the `current` and `next` values of the widget's `propertyName` property. The function uses the `properties` function to determine the available properties and the typings of the callback, both the parameters and the return value.
 
 **Example:**
@@ -737,6 +737,7 @@ export const customMiddleware = factory(({ properties, middleware: { diffPropert
 	});
 	// The rest of the custom middleware that defines the API
 });
+```
 
 ## `destroy`
 

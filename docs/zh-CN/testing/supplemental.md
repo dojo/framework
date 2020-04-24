@@ -1,4 +1,4 @@
-# Dojo test harness
+# Test Renderer
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/supplemental.md
@@ -19,7 +19,7 @@ harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Ha
 harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
 ```
 
--   `renderFunction`: 返回被测部件 WNode 的函数
+-   `renderFunction`: 返回被测部件 `WNode` 的函数
 -   [`customComparators`](/learn/testing/dojo-test-harness#自定义比较): 一组自定义的比较器描述符。每个描述符提供一个比较器函数，用于比较通过 `selector` 和 `property` 定位到的 `properties`
 -   `options`: harness 的扩展选项，包括 `customComparators` 和一组 middleware/mocks 元组。
 
@@ -32,7 +32,7 @@ harness 函数返回一个 `Harness` 对象，该对象提供了几个与被测�
 -   [`trigger`](/learn/testing/dojo-test-harness#harnesstrigger): 用于在被测部件的节点上触发函数
 -   [`getRender`](/learn/testing/dojo-test-harness#harnessgetRender): 根据提供的索引，从 harness 中返回对应的渲染器
 
-使用 `@dojo/framework/core` 中的 `w()` 函数生成一个用于测试的部件是非常简单的：
+生成一个用于测试的部件，与使用 `@dojo/framework/core` 中的 `w()` 函数或者在 render 函数中返回 TSX 一样简单：
 
 > tests/unit/widgets/MyWidget.tsx
 
@@ -89,13 +89,12 @@ describe('MyWidget', () => {
 
 Harness 会自动 mock 很多核心中间件，并注入到任何需要他们的中间件中：
 
--   invalidator
--   setProperty
--   destroy
+-   `invalidator`
+-   `setProperty`
+-   `destroy`
 
-### Dojo mock 中间件
-
-当测试使用了 Dojo 中间件的部件时，有很多 mock 中间件可以使用。Mock 会导出一个 factory，该 factory 会创建一个受限作用域的 mock 中间件，会在每个测试中使用。
+Additionally, there are a number of mock middleware available to support widgets that use the corresponding provided Dojo middleware. See the [mocking](/learn/testing/mocking#provided-middleware-mocks) section for more information on provided mock middleware.
+此外，当测试使用了 Dojo 中间件的部件时，有很多 mock 中间件可以使用。Mock 会导出一个 factory，该 factory 会创建一个受限作用域的 mock 中间件，会在每个测试中使用。
 
 #### Mock `breakpoint` 中间件
 
@@ -160,6 +159,66 @@ describe('Breakpoint', () => {
 				<div>Longer description</div>
 			</div>
 		));
+	});
+});
+```
+
+### Mock `focus` middleware
+
+Using `createFocusMock` from `@dojo/framework/testing/middleware/focus` provides tests with manual control over when the `focus` middleware reports that a node with a specified key gets focused.
+
+Consider the following widget:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+export interface FormWidgetProperties extends FocusProperties {}
+
+const factory = create({ focus }).properties<FormWidgetProperties>();
+
+export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
+	return (
+		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
+			<input type="text" key="text" value="focus me" />
+		</div>
+	);
+});
+```
+
+By calling `focusMock(key: string | number, value: boolean)` the result of the `focus` middleware's `isFocused` method can get controlled during a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+import focus from '@dojo/framework/core/middleware/focus';
+import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+describe('Focus', () => {
+	it('adds a "focused" class to the wrapper when the input is focused', () => {
+		const focusMock = createFocusMock();
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => (
+			<WrappedRoot key="wrapper" classes={[css.root, null]}>
+				<input type="text" key="text" value="focus me" />
+			</WrappedRoot>
+		));
+		const r = renderer(() => <FormWidget />, {
+			middleware: [[focus, focusMock]]
+		});
+
+		r.expect(baseAssertion);
+
+		focusMock('text', true);
+
+		r.expect(baseAssertion.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
 	});
 });
 ```
@@ -442,7 +501,76 @@ describe('MyWidget', () => {
 });
 ```
 
-#### 自定义模拟的中间件
+### Mock `validity` middleware
+
+Using `createValidityMock` from `@dojo/framework/testing/mocks/middleware/validity` creates a mock validity middleware where the return value of the `get` method can get controlled in a test.
+
+Consider the following example:
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import validity from '@dojo/framework/core/middleware/validity';
+import icache from '@dojo/framework/core/middleware/icache';
+import * as css from './FormWidget.m.css';
+
+const factory = create({ validity, icache });
+
+export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
+	const value = icache.getOrSet('value', '');
+	const { valid, message } = validity.get('input', value);
+
+	return (
+		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
+			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
+			{message ? <p key="validityMessage">{message}</p> : null}
+		</div>
+	);
+});
+```
+
+Using `validityMock(key: string, value: { valid?: boolean, message?: string; })`, the results of the `validity` mock's `get` method can get controlled in a test.
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
+import validity from '@dojo/framework/core/middleware/validity';
+import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
+import * as css from './FormWidget.m.css';
+
+describe('Validity', () => {
+	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+		const validityMock = createValidityMock();
+
+		const r = renderer(() => <FormWidget />, {
+			middleware: [[validity, validityMock]]
+		});
+
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => (
+			<WrappedRoot key="root" classes={[css.root, null]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+			</WrappedRoot>
+		));
+
+		r.expect(baseAssertion);
+
+		validityMock('input', { valid: false, message: 'invalid message' });
+
+		const invalidAssertion = baseAssertion
+			.append(WrappedRoot, () => [<p key="validityMessage">invalid message</p>])
+			.setProperty(WrappedRoot, 'classes', [css.root, css.invalid]);
+
+		r.expect(invalidAssertion);
+	});
+});
+```
+
+### 自定义模拟的中间件
 
 已提供的模拟（mock）并未覆盖所有的测试场景。也可以创建自定义的模拟中间件。模拟中间件应该提供一个可重载的接口。无参的重载应该返回中间件的实现，它将被注入到被测的部件中。根据需要创建其他重载，以便为测试提供接口。
 
