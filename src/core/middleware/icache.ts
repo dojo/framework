@@ -59,66 +59,69 @@ export function createICacheMiddleware<S = void>() {
 			destroy(() => {
 				cacheMap.clear();
 			});
-			return {
-				getOrSet(key: any, value: any, invalidate = true): any | undefined {
-					let cachedValue = cacheMap.get(key);
-					if (!cachedValue) {
-						this.set(key, value, invalidate);
-					}
-					cachedValue = cacheMap.get(key);
-					if (!cachedValue || cachedValue.status === 'pending') {
-						return undefined;
-					}
-					return cachedValue.value;
-				},
-				get(key: any): any {
+
+			const api: any = {
+				get: (key: any): any => {
 					const cachedValue = cacheMap.get(key);
 					if (!cachedValue || cachedValue.status === 'pending') {
 						return undefined;
 					}
 					return cachedValue.value;
-				},
-				set(key: any, value: any, invalidate = true): any {
-					const current = this.get(key);
-					if (typeof value === 'function') {
-						value = value(current);
-						if (value && typeof value.then === 'function') {
-							cacheMap.set(key, {
-								status: 'pending',
-								value
-							});
-							value.then((result: any) => {
-								const cachedValue = cacheMap.get(key);
-								if (cachedValue && cachedValue.value === value) {
-									cacheMap.set(key, {
-										status: 'resolved',
-										value: result
-									});
-									invalidate && invalidator();
-								}
-							});
-							return undefined;
-						}
-					}
-					cacheMap.set(key, {
-						status: 'resolved',
-						value
-					});
-					invalidate && invalidator();
-					return value;
-				},
-				has(key: any) {
-					return cacheMap.has(key);
-				},
-				delete(key: any, invalidate = true) {
-					cacheMap.delete(key);
-					invalidate && invalidator();
-				},
-				clear(invalidate = true): void {
-					cacheMap.clear();
-					invalidate && invalidator();
 				}
 			};
+
+			api.set = (key: any, value: any, invalidate: boolean = true): any => {
+				const current = api.get(key);
+				if (typeof value === 'function') {
+					value = value(current);
+					if (value && typeof value.then === 'function') {
+						cacheMap.set(key, {
+							status: 'pending',
+							value
+						});
+						value.then((result: any) => {
+							const cachedValue = cacheMap.get(key);
+							if (cachedValue && cachedValue.value === value) {
+								cacheMap.set(key, {
+									status: 'resolved',
+									value: result
+								});
+								invalidate && invalidator();
+							}
+						});
+						return undefined;
+					}
+				}
+				cacheMap.set(key, {
+					status: 'resolved',
+					value
+				});
+				invalidate && invalidator();
+				return value;
+			};
+			api.has = (key: any) => {
+				return cacheMap.has(key);
+			};
+			api.delete = (key: any, invalidate: boolean = true) => {
+				cacheMap.delete(key);
+				invalidate && invalidator();
+			};
+			api.clear = (invalidate: boolean = true): void => {
+				cacheMap.clear();
+				invalidate && invalidator();
+			};
+			api.getOrSet = (key: any, value: any, invalidate: boolean = true): any | undefined => {
+				let cachedValue = cacheMap.get(key);
+				if (!cachedValue) {
+					api.set(key, value, invalidate);
+				}
+				cachedValue = cacheMap.get(key);
+				if (!cachedValue || cachedValue.status === 'pending') {
+					return undefined;
+				}
+				return cachedValue.value;
+			};
+			return api;
 		}
 	);
 	return icache;
