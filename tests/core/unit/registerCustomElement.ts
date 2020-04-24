@@ -119,7 +119,7 @@ function createTestWidget(options: any) {
 @theme({ ' _key': 'themedWidget', foo: 'bar' })
 class ThemedWidget extends ThemedMixin(WidgetBase) {
 	render() {
-		return v('div', { classes: ['root'] }, [this.theme('bar')]);
+		return v('div', { classes: ['root'] }, [this.theme('bar'), this.variant()]);
 	}
 }
 
@@ -149,6 +149,7 @@ describe('registerCustomElement', () => {
 		}
 		element = undefined;
 		delete global.dojo;
+		global.dojoce = {};
 	});
 
 	it('throws error when no descriptor found', () => {
@@ -379,6 +380,71 @@ describe('registerCustomElement', () => {
 		assert.equal(root.innerHTML, 'bar');
 		resolvers.resolve();
 		assert.equal(root.innerHTML, 'baz');
+	});
+
+	it('custom element with global theme and default variant', () => {
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
+		customElements.define('themed-element-default-variant', CustomElement);
+		element = document.createElement('themed-element-default-variant');
+		document.body.appendChild(element);
+		global.dojoce = {
+			theme: 'dojo',
+			themes: {
+				dojo: {
+					theme: {
+						themedWidget: {
+							foo: 'baz'
+						}
+					},
+					variants: {
+						default: {
+							root: 'default variant'
+						},
+						light: {
+							root: 'light variant'
+						}
+					}
+				}
+			}
+		};
+		global.dispatchEvent(new CustomEvent('dojo-theme-set', {}));
+		const root = element.querySelector('.root') as HTMLElement;
+		assert.equal(root.innerHTML, 'bar');
+		resolvers.resolve();
+		assert.equal(root.innerHTML, 'bazdefault variant');
+	});
+
+	it('custom element with global theme and custom variant', () => {
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
+		customElements.define('themed-element-custom-variant', CustomElement);
+		element = document.createElement('themed-element-custom-variant');
+		document.body.appendChild(element);
+		global.dojoce = {
+			theme: 'dojo',
+			variant: 'light',
+			themes: {
+				dojo: {
+					theme: {
+						themedWidget: {
+							foo: 'baz'
+						}
+					},
+					variants: {
+						default: {
+							root: 'default variant'
+						},
+						light: {
+							root: 'light variant'
+						}
+					}
+				}
+			}
+		};
+		global.dispatchEvent(new CustomEvent('dojo-theme-set', {}));
+		const root = element.querySelector('.root') as HTMLElement;
+		assert.equal(root.innerHTML, 'bar');
+		resolvers.resolve();
+		assert.equal(root.innerHTML, 'bazlight variant');
 	});
 
 	it('custom element with registry factory', () => {

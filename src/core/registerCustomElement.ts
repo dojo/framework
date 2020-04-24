@@ -247,8 +247,18 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			const renderChildren = () => this.__children__();
 			const Wrapper = factory(() => w(WidgetConstructor, widgetProperties, renderChildren()));
 			const registry = registryFactory();
-			const themeContext = registerThemeInjector(this._getTheme(), registry);
-			global.addEventListener('dojo-theme-set', () => themeContext.set(this._getTheme()));
+			const themeContext = registerThemeInjector(
+				this._getVariant() ? { theme: this._getTheme(), variant: this._getVariant() } : this._getTheme(),
+				registry
+			);
+			global.addEventListener('dojo-theme-set', () => {
+				const variant = this._getVariant();
+				if (variant !== 'noVariant') {
+					themeContext.set(this._getTheme(), variant);
+				} else {
+					themeContext.set(this._getTheme());
+				}
+			});
 			const r = renderer(() => w(Wrapper, {}));
 			this._renderer = r;
 			r.mount({ domNode: this, merge: false, registry });
@@ -269,6 +279,12 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _getTheme() {
 			if (global && global.dojoce && global.dojoce.theme) {
 				return global.dojoce.themes[global.dojoce.theme];
+			}
+		}
+
+		private _getVariant() {
+			if (global && global.dojoce && global.dojoce.variant) {
+				return global.dojoce.variant;
 			}
 		}
 
