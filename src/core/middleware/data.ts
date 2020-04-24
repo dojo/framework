@@ -21,7 +21,7 @@ interface ResourceWrapper {
 }
 
 interface ResourceWithData {
-	resource: () => Resource;
+	resource: Resource;
 	data: any[];
 }
 
@@ -84,7 +84,7 @@ function createResourceWrapper(resource: Resource, options?: OptionsWrapper): Re
 }
 
 function isResourceWithData(resource: any): resource is ResourceWithData {
-	return !!resource.data;
+	return resource && !!resource.data;
 }
 
 function createResourceOptions(
@@ -161,8 +161,8 @@ export function createDataMiddleware<T = void>() {
 			});
 		});
 
-		diffProperty('resource', ({ resource: currentResource }, { resource: nextResource }) => {
-			if (currentResource && nextResource && nextResource.data) {
+		diffProperty('resource', properties, ({ resource: currentResource }, { resource: nextResource }) => {
+			if (isResourceWithData(currentResource) && isResourceWithData(nextResource)) {
 				if (
 					nextResource.data !== currentResource.data ||
 					nextResource.data.length !== currentResource.data.length
@@ -171,6 +171,7 @@ export function createDataMiddleware<T = void>() {
 					invalidator();
 				}
 			}
+			return nextResource;
 		});
 
 		return (dataOptions: DataInitialiserOptions = {}) => {
@@ -178,9 +179,8 @@ export function createDataMiddleware<T = void>() {
 			let resourceWrapperOrResource;
 
 			if (isResourceWithData(passedResourceProperty)) {
-				const { resource: resourceFactory, data } = passedResourceProperty;
+				const { resource, data } = passedResourceProperty;
 				if (!resourceWithDataMap.has(data)) {
-					const resource = resourceFactory();
 					resourceWithDataMap.set(data, resource);
 					resource.set(data);
 				}

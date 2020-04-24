@@ -11,6 +11,7 @@ export interface ResourceOptions {
 export type ResourceQuery = { keys: string[]; value: string | undefined };
 
 export interface Resource<S = any> {
+	(data: S): { resource: Resource<S>; data: S };
 	getOrRead(options: ResourceOptions): any;
 	get(options: ResourceOptions): any;
 	getTotal(options: ResourceOptions): number | undefined;
@@ -280,17 +281,24 @@ export function createResource<S>(config: DataTemplate<S>): Resource<S> {
 		}
 	}
 
-	return {
-		getOrRead,
-		get,
-		getTotal,
-		subscribe,
-		unsubscribe,
-		isFailed,
-		isLoading,
-		set(data: S[]) {
-			setData(0, data, data.length);
-			totalMap.set(getQueryKey(), data.length);
-		}
+	function resource(data: any[]) {
+		return {
+			resource,
+			data
+		};
+	}
+
+	resource.getOrRead = getOrRead;
+	resource.get = get;
+	resource.getTotal = getTotal;
+	resource.subscribe = subscribe;
+	resource.unsubscribe = unsubscribe;
+	resource.isFailed = isFailed;
+	resource.isLoading = isLoading;
+	resource.set = function set(data: S[]) {
+		setData(0, data, data.length);
+		totalMap.set(getQueryKey(), data.length);
 	};
+
+	return resource as Resource<any>;
 }

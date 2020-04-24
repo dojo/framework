@@ -960,17 +960,19 @@ function destroyHandles(meta: WidgetMeta) {
 }
 
 function runDiffs(meta: WidgetMeta, current: any, next: any) {
+	let customProperties: any = {};
 	meta.customDiffMap = meta.customDiffMap || new Map();
 	if (meta.customDiffMap.size) {
 		meta.customDiffMap.forEach((diffMap) => {
 			diffMap.forEach((diff, propertyName) => {
 				const result = diff({ ...current }, { ...next });
 				if (result) {
-					next[propertyName] = result;
+					customProperties[propertyName] = result;
 				}
 			});
 		});
 	}
+	return customProperties;
 }
 
 export const invalidator = factory(({ id }) => {
@@ -1024,7 +1026,7 @@ export const diffProperty = factory(({ id }) => {
 			widgetMeta.customDiffProperties = widgetMeta.customDiffProperties || new Set();
 			const propertyDiffMap = widgetMeta.customDiffMap.get(id) || new Map();
 			if (!propertyDiffMap.has(propertyName)) {
-				const result = diff({}, widgetMeta.properties);
+				const result = diff({}, widgetMeta.originalProperties);
 				if (result !== undefined) {
 					if (has('dojo-debug')) {
 						if (widgetMeta.propertiesCalled) {
@@ -2181,7 +2183,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				widgetMeta.properties = wrapFunctionProperties(id, widgetMeta.originalProperties);
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
-				runDiffs(widgetMeta, current.properties, widgetMeta.properties);
+				const customProperties = runDiffs(widgetMeta, current.properties, widgetMeta.originalProperties);
+				widgetMeta.properties = { ...widgetMeta.properties, ...customProperties };
 				if (current.node.children.length > 0 || next.node.children.length > 0) {
 					widgetMeta.dirty = true;
 				}

@@ -14,16 +14,16 @@ const invalidatorStub = sb.stub();
 const destroyStub = sb.stub();
 const diffPropertyStub = sb.stub();
 
-let resourceStub = {
-	getOrRead: sb.stub(),
-	getTotal: sb.stub(),
-	subscribe: sb.stub(),
-	unsubscribe: sb.stub(),
-	isLoading: sb.stub(),
-	isFailed: sb.stub(),
-	get: sb.stub(),
-	set: sb.stub()
-};
+let resourceStub: any = sb.stub();
+
+resourceStub.getOrRead = sb.stub();
+resourceStub.getTotal = sb.stub();
+resourceStub.subscribe = sb.stub();
+resourceStub.unsubscribe = sb.stub();
+resourceStub.isLoading = sb.stub();
+resourceStub.isFailed = sb.stub();
+resourceStub.get = sb.stub();
+resourceStub.set = sb.stub();
 
 jsdomDescribe('data middleware', () => {
 	beforeEach(() => {
@@ -299,7 +299,7 @@ jsdomDescribe('data middleware', () => {
 	});
 
 	it('can have a resource passed via a different property', () => {
-		const otherResource = {
+		const otherResource: any = {
 			getOrRead: sb.stub(),
 			getTotal: sb.stub(),
 			subscribe: sb.stub(),
@@ -472,7 +472,7 @@ jsdomDescribe('data middleware', () => {
 			return <div>{JSON.stringify(get({}))}</div>;
 		});
 		const root = document.createElement('div');
-		const factoryStub = sb.stub().returns(resourceStub);
+		const factoryStub = resourceStub;
 		const r = renderer(() => (
 			<App resource={{ resource: factoryStub, data: [{ value: 'foo' }, { value: 'bar' }] }} />
 		));
@@ -480,7 +480,7 @@ jsdomDescribe('data middleware', () => {
 		resolvers.resolveRAF();
 		invalidate();
 		resolvers.resolveRAF();
-		assert.isTrue(factoryStub.calledOnce);
+		assert.isTrue(factoryStub.set.calledOnce);
 	});
 
 	it('should call create resource again if the data passed has changed', () => {
@@ -505,7 +505,7 @@ jsdomDescribe('data middleware', () => {
 		});
 
 		const root = document.createElement('div');
-		const factoryStub = sb.stub().returns(resourceStub);
+		const factoryStub = resourceStub;
 		const r = renderer(() => <App />);
 		r.mount({ domNode: root });
 		resolvers.resolveRAF();
@@ -514,6 +514,6 @@ jsdomDescribe('data middleware', () => {
 		invalidate();
 
 		resolvers.resolveRAF();
-		assert.isTrue(factoryStub.calledTwice);
+		assert.isTrue(factoryStub.set.calledTwice);
 	});
 });
