@@ -67,8 +67,10 @@ export default [
 # Outlet
 
 An outlet represents a visual location of an application that renderers different content depending on which route has been matched. Using outlets reduces boilerplate required compared to using routes, multiple routes can be associated to the same outlet to more naturally and accurately structure the application output.
+outlet 用于标注应用程序中的显示位置，在这个位置可以根据匹配到的路由渲染不同的内容。与使用路由相比，使用 outlet 能减少编写样板代码，将多个路由关联到同一个 outlet 下，以便更自然、更准确的描述应用程序的输出结构。
 
 Consider a typical application layout which includes a left side menu and a main content view that depending on the route has a right hand side bar:
+考虑一个经典的应用程序布局，其中包括一个左侧菜单和主内容视图，在主内容视图右侧有一个根据路由变化的菜单栏：
 
 ```
 -------------------------------------------------------------------
@@ -87,6 +89,7 @@ Consider a typical application layout which includes a left side menu and a main
 ```
 
 The route configuration below specifies all the main pages to the main content outlet, but the `widget` to a `side-menu` outlet. This enables building an application that constantly renders the main content depending on route, but also include a right hand side menu for all children routes of the `widget` route.
+以下的路由配置将所有的主页面指向显示主内容的 outlet，将 `widget` 指向显示 `side-menu` 的 outlet。便可以构建出这样一个应用程序，它始终根据路由动态渲染主内容区，也会根据右侧菜单栏中 `widget` 路由的所有子路由动态渲染主内容区。
 
 ```tsx
 const routes = [
@@ -122,6 +125,7 @@ const routes = [
 ```
 
 In the routing configuration above, there are two outlets defined, `main` and `side-menu`, and a simplified application layout using outlets is shown below. By default the `Outlet` will render any of the keys that equal a route id that has been matched for the outlet, in this case `main`. If a function is passed to the `Outlet` then it will render whenever _any_ route is matched for the outlet specified.
+在上面的路由配置中，定义了两个 outlet，`main` 和 `side-menu`，下面显示了使用这两个 outlet 的简化版应用程序布局。默认情况下，`Outlet` 将渲染 key 值与 outlet 下的路由 id 匹配的路由，如本例中的 `main`。如果为 `Outlet` 传入的是一个函数，则与 outlet 中的 _任一_ 路由匹配时，都会渲染。
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
@@ -162,6 +166,7 @@ const App = factory(function App() {
 ```
 
 The node structure of the `App` looks good and succinctly represents the actual visual output for the user with minimal duplication, there still is a need to duplicate the usage of the `Example` widget across to different routes. This can be solved by using the `matcher` property to override the default route matching rules. The `matcher` receives the `defaultMatches` and a `matchDetailsMap` in order to make custom matching decisions. In the final example below the usage of `Example` has been combined into a new `key`, `details` that does not exist as a route. This will never match for the outlet unless we override the default matches to set it to true when either the `example` or `overview` route has matched. Finally in the `details` renderer the example property has been defaulted to `overview` to maintain the same behavior as before.
+`App` 的节点结构看起来很直观，简洁的描述出实际视觉输出，只是有一小处重复，即仍然需要在不同路由中重复使用 `Example` 部件。这可以通过使用 `matcher` 属性来覆盖默认的路由匹配规则来解决。`matcher` 会接收 `defaultMatches` 和 `matchDetailsMap` 两个参数，以便自定义匹配策略。在下面最后一个示例中，将重复使用的 `Example` 合并为一个新 `key`，即 `details`，但在路由定义中并不存在。如果不覆写默认匹配，让匹配到 `example` 或 `overview` 路由时将其设置为 true，则此 outlet 永远不会匹配到 `details`。最后，在 `details` 渲染函数中，将 example 属性的默认值设置为 `overview`，以与之前的行为保持一致。
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
