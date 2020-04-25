@@ -56,7 +56,7 @@ function isAsyncResponse<S>(response: DataResponsePromise<S> | DataResponse<S>):
 	return (response as any).then !== undefined;
 }
 
-export function defaultFilter(query: ResourceQuery[], v: any) {
+export function defaultFilter(query: ResourceQuery[], item: any) {
 	let filterValue = '';
 
 	query.forEach((q) => {
@@ -69,7 +69,7 @@ export function defaultFilter(query: ResourceQuery[], v: any) {
 		return true;
 	}
 
-	let filterText = v.label || v.value;
+	let filterText = item.label || item.value;
 	return filterText.toLocaleLowerCase().indexOf(filterValue.toLocaleLowerCase()) >= 0;
 }
 

@@ -516,4 +516,38 @@ jsdomDescribe('data middleware', () => {
 		resolvers.resolveRAF();
 		assert.isTrue(factoryStub.set.calledTwice);
 	});
+
+	it('should call create resource again if the data passed has changed using resource to set data', () => {
+		const testData = [{ value: 'foo' }, { value: 'bar' }];
+		const testData2 = [{ value: 'red' }, { value: 'blue' }, { value: 'green' }];
+		let invalidate: any;
+		let useAltData = false;
+		const factoryStub = (data: any) => {
+			return {
+				resource: resourceStub,
+				data
+			};
+		};
+
+		const Widget = create({ data: dataMiddleware, invalidator })(function Widget({
+			middleware: { data, invalidator }
+		}) {
+			const { get } = data();
+			return <div>{JSON.stringify(get({}))}</div>;
+		});
+
+		const App = create({ invalidator })(function App({ middleware: { invalidator } }) {
+			invalidate = invalidator;
+			return <Widget resource={useAltData ? factoryStub(testData2) : factoryStub(testData)} />;
+		});
+
+		const root = document.createElement('div');
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		resolvers.resolveRAF();
+		useAltData = true;
+		invalidate();
+		resolvers.resolveRAF();
+		assert.isTrue(resourceStub.set.calledTwice);
+	});
 });
