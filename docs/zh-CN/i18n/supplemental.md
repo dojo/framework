@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/i18n/supplemental.md
-commit 02d2d858cd1809468deeeac6cbbd855e9c799e5c
+commit 3064b7ce80fa19569f8975e9aa5d06718ca8decb
 -->
 
 Dojo 的消息包概念是一个 Map 对象，其中存储用 key 标识的文本消息，每个 key 标识的消息内容可以用一到多种语言表示。
@@ -119,8 +119,8 @@ export default {
 		ar: () => import('./ar/main'),
 		'ar-JO': () => import('./ar-JO/main'),
 
-		// ... or return translations directly.
-		fr: () => fr
+		// ... or return references directly.
+		fr
 	},
 	// Default/fallback messages
 	messages: {
@@ -135,6 +135,8 @@ export default {
 ## 配置应用程序支持的区域
 
 一个国际化的应用程序，应该在它的构建配置文件 `.dojorc` 中指定支持的区域。应该将其中一个区域指定为应用程序的主（默认）区域，其余受支持的区域可作为辅助选项，可在需要时激活。这是通过 `build-app` 中的 `locale` 属性和 `supportedLocales` 列表实现的。
+
+**注意**：因为大量的格式化和解析器都依赖于特定语言环境的 [CLDR](http://cldr.unicode.org) 数据，所以为了能正常运行，`@dojo/framework/i18n` 提供的大部分功能都要求在 `.dojorc` 中设置至少一个 `locale`。比如，如果没有指定默认的 `locale`，则只返回默认包中的消息，并且将禁用 [ICU 消息格式化](#icu-message-formatting)功能。
 
 -   `locale`: string
     -   应用程序支持的主区域。即，如果没有指定覆盖的区域，将使用此作为默认语言。
@@ -423,104 +425,14 @@ export class MyWidget extends WidgetBase {
 |    6 | **`@dojo/framework/i18n`**                       | 通过 [Dojo i18n 中的 `switchLocale` 方法](#changing-the-root-locale-and-observing-locale-changes)显式设置的区域                                          |
 |    7 | **`@dojo/framework/i18n`**                       | [为当前执行环境设置的 `systemLocale`](#determining-the-current-locale)。                                                                                 |
 
-# 高级格式化：CLDR
-
-## 加载 CLDR 数据
-
-鉴于 [Unicode CLDR 数据](http://cldr.unicode.org)非常大，因此并没有包含在 `@dojo/framework/i18n` 的依赖中。当应用程序使用如[基于 ICU 的格式化消息](http://userguide.icu-project.org/formatparse/messages)或者 `@dojo/framework/i18n` 提供的日期或数字格式化等功能时，才需要显式加载 CLDR 数据的相关部分。
-
-**注意**：如果国际化的应用程序只使用简单的、无格式化的特定区域消息，则不需要关心加载 CLDR 数据。这些应用程序只需要按照[国际化 Dojo 应用程序](/learn/i18n/internationalizing-a-dojo-application)来配置。
-
-### Dojo 的构建系统
-
-通过在应用程序的构建配置文件 `.dojorc` 中为 `build-app` 的 `cldrPaths` 设置值，可加载 CLDR 数据。
-
--   `cldrPaths`: string[]
-    -   一组要加载的 [CLDR JSON](https://github.com/dojo/i18n#loading-cldr-data) 文件路径。可与 [locale 和 supportedLocales](#configuring-supported-application-locales) 选项结合使用——如果路径中包含 `{locale}` 字符串，则会按照在 `locale` 和 `supportedLocales` 属性中罗列的区域来加载文件。
-
-例如，使用以下配置，将为所有支持的 `en`、`es` 和 `fr` 区域加载对应的 CLDR 文件 `numbers.json`：
-
-> .dojorc
-
-```json
-{
-	"build-app": {
-		"locale": "en",
-		"supportedLocales": ["es", "fr"],
-		"cldrPaths": ["cldr-data/main/{locale}/numbers.json"]
-	}
-}
-```
-
-### 独立使用
-
-在 Dojo 构建系统之外，也可以使用 `@dojo/framework/i18n/cldr/load` 中的 `loadCldrData` 方法加载 CLDR 数据。`loadCldrData` 接收一个描述 CLDR 数据的对象。所有 CLDR 数据必须与 [Unicode CLDR JSON](https://github.com/unicode-cldr/cldr-json) 文件使用的格式匹配。补充的数据必须放在顶层的 `supplemental` 对象中，特定区域的数据必须放在顶层 `main` 对象内的本地化对象中。
-
-例如：
-
-```ts
-import loadCldrData from '@dojo/framework/i18n/cldr/load';
-
-loadCldrData({
-	"supplemental": {
-		"likelySubtags": { ... }
-	},
-	"main": {
-		"en": {
-			"numbers": { ... }
-		}
-	}
-});
-```
-
-## 每个功能需要的 CLDR 数据
-
-Dojo 的 `i18n` 模块要求为每个特定的格式化功能提供以下 CLDR 数据：
-
-用于[格式化 ICU 消息](#icu-message-formatting)：
-
--   `supplemental/likelySubtags`
--   `supplemental/plurals`
-
-用于[格式化日期或时间](#date-and-number-formatting)：
-
--   `main/{locale}/ca-gregorian`
--   `main/{locale}/dateFields`
--   `main/{locale}/numbers`
--   `main/{locale}/timeZoneNames`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
--   `supplemental/timeData`
--   `supplemental/weekData`
-
-用于[格式化数字或货币](#date-and-number-formatting)：
-
--   `main/{locale}/currencies`
--   `main/{locale}/numbers`
--   `supplemental/currencyData`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
-
-用于[格式化单位](#date-and-number-formatting)：
-
--   `main/{locale}/numbers`
--   `main/{locale}/units`
--   `supplemental/likelySubtags`
--   `supplemental/numberingSystems`
--   `supplemental/ordinals`
--   `supplemental/plurals`
+# 高级格式化
 
 ## 消息格式
 
 ### 基本的标记替换
 
-Dojo 的 `i18n` 框架支持 [ICU 消息格式化](#icu-message-formatting)，但这需要加载 CLDR 数据，并不是每个应用程序都需要。因此，如果应用程序没有加载 `supplemental/likeSubtags` 和 `supplemental/plurals` CLDR 数据，那么 Dojo 的所有消息格式化方法只会执行简单的标记替换。
+Dojo 的 `i18n` 框架支持 [ICU 消息格式化](#icu-message-formatting)，也支持基本的标记替换。
 
-The message formatting examples in the next two subsections will use a [message bundle](#working-with-message-bundles) with a `guestInfo` message as follows:
 接下来两个小节中的消息格式化示例会使用包含一个 `guestInfo` 消息的[消息包](#working-with-message-bundles)，如下所示：
 
 > nls/main.ts
@@ -532,8 +444,6 @@ export default {
 	}
 };
 ```
-
-使用基本的标记替换，可以将拥有 `host` 和 `guest` 属性的对象提供给格式化方法，而不需要加载 CLDR 数据。
 
 #### 在部件中替换标记
 
@@ -568,43 +478,22 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 
 #### 直接使用标记替换的格式化功能
 
-`i18n` 模块公开了两个处理消息格式化的方法：
-
--   `formatMessage`，根据输入直接返回格式化后的消息
--   `getMessageFormatter`，返回一个用于格式化单条消息的方法。
-
-这两个方法都要操作包对象（bundle），因此必须先将包对象传给 [`i18n` 函数](#accessing-locale-message-bundles)以注册到 i18n 生态系统中。
+`i18n` 模块的 [`localizeBundle` 函数](#accessing-locale-message-bundles)返回的对象中，有一个用于处理消息格式化的 `format` 方法：
 
 ```ts
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
-i18n(bundle, 'en').then(() => {
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
-	let message = formatter({
+localizeBundle(bundle, { locale: 'en' }).then(({ format }) => {
+	const message = format('guestInfo', {
 		host: 'Margaret Mead',
 		guest: 'Laura Nader'
 	});
 	console.log(message); // "Margaret Mead invites Laura Nader to the party."
-
-	// Note that `formatMessage` is essentially a convenience wrapper around `getMessageFormatter`.
-	message = formatMessage(
-		bundle,
-		'guestInfo',
-		{
-			host: 'Marshall Sahlins',
-			gender: 'male',
-			guest: 'Bronisław Malinowski'
-		},
-		'en'
-	);
-	console.log(message); // "Marshall Sahlins invites Bronisław Malinowski to the party."
 });
 ```
 
 ### ICU 消息格式化
-
-**注意**：此功能要求已在应用程序中加载了相应的 [CLDR 数据](#loading-cldr-data)。
 
 `@dojo/framework/i18n` 使用 [Globalize.js](https://github.com/jquery/globalize/blob/master/doc/api/message/message-formatter.md) 进行 [ICU 消息格式化](http://userguide.icu-project.org/formatparse/messages)，因此 Globalize.js 提供的所有功能都可以通过 `@dojo/framework/i18n` 访问。
 
@@ -675,41 +564,24 @@ export default factory(function MyI18nWidget({ middleware: { i18n } }) {
 
 #### 直接使用 ICU 消息格式化功能
 
-可以直接使用 `formatMessage` 转换 ICU 格式的 `guestInfo` 消息，或者使用 `getMessageFormatter` 生成一个函数，该函数可以通过设置不同的选项来调用多次。注意，这两种方式创建或使用的格式化结果会被缓存，因此多次编译同一消息不会降低性能。
-
-因为 Globalize.js 格式化方法使用的是消息路径而不是消息字符串自身，因此也需要为 `@dojo/framework/i18n` 方法提供包，这样唯一标识符就可以解析为 Globalize.js 生态系统中的消息路径。如果提供了区域设置，则会使用相应区域的消息。否则使用当前区域设置。
+可以使用 [`localizeBundle`](#accessing-locale-message-bundles) 返回的 `format` 方法直接转换 ICU 格式的 `guestInfo` 消息。
 
 ```ts
-import i18n, { formatMessage, getMessageFormatter } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
 // 1. Load the messages for the locale.
-i18n(bundle, 'en').then(() => {
-	const message = formatMessage(
-		bundle,
-		'guestInfo',
-		{
-			host: 'Margaret Mead',
-			gender: 'female',
-			guest: 'Laura Nader',
-			guestCount: 20
-		},
-		'en'
-	);
+localizeBundle(bundle, { locale: 'en' }).then(({ format }) => {
+	const message = format('guestInfo', {
+		host: 'Margaret Mead',
+		gender: 'female',
+		guest: 'Laura Nader',
+		guestCount: 20
+	});
 	console.log(message); // "Margaret Mead invites Laura Nader and 19 other people to her party."
 
-	const formatter = getMessageFormatter(bundle, 'guestInfo', 'en');
 	console.log(
-		formatter({
-			host: 'Margaret Mead',
-			gender: 'female',
-			guest: 'Laura Nader',
-			guestCount: 20
-		})
-	); // "Margaret Mead invites Laura Nader and 19 other people to her party."
-
-	console.log(
-		formatter({
+		format('guestInfo', {
 			host: 'Marshall Sahlins',
 			gender: 'male',
 			guest: 'Bronisław Malinowski'
@@ -719,8 +591,6 @@ i18n(bundle, 'en').then(() => {
 ```
 
 ## 格式化日期和数字
-
-**注意**：此功能要求已在应用程序中加载了相应的 [CLDR 数据](#loading-cldr-data)。
 
 跟文本消息格式化功能一样，`@dojo/framework/i18n` 使用 Globalize.js 为日期、时间、货币、数字和单位提供特定区域的格式化。格式化工具本身是对 Globalize.js 相应函数的轻量级封装，这有助于确保 Dojo 生态系统的一致性，并避免直接使用 `Globalize` 对象。与文本消息的格式化不同，日期、数字和单位格式化不会缓存，因为它们有一组更加复杂的选项。因此，多次使用相同的输入执行各种“获取格式化函数”的方法不会返回完全相同的函数对象。
 
@@ -798,10 +668,10 @@ formatUnit(1000, 'meter', null, 'fr); // 1 000 mètres'
 例如：
 
 ```ts
-import i18n, { Messages } from '@dojo/framework/i18n/i18n';
+import { localizeBundle } from '@dojo/framework/i18n/i18n';
 import bundle from 'nls/main';
 
-i18n(bundle, 'fr').then(function(messages: Messages) {
+localizeBundle(bundle, { locale: 'fr' }).then(({ messages }) => {
 	console.log(messages.hello); // "Bonjour"
 	console.log(messages.goodbye); // "Au revoir"
 });
@@ -809,92 +679,9 @@ i18n(bundle, 'fr').then(function(messages: Messages) {
 
 如果将不支持的区域传给 `i18n`，则返回默认的消息。此外，如果特定区域的消息包中没有提供某些消息，也会返回默认值。因此，默认包应该包含所有特定区域包中使用的 _所有_ 消息 key。
 
-或者，将本地化消息传给 `setLocaleMessages` 函数来手动加载。这可以预先缓存特定区域的消息，这样就无需再发送 HTTP 请求来加载它们。特定区域的消息会合并到默认消息中，因此可接受传入一部分消息包：
-
-```ts
-import i18n, { setLocaleMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const partialMessages = { hello: 'Ahoj' };
-setLocaleMessages(bundle, partialMessages, 'cz');
-
-i18n(bundle, 'cz').then((messages) => {
-	console.log(messages.hello); // "Ahoj"
-	console.log(messages.goodbye); // "Goodbye" (defaults are used when not overridden)
-});
-```
-
-加载完包的本地化字典对象后，就会缓存起来，并使用 `getCachedMessages` 同步访问：
-
-```ts
-import { getCachedMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const messages = getCachedMessages(bundle, 'fr');
-console.log(messages.hello); // "Bonjour"
-console.log(messages.goodbye); // "Au revoir"
-```
-
-`getCachedMessages` 会查找包支持的 `locales`，以便决定是否返回默认消息。区域的值也已标准化，以便获取最接近区域的本地化消息。比如，如果支持 `fr` 区域，但是不支持 `fr-CA`，则 `getCachedMessages` 会返回 `fr` 区域对应的消息：
-
-```ts
-import { getCachedMessages } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/main';
-
-const frenchMessages = getCachedMessages(bundle, 'fr-CA');
-console.log(frenchMessages.hello); // "Bonjour"
-console.log(frenchMessages.goodbye); // "Au revoir"
-
-const madeUpLocaleMessages = getCachedMessages(bundle, 'made-up-locale');
-console.log(madeUpLocaleMessages.hello); // "Hello"
-console.log(madeUpLocaleMessages.goodbye); // "Goodbye"
-```
-
-如果确实需要，可以使用 `invalidate` 清除缓存。如果调用时传入了包，则只从缓存中移除该包中的消息。否则清除所有消息：
-
-```ts
-import i18n, { getCachedMessages, invalidate } from '@dojo/framework/i18n/main';
-import bundle from 'nls/main';
-
-i18n(bundle, 'ar').then(() => {
-	invalidate(bundle);
-	console.log(getCachedMessages(bundle, 'ar')); // undefined
-});
-```
-
 ## 确定当前区域
 
-可通过只读属性 `i18n.locale` 访问当前区域，该属性的值要么是使用 [`switchLocale` （见下文）](#changing-the-root-locale-and-observing-locale-changes)设置的值，要么是 `systemLocale`。
+`@dojo/framework/i18n/i18n` 公开了两个确定当前区域的方法：
 
-`systemLocale` 也是只读的，它的值由当前执行环境按照以下方式确定：
-
-|    环境 | 区域                           |
-| ------: | ------------------------------ |
-| Browser | 用户的默认语言设置             |
-| Node.js | Node.js 进程的 `LANG` 环境变量 |
-|  回退为 | `en`                           |
-
-## 更改根区域并监听区域的变化
-
-`switchLocale` 方法用于修改根区域，并通知给所有用 `observeLocale` 注册的消费者，`observeLocale` 会接收一个函数，该函数唯一的参数是新的区域字符串。例如，假设系统的区域设置为 `en-GB`：
-
-```ts
-import i18n, { observeLocale, switchLocale, systemLocale } from '@dojo/framework/i18n/i18n';
-import bundle from 'nls/bundle';
-
-// Register an event listener
-observeLocale((locale: string) => {
-	// handle locale change...
-});
-
-// Change the locale to German. The registered observer's callback will be called
-// with the new locale.
-switchLocale('de');
-
-// The locale is again switched to German, but since the current root locale is
-// already German, registered observers will not be notified.
-switchLocale('de');
-
-console.log(i18n.locale); // 'de'
-console.log(systemLocale); // 'en-GB' (the system locale does not change with the root locale)
-```
+-   `getCurrentLocale`， 用于获取应用程序当前使用的顶层区域设置。
+-   `getComputedLocale`， 支持的区域中包含用户的系统区域，则返回用户的系统区域设置；如果不支持用户的系统区域，则返回 `.dojorc` 中指定的默认区域。

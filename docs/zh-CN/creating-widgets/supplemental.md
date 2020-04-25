@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/creating-widgets/supplemental.md
-commit 64c125b997a939fbfa82b4210239a3121f7aeda8
+commit ce5482414e154b60c7eb261a32ee1f845df1542b
 -->
 
 部件是所有 Dojo 应用程序的基本构建要素。部件是主要的封装单元，它能表示从用户界面的单个元素，到更高级别的容器元素（如 Form 表单、段落、页面甚至是完整的应用程序）等所有内容。
@@ -297,6 +297,17 @@ const r = renderer(() => <MyComposingWidget />);
 r.mount({ domNode: dojoAppRootElement });
 ```
 
+## 卸载应用程序
+
+为了卸载（unmount）一个 Dojo 应用程序，`renderer` 提供了一个 `unmount` API，用于删除 DOM 节点，并对当前渲染的所有部件执行注册的所有销毁操作。
+
+```tsx
+const r = renderer(() => <App />);
+r.mount();
+// To unmount the dojo application
+r.unmount();
+```
+
 ## 向 VDOM 中加入外部的 DOM 节点
 
 Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序的 VDOM 中，用作渲染输出的一部分。这是通过 `@dojo/framework/core/vdom` 模块中的 `dom()` 工具方法完成的。它的工作原理与 [`v()`](/learn/creating-widgets/渲染部件#实例化-vdom-节点) 类似，但它的主参数使用的是现有的 DOM 节点而不是元素标记字符串。在返回 `VNode` 时，它会引用传递给它的 DOM 节点，而不是使用 `v()` 新创建的元素。
@@ -348,6 +359,60 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 
 > **注意：** 虚拟节点的 `key` 应在多次渲染函数的调用中保持一致。在每一次的渲染调用中，为相同的输出节点生成不同的 key，[在 Dojo 应用程序开发中被认为是反模式的](/learn/creating-widgets/最佳开发实践#虚拟-dom)，应当避免。
 
+## 定义部件的 `key`
+
+按惯例，Dojo 的渲染引擎在渲染时使用部件的 `key` 属性来唯一标识和跟踪部件。但是，为了确保 Dojo 渲染引擎在下一次渲染时重新创建部件，而不是重用之前的实例，更新 `key` 属性也是一种行之有效的方法。重新创建部件时，之前所有的状态都会被重置。当部件基于属性值来管理逻辑时，这种行为是非常有用的。
+
+Dojo 为部件的开发者提供一种机制，通过使用 `create()` 工厂的链接方法 `.key()` 将部件的属性关联为部件的标识。
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+
+interface MyWidgetProperties {
+	id: string;
+}
+
+const factory = create()
+	.properties<MyWidgetProperties>()
+	.key('id');
+```
+
+使用这个 factory 后，当 `id` 属性值改变时，Dojo 将重新创建部件实例。这个强大的特性让部件开发者能轻松做到，当定义的属性值变更后就重新创建部件，因此开发者不需要处理基于属性来刷新数据的复杂逻辑。
+
+```tsx
+import { create } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
+
+interface MyWidgetProperties {
+	id: string;
+}
+
+const factory = create({ icache })
+	.properties<MyWidgetProperties>()
+	.key('id');
+
+const MyWidget = factory(function MyWidget({ properties, middleware: { icache } }) {
+	const { id } = properties();
+	const data = icache.getOrSet('data', async () => {
+		const response = await fetch(`https://my-api/items/${id}`);
+		const json = await response.json();
+		return json.data;
+	});
+
+	if (!data) {
+		return <div>Loading Data...</div>;
+	}
+
+	return (
+		<div>
+			<ul>{data.map((item) => <li>{item}</li>)}</ul>
+		</div>
+	);
+});
+```
+
+本实例演示了基于 `id` 属性来获取数据。如果不使用 `.key('id')`，部件需要管理 `id` 属性变更逻辑。包括确定属性是否已真正修改，重新获取相关数据以及显示加载信息等。使用 `.key('id')` 能确保当 `id` 属性变化后，部件能重新创建，并重置所有状态，然后部件显示 “Loading Data...” 信息，并基于更新后的 `id` 获取数据（而不是使用 icache 缓存的数据）。
+
 ## 配置 `VNode`
 
 `VNodeProperties` 包含很多字段，是与 DOM 中的元素交互的重要 API。其中很多属性镜像了 [`HTMLElement`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement) 中的可用属性，包括指定各种 `oneventname` 的事件处理器。
@@ -357,6 +422,18 @@ Dojo 可以包装外部的 DOM 元素，有效地将它们引入到应用程序�
 ## 修改属性和差异检测
 
 Dojo 使用虚拟节点的属性来确定给定节点是否已更新，从而是否需要重新渲染。具体来说，它使用差异检测策略来比较前一次和当前渲染帧的属性集。如果在节点接收的最新属性集中检测到差异，则该节点将失效，并在下一个绘制周期中重新渲染。
+
+注意，在做属性差异检测时会忽略掉函数，因为常见模式是在每次渲染时都会实例化一个新的函数。考虑下面的示例，子部件 `ChildWidget` 会在每次渲染时接收一个新的 `onClick` 函数。
+
+```tsx
+export const ParentWidget(function ParentWidget() {
+  return <ChildWidget onClick={() => {
+      console.log('child widget clicked.');
+  }} />
+});
+```
+
+如果在差异检测期间对函数进行检测，这将导致每次渲染完 `ParentWidget` 后都重新渲染 `ChildWidget`。
 
 > **注意：** 属性更改检测是由框架内部管理的，依赖于在部件的渲染函数中声明的 VDOM 输出结构。试图保留属性的引用，并在正常的部件渲染周期之外对其进行修改，[在 Dojo 应用程序开发中被视为反模式的](/learn/creating-widgets/最佳开发实践)，应当避免。
 

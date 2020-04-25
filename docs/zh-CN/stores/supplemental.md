@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/stores/supplemental.md
-commit b8e0228c4025cb803d1c56521b054f6d5e6dfdb2
+commit b61c6ff6ce70fa52dc3545f473b13db0d20df50c
 -->
 
 ## `State` 对象

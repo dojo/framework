@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/building/introduction.md
-commit b8e0228c4025cb803d1c56521b054f6d5e6dfdb2
+commit 61abf42bce834d76e68b5c32e8d38c392f4858fd
 -->
 
 Dojo 提供了一套强大的命令行工具，让构建现代应用程序更加简单。
@@ -41,7 +41,7 @@ Dojo 的 CLI 工具支持多种构建目标或 `mode`。在 `dojo create app` �
 生成的 `package.json` 文件中包含 `dev` 脚本，它使用这些标记运行应用程序的构建版本，并监听到磁盘上的文件发生变化后会自动重新构建。
 
 ```bash
-> dojo build --mode dev --watch file --serve
+> dojo build --mode dev --watch --serve
 ```
 
 应用程序也会提供 source map。这样调试器就可以将构建的 JavaScript 代码映射回位于 `src/` 文件夹下原本的 TypeScript 代码上。

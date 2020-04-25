@@ -1,103 +1,572 @@
-# Dojo test harness
+# Test Renderer
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/testing/supplemental.md
-commit adada1e2395d7cdf5e322bb6006415eb50257691
+commit edbf841eb3b65c6862e3ed73ae9b6855e540281c
 -->
 
-当使用 `@dojo/framework/testing` 时，`harness()` 是最重要的 API，主要用于设置每一个测试并提供一个执行虚拟 DOM 断言和交互的上下文。目的在于当更新 `properties` 或 `children`，以及部件失效时，镜像部件的核心行为，并且不需要任何特殊或自定义逻辑。
+Dojo 提供了一个简单且类型安全的测试渲染器(test renderer)，以便于浅断言部件期望的输出结构和行为。测试渲染器的 API 在设计之初就鼓励将单元测试作为最佳实践，以确保 Dojo 应用程序的高度可靠性。
 
-## Harness API
+[断言](/learn/testing/test-renderer#assertion)和测试渲染器是结合断言结构中定义的[包装的测试节点](/learn/testing/test-renderer#wrapped-test-nodes)来使用的，确保在测试的整个生命周期类型安全。
 
-```ts
-interface HarnessOptions {
-	customComparators?: CustomComparator[];
-	middleware?: [MiddlewareResultFactory<any, any, any>, MiddlewareResultFactory<any, any, any>][];
+使用 assertion 定义部件的期望结构，然后将其传给测试渲染器的 `.expect()` 函数，测试渲染器就可执行断言。
+
+> src/MyWidget.spec.tsx
+
+```tsx
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
+
+import MyWidget from './MyWidget';
+
+const baseAssertion = assertion(() => (
+	<div>
+		<h1>Heading</h1>
+		<h2>Sub Heading</h2>
+		<div>Content</div>
+	</div>
+));
+
+const r = renderer(() => <MyWidget />);
+
+r.expect(baseAssertion);
+```
+
+## 包装的测试节点
+
+为了让测试渲染器和断言能在期望和实际的节点结构中标识节点，需要使用指定的包装节点。在期望的断言结构中，可使用包装的节点代替实际节点，从而保持所有正确的属性和子类型。
+
+使用 `@dojo/framework/testing/renderer` 中的 `wrap` 函数来创建一个包装的测试节点：
+
+> src/MyWidget.spec.tsx
+
+```tsx
+import { wrap } from '@dojo/framework/testing/renderer';
+
+import MyWidget from './MyWidget';
+
+// Create a wrapped node for a widget
+const WrappedMyWidget = wrap(MyWidget);
+
+// Create a wrapped node for a vnode
+const WrappedDiv = wrap('div');
+```
+
+测试渲染器使用测试节点在预期树结构中的位置，尝试对被测部件的实际输出上执行任意请求操作（`r.property()` 或 `r.child`）。如果包装的测试节点与实际输出数结构上对应的节点不匹配，则不会执行任何操作，并且断言会报错。
+
+**注意：** 包装的测试节点只能在断言中使用一次，如果在一次断言中多次检测到同一个测试节点，则会抛出错误，并导致测试失败。
+
+## 断言
+
+断言（assertion）用于构建预期的部件输出结构，以便在 `renderer.expect()` 中使用。断言公开了一系列 API，允许在不同的测试间调整期望的输出。
+
+假定有一个部件，它根据属性值渲染不同的内容：
+
+> src/Profile.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+
+import * as css from './Profile.m.css';
+
+export interface ProfileProperties {
+	username?: string;
 }
 
-harness(renderFunction: () => WNode, customComparators?: CustomComparator[]): Harness;
-harness(renderFunction: () => WNode, options?: HarnessOptions): Harness;
-```
+const factory = create().properties<ProfileProperties>();
 
--   `renderFunction`: 返回被测部件 WNode 的函数
--   [`customComparators`](/learn/testing/dojo-test-harness#自定义比较): 一组自定义的比较器描述符。每个描述符提供一个比较器函数，用于比较通过 `selector` 和 `property` 定位到的 `properties`
--   `options`: harness 的扩展选项，包括 `customComparators` 和一组 middleware/mocks 元组。
-
-harness 函数返回一个 `Harness` 对象，该对象提供了几个与被测部件交互的 API：
-
-`Harness`
-
--   [`expect`](/learn/testing/dojo-test-harness#harnessexpect): 对被测部件完整的渲染结果执行断言
--   [`expectPartial`](/learn/testing/dojo-test-harness#harnessexpectpartial): 对被测部件部分渲染结果执行断言
--   [`trigger`](/learn/testing/dojo-test-harness#harnesstrigger): 用于在被测部件的节点上触发函数
--   [`getRender`](/learn/testing/dojo-test-harness#harnessgetRender): 根据提供的索引，从 harness 中返回对应的渲染器
-
-使用 `@dojo/framework/core` 中的 `w()` 函数生成一个用于测试的部件是非常简单的：
-
-> tests/unit/widgets/MyWidget.tsx
-
-```ts
-const { describe, it } = intern.getInterface('bdd');
-import { create, tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
-
-const factory = create().properties<{ foo: string }>();
-
-const MyWidget = factory(function MyWidget({ properties, children }) {
-	const { foo } = properties();
-	return <div foo={foo}>{children}</div>;
+const Profile = factory(function Profile({ properties }) {
+	const { username = 'Stranger' } = properties();
+	return <h1 classes={[css.root]}>{`Welcome ${username}!`}</h1>;
 });
 
-const h = harness(() => <MyWidget foo="bar">child</MyWidget>);
+export default Profile;
 ```
 
-`renderFunction` 是延迟执行的，所以可在断言之间包含额外的逻辑来操作部件的 `properties` 和 `children`。
+使用 `@dojo/framework/testing/renderer#assertion` 创建一个断言：
 
-```ts
-describe('MyWidget', () => {
-	it('renders with foo correctly', () => {
-		let foo = 'bar';
+> src/Profile.spec.tsx
 
-		const h = harness(() => <MyWidget foo={foo}>child</MyWidget>);
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
-		h.expect(/** 断言包含 bar **/);
-		// 更新传入部件的属性值
-		foo = 'foo';
-		h.expect(/** 断言包含 foo **/);
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/Profile.m.css';
+
+// Create a wrapped node
+const WrappedHeader = wrap('h1');
+
+// Create an assertion using the `WrappedHeader` in place of the `h1`
+const baseAssertion = assertion(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
+
+describe('Profile', () => {
+	it('Should render using the default username', () => {
+		const r = renderer(() => <Profile />);
+
+		// Test against the base assertion
+		r.expect(baseAssertion);
 	});
 });
 ```
 
+为了测试将 `username` 属性传给 `Profile` 部件，我们创建一个新的断言，将其更新为期望的用户名。但是，随着部件功能的增加，为每个场景重新创建整个断言将变得冗长且难以维护，因为对部件结构中的任何更改都需要调整所有断言。
+
+为了避免维护开销并减少重复，断言提供了一套详尽的 API 来基于基础断言创建出变体。断言 API 使用包装的测试节点来标识要更新的期望结构中的节点。
+
+> src/Profile.spec.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+
+import Profile from '../../../src/widgets/Profile';
+import * as css from '../../../src/widgets/Profile.m.css';
+
+// Create a wrapped node
+const WrappedHeader = wrap('h1');
+
+// Create an assertion using the `WrappedHeader` in place of the `h1`
+const baseAssertion = assertion(() => <WrappedHeader classes={[css.root]}>Welcome Stranger!</WrappedHeader>);
+
+describe('Profile', () => {
+	it('Should render using the default username', () => {
+		const r = renderer(() => <Profile />);
+
+		// Test against the base assertion
+		r.expect(baseAssertion);
+	});
+
+	it('Should render using the passed username', () => {
+		const r = renderer(() => <Profile username="Dojo" />);
+
+		// Create a variation of the base assertion
+		const usernameAssertion = baseAssertion.setChildren(WrappedHeader, () => ['Dojo']);
+
+		// Test against the username assertion
+		r.expect(usernameAssertion);
+	});
+});
+```
+
+在基础断言之上创建新断言意味着，如果对默认的部件输出进行了更改，则只需修改基础断言，就可更新部件的所有测试。
+
+### 断言 API
+
+#### `assertion.setChildren()`
+
+返回一个新断言，根据传入的 `type` 值将新的子节点放在已存子节点之前，或者之后，或者替换掉子节点。
+
+```tsx
+.setChildren(
+  wrapped: Wrapped,
+  children: () => RenderResult,
+  type: 'prepend' | 'replace' | 'append' = 'replace'
+): AssertionResult;
+```
+
+#### `assertion.append()`
+
+返回一个新断言，将新的子节点追加在已存在子节点之后。
+
+```tsx
+.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+```
+
+#### `assertion.prepend()`
+
+返回一个新断言，将新的子节点放在已存在子节点之前。
+
+```tsx
+.prepend(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+```
+
+#### `assertion.replaceChildren()`
+
+返回一个新断言，使用新的子节点替换掉已存在的子节点。
+
+```tsx
+.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+```
+
+#### `assertion.insertSiblings()`
+
+返回一个新节点，根据传入的 `type` 值，将传入的子节点插入到 `before` 或 `after` 位置。
+
+```tsx
+.insertSiblings(
+  wrapped: Wrapped,
+  children: () => RenderResult,
+  type: 'before' | 'after' = 'before'
+): AssertionResult;
+```
+
+#### `assertion.insertBefore()`
+
+返回一个新节点，将传入的子节点插入到已存在子节点之前。
+
+```tsx
+.insertBefore(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+```
+
+#### `assertion.insertAfter()`
+
+R返回一个新节点，将传入的子节点插入到已存在子节点之后。
+
+```tsx
+.insertAfter(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+```
+
+#### `assertion.replace()`
+
+返回一个新断言，使用传入的节点替换掉已存在的节点。注意，如果你需要在断言或测试渲染器中与传入的新节点交互，则应传入包装的测试节点。
+
+```tsx
+.replace(wrapped: Wrapped, node: DNode): AssertionResult;
+```
+
+#### `assertion.remove()`
+
+返回一个新断言，其中完全删除指定的包装节点。
+
+```tsx
+.remove(wrapped: Wrapped): AssertionResult;
+```
+
+#### `assertion.setProperty()`
+
+返回一个新断言，为指定的包装节点设置新属性。
+
+```tsx
+.setProperty<T, K extends keyof T['properties']>(
+  wrapped: Wrapped<T>,
+  property: K,
+  value: T['properties'][K]
+): AssertionResult;
+```
+
+#### `assertion.setProperties()`
+
+返回一个新断言，为指定的节点设置多个新属性。
+
+```tsx
+.setProperties<T>(
+  wrapped: Wrapped<T>,
+  value: T['properties'] | PropertiesComparatorFunction<T['properties']>
+): AssertionResult;
+```
+
+可以设置一个函数来代替属性对象，以根据实际属性返回期望的属性。
+
+## 触发属性
+
+除了断言部件的输出结构外，还可以使用 `renderer.property()` 函数测试部件行为。`property()` 函数接收一个[包装的测试节点]()和一个在下一次调用 `expect()` 之前会被调用的属性 key。
+
+> src/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import icache from '@dojo/framework/core/middleware/icache';
+import { RenderResult } from '@dojo/framework/core/interfaces';
+
+import MyWidgetWithChildren from './MyWidgetWithChildren';
+
+const factory = create({ icache }).properties<{ onClick: () => void }>();
+
+export const MyWidget = factory(function MyWidget({ properties, middleware: { icache } }) {
+	const count = icache.getOrSet('count', 0);
+	return (
+		<div>
+			<h1>Header</h1>
+			<span>{`${count}`}</span>
+			<button
+				onclick={() => {
+					icache.set('count', icache.getOrSet('count', 0) + 1);
+					properties().onClick();
+				}}
+			>
+				Increase Counter!
+			</button>
+		</div>
+	);
+});
+```
+
+> src/MyWidget.spec.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+import * as sinon from 'sinon';
+
+import MyWidget from './MyWidget';
+
+// Create a wrapped node for the button
+const WrappedButton = wrap('button');
+
+const WrappedSpan = wrap('span');
+
+const baseAssertion = assertion(() => (
+	<div>
+		<h1>Header</h1>
+		<WrappedSpan>0</WrappedSpan>
+		<WrappedButton
+			onclick={() => {
+				icache.set('count', icache.getOrSet('count', 0) + 1);
+				properties().onClick();
+			}}
+		>
+			Increase Counter!
+		</WrappedButton>
+	</div>
+));
+
+describe('MyWidget', () => {
+	it('render', () => {
+		const onClickStub = sinon.stub();
+		const r = renderer(() => <MyWidget onClick={onClickStub} />);
+
+		// assert against the base assertion
+		r.expect(baseAssertion);
+
+		// register a call to the button's onclick property
+		r.property(WrappedButton, 'onclick');
+
+		// create a new assertion with the updated count
+		const counterAssertion = baseAssertion.setChildren(WrappedSpan, () => ['1']);
+
+		// expect against the new assertion, the property will be called before the test render
+		r.expect(counterAssertion);
+
+		// once the assertion is complete, check that the stub property was called
+		assert.isTrue(onClickStub.calledOnce);
+	});
+});
+```
+
+可在函数名之后传入函数的参数，如 `r.property(WrappedButton, 'onclick', { target: { value: 'value' }})`。当函数有多个参数时，逐个传入即可 `r.property(WrappedButton, 'onclick', 'first-arg', 'second-arg', 'third-arg')`。
+
+## 断言函数型的子节点
+
+要断言函数型子节点的输出内容，测试渲染器需要理解如何解析子节点的渲染函数。包括传入任意期望的注入值。
+
+测试渲染器的 `renderer.child()` 函数能够解析子节点，以便将解析结果包含到断言中。使用 `.child()` 函数时，需要包装使用了函数型子节点的部件，以在断言中使用，然后将包装的节点传给 `.child` 函数。
+
+> src/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { RenderResult } from '@dojo/framework/core/interfaces';
+
+import MyWidgetWithChildren from './MyWidgetWithChildren';
+
+const factory = create().children<(value: string) => RenderResult>();
+
+export const MyWidget = factory(function MyWidget() {
+	return (
+		<div>
+			<h1>Header</h1>
+			<MyWidgetWithChildren>{(value) => <div>{value}</div>}</MyWidgetWithChildren>
+		</div>
+	);
+});
+```
+
+> src/MyWidget.spec.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+
+import MyWidgetWithChildren from './MyWidgetWithChildren';
+import MyWidget from './MyWidget';
+
+// Create a wrapped node for the widget with functional children
+const WrappedMyWidgetWithChildren = wrap(MyWidgetWithChildren);
+
+const baseAssertion = assertion(() => (
+    <div>
+      <h1>Header</h1>
+      <WrappedMyWidgetWithChildren>{() => <div>Hello!</div>}</MyWidgetWithChildren>
+    </div>
+));
+
+describe('MyWidget', () => {
+    it('render', () => {
+        const r = renderer(() => <MyWidget />);
+
+        // instruct the test renderer to resolve the children
+        // with the provided params
+        r.child(WrappedMyWidgetWithChildren, ['Hello!']);
+
+        r.expect(baseAssertion);
+    });
+});
+```
+
+## 自定义属性比较器
+
+在某些情况下，测试期间无法得知属性的确切值，所以需要使用自定义比较器。自定义比较器用于包装的部件，结合 `@dojo/framework/testing/renderer#compare` 函数可替换部件或节点属性。
+
+```tsx
+compare(comparator: (actual) => boolean)
+```
+
+```tsx
+import { assertion, wrap, compare } from '@dojo/framework/testing/renderer';
+
+// create a wrapped node the `h1`
+const WrappedHeader = wrap('h1');
+
+const baseAssertion = assertion(() => (
+	<div>
+		<WrappedHeader id={compare((actual) => typeof actual === 'string')}>Header!</WrappedHeader>
+	</div>
+));
+```
+
+## 断言时忽略节点
+
+当处理渲染多个项的部件时，例如一个列表，可能需要让测试渲染器忽略输出中的一些内容。比如只断言第一个和最后一项是有效的，然后忽略这两项中间的所有项的详细信息，只是简单断言期望的类型。要让测试渲染器做到这一点，需使用 `ignore` 函数让测试渲染器忽略节点，只检查节点类型是否相同即可，即匹配标签名或部件的工厂或构造器。
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, ignore } from '@dojo/framework/testing/renderer';
+
+const factory = create().properties<{ items: string[] }>();
+
+const ListWidget = create(function ListWidget({ properties }) {
+	const { items } = properties();
+	return (
+		<div>
+			<ul>{items.map((item) => <li>{item}</li>)}</ul>
+		</div>
+	);
+});
+
+const r = renderer(() => <ListWidget items={['a', 'b', 'c', 'd']} />);
+const IgnoredItem = ignore('li');
+const listAssertion = assertion(() => (
+	<div>
+		<ul>
+			<li>a</li>
+			<IgnoredItem />
+			<IgnoredItem />
+			<li>d</li>
+		</ul>
+	</div>
+));
+r.expect(listAssertion);
+```
+
 ## Mocking 中间件
 
-当初始化 harness 时，可将 mock 中间件指定为 `HarnessOptions` 值的一部分。Mock 中间件被定义为由原始的中间件和 mock 中间件的实现组成的元组。Mock 中间件的创建方式与其他中间件相同。
+当初始化测试渲染器时，可将 mock 中间件指定为 `RendererOptions` 值的一部分。Mock 中间件被定义为由原始的中间件和 mock 中间件实现组成的元组。Mock 中间件的创建方式与其他中间件相同。
 
-```ts
+```tsx
 import myMiddleware from './myMiddleware';
 import myMockMiddleware from './myMockMiddleware';
-import harness from '@dojo/framework/testing/harness';
+import renderer from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
 describe('MyWidget', () => {
 	it('renders', () => {
-		const h = harness(() => <MyWidget />, { middleware: [[myMiddleware, myMockMiddleware]] });
-		h.expect(/** 断言执行的是 mock 的中间件而不是实际的中间件 **/);
+		const r = renderer(() => <MyWidget />, { middleware: [[myMiddleware, myMockMiddleware]] });
+
+		h
+			.expect
+			/** 断言执行的是 mock 的中间件而不是实际的中间件 **/
+			();
 	});
 });
 ```
 
-Harness 会自动 mock 很多核心中间件，并注入到任何需要他们的中间件中：
+测试渲染器会自动 mock 很多核心中间件，并注入到任何需要他们的中间件中：
 
--   invalidator
--   setProperty
--   destroy
+-   `invalidator`
+-   `setProperty`
+-   `destroy`
 
-### Dojo mock 中间件
+此外，当测试使用了 Dojo 中间件的部件时，还可以使用很多对应的 mock 中间件。有关已提供的 mock 中间件的更多信息，请查看 [mocking](/learn/testing/mocking#provided-middleware-mocks)。
 
-当测试使用了 Dojo 中间件的部件时，有很多 mock 中间件可以使用。Mock 会导出一个 factory，该 factory 会创建一个受限作用域的 mock 中间件，会在每个测试中使用。
+# Mocking
 
-#### Mock `breakpoint` 中间件
+一种常见的测试类型是验证部件的用户界面是否按预期渲染，而不必关心部件的底层业务逻辑。但这些测试可能希望断言一些场景，如单击按钮以调用部件的属性方法，并不关心属性方法的实现逻辑，只是希望按预期调用了接口。在这种情况下，可借助类似 [Sinon] 的 mock 库。
+
+> src/widgets/Action.tsx
+
+```ts
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Button from '@dojo/widgets/button';
+
+import * as css from './Action.m.css';
+
+const factory = create().properties<{ fetchItems: () => void }>();
+
+const Action = factory(function Action({ properties }) {
+	return (
+		<div classes={[css.root]}>
+			<Button key="button" onClick={() => properties().fetchItems()}>
+				Fetch
+			</Button>
+		</div>
+	);
+});
+
+export default Action;
+```
+
+测试当单击按钮后，会调用 `properties().fetchItems` 方法。
+
+> tests/unit/widgets/Action.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+
+import Action from '../../../src/widgets/Action';
+import * as css from '../../../src/widgets/Action.m.css';
+
+import Button from '@dojo/widgets/button';
+
+import { stub } from 'sinon';
+import { assert } from 'chai';
+
+describe('Action', () => {
+	const fetchItems = stub();
+	it('can fetch data on button click', () => {
+		const WrappedButton = wrap(Button);
+		const baseAssertion = assertion(() => (
+			<div classes={[css.root]}>
+				<WrappedButton key="button" onClick={() => {}}>
+					Fetch
+				</WrappedButton>
+			</div>
+		));
+		const r = renderer(() => <Action fetchItems={fetchItems} />);
+		r.expect(baseAssertion);
+		r.property(WrappedButton, 'onClick');
+		r.expect(baseAssertion);
+		assert.isTrue(fetchItems.calledOnce);
+	});
+});
+```
+
+在这种情况下，为 Action 部件的 `fetchItems` 方法提供一个 mock 实现，该方法用于获取数据项。然后使用 `WrappedButton` 定位到按钮，并触发按钮的 `onClick` 事件，然后校验 `fetchItems` 方法仅被调用过一次。
+
+要了解更多 mocking 信息，请阅读 [Sinon] 文档。
+
+## 内置的 mock 中间件
+
+有很多 mock 的中间件支持测试使用了相关 Dojo 中间件的部件。Mock 会导出一个 factory，该 factory 创建一个受限作用域的 mock 中间件，会在每个测试中使用。
+
+### Mock `breakpoint` 中间件
 
 使用 `@dojo/framework/testing/mocks/middlware/breakpoint` 中的 `createBreakpointMock` 可手动控制 resize 事件来触发断点测试。
 
@@ -125,50 +594,105 @@ export default factory(function Breakpoint({ middleware: { breakpoint } }) {
 });
 ```
 
-使用 mock 的 breakpoint 中间件上的 `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` 方法，测试中可以使用给定的值显式触发一个 resize 事件：
+使用 mock 的 `breakpoint` 中间件上的 `mockBreakpoint(key: string, contentRect: Partial<DOMRectReadOnly>)` 方法，测试可以显式触发一个 resize 事件：
 
 > tests/unit/Breakpoint.tsx
 
 ```tsx
 const { describe, it } = intern.getInterface('bdd');
 import { tsx } from '@dojo/framework/core/vdom';
-import harness from '@dojo/framework/testing/harness';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import breakpoint from '@dojo/framework/core/middleware/breakpoint';
 import createBreakpointMock from '@dojo/framework/testing/mocks/middleware/breakpoint';
 import Breakpoint from '../../src/Breakpoint';
 
 describe('Breakpoint', () => {
 	it('resizes correctly', () => {
+		const WrappedHeader = wrap('h1');
 		const mockBreakpoint = createBreakpointMock();
-
-		const h = harness(() => <Breakpoint />, {
-			middleware: [[breakpoint, mockBreakpoint]]
-		});
-		h.expect(() => (
+		const baseAssertion = assertion(() => (
 			<div key="root">
-				<h1>Header</h1>
+				<WrappedHeader>Header</WrappedHeader>
 				<div>Longer description</div>
 			</div>
 		));
+		const r = renderer(() => <Breakpoint />, {
+			middleware: [[breakpoint, mockBreakpoint]]
+		});
+		r.expect(baseAssertion);
 
 		mockBreakpoint('root', { breakpoint: 'LG', contentRect: { width: 800 } });
 
-		h.expect(() => (
-			<div key="root">
-				<h1>Header</h1>
-				<h2>Subtitle</h2>
-				<div>Longer description</div>
-			</div>
-		));
+		r.expect(baseAssertion.insertAfter(WrappedHeader, () => [<h2>Subtitle</h2>]);
 	});
 });
 ```
 
-#### Mock `iCache` 中间件
+### Mock `focus` 中间件
+
+使用 `@dojo/framework/testing/middleware/focus` 中的 `createFocusMock` 可手动控制 `focus` 中间件何时报告指定 key 的节点获取了焦点。
+
+考虑下面的部件：
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import focus, { FocusProperties } from '@dojo/framework/core/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+export interface FormWidgetProperties extends FocusProperties {}
+
+const factory = create({ focus }).properties<FormWidgetProperties>();
+
+export const FormWidget = factory(function FormWidget({ middleware: { focus } }) {
+	return (
+		<div key="wrapper" classes={[css.root, focus.isFocused('text') ? css.focused : null]}>
+			<input type="text" key="text" value="focus me" />
+		</div>
+	);
+});
+```
+
+通过调用 `focusMock(key: string | number, value: boolean)`，就可以在测试时控制 `focus` 中间件中 `isFocused` 方法的返回值。
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
+import focus from '@dojo/framework/core/middleware/focus';
+import createFocusMock from '@dojo/framework/testing/mocks/middleware/focus';
+import * as css from './FormWidget.m.css';
+
+describe('Focus', () => {
+	it('adds a "focused" class to the wrapper when the input is focused', () => {
+		const focusMock = createFocusMock();
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => (
+			<WrappedRoot key="wrapper" classes={[css.root, null]}>
+				<input type="text" key="text" value="focus me" />
+			</WrappedRoot>
+		));
+		const r = renderer(() => <FormWidget />, {
+			middleware: [[focus, focusMock]]
+		});
+
+		r.expect(baseAssertion);
+
+		focusMock('text', true);
+
+		r.expect(baseAssertion.setProperty(WrappedRoot, 'classes', [css.root, css.focused]));
+	});
+});
+```
+
+### Mock `iCache` 中间件
 
 使用 `@dojo/framework/testing/mocks/middleware/icache` 中的 `createICacheMiddleware`，能让测试代码直接访问缓存中的项，而此 mock 为被测的小部件提供了足够的 icache 功能。当使用 `icache` 异步获取数据时特别有用。直接访问缓存让测试可以 `await` 部件，就如 `await` promise 一样。
 
-考虑以下部件，从一个 API 中获取数据：
+考虑以下部件，从一个 API 获取数据：
 
 > src/MyWidget.tsx
 
@@ -189,13 +713,13 @@ export default factory(function MyWidget({ middleware: { icache } }) {
 });
 ```
 
-使用 mock 的 icache 中间件测试异步结果很简单：
+使用 mock 的 `icache` 中间件测试异步结果很简单：
 
 > tests/unit/MyWidget.tsx
 
 ```tsx
 const { describe, it, afterEach } = intern.getInterface('bdd');
-import harness from '@dojo/framework/testing/harness';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 import { tsx } from '@dojo/framework/core/vdom';
 import * as sinon from 'sinon';
 import global from '@dojo/framework/shim/global';
@@ -209,21 +733,23 @@ describe('MyWidget', () => {
 	});
 
 	it('test', async () => {
-		// stub 一个 fetch 调用，让返回一个已知的值
+		// stub the fetch call to return a known value
 		global.fetch = sinon.stub().returns(Promise.resolve({ json: () => Promise.resolve('api data') }));
 
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => <WrappedRoot>Loading</WrappedRoot>);
 		const mockICache = createICacheMock();
-		const h = harness(() => <Home />, { middleware: [[icache, mockICache]] });
-		h.expect(() => <div>Loading</div>);
+		const r = renderer(() => <Home />, { middleware: [[icache, mockICache]] });
+		r.expect(baseAssertion);
 
-		// 等待模拟缓存的异步方法
+		// await the async method passed to the mock cache
 		await mockICache('users');
-		h.expect(() => <pre>api data</pre>);
+		r.expect(baseAssertion.setChildren(WrappedRoot, () => ['api data']));
 	});
 });
 ```
 
-#### Mock `intersection` 中间件
+### Mock `intersection` 中间件
 
 使用 `@dojo/framework/testing/mocks/middleware/intersection` 中的 `createIntersectionMock` 可 mock 一个 intersection 中间件。要设置从 intersection mock 中返回的期望值，需要调用创建的 mock intersection 中间件，并传入 `key` 和期望的 intersection 详情。
 
@@ -241,38 +767,41 @@ const App = factory(({ middleware: { intersection } }) => {
 });
 ```
 
-使用 mock intersection 中间件：
+使用 mock 的 `intersection` 中间件：
 
 ```tsx
 import { tsx } from '@dojo/framework/core/vdom';
 import createIntersectionMock from '@dojo/framework/testing/mocks/middleware/intersection';
 import intersection from '@dojo/framework/core/middleware/intersection';
-import harness from '@dojo/framework/testing/harness';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
 describe('MyWidget', () => {
 	it('test', () => {
-		// 创建一个 mock intersection 的中间件
+		// create the intersection mock
 		const intersectionMock = createIntersectionMock();
-		// 将 intersection mock 中间件传给 harness，
-		// 这样 harness 就知道替换掉原来的中间件
-		const h = harness(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+		// pass the intersection mock to the renderer so it knows to
+		// replace the original middleware
+		const r = renderer(() => <App key="app" />, { middleware: [[intersection, intersectionMock]] });
+		const WrappedRoot = wrap('div');
+		const assertion = assertion(() => (
+			<WrappedRoot key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</WrappedRoot>
+		));
+		// call renderer.expect as usual, asserting the default response
+		r.expect(assertion);
 
-		// 像平常一样调用 harness.expect 来断言默认的响应
-		h.expect(() => <div key="root">{`{"intersectionRatio":0,"isIntersecting":false}`}</div>);
-
-		// 使用 mock 的 intersection 中间件，通过指定 key 值，
-		// 设置期望 intersection 中间件返回的结果
+		// use the intersection mock to set the expected return
+		// of the intersection middleware by key
 		intersectionMock('root', { isIntersecting: true });
 
-		// 用更新后的期望值再断言一次
-		h.expect(() => <div key="root">{`{"isIntersecting": true }`}</div>);
+		// assert again with the updated expectation
+		r.expect(assertion.setChildren(WrappedRoot, () => [`{"isIntersecting": true }`]));
 	});
 });
 ```
 
-#### Mock `node` 中间件
+### Mock `node` 中间件
 
 使用 `@dojo/framework/testing/mocks/middleware/node` 中的 `createNodeMock` 可 mock 一个 node 中间件。要设置从 node mock 中返回的期望值，需要调用创建的 mock node 中间件，并传入 `key` 和期望的 DOM node。
 
@@ -289,7 +818,7 @@ const domNode = {};
 mockNode('key', domNode);
 ```
 
-#### Mock `resize` 中间件
+### Mock `resize` 中间件
 
 使用 `@dojo/framework/testing/mocks/middleware/resize` 中的 `createResizeMock` 可 mock 一个 resize 中间件。要设置从 resize mock 中返回的期望值，需要调用创建的 mock resize 中间件，并传入 `key` 和期望的容纳内容的矩形区域。
 
@@ -313,13 +842,13 @@ export const MyWidget = factory(function MyWidget({ middleware }) => {
 });
 ```
 
-使用 mock resize 中间件：
+使用 mock 的 `resize` 中间件：
 
 ```tsx
 import { tsx } from '@dojo/framework/core/vdom';
 import createResizeMock from '@dojo/framework/testing/mocks/middleware/resize';
 import resize from '@dojo/framework/core/middleware/resize';
-import harness from '@dojo/framework/testing/harness';
+import renderer, { assertion, wrap } from '@dojo/framework/testing/renderer';
 
 import MyWidget from './MyWidget';
 
@@ -327,26 +856,29 @@ describe('MyWidget', () => {
 	it('test', () => {
 		// 创建一个 mock resize 的中间件
 		const resizeMock = createResizeMock();
-		// 将 resize mock 中间件传给 harness，
-		// 这样 harness 就知道替换掉原来的中间件
-		const h = harness(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
+		// 将 resize mock 中间件传给测试渲染器，
+		// 这样测试渲染器就知道要替换掉原来的中间件
+		const r = renderer(() => <App key="app" />, { middleware: [[resize, resizeMock]] });
 
-		// 像平常一样调用 harness.expect
-		h.expect(() => <div key="root">null</div>);
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => <div key="root">null</div>);
+
+		// 像平常一样调用 renderer.expect
+		r.expect(baseAssertion);
 
 		// 使用 mock 的 resize 中间件，通过指定 key 值，
 		// 设置期望 resize 中间件返回的结果
 		resizeMock('root', { width: 100 });
 
 		// 用更新后的期望值再断言一次
-		h.expect(() => <div key="root">{`{"width":100}`}</div>);
+		r.expect(baseAssertion.setChildren(WrappedRoot, () [`{"width":100}`]);)
 	});
 });
 ```
 
-#### Mock `Store` 中间件
+### Mock `Store` 中间件
 
-使用 `@dojo/framework/testing/mocks/middleware/store` 中的 `createMockStoreMiddleware` 可 mock 一个强类型的 store 中间件，也支持 mock process。为了 mock 一个 store 的 process，可传入一个由原始 store process 和 stub process 组成的元组。中间件会改为调用 stub，而不是调用原始的 process。如果没有传入 stub，中间件将停止调用所有的 process。
+使用 `@dojo/framework/testing/mocks/middleware/store` 中的 `createMockStoreMiddleware` 可 mock 一个强类型的 store 中间件，也支持 mock process。为了 mock 一个 store 的 process，可传入一个由原始 store process 和 stub process 组成的元组。中间件会改为调用 stub，而不是调用原始的 process。如果没有传入 stub，中间件将不会调用所有的 process。
 
 要修改 mock store 中的值，需要调用 `mockStore`，并传入一个返回一组 store 操作的函数。这将注入 store 的 `path` 函数，以创建指向需要修改的状态的指针。
 
@@ -387,14 +919,14 @@ export default factory(function MyWidget({ properties, middleware: store }) {
 });
 ```
 
-使用 mock store 中间件：
+使用 mock 的 `store` 中间件：
 
 > tests/unit/MyWidget.tsx
 
 ```tsx
 import { tsx } from '@dojo/framework/core/vdom'
 import createMockStoreMiddleware from '@dojo/framework/testing/mocks/middleware/store';
-import harness from '@dojo/framework/testing/harness';
+import renderer from '@dojo/framework/testing/renderer';
 
 import { myProcess } from './processes';
 import MyWidget from './MyWidget';
@@ -414,39 +946,108 @@ describe('MyWidget', () => {
 		 // 为 mock 的 process 传入一组 `[originalProcess, stub]` 元组
 		 // 将忽略未传入 stub/mock 的 process
          const mockStore = createMockStoreMiddleware<MyState>([[myProcess, myProcessStub]]);
-         const h = harness(() => <MyWidget {...properties} />, {
+         const r = renderer(() => <MyWidget {...properties} />, {
              middleware: [[store, mockStore]]
          });
-         h.expect(/* 断言 `Loading` 的断言模板 */);
+         r.expect(/* 断言 `Loading`*/);
 
 		 // 重新断言 stubbed process
          expect(myProcessStub.calledWith({ id: 'id' })).toBeTruthy();
 
          mockStore((path) => [replace(path('isLoading', true)]);
-         h.expect(/* 断言 `Loading` 的断言模板 */);
+         r.expect(/* 断言 `Loading`*/);
          expect(myProcessStub.calledOnce()).toBeTruthy();
 
 		 // 使用 mock 的 store 来在 store 上应用操作
          mockStore((path) => [replace(path('details', { id: 'id' })]);
          mockStore((path) => [replace(path('isLoading', true)]);
 
-         h.expect(/* 断言 `ShowDetails` 的断言模板 */);
+         r.expect(/* 断言 `ShowDetails` */);
 
          properties.id = 'other';
-         h.expect(/* 断言 `Loading` 的断言模板 */);
+         r.expect(/* 断言 `Loading`*/);
          expect(myProcessStub.calledTwice()).toBeTruthy();
          expect(myProcessStub.secondCall.calledWith({ id: 'other' })).toBeTruthy();
          mockStore((path) => [replace(path('details', { id: 'other' })]);
-         h.expect(/* 断言 `ShowDetails` 的断言模板 */);
+         r.expect(/* 断言 `ShowDetails`*/);
      });
 });
 ```
 
-#### 自定义模拟的中间件
+### Mock `validity` 中间件
 
-已提供的模拟（mock）并未覆盖所有的测试场景。也可以创建自定义的模拟中间件。模拟中间件应该提供一个可重载的接口。无参的重载应该返回中间件的实现，它将被注入到被测的部件中。根据需要创建其他重载，以便为测试提供接口。
+使用 `@dojo/framework/testing/mocks/middleware/validity` 中的 `createValidityMock` 可 mock 一个 validity 中间件，可以在测试用控制 `get` 方法的返回值。
 
-例如，考虑框架中的 `icache` 模拟。这个模拟提供了以下重载：
+考虑以下示例：
+
+> src/FormWidget.tsx
+
+```tsx
+import { tsx, create } from '@dojo/framework/core/vdom';
+import validity from '@dojo/framework/core/middleware/validity';
+import icache from '@dojo/framework/core/middleware/icache';
+import * as css from './FormWidget.m.css';
+
+const factory = create({ validity, icache });
+
+export const FormWidget = factory(function FormWidget({ middleware: { validity, icache } }) {
+	const value = icache.getOrSet('value', '');
+	const { valid, message } = validity.get('input', value);
+
+	return (
+		<div key="root" classes={[css.root, valid === false ? css.invalid : null]}>
+			<input type="email" key="input" value={value} onchange={(value) => icache.set('value', value)} />
+			{message ? <p key="validityMessage">{message}</p> : null}
+		</div>
+	);
+});
+```
+
+使用 `validityMock(key: string, value: { valid?: boolean, message?: string; })`，可以在测试中控制 `validity` mock 中 `get` 方法的返回值。
+
+> tests/unit/FormWidget.tsx
+
+```tsx
+const { describe, it } = intern.getInterface('bdd');
+import { tsx } from '@dojo/framework/core/vdom';
+import renderer, { assertion } from '@dojo/framework/testing/renderer';
+import validity from '@dojo/framework/core/middleware/validity';
+import createValidityMock from '@dojo/framework/testing/mocks/middleware/validity';
+import * as css from './FormWidget.m.css';
+
+describe('Validity', () => {
+	it('adds the "invalid" class to the wrapper when the input is invalid and displays a message', () => {
+		const validityMock = createValidityMock();
+
+		const r = renderer(() => <FormWidget />, {
+			middleware: [[validity, validityMock]]
+		});
+
+		const WrappedRoot = wrap('div');
+		const baseAssertion = assertion(() => (
+			<WrappedRoot key="root" classes={[css.root, null]}>
+				<input type="email" key="input" value="" onchange={() => {}} />
+			</WrappedRoot>
+		));
+
+		r.expect(baseAssertion);
+
+		validityMock('input', { valid: false, message: 'invalid message' });
+
+		const invalidAssertion = baseAssertion
+			.append(WrappedRoot, () => [<p key="validityMessage">invalid message</p>])
+			.setProperty(WrappedRoot, 'classes', [css.root, css.invalid]);
+
+		r.expect(invalidAssertion);
+	});
+});
+```
+
+### 自定义 Mock 中间件
+
+已提供的 mock 中间件并未覆盖所有的测试场景。也可以创建自定义的 mock 中间件。模拟中间件应该提供一个可重载的接口。无参的重载应该返回中间件的实现，它将被注入到被测的部件中。根据需要创建其他重载，以便为测试提供接口。
+
+例如，参考框架中的 `icache` mock。这个 mock 提供了以下重载：
 
 ```ts
 function mockCache(): MiddlewareResult<any, any, any>;
@@ -454,7 +1055,7 @@ function mockCache(key: string): Promise<any>;
 function mockCache(key?: string): Promise<any> | MiddlewareResult<any, any, any>;
 ```
 
-接收 `key` 的重载让测试可以直接访问缓存中的项。这个简短的示例演示了模拟如何同时包含中间件实现和测试接口；这使得模拟（mock）可以在部件和测试之间的搭起桥梁。
+接收 `key` 的重载让测试可以直接访问缓存中的项。这个简短的示例演示了模拟如何同时包含中间件实现和测试接口；这使得 mock 可以在部件和测试之间的搭起桥梁。
 
 ```ts
 export function createMockMiddleware() {
@@ -472,7 +1073,7 @@ export function createMockMiddleware() {
 	function mockMiddleware(id: string): any;
 	function mockMiddleware(id?: string): any | Middleware<any, any, any> {
 		if (id) {
-			// 直接访问 `shardData`
+			// 直接访问 `sharedData`
 			return sharedData.get(id);
 		} else {
 			// 向部件提供中间件的实现
@@ -484,356 +1085,6 @@ export function createMockMiddleware() {
 
 在 [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) 中有很多完整的模拟示例可供参考。
 
-## 自定义比较
-
-在某些情况下，我们在测试期间无法得知属性的确切值，所以需要使用自定义比较描述符(custom compare descriptor)。
-
-描述符中有一个用于定位要检查的虚拟节点的 [`selector`](/learn/testing/dojo-test-harness#selectors)，一个应用自定义比较的属性名和一个接收实际值并返回一个 boolean 类型断言结果的比较器函数。
-
-```ts
-const compareId = {
-	selector: '*', // 所有节点
-	property: 'id',
-	comparator: (value: any) => typeof value === 'string' // 检查属性值是 string 类型
-};
-
-const h = harness(() => w(MyWidget, {}), [compareId]);
-```
-
-对于所有的断言，返回的 `harness` API 将只对 `id` 属性使用 `comparator` 进行测试，而不是标准的相等测试。
-
-## Selectors
-
-`harness` API 支持 CSS style 选择器概念，来定位要断言和操作的虚拟 DOM 中的节点。查看[支持的选择器的完整列表](https://github.com/fb55/css-select#supported-selectors)以了解更多信息。
-
-除了标准 API 之外还提供：
-
--   支持将定位节点 `key` 属性简写为 `@` 符号
--   当使用标准的 `.` 来定位样式类时，使用 `classes` 属性而不是 `class` 属性
-
-## `harness.expect`
-
-测试中最常见的需求是断言部件的 `render` 函数的输出结构。`expect` 接收一个返回被测部件期望的渲染结果的函数作为参数。
-
-```ts
-expect(expectedRenderFunction: () => DNode | DNode[], actualRenderFunction?: () => DNode | DNode[]);
-```
-
--   `expectedRenderFunction`: 返回查询节点期望的 `DNode` 结构的函数
--   `actualRenderFunction`: 一个可选函数，返回被断言的实际 `DNode` 结构
-
-```ts
-h.expect(() =>
-	<div key="foo">
-		<Widget key="child-widget" />
-		text node
-		<span classes={[class]} />
-	</div>
-);
-```
-
-`expect` 也可以接收第二个可选参数，返回要断言的渲染结果的函数。
-
-```ts
-h.expect(() => <div key="foo" />, () => <div key="foo" />);
-```
-
-如果实际的渲染输出和期望的渲染输出不同，就会抛出一个异常，并使用结构化的可视方法，用 `(A)` （实际值）和 `(E)` （期望值）指出所有不同点。
-
-出错后的断言输出示例：
-
-```ts
-v('div', {
-	'classes': [
-		'root',
-(A)		'other'
-(E)		'another'
-	],
-	'onclick': 'function'
-}, [
-	v('span', {
-		'classes': 'span',
-		'id': 'random-id',
-		'key': 'label',
-		'onclick': 'function',
-		'style': 'width: 100px'
-	}, [
-		'hello 0'
-	])
-	w(ChildWidget, {
-		'id': 'random-id',
-		'key': 'widget'
-	})
-	w('registry-item', {
-		'id': true,
-		'key': 'registry'
-	})
-])
-```
-
-## `harness.trigger`
-
-`harness.trigger()` 在 `selector` 定位的节点上调用 `name` 指定的函数。
-
-```ts
-interface FunctionalSelector {
-	(node: VNode | WNode): undefined | Function;
-}
-
-trigger(selector: string, functionSelector: string | FunctionalSelector, ...args: any[]): any;
-```
-
--   `selector`: 用于查找目标节点的选择器
--   `functionSelector`: 要么是从节点的属性中找到的被调用的函数名，或者是从节点的属性中返回一个函数的函数选择器
--   `args`: 为定位到的函数传入的参数
-
-如果有返回结果，则返回的是被触发函数的结果。
-
-用法示例：
-
-```ts
-// 在第一个 key 值为 `foo` 的节点上调用 `onclick` 函数
-h.trigger('@foo', 'onclick');
-```
-
-```ts
-// 在第一个 key 值为 `bar` 的节点上调用 `customFunction` 函数，并为其传入值为 `100` 的参数
-// 然后接收被触发函数返回的结果
-const result = h.trigger('@bar', 'customFunction', 100);
-```
-
-`functionalSelector` 返回部件属性中的函数。函数也会被触发，与使用普通字符串 `functionSelector` 的方式相同。
-
-### Trigger 示例
-
-假定有如下 VDOM 树结构：
-
-```ts
-v(Toolbar, {
-	key: 'toolbar',
-	buttons: [
-		{
-			icon: 'save',
-			onClick: () => this._onSave()
-		},
-		{
-			icon: 'cancel',
-			onClick: () => this._onCancel()
-		}
-	]
-});
-```
-
-通过以下代码触发 save 按钮的 `onClick` 函数：
-
-```typescript
-h.trigger('@buttons', (renderResult: DNode<Toolbar>) => {
-	return renderResult.properties.buttons[0].onClick;
-});
-```
-
-**注意：** 如果没能找到指定的选择器，则 `trigger` 会抛出一个错误。
-
-## `harness.getRender`
-
-`harness.getRender()` 返回索引指定的渲染器，如果没有提供索引则返回最后一个渲染器。
-
-```ts
-getRender(index?: number);
-```
-
--   `index`: 要返回的渲染器的索引
-
-用法示例:
-
-```ts
-// 返回最后一个渲染器的结果
-const render = h.getRender();
-```
-
-```ts
-// 返回传入的索引对应渲染器的结果
-h.getRender(1);
-```
-
-# 断言模板
-
-断言模板（assertion template）提供一个可复用的基本模板来断言部件的整个输出内容，但在执行每个测试前可按需修改部分内容。这意味着在多次测试中都不会改变的公共元素可被抽象并定义一次，然后多处使用。
-
-要使用断言模板，首先导入模块：
-
-```ts
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-```
-
-可创建一个基本断言，它定义了部件的默认渲染状态。假定有以下部件：
-
-> src/widgets/Profile.tsx
-
-```ts
-import { create, tsx } from '@dojo/framework/core/vdom';
-
-import * as css from './styles/Profile.m.css';
-
-export interface ProfileProperties {
-	username?: string;
-}
-
-const factory = create().properties<ProfileProperties>();
-
-const Profile = factory(function Profile({ properties }) {
-	const { username } = properties();
-	return <h1 classes={[css.root]}>{`Welcome ${username || 'Stranger'}!`}</h1>;
-});
-
-export default Profile;
-```
-
-基本断言如下所示：
-
-> tests/unit/widgets/Profile.tsx
-
-```ts
-const { describe, it } = intern.getInterface('bdd');
-import harness from '@dojo/framework/testing/harness';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import { tsx } from '@dojo/framework/core/vdom';
-
-import Profile from '../../../src/widgets/Profile';
-import * as css from '../../../src/widgets/Profile.m.css';
-
-const profileAssertion = assertionTemplate(() => (
-	<h1 classes={[css.root]} assertion-key="welcome">
-		Welcome Stranger!
-	</h1>
-));
-```
-
-在测试中这样写：
-
-> tests/unit/widgets/Profile.tsx
-
-```ts
-const profileAssertion = assertionTemplate(() => (
-	<h1 classes={[css.root]} assertion-key="welcome">
-		Welcome Stranger!
-	</h1>
-));
-
-describe('Profile', () => {
-	it('default renders correctly', () => {
-		const h = harness(() => <Profile />);
-		h.expect(profileAssertion);
-	});
-});
-```
-
-要测试为 `Profile` 传入 `username` 属性的场景，可以按如下方式为断言模板调参：
-
-> tests/unit/widgets/Profile.tsx
-
-```ts
-describe('Profile', () => {
-	...
-
-	it('renders given username correctly', () => {
-		// 使用给定的用户名更新期望的结果
-		const namedAssertion = profileAssertion.setChildren('~welcome', () => [
-			'Welcome Kel Varnsen!'
-		]);
-		const h = harness(() => <Profile username="Kel Varnsen" />);
-		h.expect(namedAssertion);
-	});
-});
-```
-
-这里使用 baseAssertion 的 `setChildren()` api，然后使用特定的 `~` 选择器来定位 key 值为 `~welcome` 的节点。`assertion-key` 属性（当使用 `w()` 或 `v()` 函数时为 `~key`）是断言模板的一个特殊属性，在断言时会被删除，因此在匹配渲染结构时不会显示出来。此功能能让断言模板简单的选择节点，而不需要扩展实际的部件渲染函数。一旦找到 `welcome` 节点，它的子节点将被设置为新值 `['Welcome Kel Varnsen!']`，然后在 `h.expect` 中使用生成的模板。需要注意的是，断言模板在设置值时总是返回一个新的断言模板，这可以确保现有模板不会被意外地修改，若被修改可能导致其他测试失败，并允许基于新模板，增量逐层构建出新的模板。
-
-断言模板具有以下 API：
-
-```
-insertBefore(selector: string, children: () => DNode[]): AssertionTemplateResult;
-insertAfter(selector: string, children: () => DNode[]): AssertionTemplateResult;
-insertSiblings(selector: string, children: () => DNode[], type?: 'before' | 'after'): AssertionTemplateResult;
-append(selector: string, children: () => DNode[]): AssertionTemplateResult;
-prepend(selector: string, children: () => DNode[]): AssertionTemplateResult;
-replaceChildren(selector: string, children: () => DNode[]): AssertionTemplateResult;
-setChildren(selector: string, children: () => DNode[], type?: 'prepend' | 'replace' | 'append'): AssertionTemplateResult;
-setProperty(selector: string, property: string, value: any): AssertionTemplateResult;
-setProperties(selector: string, value: any | PropertiesComparatorFunction): AssertionTemplateResult;
-getChildren(selector: string): DNode[];
-getProperty(selector: string, property: string): any;
-getProperties(selector: string): any;
-replace(selector: string, node: DNode): AssertionTemplateResult;
-remove(selector: string): AssertionTemplateResult;
-```
-
-# Mocking
-
-一种常见的测试类型是验证部件的用户界面是否按预期渲染，而不必关心部件的底层业务逻辑。但这些测试可能希望断言一些场景，如单击按钮以调用部件的属性方法，并不关心属性方法的实现逻辑，只是希望按预期调用了接口。在这种情况下，可借助类似 [Sinon] 的 mock 库。
-
-> src/widgets/Action.tsx
-
-```ts
-import { create, tsx } from '@dojo/framework/core/vdom';
-import Button from '@dojo/widgets/button';
-
-import * as css from './Action.m.css';
-
-const factory = create().properties<{ fetchItems: () => void }>();
-
-const Action = factory(function Action({ properties }) {
-	return (
-		<div classes={[css.root]}>
-			<Button key="button" onClick={() => properties().fetchItems()}>
-				Fetch
-			</Button>
-		</div>
-	);
-});
-
-export default Action;
-```
-
-测试当单击按钮后，会调用 `properties().fetchItems` 方法。
-
-> tests/unit/widgets/Action.tsx
-
-```ts
-const { describe, it } = intern.getInterface('bdd');
-import { tsx } from '@dojo/framework/core/vdom';
-import assertionTemplate from '@dojo/framework/testing/assertionTemplate';
-import harness from '@dojo/framework/testing/harness';
-
-import Action from '../../../src/widgets/Action';
-import * as css from '../../../src/widgets/Action.m.css';
-
-import Button from '@dojo/widgets/button';
-
-import { stub } from 'sinon';
-import { assert } from 'chai';
-
-describe('Action', () => {
-	const fetchItems = stub();
-	it('can fetch data on button click', () => {
-		const h = harness(() => <Action fetchItems={fetchItems} />);
-		h.expect(() => (
-			<div classes={[css.root]}>
-				<Button key="button" onClick={() => {}}>
-					Fetch
-				</Button>
-			</div>
-		));
-		h.trigger('@button', 'onClick');
-		assert.isTrue(fetchItems.calledOnce);
-	});
-});
-```
-
-在这种情况下，mock 一个 Action 部件的 `fetchItems` 方法，该方法用于获取数据项。然后使用 `@button` 定位到按钮，并触发按钮的 `onClick` 事件，然后校验 `fetchItems` 方法仅被调用过一次。
-
-要了解更多 mocking 信息，请阅读 [Sinon] 文档。
-
 # 功能测试
 
 与单元测试加载和执行代码的流程不同，功能测试在浏览器中加载一个页面并测试应用程序的交互功能。
@@ -842,7 +1093,7 @@ describe('Action', () => {
 
 > src/widgets/Menu.tsx
 
-```ts
+```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 import Link from '@dojo/framework/routing/ActiveLink';
 import Toolbar from '@dojo/widgets/toolbar';
