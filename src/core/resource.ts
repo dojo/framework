@@ -60,7 +60,7 @@ export function defaultFilter(query: ResourceQuery[], item: any) {
 	let filterValue = '';
 
 	query.forEach((q) => {
-		if (q.keys.indexOf('value') >= -1) {
+		if (q.keys.indexOf('value') !== -1) {
 			filterValue = q.value || '';
 		}
 	});

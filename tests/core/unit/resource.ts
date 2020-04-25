@@ -185,8 +185,10 @@ describe('resource', () => {
 		resource.set([{ value: 'one' }, { value: 'two' }]);
 		assert.deepEqual(resource.get({}), [{ value: 'one' }, { value: 'two' }]);
 		assert.equal(resource.getTotal({}), 2);
-		const results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
+		let results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
 		assert.deepEqual(results, [{ value: 'one' }]);
+		results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['other'] }] });
+		assert.deepEqual(results, [{ value: 'one' }, { value: 'two' }]);
 	});
 
 	it('Can provide a custom filter with memory resource', () => {
