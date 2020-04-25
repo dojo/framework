@@ -1,11 +1,10 @@
 # Introduction
 
-Dojo **resource** provides a consistent means to make widgets data aware.
-
-A Dojo resource is initialized with a `DataTemplate` that describes how to read data, and enables creation of a single data store which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets being aware of the underlying data fetching implementation or the raw data format being used, as these are abstracted away by both the template read mechanism and the resource.
+Dojo **resource** provides a consistent means to make widgets data aware. A `resource` is initialized with a `DataTemplate` that describes how to read data, and enables creation of a single data store which can be passed into multiple widgets. It allows data to be cached, transformed and filtered to suit the needs of the widget using it. Coupled with the data middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets being aware of the underlying data fetching implementation or the raw data format being used, as these are abstracted away by both the template read mechanism and the resource.
 
 | Feature                                   | Description                                                                                                                                                                                  |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Built in support for memory resources** | Default support for using resources with in-memory data.                                                                                                                                     |
 | **Single data source**                    | Resources allow creation of a single source of data for a given template that can be shared between multiple widgets using the data middleware.                                              |
 | **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume                                 |
 | **Support for async and sync data reads** | Resource templates can read data in any way they like - once data becomes available, the data middleware reactively invalidates any affected widgets.                                        |
@@ -18,13 +17,47 @@ A Dojo resource can be created to fetch data in some way, and widgets are then a
 
 ## Creating a resource
 
-A basic resource requires only a `DataTemplate` to be created which specifies a `read` function.
+A basic resource can be created using the `createResource` factory from `@dojo/framework/core/resource` module, configured to work with in-memory data that can be passed within a widget.
+
+> resources.tsx
+
+```tsx
+const resource = createResource();
+```
+
+This `resource` can be used with any data aware widget, with any data that is passed.
+
+> MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+
+import MyDataAwareWidget from './MyDataAwareWidget';
+import myResource from './resources';
+
+const factory = create();
+
+const MyWidget = factory(function MyWidget() {
+	return (
+		<MyDataAwareWidget
+			resource={myResource([
+				/* array of data for the widget to use */
+			])}
+		/>
+	);
+});
+```
+
+## Custom Data Template
+
+To use a `resource` to use a data source instead of requiring data to be passed into the resource on usage, a custom `DataTemplate` is required. By default the `DataTemplate` provided is an in-memory one that needs `data` to be passed on usage. The following is an example of a `DataTemplate` that wires a resource to a remote REST API.
 
 > main.ts
 
 ```ts
-import { DataTemplate, createResource } from '@dojo/framework/core/resource';
-const template: DataTemplate = {
+import { createResource } from '@dojo/framework/core/resource';
+
+const resource = createResource({
 	read: async (options: ReadOptions) => {
 		const { offset, size } = options;
 		let url = `https://my.endpoint.com?offset=${offset}&size=${size}`;
@@ -37,12 +70,10 @@ const template: DataTemplate = {
 			total: data.total
 		};
 	}
-};
-
-const resource = createResource(template);
+});
 ```
 
-When a call is made to the resource api which requires data to be read, the `read` function will be called with the `ReadOptions`, a `put` function and a `get` function. The `ReadOptions` consist of the `offset`, the requested page `size` and a `query` for filtering. The two helper functions can be used to sideload data or to read existing data from the resource. More information on this can be found in the [supplemental documentation](/learn/resource/data-templates).
+When a call is made to the resource api which requires data to be read, the `read` function will be called with the `ReadOptions`, a `put` function and a `get` function. The `ReadOptions` consist of the `offset`, the requested page `size` and a `query` for filtering. The two helper functions can be used to side-load data or to read existing data from the resource. More information on this can be found in the [supplemental documentation](/learn/resource/data-templates).
 
 ## Transforming data
 
