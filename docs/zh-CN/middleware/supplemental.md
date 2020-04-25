@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/middleware/supplemental.md
-commit 83414e32b356e67f9f7dac0567c0ebd13548b720
+commit ebef92b9e1d10e0a22e957a508cd71d07e649646
 -->
 
 Dojo 提供了渲染中间件的概念，以帮助衔接响应式、函数部件与底层的命令式 DOM 结构。
@@ -182,7 +182,7 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   如果存在的话，则返回根据 `key` 获取的值，否则就将 `key` 值设置为 `value`。在这两种情况下，如果缓存值尚未解析，则返回 `undefined`。
 -   `icache.get<T = any>(key: any): T | undefined`
     -   根据 `key` 获取缓存值，如果未设置值或者该值处在挂起状态，则返回 `undefined`。
--   `icache.set(key: any, value: any, invalidate: boolean = true)`
+-   `icache.set(key: any, value: any, invalidate: boolean = true): any`
     -   将提供的 `value` 设置给指定的 `key`。如果 `value` 是一个函数，则将调用它以获取要缓存的实际值。如果函数返回的是 promise，则会先缓存一个“pending”值，直到解析出最终的值。在所有场景中，一旦一个值可用并存储到缓存中，该部件将被标记为无效，这样就可以使用最终的值重新渲染。
 -   `icache.has(key: any): boolean`
     -   根据 key 是否已在缓存中设置，来返回 `true` 或 `false`。
@@ -190,6 +190,17 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   从缓存中移除对应的项。
 -   `clear(invalidate: boolean = true)`
     -   清除当前在部件本地缓存中存储的所有值。
+
+当将函数传给 `icache.set` 时，可在函数中访问当前的缓存值，下面的示例演示如何递增当前值。
+
+```tsx
+icache.set('key', (current) => {
+	if (current) {
+		return current + 1;
+	}
+	return 1;
+});
+```
 
 可以使用两种方式为 `icache` 设置类型。一种方式是使用泛型来在调用的地方指定返回类型，对于 `getOrSet`，可以根据值类型推断出返回的类型，如果 `getOrSet` 的 `value` 是一个函数，则使用函数返回的类型推断出值类型。
 

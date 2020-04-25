@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/styling/supplemental.md
-commit b8e0228c4025cb803d1c56521b054f6d5e6dfdb2
+commit 3e723153b8504dd5284116eb80ec0a17e029bd9a
 -->
 
 Dojo 部件最适合作为简单的组件，每个组件处理单一职责。它们应该尽可能的封装和模块化，以提高可重用性，同时避免与应用程序使用的其他组件出现冲突。
@@ -20,7 +20,7 @@ Dojo 界定出以下几类样式，每一类都代表了企业 web 应用程序�
         -   提供一个[应用程序范围的主题](/learn/styling/theming-a-dojo-application#making-themeable-applications)
         -   [为每个部件指定主题](/learn/styling/theming-a-dojo-application#overriding-the-theme-of-specific-widget-instances)
         -   [为部件传入额外的样式](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets)
-        -   使用[一个集中存储的 `variables.css` 文件](/learn/styling/theming-a-dojo-application#css-custom-properties)，供其他样式导入和引用
+        -   在变体模块中定义 [css 属性](/learn/styling/theming-a-dojo-application#css-custom-properties)，然后在部件的样式中使用，这样有助于实现一致性和创建主题变体
         -   在一个 CSS 模块中[组合样式类](/learn/styling/theming-a-dojo-application#css-module-composition)
         -   在一个部件中[使用多个 CSS 模块](/learn/styling/theming-a-dojo-application#using-several-css-modules)
 
@@ -76,18 +76,16 @@ export default factory(function MyWidget() {
 
 Dojo 可以使用现代的 CSS 特性，例如[自定义属性和 `var()`](https://www.w3.org/TR/css-variables/)，来提取和集中管理应用程序中的通用样式属性。
 
-不必在每个部件的 CSS 模块中为颜色或字体设置相同的值，而是通过提取自定义属性，在每个 CSS 模块中引用该属性名，然后在集中一处的 CSS `:root` 伪类中设置值。这种隔离更易于维护跨整个应用程序的公共样式。
+不必在每个部件的 CSS 模块中为颜色或字体设置相同的值，而是通过提取自定义属性，在每个 CSS 模块中引用该属性名，然后在集中一处的 `.root` 样式类设置主题的 `variant`。这种隔离更易于维护跨整个应用程序的公共样式，并可以通过更改变量创建主题的变体。
+
+注意：不要在部件的 CSS 模块中导入主题变体文件；这是在运行时通过 `theme.variant()` 类处理的。
 
 例如：
 
-> src/themes/variables.css
+> src/themes/MyTheme/variants/default.m.css
 
 ```css
-:root {
-	/* different sets of custom properties can be used if an application supports more than one possible theme */
-	--light-background: lightgray;
-	--light-foreground: black;
-
+.root {
 	--dark-background: black;
 	--dark-foreground: lightgray;
 
@@ -95,11 +93,9 @@ Dojo 可以使用现代的 CSS 特性，例如[自定义属性和 `var()`](https
 }
 ```
 
-> src/themes/myDarkTheme/MyWidget.m.css
+> src/themes/MyTheme/MyWidget.m.css
 
 ```css
-@import '../variables.css';
-
 .root {
 	margin: var(--padding);
 
@@ -107,8 +103,6 @@ Dojo 可以使用现代的 CSS 特性，例如[自定义属性和 `var()`](https
 	background: var(--dark-background);
 }
 ```
-
-注意，在一个页面中，`:root` 伪类是全局的，但是因为 Dojo 使用了 CSS 模块，则可能会在应用程序的多处指定 `:root` 属性。但是 Dojo 无法保证 CSS 模块的处理顺序，因此为了确保 `:root` 中属性的一致性，建议在应用程序的代码中只有一处 `:root` 定义，统一放在 `variables.css` 文件中。这个集中存放的变量文件是一个常规的 CSS 文件（不是一个 CSS 模块），当 CSS 模块需要使用自定义属性值时，可以使用 `@import` 导入。
 
 Dojo 默认的构建流程按原样将自定义属性输出到应用程序的样式表中。对于最新的浏览器来说，这样做没有问题；但当使用的浏览器没有实现 CSS 自定义属性标准（如 IE）时，就会出现问题。为了解决这个问题，可以使用遗留模式（`dojo build app --legacy`）来构建应用程序，这种情况下，Dojo 会在构建期间解析自定义属性的值，并复制到输出的样式表中。一个值将包含原来的 `var()` 引用，第二个值是专为旧版浏览器解析的值，当无法处理 `var()` 时就使用解析后的值。
 
@@ -197,6 +191,9 @@ theme.classes<T extends ClassNames>(css: T): T;
     -   如果指定，则[所提供的主题](/learn/styling/working-with-themes#writing-a-theme)会重写部件使用的任何主题，并且优先于[应用程序的默认主题](/learn/styling/theming-a-dojo-application#making-themeable-applications)，以及[应用程序中切换的任何其他主题](/learn/styling/theming-a-dojo-application#changing-the-currently-active-theme)。
 -   `classes` （可选）
     -   在[为部件传入外部样式类](/learn/styling/theming-a-dojo-application#passing-extra-classes-to-widgets)一节有详细描述。
+-   `variant` （可选）
+    -   从当前的主题变体中返回 `root` 类。
+    -   应该应用到部件的根节点上。
 
 ### 可主题化部件示例
 
@@ -245,7 +242,8 @@ export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 				/* requirement 3: */
 				root,
 				myWidgetExtraThemeableClass,
-				css.myWidgetExtraThemeableClass
+				css.myWidgetExtraThemeableClass,
+				theme.variant()
 			]}
 		>
 			Hello from a themed Dojo widget!
@@ -272,7 +270,7 @@ export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 
 > src/widgets/MyThemeableWidget.tsx
 
-```ts
+```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
 import theme from '@dojo/framework/core/middleware/theme';
 
@@ -284,7 +282,11 @@ const factory = create({ theme });
 export default factory(function MyThemeableWidget({ middleware: { theme } }) {
 	const { root } = theme.classes(css);
 	const { commonBase } = theme.classes(commonCss);
-	return <div classes={[root, commonBase, css.myWidgetExtraThemeableClass]}>Hello from a themed Dojo widget!</div>;
+	return (
+		<div classes={[root, commonBase, css.myWidgetExtraThemeableClass, theme.variant()]}>
+			Hello from a themed Dojo widget!
+		</div>
+	);
 });
 ```
 
@@ -648,32 +650,3 @@ dojo build theme --name={myThemeName} --release={releaseVersion}
     ```html
     <script src="node_modules/@dojo/themes/dojo/dojo-{version}.js"></script>
     ```
-
-### 扩展 Dojo 主题
-
-一旦在项目中安装了 `@dojo/themes`，就可将其作为扩展应用程序主题的基础，在新的主题中使用 [CSS 模块化的组合功能](/learn/styling/styling-and-theming-in-dojo#css-module-composition)来包含相关的组件。
-
-`@dojo/themes` 中也包含一个 [拥有 `:root` 的 `variables.css` 文件](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)，如果扩展的应用程序主题需要在新主题的某处引用 Dojo 内置的属性，则可以导入该文件。
-
-下面是一个 `@dojo/widgets/button` 使用新主题的示例，扩展自 `@dojo/themes`，将按钮的背景色改为绿色，而其他的主题样式属性保持不变：
-
-> src/themes/myTheme/theme.ts
-
-```ts
-import * as myButton from './myButton.m.css';
-
-export default {
-	'@dojo/widgets/button': myButton
-};
-```
-
-> src/themes/myTheme/myButton.m.css
-
-```css
-@import '@dojo/themes/dojo/variables.css';
-
-.root {
-	composes: root from '@dojo/themes/dojo/button.m.css';
-	background-color: var(--dojo-green);
-}
-```
