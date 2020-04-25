@@ -627,7 +627,6 @@ export default factory(function FocusableWidget({ middleware: { focus, icache } 
 
 ## `validity`
 
-Allows retrieving information specifically about a node's [validity state](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) which is useful for using the browser's built-in methods for validating form inputs and providing locale-based error messages.
 专用于获取节点的 [有效性状态（validity state）](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState) 信息，当使用浏览器内置的方法来校验表单输入和提供本地的错误信息时，这将非常有用。
 
 **API:**

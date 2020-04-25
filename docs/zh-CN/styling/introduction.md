@@ -83,9 +83,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 
 ## 在部件中应用主题变体
 
--   Set the `theme.variant` class on the widget's `root`.
 -   在部件的 `root` 上设置 `theme.variant` 样式。
--   css-properties get applied at the correct DOM level and do not leak out of the widget's DOM.
 -   将 css 属性应用到正确的 DOM 层级上，并且不能暴露出部件的 DOM。
 
 > src/widgets/MyWidget.tsx
