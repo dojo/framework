@@ -4442,6 +4442,37 @@ jsdomDescribe('vdom', () => {
 							'Calling "propertyDiff" middleware after accessing properties in "unknown", can result in referencing stale properties.'
 						);
 					});
+
+					it('should be able to return original property in favour of the wrapped property', () => {
+						const createWidget = create({ diffProperty, invalidator }).properties<{ foo: () => string }>();
+						function fooProperty() {
+							return 'hello original';
+						}
+						const App = createWidget(({ middleware, properties }) => {
+							middleware.diffProperty('foo', properties, (_, next) => {
+								return next.foo;
+							});
+							const { foo } = properties();
+							assert.strictEqual(foo, fooProperty);
+							return (
+								<div>
+									<button
+										onclick={() => {
+											middleware.invalidator();
+										}}
+									/>
+									<div>{foo()}</div>
+								</div>
+							);
+						});
+						const r = renderer(() => App({ foo: fooProperty }));
+						const root = document.createElement('div');
+						r.mount({ domNode: root });
+						assert.strictEqual(root.innerHTML, '<div><button></button><div>hello original</div></div>');
+						sendEvent(root.childNodes[0].childNodes[0] as HTMLButtonElement, 'click');
+						resolvers.resolve();
+						assert.strictEqual(root.innerHTML, '<div><button></button><div>hello original</div></div>');
+					});
 				});
 			});
 		});
