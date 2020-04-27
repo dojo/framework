@@ -15,12 +15,17 @@ export interface EmailSignupProperties {
 	title?: string;
 	onSignUp?: () => void;
 	signUpBonusDate?: Date;
+	successMessages?: string[];
+}
+
+function randomEntry(arr: string[]) {
+	return arr[Math.floor(Math.random() * arr.length)];
 }
 
 const factory = create({ icache }).properties<EmailSignupProperties>();
 
 export default factory(function EmailSignup({ middleware: { icache }, properties }) {
-	const { title, signUpBonusDate } = properties();
+	const { title, signUpBonusDate, successMessages } = properties();
 
 	const signedUp = icache.getOrSet('signedUp', false);
 	const signUp = () => {
@@ -28,6 +33,7 @@ export default factory(function EmailSignup({ middleware: { icache }, properties
 
 		// post email address to a server
 		icache.set('signedUp', true);
+		icache.set('successMessage', successMessages ? randomEntry(successMessages) : 'Thank you for signing up!');
 		onSignUp && onSignUp();
 	};
 
@@ -38,7 +44,7 @@ export default factory(function EmailSignup({ middleware: { icache }, properties
 			</div>
 			{signedUp ? (
 				<div key="confirmation" classes={css.thanks}>
-					Thank you for signing up!
+					{icache.get('successMessage')}
 				</div>
 			) : (
 				<div key="signup" classes={css.signup}>
@@ -54,11 +60,25 @@ export default factory(function EmailSignup({ middleware: { icache }, properties
 
 ### Attributes
 
-`string` typed widget properties are automatically added as HTML attributes to your custom element. Continuing with the email subscription example, the title property (`{ title?: string }`) can be customized by adding a `title` attribute to the HTML.
+`string` and object typed widget properties are automatically added as HTML attributes to your custom element. Continuing with the email subscription example, the `title` property (`{ title?: string }`) can be customized by adding a `title` attribute to the HTML. Since `title` is a string property, the value of the HTML attribute is used as the value of the title property with no transformation.
 
 ```html
 <ref-email-signup id="emailSignup" title="Subscribe to Our Newsletter"></ref-email-signup>
 ```
+
+Other serializable properties, like arrays and configuration objects, can be set via HTML attributes by passing in serialized JSON. The `sucessMessages` property (`{ successMessages?: string[] }`) can be set by adding a `successmessages` attribute to the HTML.
+
+```html
+<ref-email-signup
+  id="emailSignup"
+  title="Subscribe to Our Newsletter"
+  successmessages='["Thanks!","Thank you for signing up","You are the best!"]'
+></ref-email-signup>
+```
+
+Here, the value of the `successmessages` attribute will be deserialized and set as the `successMessages` property.
+
+> Note that if the attribute's value is not valid JSON, _the property will not be set_.
 
 ### Events
 
