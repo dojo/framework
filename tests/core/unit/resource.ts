@@ -1,7 +1,7 @@
 const { describe, it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 import { sandbox } from 'sinon';
-import { createResource } from '../../../src/core/resource';
+import { createResource, createMemoryTemplate, defaultFilter } from '../../../src/core/resource';
 
 const sb = sandbox.create();
 
@@ -15,7 +15,7 @@ describe('resource', () => {
 		sb.resetHistory();
 	});
 
-	it('creates a resouce given a template', () => {
+	it('creates a resource given a template', () => {
 		const resource = createResource(template);
 		assert.hasAllKeys(resource, [
 			'getOrRead',
@@ -27,6 +27,28 @@ describe('resource', () => {
 			'isLoading',
 			'set'
 		]);
+	});
+
+	it('returns resource an associated data', () => {
+		const resource = createResource()([1, 2, 3]);
+		assert.hasAllKeys(resource.resource, [
+			'getOrRead',
+			'get',
+			'getTotal',
+			'subscribe',
+			'unsubscribe',
+			'isFailed',
+			'isLoading',
+			'set'
+		]);
+		assert.deepEqual(resource.data, [1, 2, 3]);
+	});
+
+	it('provides an in-memory template by default', () => {
+		const resource = createResource();
+		resource.set([{ value: 1 }, { value: 2 }]);
+		assert.deepEqual(resource.get({}), [{ value: 1 }, { value: 2 }]);
+		assert.equal(resource.getTotal({}), 2);
 	});
 
 	it('calls the read template function with calculated offset when getOrRead is called', () => {
@@ -156,5 +178,34 @@ describe('resource', () => {
 		const secondPageGetOrRead = resource.getOrRead({ pageNumber: 2, pageSize: 2 });
 		assert.deepEqual(secondPageGetOrRead, ['foo', 'bar']);
 		assert.isTrue(template.read.notCalled);
+	});
+
+	it('Can use default filter with memory resource', () => {
+		const resource = createResource(createMemoryTemplate({ filter: defaultFilter }));
+		resource.set([{ value: 'one' }, { value: 'two' }]);
+		assert.deepEqual(resource.get({}), [{ value: 'one' }, { value: 'two' }]);
+		assert.equal(resource.getTotal({}), 2);
+		let results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
+		assert.deepEqual(results, [{ value: 'one' }]);
+		results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['other'] }] });
+		assert.deepEqual(results, [{ value: 'one' }, { value: 'two' }]);
+	});
+
+	it('Can provide a custom filter with memory resource', () => {
+		const resource = createResource<{ value: string }>(
+			createMemoryTemplate({
+				filter: (query, item) => {
+					if (item.value === 'two') {
+						return true;
+					}
+					return false;
+				}
+			})
+		);
+		resource.set([{ value: 'one' }, { value: 'two' }]);
+		assert.deepEqual(resource.get({}), [{ value: 'one' }, { value: 'two' }]);
+		assert.equal(resource.getTotal({}), 2);
+		const results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
+		assert.deepEqual(results, [{ value: 'two' }]);
 	});
 });

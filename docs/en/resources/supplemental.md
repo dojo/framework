@@ -1,10 +1,9 @@
 # Data templates
 
-Data templates tell a resource how to read data, and can accept a generic which is used to type the transformer.
-The template's `read` function receives three paramaters.
+Data templates tell a resource how to read data, and can accept a generic which is used to type the transformer. The template's `read` function receives three parameters.
 
 -   `options`: A `ReadOptions` object consisting of the current `query`, the read `offset` and the page `size` to request.
--   `put`: A function used to sideload data into the resource. The template can use this to pre-fetch data or to load the full data payload into a memory template. This function takes two parameters, an `offset` at which the data should be set, and the array of `data` to set. It is pre-configured to use the current `ReadOption` query when setting data.
+-   `put`: A function used to side-load data into the resource. The template can use this to pre-fetch data or to load the full data payload into a memory template. This function takes two parameters, an `offset` at which the data should be set, and the array of `data` to set. It is pre-configured to use the current `ReadOption` query when setting data.
 -   `get`: A function used to query the current data in the resource. This function accepts a single parameter, a `query` string used to identify the data to fetch.
 
 ## Creating a template
@@ -33,62 +32,61 @@ const template: DataTemplate = {
 
 ## Memory templates
 
-Templates that work off of a local in-memory array can also be used as a data source. These types of template use the same creation mechanism as any other template, but with a few extra considerations, namely:
+By default a resource is created with a memory `DataTemplate` that enables using resources with a local data source. This default `DataTemplate` does not include any filtering options, if custom filtering behavior is required then the memory template can be created explicitly and passed into the `createResource` factory using the `createMemoryTemplate` factory.
 
--   Filtering should be catered for through the `query` parameter.
--   The full data set can be sideloaded using the `put` parameter. This gives data-aware widgets access to the full data set up front, and is useful for widgets such as `select` which need to skip to specific content related to a given keypress, for example.
+```tsx
+import { createResource, createMemoryTemplate } from '@dojo/framework/core/resource';
 
-```ts
-import USStates from './states';
-
-const memoryTemplate: DataTemplate = {
-	read: ({ query }, put) => {
-		// filter the data
-		const filteredData = filter && query ? USStates.filter((i) => filter(query, i)) : USStates;
-		// put the filtered data into the resource so it
-		// won't try and read it again for the same query
-		put(0, filteredData);
-		// return the data that was requested
-		return { data: filteredData, total: filteredData.length };
-	}
-};
+// the same as just calling `createResource`
+const resource = createResource(createMemoryTemplate());
 ```
 
-## Initialising a resource with local data
+### Default Filter
+
+Dojo provides a very basic default filter that is designed to work for simple a data structure, having a `value` and optional `label`. This default filter can be passed to the `createMemoryTemplate` factory
+
+```tsx
+import { createResource, createMemoryTemplate, defaultFilter } from '@dojo/framework/core/resource';
+
+// a resource with the default filter
+const resource = createResource(createMemoryTemplate({ filter: defaultFilter }));
+```
+
+### Custom Filter
+
+Custom filters can be passed to `createMemoryTemplate` and use the `query` param with the resource item to determine if the value should be filtered.
+
+```tsx
+import { createResource, createMemoryTemplate, defaultFilter } from '@dojo/framework/core/resource';
+
+const resource = createResource(
+	createMemoryTemplate({
+		filter: (query, item) => {
+			// use the query and item to provide custom filtering
+		}
+	})
+);
+```
+
+## Initializing a resource with local data
 
 When the local data being used can change over time, for example if it is dynamically generated, an alternative approach is required to set up a memory template and pass such dynamic data to a widget.
 
-```ts
-const memoryTemplate: DataTemplate = {
-	read: ({ query }, get, put) => {
-		// get the data from the resource
-		let data: any[] = get();
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResource } from '@dojo/framework/core/resource';
 
-		// filter the data
-		const filteredData = filter && query ? data.filter((i) => filter(query, i)) : data;
-		// put the filtered data into the resource so it
-		// won't try and read it again for the same query
-		put(0, filteredData);
-		// return the data that was requested
-		return { data: filteredData, total: filteredData.length };
-	}
-};
+import List from './List';
+
+const resource = createResource();
 
 export default factory(function() {
-	// pass a resource factory and the data to sideload
-	// instead of just the resource
-	return (
-		<List
-			resource={{
-				resource: () => createResource(memoryTemplate),
-				data: ['dog', 'fish', 'cat']
-			}}
-		/>
-	);
+	// pass a resource factory and the data to side-load instead of just the resource
+	return <List resource={resource(['dog', 'fish', 'cat'])} />;
 });
 ```
 
-This approach allows the `data` to be changed at any time, causing the resource to be cleared and the new data sideloaded again. This approach should be used for most in-memory data array scenarios - a good example is [Dojo's `TimePicker` widget](https://github.com/dojo/widgets/tree/master/src/time-picker), where time options are generated and passed to the underlying `Select`.
+This approach allows the `data` to be changed at any time, causing the resource to be cleared and the new data side-loaded again. This approach should be used for most in-memory data array scenarios - a good example is [Dojo's `TimePicker` widget](https://github.com/dojo/widgets/tree/master/src/time-picker), where time options are generated and passed to the underlying `Select`.
 
 # Data middleware
 
@@ -110,7 +108,7 @@ export const DataAwareWidget = factory(function DataAwareWidget({
 ## Creating a typed data middleware
 
 In order to type the data returned by the data middleware, a `createDataMiddleware` function is provided. This function takes a generic that defines both the return types from the `get` / `getOrRead` functions and the keys that must be provided by the `transform` property.
-When using `createDataMiddleware` in a widget, the `transform` property becomes required. More information about data transforms can be found [here](/learn/resource/data-middlware#the-transform-prperty).
+When using `createDataMiddleware` in a widget, the `transform` property becomes required. More information about data transforms can be found in [data middleware section](/learn/resource/data-middleware#the-transform-property).
 
 ```tsx
 import { create } from '@dojo/framework/core/vdom';
@@ -257,7 +255,7 @@ export default factory(function() {
 
 ### Passing a resource factory with data
 
-A resource factory with data is the approach used when data needs to be sideloaded into the resource. This will commonly be used when working with an in-memory data array and a memory template, as it allows the resource data to be reloaded when the provided data is changed.
+A resource factory with data is the approach used when data needs to be side-loaded into the resource. This will commonly be used when working with an in-memory data array and a memory template, as it allows the resource data to be reloaded when the provided data is changed.
 
 ```tsx
 import { DataTemplate, createResource } from '@dojo/framework/core/resource';

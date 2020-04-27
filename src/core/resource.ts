@@ -10,7 +10,8 @@ export interface ResourceOptions {
 
 export type ResourceQuery = { keys: string[]; value: string | undefined };
 
-export interface Resource {
+export interface Resource<S = any> {
+	(data: S[]): { resource: Resource<S>; data: S[] };
 	getOrRead(options: ResourceOptions): any;
 	get(options: ResourceOptions): any;
 	getTotal(options: ResourceOptions): number | undefined;
@@ -18,7 +19,7 @@ export interface Resource {
 	isFailed(options: ResourceOptions): boolean;
 	subscribe(type: SubscriptionType, options: ResourceOptions, invalidator: Invalidator): void;
 	unsubscribe(invalidator: Invalidator): void;
-	set(data: any[]): void;
+	set(data: S[]): void;
 }
 
 export type TransformConfig<T, S = void> = { [P in keyof T]: (S extends void ? string : keyof S)[] };
@@ -55,7 +56,37 @@ function isAsyncResponse<S>(response: DataResponsePromise<S> | DataResponse<S>):
 	return (response as any).then !== undefined;
 }
 
-export function createResource<S>(config: DataTemplate<S>): Resource {
+export function defaultFilter(query: ResourceQuery[], item: any) {
+	let filterValue = '';
+
+	query.forEach((q) => {
+		if (q.keys.indexOf('value') !== -1) {
+			filterValue = q.value || '';
+		}
+	});
+
+	if (!filterValue) {
+		return true;
+	}
+
+	let filterText = item.label || item.value;
+	return filterText.toLocaleLowerCase().indexOf(filterValue.toLocaleLowerCase()) >= 0;
+}
+
+export function createMemoryTemplate<S = void>({
+	filter
+}: { filter?: (query: ResourceQuery[], v: S) => boolean } = {}): DataTemplate<S> {
+	return {
+		read: ({ query }, put, get) => {
+			let data: any[] = get();
+			const filteredData = filter && query ? data.filter((i) => filter(query, i)) : data;
+			put(0, filteredData);
+			return { data: filteredData, total: filteredData.length };
+		}
+	};
+}
+
+export function createResource<S>(config: DataTemplate<S> = createMemoryTemplate<S>()): Resource<S> {
 	const { read } = config;
 	let queryMap = new Map<string, S[]>();
 	let statusMap = new Map<string, { [key: string]: Status }>();
@@ -280,17 +311,24 @@ export function createResource<S>(config: DataTemplate<S>): Resource {
 		}
 	}
 
-	return {
-		getOrRead,
-		get,
-		getTotal,
-		subscribe,
-		unsubscribe,
-		isFailed,
-		isLoading,
-		set(data: S[]) {
-			setData(0, data, data.length);
-			totalMap.set(getQueryKey(), data.length);
-		}
+	function resource(data: any[]) {
+		return {
+			resource,
+			data
+		};
+	}
+
+	resource.getOrRead = getOrRead;
+	resource.get = get;
+	resource.getTotal = getTotal;
+	resource.subscribe = subscribe;
+	resource.unsubscribe = unsubscribe;
+	resource.isFailed = isFailed;
+	resource.isLoading = isLoading;
+	resource.set = function set(data: S[]) {
+		setData(0, data, data.length);
+		totalMap.set(getQueryKey(), data.length);
 	};
+
+	return resource as Resource<any>;
 }
