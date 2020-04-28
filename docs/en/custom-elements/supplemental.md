@@ -280,3 +280,34 @@ Themes can be used with custom elements by including the theme's JavaScript and 
 </body>
 </html>
 ```
+
+## Switching Variants
+
+A single theme could have multiple variants. For example the Dojo theme has a "light" and a "dark" variant. The global `dojoce` variable will let you change the theme at runtime.
+
+```
+dojoce.variant = 'dark';
+```
+
+Custom elements will re-render and immediately reflect the newly selected variant.
+
+## Switching Themes
+
+An application can have multiple themes loaded at the same time, and switch between them at runtime. To load multiple themes, load the stylesheet and script for each theme.
+
+```html
+	<link rel="stylesheet" href="./output/theme/dojo/dojo-7.0.0-pre.css" />
+	<link rel="stylesheet" href="./output/theme/material/material-7.0.0-pre.css" />
+	<script src="./output/theme/dojo/dojo-7.0.0-pre.js"></script>
+	<script src="./output/theme/material/material-7.0.0-pre.js"></script>
+```
+
+> Note that the last loaded theme will be the "current" theme.
+
+At runtime, you can switch themes by setting the `theme` property on the global `dojoce` variable.
+
+```
+dojoce.theme = 'material';
+```
+
+Custom elements will re-render and immediately reflect the newly selected theme.
