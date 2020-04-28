@@ -141,6 +141,14 @@ export const theme = factory(
 				const { theme } = properties();
 				if (theme && isThemeWithVariant(theme)) {
 					return theme.variant.value.root;
+				} else {
+					const themeInjector = injector.get<ThemeInjector>(INJECTED_THEME_KEY);
+					if (themeInjector) {
+						const themePayload = themeInjector.get();
+						if (isThemeInjectorPayloadWithVariant(themePayload)) {
+							return themePayload.variant.value.root;
+						}
+					}
 				}
 			},
 			set,

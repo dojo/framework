@@ -263,6 +263,34 @@ jsdomDescribe('theme middleware', () => {
 		assert.strictEqual(root.innerHTML, '<div class="variant-root"></div>');
 	});
 
+	it('returns injected theme variant class', () => {
+		const factory = create({ theme });
+		const themeWithVariant = {
+			theme: {
+				theme: {
+					'test-key': {
+						root: 'themed-root'
+					}
+				},
+				variants: {
+					default: {
+						root: 'variant-root'
+					}
+				}
+			}
+		};
+
+		const App = factory(function App({ middleware: { theme } }) {
+			theme.set(themeWithVariant.theme, 'default');
+			const variantRoot = theme.variant();
+			return <div classes={variantRoot} />;
+		});
+		const root = document.createElement('div');
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div class="variant-root"></div>');
+	});
+
 	it('selects default variant theme with variants is set', () => {
 		const factory = create({ theme });
 		const themeWithVariants = {
