@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/styling/introduction.md
-commit b8e0228c4025cb803d1c56521b054f6d5e6dfdb2
+commit 3e723153b8504dd5284116eb80ec0a17e029bd9a
 -->
 
 Dojo 是基于 HTML 的技术，使用 CSS 为框架中的元素和用它开发的应用程序设置样式。
@@ -14,7 +14,7 @@ Dojo 鼓励将结构样式封装在各部件中，以便最大限度复用；同
 | **为单个部件设置样式**       | [CSS Modules](https://github.com/css-modules/css-modules) 用于定义，在单个部件的作用域内有效的样式，避免潜在的交叉污染和样式冲突。通过类型化的 CSS 模块导入和 IDE 自动完成功能，部件可以精确的引用 CSS 类名。                                                                |
 | **强大的主题支持**           | 可以轻松开发出支持主题的部件，这样的部件既能使用简化的、中心化的应用程序主题，也能调整或覆盖单个实例的目标样式（如果需要的话）。[CLI 工具](https://github.com/dojo/cli-build-theme)支持分发自定义主题。                                                                      |
 | **响应式的主题变更**         | 与 Dojo 应用程序中的其他响应式状态变更类似，当一个部件或者整个应用程序的主题发生变化时，只有受影响的部件才会重新渲染。                                                                                                                                                       |
-| **提取 CSS 属性**            | 每个 CSS 模块可通过 [CSS 自定义属性和 `var()`](https://www.w3.org/TR/css-variables/) 引用集中定义的 `:root` 样式变量。                                                                                                                                                       |
+| **CSS 属性**                 | CSS 模块能使用 [CSS 自定义属性和 `var()`](https://www.w3.org/TR/css-variables/) 来设置主题变体的属性和颜色。                                                                                                                                                                 |
 | **简化定义第三方部件的主题** | 应用程序可以轻松扩展主题以覆盖第三方部件，如 Dojo 内置[部件库](https://github.com/dojo/widgets)中的部件，Dojo 也提供了[开箱即用的主题](https://github.com/dojo/themes)，应用程序可直接使用。[CLI 工具](https://github.com/dojo/cli-create-theme)极大简化了主题的创建和组合。 |
 
 # 基本用法
@@ -81,6 +81,28 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
+## 在部件中应用主题变体
+
+-   在部件的 `root` 上设置 `theme.variant` 样式。
+-   将 css 属性应用到正确的 DOM 层级上，并且不能暴露出部件的 DOM。
+
+> src/widgets/MyWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import * as css from '../styles/MyWidget.m.css';
+
+const factory = create({ theme });
+
+export default factory(function MyWidget({ middleware: { theme } }) {
+	const { root } = theme.classes(css);
+	const variantRoot = theme.variant();
+	return <div classes={[root, variantRoot]}>My Widget</div>;
+});
+```
+
 ## 创建主题
 
 -   使用自定义的主题样式属性重写部件默认的 CSS 类
@@ -105,14 +127,16 @@ export default {
 };
 ```
 
-## 提取公共的主题属性
+## 创建主题的变体
 
--   导入一个集中定义的常规 CSS 文件 `variables.css`，其中定义了 [CSS 自定义属性](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)
+-   将主题变量作为 [CSS 自定义属性](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)存放在 `variant` 模块中
 -   通过 `var()` 引用自定义属性
+-   不依赖于本地变量或者公共的 `variables.css` 文件
 
-> src/themes/variables.css
+> src/themes/variants/default.m.css
 
 ```css
+/* single root class */
 :root {
 	--foreground: hotpink;
 	--background: slategray;
@@ -122,12 +146,26 @@ export default {
 > src/themes/MyTheme/MyWidget.m.css
 
 ```css
-@import '../variables.css';
-
 .root {
 	color: var(--foreground);
 	background-color: var(--background);
 }
+```
+
+> src/themes/MyTheme/index.tsx
+
+```tsx
+import * as defaultVariant from './variants/default.m.css';
+import * as myWidgetCss from './MyWidget.m.css';
+
+export default {
+	theme: {
+		'my-app/MyWidget': myWidgetCss
+	},
+	variants: {
+		default: defaultVariant
+	}
+};
 ```
 
 ## 指定默认的应用程序主题
@@ -156,6 +194,29 @@ export default factory(function App({ middleware: { theme }}) {
 ```
 
 **注意：** 当同时使用基于函数的部件和基于类的部件时，应该使用应用程序注册器来注册主题。当使用基于类的部件时（如 `@dojo/widgets`） 也是如此。详情参考[基于类部件的主题]()。
+
+## 设置主题变体
+
+如果将主题与 `variants` 一起使用，则自动选用 `default` 变体。使用 `theme.set` 函数来设置不同的变体——传入的变体名必须是主题导出的 `variants` 的 key 值。
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import theme from '@dojo/framework/core/middleware/theme';
+
+import myTheme from '../themes/MyTheme/theme';
+
+const factory = create({ theme });
+
+export default factory(function App({ middleware: { theme }}) {
+	// if the theme isn't set, set the default theme
+	if (!theme.get()) {
+		theme.set(myTheme, 'variant-name');
+	}
+	return (
+		// the application's widgets
+	);
+});
+```
 
 ## 更改应用程序主题
 

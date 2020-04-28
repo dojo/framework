@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/outline/introduction.md
-commit 8071636e1a942caacc8349bd6bc211678bd33f06
+commit 3064b7ce80fa19569f8975e9aa5d06718ca8decb
 -->
 
 Dojo 提供了一套设计现代 web 应用程序的完整解决方案，项目需要时也可以逐步的模块化。Dojo 框架可以随着应用程序的复杂性而扩展，可构建的内容从简单的预渲染站点一直到企业级的单页面 web 应用，包括跨多种设备的、接近本地 app 体验的渐进式 web 应用程序。
@@ -26,7 +26,7 @@ Dojo 提供了各种各样的框架组件、工具以及构建管道，它们协
 
 -   开发[支持主题的部件和应用程序](/learn/styling/introduction)，从而将页面外观和页面功能隔离，并通过一种极其简单的方式在整个应用程序中实现外观一致。
 -   使用一套支持国际化（i18n）、可访问性（a11y）以及现成主题的 [UI 部件](https://github.com/dojo/widgets/blob/master/README.md)
--   使用[国际化（i18n）框架](/learn/i18n/introduction)支持多套区域设置，包括通过 [Unicode CLDR](/learn/i18n/advanced-formatting-cldr) 实现高级的消息格式化。
+-   使用[国际化（i18n）框架](/learn/i18n/introduction)支持多套区域设置，包括通过 [Unicode CLDR](/learn/i18n/advanced-formatting) 实现高级的消息格式化。
 
 ## 创建可适配的应用程序
 

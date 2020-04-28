@@ -2,7 +2,7 @@
 
 <!--
 https://github.com/dojo/framework/blob/master/docs/en/stores/introduction.md
-commit 7a7707a6124da75a516c4a57644242e6f97dac16
+commit b61c6ff6ce70fa52dc3545f473b13db0d20df50c
 -->
 
 Dojo **store** 提供可预测的、一致的状态容器，内置了对共享状态管理模式的支持。
