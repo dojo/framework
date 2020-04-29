@@ -229,4 +229,5 @@ export interface RouterOptions {
 	base?: string;
 	HistoryManager?: HistoryConstructor;
 	setDocumentTitle?: SetDocumentTitle;
+	resetScroll?: boolean;
 }

@@ -1,6 +1,7 @@
 const { it } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
+import * as sinon from 'sinon';
 
 import global from '../../../src/shim/global';
 import { Router } from '../../../src/routing/Router';
@@ -393,6 +394,13 @@ describe('Router', () => {
 			assert.strictEqual(action, 'enter');
 		});
 		router.setPath('/foo/bar');
+	});
+
+	it('should reset scroll when emitting if resetScroll is true', () => {
+		const window: any = { scroll: sinon.stub() };
+		new Router(routeConfig, { HistoryManager, resetScroll: true, window });
+		assert.isTrue(window.scroll.calledOnce);
+		assert.deepEqual(window.scroll.args, [[0, 0]]);
 	});
 
 	it('should emit route event when a routes param changes', () => {
