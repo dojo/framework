@@ -159,7 +159,7 @@ Dojo store 使用 patch operation 跟踪底层 store 的变化。这样，Dojo �
 ```ts
 const undoOnFailure = () => {
 	return {
-		after: () => (error, result) {
+		after: (error, result) => {
 			if (error) {
 				result.store.apply(result.undoOperations);
 			}
@@ -169,7 +169,7 @@ const undoOnFailure = () => {
 
 const process = createProcess('do-something', [
 	command1, command2, command3
-], [ undoOnFailure ])
+], [ undoOnFailure ]);
 ```
 
 在执行时，任何 command 出错，则 `undoOnFailure` 中间件就负责应用 `undoOperations`。
