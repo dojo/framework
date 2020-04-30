@@ -189,6 +189,12 @@ add('dojo-debug', false);
 /* Detects if the environment is "browser like" */
 add('host-browser', typeof document !== 'undefined' && typeof location !== 'undefined');
 
+/* Detects if the environment is "jsdom" */
+add(
+	'host-jsdom',
+	has('host-browser') && typeof navigator !== 'undefined' && navigator.userAgent.indexOf('jsdom') !== -1
+);
+
 /* Detects if the environment appears to be NodeJS */
 add('host-node', function() {
 	if (typeof process === 'object' && process.versions && process.versions.node) {
@@ -474,6 +480,17 @@ add('dom-intersection-observer', () => has('host-browser') && global.Intersectio
 add('dom-resize-observer', () => has('host-browser') && global.ResizeObserver !== undefined, true);
 
 add('dom-pointer-events', () => has('host-browser') && global.onpointerdown !== undefined, true);
+
+add(
+	'dom-css-variables',
+	() =>
+		has('host-browser') &&
+		!has('host-jsdom') &&
+		global.window.CSS &&
+		global.window.CSS.supports &&
+		global.window.CSS.supports('(--a: 0)'),
+	true
+);
 
 add('dom-inert', () => has('host-browser') && Element.prototype.hasOwnProperty('inert'), true);
 
