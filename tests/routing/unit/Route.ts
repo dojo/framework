@@ -56,6 +56,19 @@ describe('Route', () => {
 		registry = new Registry();
 	});
 
+	it('returns null if rendered without an available router', () => {
+		const r = renderer(() =>
+			w(Route, {
+				id: 'foo',
+				renderer() {
+					return w(Widget, {});
+				},
+				routerKey: 'Does not exist'
+			})
+		);
+		r.expect(assertion(() => null));
+	});
+
 	it('Should render the result of the renderer when the Route matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
