@@ -36,6 +36,11 @@ const routeConfig = [
 				]
 			}
 		]
+	},
+	{
+		path: '/bar/*',
+		outlet: 'bar',
+		id: 'bar'
 	}
 ];
 
@@ -432,6 +437,36 @@ describe('Router', () => {
 			}
 		});
 		router.setPath('/foo/baaz/baz');
+	});
+
+	it('should emit route event when wildcard paths change', () => {
+		const router = new Router(routeConfig, { HistoryManager });
+		let handle = router.on('route', () => {});
+		handle.destroy();
+		handle = router.on('route', ({ route, action }) => {
+			if (action === 'exit') {
+				assert.strictEqual(route.id, 'home');
+			} else {
+				assert.strictEqual(route.id, 'bar');
+			}
+		});
+		router.setPath('/bar/baz');
+		handle.destroy();
+		let count = 0;
+		handle = router.on('route', ({ route, action }) => {
+			if (!count) {
+				assert.strictEqual(action, 'enter');
+				assert.deepEqual(route.wildcardSegments, ['baz', 'buzz']);
+			} else {
+				assert.strictEqual(action, 'exit');
+				assert.deepEqual(route.wildcardSegments, ['baz']);
+			}
+			assert.strictEqual(route.id, 'bar');
+			count++;
+		});
+		router.setPath('/bar/baz/buzz');
+		handle.destroy();
+		assert.strictEqual(count, 2);
 	});
 
 	it('Should return all params for a route', () => {

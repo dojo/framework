@@ -49,7 +49,7 @@ export interface Params {
 /**
  * Type of outlet matches
  */
-export type MatchType = 'error' | 'index' | 'partial';
+export type MatchType = 'error' | 'index' | 'partial' | 'wildcard';
 
 /**
  * Context stored for matched outlets
@@ -78,6 +78,12 @@ export interface RouteContext {
 	 * The query params for the route
 	 */
 	queryParams: Params;
+
+	/**
+	 * If this route is a wildcard route, any segments that are part of the "wild" section
+	 * of the route
+	 */
+	wildcardSegments: string[];
 
 	/**
 	 * Returns `true` when the route is an error match
@@ -137,6 +143,12 @@ export interface MatchDetails {
 	 * Match type of the route for the outlet, either `index`, `partial` or `error`
 	 */
 	type: MatchType;
+
+	/**
+	 * If this route is a wildcard route, any segments that are part of the "wild" section
+	 * of the route
+	 */
+	wildcardSegments: string[];
 
 	/**
 	 * The router instance

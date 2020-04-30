@@ -14,8 +14,10 @@ import { HashHistory } from './history/HashHistory';
 import { EventObject } from '../core/Evented';
 
 const PARAM = '__PARAM__';
+const WILDCARD = '__WILDCARD__';
 
 const paramRegExp = new RegExp(/^{.+}$/);
+const wildCardRegExp = new RegExp(/^\*$/);
 
 interface RouteWrapper {
 	route: Route;
@@ -42,6 +44,7 @@ export interface OutletEvent extends EventObject<string> {
 
 const ROUTE_SEGMENT_SCORE = 7;
 const DYNAMIC_SEGMENT_PENALTY = 2;
+const WILDCARD_SEGMENT_PENALTY = 3;
 
 function matchingParams({ params: previousParams }: RouteContext, { params }: RouteContext) {
 	const matching = Object.keys(previousParams).every((key) => previousParams[key] === params[key]);
@@ -49,6 +52,10 @@ function matchingParams({ params: previousParams }: RouteContext, { params }: Ro
 		return false;
 	}
 	return Object.keys(params).every((key) => previousParams[key] === params[key]);
+}
+
+function matchingSegments({ wildcardSegments: previousSegments }: RouteContext, { wildcardSegments }: RouteContext) {
+	return wildcardSegments.join('') === previousSegments.join('');
 }
 
 export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: OutletEvent }>
@@ -211,6 +218,13 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 					route.params.push(segment.replace('{', '').replace('}', ''));
 					segments[i] = PARAM;
 				}
+
+				if (wildCardRegExp.test(segment)) {
+					route.score -= WILDCARD_SEGMENT_PENALTY;
+					segments[i] = WILDCARD;
+					segments.splice(i + 1);
+					break;
+				}
 			}
 			if (queryParamString) {
 				queryParams = queryParamString.split('&').map((queryParam) => {
@@ -287,6 +301,10 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 					if (route.segments[segmentIndex] === PARAM) {
 						params[route.params[paramIndex++]] = segment;
 						this._currentParams = { ...this._currentParams, ...params };
+					} else if (route.segments[segmentIndex] === WILDCARD) {
+						type = 'wildcard';
+						segments.unshift(segment);
+						break;
 					} else if (route.segments[segmentIndex] !== segment) {
 						routeMatch = false;
 						break;
@@ -297,7 +315,13 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 
 			if (routeMatch) {
 				routeConfig.type = type;
-				matchedRoutes.push({ route, parent, type, params, segments: [] });
+				matchedRoutes.push({
+					route,
+					parent,
+					type,
+					params,
+					segments: type === 'wildcard' ? segments.splice(0) : []
+				});
 				if (segments.length) {
 					routeConfigs = [
 						...routeConfigs,
@@ -340,13 +364,14 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				global.document.title = title;
 			}
 			while (matchedRoute) {
-				let { type, params, route } = matchedRoute;
+				let { type, params, route, segments } = matchedRoute;
 				let parent: RouteWrapper | undefined = matchedRoute.parent;
 				const matchedRouteContext: RouteContext = {
 					id: route.id,
 					outlet: route.outlet,
 					queryParams: this._currentQueryParams,
 					params,
+					wildcardSegments: type === 'wildcard' ? segments : [],
 					type,
 					isError: () => type === 'error',
 					isExact: () => type === 'index'
@@ -356,7 +381,11 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				routeMap.set(route.id, matchedRouteContext);
 				this._matchedOutletMap.set(route.outlet, routeMap);
 				this._matchedRoutes[route.id] = matchedRouteContext;
-				if (!previousMatchedOutlet || !matchingParams(previousMatchedOutlet, matchedRouteContext)) {
+				if (
+					!previousMatchedOutlet ||
+					!matchingParams(previousMatchedOutlet, matchedRouteContext) ||
+					(type === 'wildcard' && !matchingSegments(previousMatchedOutlet, matchedRouteContext))
+				) {
 					this.emit({ type: 'route', route: matchedRouteContext, action: 'enter' });
 					this.emit({ type: 'outlet', outlet: matchedRouteContext, action: 'enter' });
 				}
@@ -368,6 +397,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				outlet: 'errorRoute',
 				queryParams: {},
 				params: {},
+				wildcardSegments: [],
 				isError: () => true,
 				isExact: () => false,
 				type: 'error'
@@ -378,7 +408,11 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 		for (let i = 0; i < previousMatchedOutletKeys.length; i++) {
 			const key = previousMatchedOutletKeys[i];
 			const matchedRoute = this._matchedRoutes[key];
-			if (!matchedRoute || !matchingParams(previousMatchedRoutes[key], matchedRoute)) {
+			if (
+				!matchedRoute ||
+				!matchingParams(previousMatchedRoutes[key], matchedRoute) ||
+				(matchedRoute.type === 'wildcard' && !matchingSegments(previousMatchedRoutes[key], matchedRoute))
+			) {
 				this.emit({ type: 'route', route: previousMatchedRoutes[key], action: 'exit' });
 				this.emit({ type: 'outlet', outlet: previousMatchedRoutes[key], action: 'exit' });
 			}
