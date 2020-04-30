@@ -61,6 +61,12 @@ function shimAmdDependencies(config: any) {
 		location: 'node_modules/cldr-core'
 	});
 
+	addIfNotPresent(packages, {
+		name: 'css-vars-ponyfill',
+		location: 'node_modules/css-vars-ponyfill/dist',
+		main: 'css-vars-ponyfill.min'
+	});
+
 	config.packages = packages;
 
 	return config;
