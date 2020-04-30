@@ -213,7 +213,7 @@ describe('Profile', () => {
 
 #### `assertion.insertAfter()`
 
-R返回一个新节点，将传入的子节点插入到已存在子节点之后。
+R 返回一个新节点，将传入的子节点插入到已存在子节点之后。
 
 ```tsx
 .insertAfter(wrapped: Wrapped, children: () => RenderResult): AssertionResult;

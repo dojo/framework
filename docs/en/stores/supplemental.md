@@ -162,9 +162,7 @@ const undoOnFailure = () => {
 	};
 };
 
-const process = createProcess('do-something', [
-	command1, command2, command3
-], [ undoOnFailure ]);
+const process = createProcess('do-something', [command1, command2, command3], [undoOnFailure]);
 ```
 
 If any of the commands fail during their execution the `undoOnFailure` middleware will have an opportunity to apply `undoOperations`.

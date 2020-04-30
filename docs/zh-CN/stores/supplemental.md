@@ -167,9 +167,7 @@ const undoOnFailure = () => {
 	};
 };
 
-const process = createProcess('do-something', [
-	command1, command2, command3
-], [ undoOnFailure ]);
+const process = createProcess('do-something', [command1, command2, command3], [undoOnFailure]);
 ```
 
 在执行时，任何 command 出错，则 `undoOnFailure` 中间件就负责应用 `undoOperations`。
