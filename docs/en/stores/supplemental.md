@@ -154,7 +154,7 @@ Undo operations are useful when a process involves several commands that alter t
 ```ts
 const undoOnFailure = () => {
 	return {
-		after: () => (error, result) {
+		after: (error, result) => {
 			if (error) {
 				result.store.apply(result.undoOperations);
 			}
@@ -164,7 +164,7 @@ const undoOnFailure = () => {
 
 const process = createProcess('do-something', [
 	command1, command2, command3
-], [ undoOnFailure ])
+], [ undoOnFailure ]);
 ```
 
 If any of the commands fail during their execution the `undoOnFailure` middleware will have an opportunity to apply `undoOperations`.
