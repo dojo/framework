@@ -75,7 +75,7 @@ The following example shows middleware composing other middleware to implement m
 
 ```ts
 import { create, defer } from '@dojo/framework/core/vdom';
-import { icache } from '@dojo/framework/core/middleware/icache';
+import icache from '@dojo/framework/core/middleware/icache';
 
 const factory = create({ defer, icache });
 
@@ -682,7 +682,7 @@ The most important middleware which provides a hook into a widget's invalidation
 **API:**
 
 ```ts
-import invalidator from '@dojo/framework/core/vdom';
+import { invalidator } from '@dojo/framework/core/vdom';
 ```
 
 -   `invalidator()`
@@ -695,7 +695,7 @@ Provides widgets access to their underlying DOM nodes, identified by node `key`s
 **API:**
 
 ```ts
-import node from '@dojo/framework/core/vdom';
+import { node } from '@dojo/framework/core/vdom';
 ```
 
 -   `node.get(key: string | number): HTMLElement | null`
@@ -714,7 +714,7 @@ An additional use for `diffProperty` is to be able to return a value that will b
 **API:**
 
 ```ts
-import diffProperty from '@dojo/framework/core/vdom';
+import { diffProperty } from '@dojo/framework/core/vdom';
 ```
 
 -   `diffProperty(propertyName: string, properties: () => WidgetProperties (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
@@ -747,7 +747,7 @@ Assigns a function that is called on widget destruction, allowing any required r
 **API:**
 
 ```ts
-import destroy from '@dojo/framework/core/vdom';
+import { destroy } from '@dojo/framework/core/vdom';
 ````
 
 -   `destroy(destroyFunction: () => void)`
@@ -762,7 +762,7 @@ Provides access to the widget's own `Registry` instance, as well as the root app
 **API:**
 
 ```ts
-import getRegistry from '@dojo/framework/core/vdom';
+import { getRegistry } from '@dojo/framework/core/vdom';
 ```
 
 -   `getRegistry(): RegistryHandler | null`
@@ -775,7 +775,7 @@ Allows widgets to pause and resume their rendering logic; useful when short-circ
 **API:**
 
 ```ts
-import defer from '@dojo/framework/core/vdom';
+import { defer } from '@dojo/framework/core/vdom';
 ```
 
 -   `defer.pause()`

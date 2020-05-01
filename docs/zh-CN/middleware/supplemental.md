@@ -80,7 +80,7 @@ export default MiddlewareConsumerWidget;
 
 ```ts
 import { create, defer } from '@dojo/framework/core/vdom';
-import { icache } from '@dojo/framework/core/middleware/icache';
+import icache from '@dojo/framework/core/middleware/icache';
 
 const factory = create({ defer, icache });
 
@@ -687,7 +687,7 @@ import block from '@dojo/framework/core/middleware/block';
 **API:**
 
 ```ts
-import invalidator from '@dojo/framework/core/vdom';
+import { invalidator } from '@dojo/framework/core/vdom';
 ```
 
 -   `invalidator()`
@@ -700,7 +700,7 @@ import invalidator from '@dojo/framework/core/vdom';
 **API:**
 
 ```ts
-import node from '@dojo/framework/core/vdom';
+import { node } from '@dojo/framework/core/vdom';
 ```
 
 -   `node.get(key: string | number): HTMLElement | null`
@@ -719,7 +719,7 @@ import node from '@dojo/framework/core/vdom';
 **API:**
 
 ```ts
-import diffProperty from '@dojo/framework/core/vdom';
+import { diffProperty } from '@dojo/framework/core/vdom';
 ```
 
 -   `diffProperty(propertyName: string, properties: () => WidgetProperties, diff: (current: WidgetProperties, next: WidgetProperties) => void | WidgetProperties[propertyName])`
@@ -753,7 +753,7 @@ export const customMiddleware = factory(({ properties, middleware: { diffPropert
 **API:**
 
 ```ts
-import destroy from '@dojo/framework/core/vdom';
+import { destroy } from '@dojo/framework/core/vdom';
 ```
 
 -   `destroy(destroyFunction: () => void)`
@@ -768,7 +768,7 @@ import destroy from '@dojo/framework/core/vdom';
 **API:**
 
 ```ts
-import getRegistry from '@dojo/framework/core/vdom';
+import { getRegistry } from '@dojo/framework/core/vdom';
 ```
 
 -   `getRegistry(): RegistryHandler | null`
@@ -781,7 +781,7 @@ import getRegistry from '@dojo/framework/core/vdom';
 **API:**
 
 ```ts
-import defer from '@dojo/framework/core/vdom';
+import { defer } from '@dojo/framework/core/vdom';
 ```
 
 -   `defer.pause()`
