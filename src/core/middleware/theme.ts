@@ -41,20 +41,10 @@ export const theme = factory(
 		let themeKeys = new Set();
 
 		diffProperty('theme', properties, (current, next) => {
-			const themeInjector = injector.get<ThemeInjector>(INJECTED_THEME_KEY);
 			const diffResult = auto(current.theme, next.theme);
 			if (diffResult.changed) {
 				icache.clear();
 				invalidator();
-			}
-
-			if (!next.theme && themeInjector) {
-				const themePayload = themeInjector.get();
-				if (isThemeInjectorPayloadWithVariant(themePayload)) {
-					return { theme: themePayload.theme, variant: themePayload.variant };
-				} else if (themePayload) {
-					return themePayload.theme;
-				}
 			}
 		});
 		diffProperty('classes', (current: ThemeProperties, next: ThemeProperties) => {
@@ -76,6 +66,22 @@ export const theme = factory(
 				invalidator();
 			}
 		});
+
+		function getTheme() {
+			const { theme } = properties();
+			if (theme) {
+				return theme;
+			}
+			const themeInjector = injector.get<ThemeInjector>(INJECTED_THEME_KEY);
+			if (themeInjector) {
+				const themePayload = themeInjector.get();
+				if (isThemeInjectorPayloadWithVariant(themePayload)) {
+					return { theme: themePayload.theme, variant: themePayload.variant };
+				} else if (themePayload) {
+					return themePayload.theme;
+				}
+			}
+		}
 
 		const themeInjector = injector.get(INJECTED_THEME_KEY);
 		if (!themeInjector) {
@@ -114,7 +120,8 @@ export const theme = factory(
 				const { [THEME_KEY]: key, ...classes } = css;
 				themeKeys.add(key);
 				let theme = classes as ClassNames;
-				let { theme: currentTheme, classes: currentClasses } = properties();
+				let { classes: currentClasses } = properties();
+				let currentTheme = getTheme();
 
 				if (currentTheme && isThemeWithVariant(currentTheme)) {
 					currentTheme = isThemeWithVariants(currentTheme.theme)
@@ -138,7 +145,7 @@ export const theme = factory(
 				return theme as T;
 			},
 			variant() {
-				const { theme } = properties();
+				const theme = getTheme();
 				if (theme && isThemeWithVariant(theme)) {
 					return theme.variant.value.root;
 				}
