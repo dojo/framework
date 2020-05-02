@@ -94,8 +94,9 @@ The data middleware provides a widget access to the underlying resource and its 
 
 ```ts
 import { create } from '@dojo/framework/core/vdom';
-import data from '@dojo/framework/core/middleware/data';
+import createDataMiddleware from '@dojo/framework/core/middleware/data';
 
+const data = createDataMiddleware();
 const factory = create({ data });
 
 export const DataAwareWidget = factory(function DataAwareWidget({
