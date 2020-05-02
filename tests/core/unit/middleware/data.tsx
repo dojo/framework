@@ -21,7 +21,7 @@ jsdomDescribe('data middleware', () => {
 		const root = document.createElement('div');
 		const factory = create({ data: createDataMiddleware<{ hello: string }>() });
 
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { get, getOptions } = data();
 			return <div>{JSON.stringify(get(getOptions()))}</div>;
 		});
@@ -29,7 +29,7 @@ jsdomDescribe('data middleware', () => {
 		const resource = createResource<{ hello: string }>();
 
 		const App = create()(() => {
-			return <Thing resource={resource({ data: [{ hello: '1' }] })} />;
+			return <Widget resource={resource({ data: [{ hello: '1' }] })} />;
 		});
 
 		const r = renderer(() => <App />);
@@ -37,12 +37,12 @@ jsdomDescribe('data middleware', () => {
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([{ hello: '1' }])}</div>`);
 	});
 
-	it('should update when setOptions() called', () => {
+	it('should update when setOptions called', () => {
 		const root = document.createElement('div');
 		const factory = create({ data: createDataMiddleware<{ hello: string }>() });
 
 		let set: any;
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { get, getOptions, setOptions } = data();
 			set = setOptions;
 			const { pageSize = 1, pageNumber = 1 } = getOptions();
@@ -53,7 +53,7 @@ jsdomDescribe('data middleware', () => {
 		const resource = createResource<{ hello: string }>();
 
 		const App = create()(() => {
-			return <Thing resource={resource({ data: [{ hello: '1' }, { hello: '2' }] })} />;
+			return <Widget resource={resource({ data: [{ hello: '1' }, { hello: '2' }] })} />;
 		});
 
 		const r = renderer(() => <App />);
@@ -67,7 +67,7 @@ jsdomDescribe('data middleware', () => {
 	it('should transform data', () => {
 		const root = document.createElement('div');
 		const factory = create({ data: createDataMiddleware<{ hello: string }>() });
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { get, getOptions, setOptions, getTotal } = data();
 			const { pageSize = 1, pageNumber = 1 } = getOptions();
 			setOptions({ pageSize, pageNumber });
@@ -83,7 +83,9 @@ jsdomDescribe('data middleware', () => {
 
 		const App = create()(() => {
 			return (
-				<Thing resource={resource({ transform: { hello: 'wrong' }, data: [{ wrong: '1' }, { wrong: '2' }] })} />
+				<Widget
+					resource={resource({ transform: { hello: 'wrong' }, data: [{ wrong: '1' }, { wrong: '2' }] })}
+				/>
 			);
 		});
 
@@ -95,7 +97,7 @@ jsdomDescribe('data middleware', () => {
 	it('should by able to filter with transformed data', () => {
 		const root = document.createElement('div');
 		const factory = create({ data: createDataMiddleware<{ hello: string; foo?: string }>() });
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { getOrRead, getOptions, setOptions } = data();
 			const {
 				query: {}
@@ -110,7 +112,7 @@ jsdomDescribe('data middleware', () => {
 
 		const App = create()(() => {
 			return (
-				<Thing
+				<Widget
 					resource={resource({
 						transform: { hello: 'wrong' },
 						data: [{ wrong: '1', foo: '1' }, { wrong: '2', foo: '1' }, { wrong: '2', foo: '2' }]
@@ -128,7 +130,7 @@ jsdomDescribe('data middleware', () => {
 		const root = document.createElement('div');
 		const factory = create({ data: createDataMiddleware<{ hello: number }>() });
 
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { getOrRead, getOptions, setOptions } = data();
 			const { pageSize = 1, pageNumber = 1 } = getOptions();
 			setOptions({ pageSize, pageNumber });
@@ -138,7 +140,9 @@ jsdomDescribe('data middleware', () => {
 		const resource = createResource<{ wrong: number }>();
 
 		const App = create()(() => {
-			return <Thing resource={resource({ transform: { hello: 'wrong' }, data: [{ wrong: 1 }, { wrong: 2 }] })} />;
+			return (
+				<Widget resource={resource({ transform: { hello: 'wrong' }, data: [{ wrong: 1 }, { wrong: 2 }] })} />
+			);
 		});
 
 		const r = renderer(() => <App />);
@@ -159,7 +163,7 @@ jsdomDescribe('data middleware', () => {
 			}
 		});
 
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { getOrRead, isLoading } = data();
 			const items = getOrRead({ pageSize: 1, pageNumber: 1 });
 			const loading = isLoading({ pageSize: 1, pageNumber: 1 });
@@ -170,7 +174,7 @@ jsdomDescribe('data middleware', () => {
 		});
 
 		const App = create()(() => {
-			return <Thing resource={resource()} />;
+			return <Widget resource={resource()} />;
 		});
 
 		const r = renderer(() => <App />);
@@ -196,7 +200,7 @@ jsdomDescribe('data middleware', () => {
 			}
 		});
 
-		const Thing = factory(({ middleware: { data } }) => {
+		const Widget = factory(({ middleware: { data } }) => {
 			const { getOrRead, isLoading, isFailed } = data();
 			const items = getOrRead({ pageSize: 1, pageNumber: 1 });
 			const loading = isLoading({ pageSize: 1, pageNumber: 1 });
@@ -211,7 +215,7 @@ jsdomDescribe('data middleware', () => {
 		});
 
 		const App = create()(() => {
-			return <Thing resource={resource()} />;
+			return <Widget resource={resource()} />;
 		});
 
 		const r = renderer(() => <App />);
