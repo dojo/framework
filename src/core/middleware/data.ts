@@ -126,13 +126,23 @@ function transformQuery<T>(query: Query, transformConfig?: TransformConfig<T>): 
 
 function transformData<T>(item: any, transformConfig: TransformConfig<T>) {
 	let transformedItem: Partial<T> = {};
+	let sourceKeys: string[] = [];
 	Object.keys(transformConfig).forEach((key: string) => {
 		const sourceKey = transformConfig[key as keyof T];
 		transformedItem = {
 			...transformedItem,
 			[key]: item[sourceKey]
 		};
+		sourceKeys.push(sourceKey);
 	});
+	Object.keys(item)
+		.filter((key) => sourceKeys.indexOf(key) === -1)
+		.forEach((key) => {
+			transformedItem = {
+				...transformedItem,
+				[key]: item[key]
+			};
+		});
 	return transformedItem;
 }
 

@@ -100,7 +100,7 @@ export function createResource<S = any>(config: DataTemplate<S> = createMemoryTe
 	};
 
 	function invalidate(types: SubscriptionType[], options: ResourceOptions) {
-		const key = `${getQueryKey(options)}-${getPageKey(options)}`;
+		const key = `${getQueryKey(options.query)}-${getPageKey(options)}`;
 
 		types.forEach((type) => {
 			const keyedInvalidatorMap = invalidatorMaps[type];
@@ -117,12 +117,12 @@ export function createResource<S = any>(config: DataTemplate<S> = createMemoryTe
 		return `page-${pageNumber}-pageSize-${pageSize}`;
 	}
 
-	function getQueryKey(query = {}): string {
+	function getQueryKey(query: ResourceQuery[] = []): string {
 		return JSON.stringify(query);
 	}
 
 	function subscribe(type: SubscriptionType, options: ResourceOptions, invalidator: Invalidator) {
-		const key = `${getQueryKey(options)}-${getPageKey(options)}`;
+		const key = `${getQueryKey(options.query)}-${getPageKey(options)}`;
 		const keyedInvalidatorMap = invalidatorMaps[type];
 		const invalidatorSet = keyedInvalidatorMap.get(key) || new Set<Invalidator>();
 		invalidatorSet.add(invalidator);
@@ -210,7 +210,7 @@ export function createResource<S = any>(config: DataTemplate<S> = createMemoryTe
 		}
 	}
 
-	function setData(start: number, data: S[], size: number, query = {}) {
+	function setData(start: number, data: S[], size: number, query: ResourceQuery[] = []) {
 		const queryKey = getQueryKey(query);
 		const cachedQueryData = queryMap.get(queryKey);
 		const newQueryData = cachedQueryData && cachedQueryData.length ? cachedQueryData : [];
@@ -223,7 +223,7 @@ export function createResource<S = any>(config: DataTemplate<S> = createMemoryTe
 	}
 
 	function getOrRead(options: ResourceOptions): S[] | undefined {
-		const { pageNumber, query, pageSize } = options;
+		const { pageNumber = 1, query, pageSize } = options;
 		const queryKey = getQueryKey(options.query);
 
 		if (isLoading(options) || isFailed(options)) {
