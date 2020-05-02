@@ -30,7 +30,7 @@ describe('resource', () => {
 	});
 
 	it('returns resource an associated data', () => {
-		const resource = createResource()([1, 2, 3]);
+		const resource = createResource()({ data: [1, 2, 3] });
 		assert.hasAllKeys(resource.resource, [
 			'getOrRead',
 			'get',
@@ -54,7 +54,7 @@ describe('resource', () => {
 	it('calls the read template function with calculated offset when getOrRead is called', () => {
 		template.read.returns({ data: [], total: 0 });
 		const resource = createResource(template);
-		const query = [{ value: 'test', keys: ['foo', 'bar'] }];
+		const query = [{ value: 'test', keys: 'foo' }];
 		resource.getOrRead({ pageNumber: 2, pageSize: 10, query });
 		assert.isTrue(template.read.calledWith({ offset: 10, size: 10, query }));
 	});
@@ -69,7 +69,7 @@ describe('resource', () => {
 		assert.deepEqual(resource.get({}), data);
 	});
 
-	it('sets the date and total when the set function is used to sideload data', () => {
+	it('sets the date and total when the set function is used to side-load data', () => {
 		const testData = [{ value: 1 }, { value: 2 }];
 		template.read.returns({ data: testData, total: 2 });
 		const resource = createResource(template);
@@ -96,7 +96,7 @@ describe('resource', () => {
 		template.read.returns(new Promise(() => {}));
 		const invalidatorStub = sb.stub();
 		const resource = createResource(template);
-		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: ['foo', 'bar'] }] };
+		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: 'foo' }] };
 		resource.subscribe('loading', options, invalidatorStub);
 		resource.getOrRead(options);
 		assert.isTrue(resource.isLoading(options));
@@ -109,7 +109,7 @@ describe('resource', () => {
 		const loadingInvalidator = sb.stub();
 		const failedInvalidator = sb.stub();
 		const resource = createResource(template);
-		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: ['foo', 'bar'] }] };
+		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: 'foo' }] };
 		resource.subscribe('loading', options, loadingInvalidator);
 		resource.subscribe('failed', options, failedInvalidator);
 		resource.getOrRead(options);
@@ -127,7 +127,7 @@ describe('resource', () => {
 		});
 		template.read.returns(promise);
 		const resource = createResource(template);
-		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: ['foo', 'bar'] }] };
+		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: 'foo' }] };
 		resource.subscribe('data', options, dataInvalidator);
 		resource.getOrRead(options);
 		resolver({ data: ['foo', 'bar'], total: 2 });
@@ -144,7 +144,7 @@ describe('resource', () => {
 		template.read.returns(new Promise(() => {}));
 		const invalidatorStub = sb.stub();
 		const resource = createResource(template);
-		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: ['foo', 'bar'] }] };
+		const options = { pageNumber: 1, pageSize: 2, query: [{ value: 'test', keys: 'foo' }] };
 		resource.subscribe('loading', options, invalidatorStub);
 		resource.getOrRead(options);
 		assert.isTrue(invalidatorStub.called);
@@ -185,10 +185,10 @@ describe('resource', () => {
 		resource.set([{ value: 'one' }, { value: 'two' }]);
 		assert.deepEqual(resource.get({}), [{ value: 'one' }, { value: 'two' }]);
 		assert.equal(resource.getTotal({}), 2);
-		let results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
+		let results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: 'value' }] });
 		assert.deepEqual(results, [{ value: 'one' }]);
-		results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['other'] }] });
-		assert.deepEqual(results, [{ value: 'one' }, { value: 'two' }]);
+		results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'two', keys: 'value' }] });
+		assert.deepEqual(results, [{ value: 'two' }]);
 	});
 
 	it('Can provide a custom filter with memory resource', () => {
@@ -205,7 +205,7 @@ describe('resource', () => {
 		resource.set([{ value: 'one' }, { value: 'two' }]);
 		assert.deepEqual(resource.get({}), [{ value: 'one' }, { value: 'two' }]);
 		assert.equal(resource.getTotal({}), 2);
-		const results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: ['value'] }] });
+		const results = resource.getOrRead({ pageNumber: 1, pageSize: 10, query: [{ value: 'one', keys: 'value' }] });
 		assert.deepEqual(results, [{ value: 'two' }]);
 	});
 });

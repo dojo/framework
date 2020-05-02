@@ -1,6 +1,7 @@
 import { create, invalidator, destroy, diffProperty } from '../vdom';
 import { Resource, ResourceOptions, ResourceQuery, TransformConfig } from '../resource';
 import { Invalidator } from '../interfaces';
+import { auto } from '../diff';
 
 type Query = { [key: string]: string | undefined };
 
@@ -15,87 +16,88 @@ interface OptionsWrapper {
 	setOptions(newOptions: Options, invalidator: Invalidator): void;
 }
 
-interface ResourceWrapper {
-	resource: Resource;
+interface ResourceWrapper<R, T> {
+	resource: Resource<R, T>;
 	createOptionsWrapper(): OptionsWrapper;
+	transform?: TransformConfig<T, any>;
+	type: 'WRAPPER';
 }
 
 interface ResourceWithData {
 	resource: Resource;
-	data: any[];
+	transform?: any;
+	data?: any[];
+	type: 'RESOURCE';
 }
 
-export type ResourceOrResourceWrapper = Resource | ResourceWrapper | ResourceWithData;
+export type ResourceOrResourceWrapper<R, T> = ResourceWithData | ResourceWrapper<R, T>;
 
-export interface DataProperties {
-	resource: ResourceOrResourceWrapper;
+export interface DataProperties<T = void> {
+	resource:
+		| (T extends infer R
+				? { resource: Resource<R, T>; transform?: TransformConfig<T, any>; data?: any; type: 'RESOURCE' }
+				: any)
+		| ResourceWrapper<T, T>;
 }
 
-export interface DataTransformProperties<T = void> {
-	transform: TransformConfig<T>;
-	resource: ResourceOrResourceWrapper;
-}
-
-export interface DataInitialiserOptions {
+export interface DataInitializerOptions {
 	reset?: boolean;
-	resource?: ResourceOrResourceWrapper;
+	resource?: ResourceOrResourceWrapper<any, any>;
 	key?: string;
-}
-
-function isResource(resourceWrapperOrResource: any): resourceWrapperOrResource is Resource {
-	return !!(resourceWrapperOrResource as any).getOrRead;
-}
-
-function isDataTransformProperties<T>(properties: any): properties is DataTransformProperties<T> {
-	return !!properties.transform;
 }
 
 function createOptionsWrapper(): OptionsWrapper {
 	let options: Options = {};
 
-	const invalidators = new Set<Invalidator>();
+	const invalidatorSet = new Set<Invalidator>();
 
 	function invalidate() {
-		[...invalidators].forEach((invalidator) => {
+		[...invalidatorSet].forEach((invalidator) => {
 			invalidator();
 		});
 	}
 
 	return {
 		setOptions(newOptions: Options, invalidator: Invalidator) {
-			invalidators.add(invalidator);
+			invalidatorSet.add(invalidator);
 			if (newOptions !== options) {
 				options = newOptions;
 				invalidate();
 			}
 		},
 		getOptions(invalidator: Invalidator) {
-			invalidators.add(invalidator);
+			invalidatorSet.add(invalidator);
 			return options;
 		}
 	};
 }
 
-function createResourceWrapper(resource: Resource, options?: OptionsWrapper): ResourceWrapper {
+function createResourceWrapper(
+	resource: Resource<any, any>,
+	transform?: any,
+	options?: OptionsWrapper
+): ResourceWrapper<any, any> {
 	return {
 		resource,
-		createOptionsWrapper: options ? () => options : createOptionsWrapper
+		transform,
+		createOptionsWrapper: options ? () => options : createOptionsWrapper,
+		type: 'WRAPPER'
 	};
 }
 
-function isResourceWithData(resource: any): resource is ResourceWithData {
+function isResourceWithData(resource: any): resource is Required<ResourceWithData> {
 	return resource && !!resource.data;
 }
 
-function createResourceOptions(
-	options: Options,
-	properties: DataProperties | DataTransformProperties
-): ResourceOptions {
+function isResourceWrapper(resource: any): resource is ResourceWrapper<any, any> {
+	return Boolean(resource && resource.type === 'WRAPPER');
+}
+
+function createResourceOptions(options: Options, resource: ResourceOrResourceWrapper<any, any>): ResourceOptions {
 	if (options.query) {
 		let query: ResourceQuery[] = [];
-		if (isDataTransformProperties(properties)) {
-			const newProperties: DataTransformProperties<any> = properties;
-			query = transformQuery(options.query, newProperties.transform);
+		if (resource.transform) {
+			query = transformQuery(options.query, resource.transform);
 		} else {
 			query = transformQuery(options.query);
 		}
@@ -112,13 +114,13 @@ function createResourceOptions(
 function transformQuery<T>(query: Query, transformConfig?: TransformConfig<T>): ResourceQuery[] {
 	return Object.keys(query).map((key: string) => {
 		if (!transformConfig) {
-			return { value: query[key], keys: [key] };
+			return { value: query[key], keys: key };
 		} else {
 			const destinationValues = transformConfig[key as keyof T];
 			if (destinationValues) {
 				return { value: query[key], keys: destinationValues };
 			} else {
-				return { value: query[key], keys: [key] };
+				return { value: query[key], keys: key };
 			}
 		}
 	});
@@ -127,33 +129,20 @@ function transformQuery<T>(query: Query, transformConfig?: TransformConfig<T>): 
 function transformData<T>(item: any, transformConfig: TransformConfig<T>) {
 	let transformedItem: Partial<T> = {};
 	Object.keys(transformConfig).forEach((key: string) => {
-		const sourceValues = transformConfig[key as keyof T];
-		if (sourceValues) {
-			if (sourceValues.length === 1) {
-				transformedItem = {
-					...transformedItem,
-					[key]: item[sourceValues[0]]
-				};
-			} else {
-				const transformedValues: string | undefined[] = sourceValues.map((value) => item[value]);
-				transformedItem = {
-					...transformedItem,
-					[key]: transformedValues.join(' ')
-				};
-			}
-		}
+		const sourceKey = transformConfig[key as keyof T];
+		transformedItem = {
+			...transformedItem,
+			[key]: item[sourceKey]
+		};
 	});
 	return transformedItem;
 }
 
 export function createDataMiddleware<T = void>() {
-	const factory = create({ invalidator, destroy, diffProperty }).properties<
-		T extends void ? DataProperties : DataTransformProperties<T>
-	>();
+	const factory = create({ invalidator, destroy, diffProperty }).properties<DataProperties<T>>();
 
 	const data = factory(({ middleware: { invalidator, destroy, diffProperty }, properties }) => {
 		const optionsWrapperMap = new Map<Resource, Map<string, OptionsWrapper>>();
-		const resourceWithDataMap = new Map<T[], Resource>();
 
 		destroy(() => {
 			[...optionsWrapperMap.keys()].forEach((resource) => {
@@ -163,42 +152,41 @@ export function createDataMiddleware<T = void>() {
 
 		diffProperty('resource', properties, ({ resource: currentResource }, { resource: nextResource }) => {
 			if (isResourceWithData(currentResource) && isResourceWithData(nextResource)) {
-				if (
-					nextResource.data !== currentResource.data ||
-					nextResource.data.length !== currentResource.data.length
-				) {
-					resourceWithDataMap.delete(nextResource.data);
+				const result = auto(currentResource.data, nextResource.data);
+				if (result.changed) {
 					invalidator();
 				}
 			}
 			return nextResource;
 		});
 
-		return (dataOptions: DataInitialiserOptions = {}) => {
-			let passedResourceProperty = dataOptions.resource || properties().resource;
+		return (dataOptions: DataInitializerOptions = {}) => {
+			let passedResourceProperty = properties().resource;
 			let resourceWrapperOrResource;
+			const {
+				resource: { transform }
+			} = properties();
 
-			if (isResourceWithData(passedResourceProperty)) {
+			if (isResourceWrapper(passedResourceProperty)) {
+				resourceWrapperOrResource = passedResourceProperty;
+			} else {
 				const { resource, data } = passedResourceProperty;
-				if (!resourceWithDataMap.has(data)) {
-					resourceWithDataMap.set(data, resource);
+				if (data) {
 					resource.set(data);
 				}
-				resourceWrapperOrResource = resourceWithDataMap.get(data);
-			} else {
-				resourceWrapperOrResource = passedResourceProperty;
+				resourceWrapperOrResource = resource;
 			}
 
-			let resourceWrapper: ResourceWrapper;
+			let resourceWrapper: ResourceWrapper<any, T>;
 
-			if (isResource(resourceWrapperOrResource)) {
-				resourceWrapper = createResourceWrapper(resourceWrapperOrResource);
+			if (isResourceWrapper(resourceWrapperOrResource)) {
+				resourceWrapper = resourceWrapperOrResource;
 			} else {
-				resourceWrapper = resourceWrapperOrResource as ResourceWrapper;
+				resourceWrapper = createResourceWrapper(resourceWrapperOrResource, transform);
 			}
 
 			if (dataOptions.reset) {
-				resourceWrapper = createResourceWrapper(resourceWrapper.resource);
+				resourceWrapper = createResourceWrapper(resourceWrapper.resource, transform);
 			}
 
 			const { resource } = resourceWrapper;
@@ -223,48 +211,58 @@ export function createDataMiddleware<T = void>() {
 
 			return {
 				getOrRead(options: Options): T extends void ? any : T[] | undefined {
-					const props = properties();
-					const resourceOptions = createResourceOptions(options, props);
+					const { resource: resourceContainer } = properties();
+					const { transform, resource } = resourceContainer;
+
+					const resourceOptions = createResourceOptions(options, resourceContainer);
 
 					resource.subscribe('data', resourceOptions, invalidator);
 
 					const data = resource.getOrRead(resourceOptions);
 
-					if (data && data.length && isDataTransformProperties(props)) {
-						return data.map((item: any) => transformData(item, props.transform));
+					if (data && data.length && transform) {
+						return data.map((item: any) => transformData(item, transform));
 					}
 
 					return data;
 				},
 				get(options: Options): T extends void ? any : T[] | undefined {
-					const props = properties();
-					const resourceOptions = createResourceOptions(options, props);
+					const { resource: resourceContainer } = properties();
+					const { transform, resource } = resourceContainer;
+
+					const resourceOptions = createResourceOptions(options, resourceContainer);
 
 					const data = resource.get(resourceOptions);
 
-					if (data && data.length && isDataTransformProperties(props)) {
-						return data.map((item: any) => transformData(item, props.transform));
+					if (data && data.length && transform) {
+						return data.map((item: any) => transformData(item, transform));
 					}
 
 					return data;
 				},
 				getTotal(options: Options) {
-					const props = properties();
-					const resourceOptions = createResourceOptions(options, props);
+					const { resource: resourceContainer } = properties();
+					const { resource } = resourceContainer;
+
+					const resourceOptions = createResourceOptions(options, resourceContainer);
 
 					resource.subscribe('total', resourceOptions, invalidator);
 					return resource.getTotal(resourceOptions);
 				},
 				isLoading(options: Options) {
-					const props = properties();
-					const resourceOptions = createResourceOptions(options, props);
+					const { resource: resourceContainer } = properties();
+					const { resource } = resourceContainer;
+
+					const resourceOptions = createResourceOptions(options, resourceContainer);
 
 					resource.subscribe('loading', resourceOptions, invalidator);
 					return resource.isLoading(resourceOptions);
 				},
 				isFailed(options: Options) {
-					const props = properties();
-					const resourceOptions = createResourceOptions(options, props);
+					const { resource: resourceContainer } = properties();
+					const { resource } = resourceContainer;
+
+					const resourceOptions = createResourceOptions(options, resourceContainer);
 
 					resource.subscribe('failed', resourceOptions, invalidator);
 					return resource.isFailed(resourceOptions);
@@ -278,8 +276,8 @@ export function createDataMiddleware<T = void>() {
 				get resource() {
 					return resourceWrapper;
 				},
-				shared() {
-					return createResourceWrapper(resource, optionsWrapper);
+				shared(): ResourceWrapper<T, T> {
+					return createResourceWrapper(resource, transform, optionsWrapper);
 				}
 			};
 		};
@@ -287,6 +285,4 @@ export function createDataMiddleware<T = void>() {
 	return data;
 }
 
-export const data = createDataMiddleware();
-
-export default data;
+export default createDataMiddleware;

@@ -8,10 +8,16 @@ export interface ResourceOptions {
 	pageSize?: number;
 }
 
-export type ResourceQuery = { keys: string[]; value: string | undefined };
+export type ResourceQuery = { keys: string; value: string | undefined };
 
-export interface Resource<S = any> {
-	(data: S[]): { resource: Resource<S>; data: S[] };
+export interface Resource<S = {}, T = {}> {
+	(options?: { data?: S[] }): { resource: Resource<S, T>; transform?: any; data?: S[]; type: 'RESOURCE' };
+	<T>(options: { transform: TransformConfig<T, S>; data?: S[] }): {
+		resource: Resource<any, any>;
+		transform: TransformConfig<T, S>;
+		data?: S[];
+		type: 'RESOURCE';
+	};
 	getOrRead(options: ResourceOptions): any;
 	get(options: ResourceOptions): any;
 	getTotal(options: ResourceOptions): number | undefined;
@@ -22,7 +28,9 @@ export interface Resource<S = any> {
 	set(data: S[]): void;
 }
 
-export type TransformConfig<T, S = void> = { [P in keyof T]: (S extends void ? string : keyof S)[] };
+export type MatchedKeyType<Match, T> = { [K in keyof T]: T[K] extends Match ? K : never }[keyof T];
+
+export type TransformConfig<T, S = void> = { [P in keyof T]: S extends void ? string : keyof S };
 
 export interface ReadOptions {
 	offset?: number;
@@ -48,29 +56,21 @@ export interface DataTemplate<S = {}> {
 type Status = 'LOADING' | 'FAILED';
 type InvalidatorMaps = { [key in SubscriptionType]: Map<string, Set<Invalidator>> };
 
-export function createTransformer<S, T>(template: DataTemplate<S>, transformer: TransformConfig<T, S>) {
-	return transformer;
+function isAsyncResponse<S>(response: any): response is DataResponsePromise<S> {
+	return response.then !== undefined;
 }
 
-function isAsyncResponse<S>(response: DataResponsePromise<S> | DataResponse<S>): response is DataResponsePromise<S> {
-	return (response as any).then !== undefined;
-}
-
-export function defaultFilter(query: ResourceQuery[], item: any) {
-	let filterValue = '';
-
-	query.forEach((q) => {
-		if (q.keys.indexOf('value') !== -1) {
-			filterValue = q.value || '';
+export function defaultFilter(queries: ResourceQuery[], item: any) {
+	for (let i = 0; i < queries.length; i++) {
+		const query = queries[i];
+		if (query.value) {
+			const result = item[query.keys].toLowerCase().indexOf(query.value!.toLowerCase()) !== -1;
+			if (!result) {
+				return false;
+			}
 		}
-	});
-
-	if (!filterValue) {
-		return true;
 	}
-
-	let filterText = item.label || item.value;
-	return filterText.toLocaleLowerCase().indexOf(filterValue.toLocaleLowerCase()) >= 0;
+	return true;
 }
 
 export function createMemoryTemplate<S = void>({
@@ -86,7 +86,7 @@ export function createMemoryTemplate<S = void>({
 	};
 }
 
-export function createResource<S>(config: DataTemplate<S> = createMemoryTemplate<S>()): Resource<S> {
+export function createResource<S = any>(config: DataTemplate<S> = createMemoryTemplate<S>()): Resource<S> {
 	const { read } = config;
 	let queryMap = new Map<string, S[]>();
 	let statusMap = new Map<string, { [key: string]: Status }>();
@@ -311,13 +311,15 @@ export function createResource<S>(config: DataTemplate<S> = createMemoryTemplate
 		}
 	}
 
-	function resource(data: any[]) {
+	function resource(options: { transform?: any; data?: any[] } = {}) {
+		const { data, transform } = options;
 		return {
 			resource,
-			data
+			data,
+			transform,
+			type: 'RESOURCE'
 		};
 	}
-
 	resource.getOrRead = getOrRead;
 	resource.get = get;
 	resource.getTotal = getTotal;
