@@ -3,6 +3,7 @@ import './breakpoint';
 import './cache';
 import './data';
 import './dimensions';
+import './drag';
 import './i18n';
 import './focus';
 import './icache';
