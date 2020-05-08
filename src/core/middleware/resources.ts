@@ -92,7 +92,8 @@ export type ResourceRead<S> = (
 export interface ResourceFind<S> {
 	(options: ResourceGetOrReadOptions<S>, findOptions: ResourceFindOptions<S>, operations: ResourceOperations<S>):
 		| ResourceFindResponse<S>
-		| Promise<ResourceFindResponse<S>>;
+		| Promise<ResourceFindResponse<S>>
+		| undefined;
 }
 
 export type ResourceInit<S> = (data: S[], options: ResourceOperations<S>) => void;
@@ -345,7 +346,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 			const keyedInvalidatorMap = invalidatorMaps[type];
 			const invalidatorSet = keyedInvalidatorMap.get(key);
 			if (invalidatorSet) {
-				[...invalidatorSet].forEach((invalidator: any) => {
+				[...invalidatorSet].forEach((invalidator) => {
 					invalidator();
 				});
 			}
@@ -444,7 +445,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		metaMap.set(metaKey, meta);
 	}
 
-	function setData(response: ResourceResponse<S>, options: { page: number; size: number; query: any }) {
+	function setData(response: ResourceResponse<S>, options: { page: number; size: number; query: ResourceQuery<S> }) {
 		const { data, total } = response;
 		const { size, page } = options;
 		const offset = (page - 1) * size;
@@ -469,8 +470,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		const { size, query } = options;
 		const getOrReadResponse: (undefined | S[])[] = [];
 		const requestKey = getKey(options);
-		const promises: any[] = [];
-		let isAsync = false;
+		const promises: Promise<any>[] = [];
 
 		for (let i = 0; i < pages.length; i++) {
 			const page = pages[i];
@@ -501,11 +501,10 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 					put
 				}
 			);
-			promises.push(response);
 
 			if (isThenable(response)) {
+				promises.push(response);
 				getOrReadResponse.push(undefined);
-				isAsync = true;
 				setStatus('LOADING', statusKey);
 				invalidate(['loading'], { size, page, query });
 				response
@@ -522,7 +521,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 				getOrReadResponse.push(setData(response, { size, page, query }));
 			}
 		}
-		if (isAsync) {
+		if (promises.length) {
 			setStatus('LOADING', requestKey);
 			Promise.all(promises)
 				.then(() => {
@@ -648,22 +647,20 @@ export function createMemoryResourceTemplate<S = void>(
 			const { type } = findOptions;
 			const { data } = get();
 			const filteredData = data.filter((item) => defaultFilter(query, item));
-			let found: any;
+			let found: ResourceFindResponse<any> | undefined;
 			for (let i = 0; i < filteredData.length; i++) {
 				const item = filteredData[i];
 				if (defaultFilter(findOptions.query, item, type)) {
 					found = {
 						item,
-						index: i
+						index: i,
+						page: Math.floor(i / size) + 1,
+						pageIndex: i % size
 					};
 					if (i >= findOptions.start) {
 						break;
 					}
 				}
-			}
-			if (found) {
-				found.page = Math.floor(found.index / size) + 1;
-				found.pageIndex = found.index % size;
 			}
 			return found;
 		}
