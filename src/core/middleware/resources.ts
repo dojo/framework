@@ -31,7 +31,7 @@ export interface ResourceFindOptions<S> {
 }
 
 export interface ResourceFindResponse<S> {
-	item?: S;
+	item: S;
 	page: number;
 	index: number;
 	pageIndex: number;
@@ -67,36 +67,34 @@ export interface Resource<S = {}> {
 
 export interface ResourceReadOptions<S> {
 	offset: number;
+	page: number;
 	size: number;
 	query: ResourceQuery<S>;
 }
 
-export interface ResourceOperations<S> {
+export interface ResourceControls<S> {
 	get: Getter<S>;
 	put: Putter<S>;
 }
 
-export type Putter<S> = (data: S[], total: number) => void;
+export type Putter<S> = (resourceResponse: ResourceResponse<S>, options: ResourceResponseOptions<S>) => void;
 
 export type Getter<S> = () => ResourceResponse<S>;
 
 export type ResourceResponse<S> = { data: S[]; total: number };
 
-export type ResourceResponsePromise<S> = Promise<ResourceResponse<S>>;
+export type ResourceResponseOptions<S> = { size: number; query: ResourceQuery<S>; offset: number };
 
-export type ResourceRead<S> = (
-	options: ResourceReadOptions<S>,
-	operations: ResourceOperations<S>
-) => ResourceResponse<S> | ResourceResponsePromise<S>;
+export type ResourceRead<S> = (options: ResourceReadOptions<S>, controls: ResourceControls<S>) => void | Promise<void>;
 
 export interface ResourceFind<S> {
-	(options: ResourceGetOrReadOptions<S>, findOptions: ResourceFindOptions<S>, operations: ResourceOperations<S>):
+	(options: ResourceGetOrReadOptions<S>, findOptions: ResourceFindOptions<S>, controls: ResourceControls<S>):
 		| ResourceFindResponse<S>
 		| Promise<ResourceFindResponse<S>>
 		| undefined;
 }
 
-export type ResourceInit<S> = (data: S[], options: ResourceOperations<S>) => void;
+export type ResourceInit<S> = (data: S[], controls: ResourceControls<S>) => void;
 
 export interface ResourceTemplate<S = {}, T = {}> {
 	read: ResourceRead<S>;
@@ -183,7 +181,7 @@ function getKey({ page, size, query }: Required<ResourceGetOrReadOptions<any>>):
 	return `page-${JSON.stringify(page)}-size-${size}-query-${JSON.stringify(query)}`;
 }
 
-function getDataKey({ query }: Required<ResourceGetOrReadOptions<any>>): string {
+function getDataKey({ query }: ResourceResponseOptions<any> | ResourceGetOrReadOptions<any>): string {
 	return `${JSON.stringify(query)}`;
 }
 
@@ -293,6 +291,10 @@ function transformOptions<T extends ResourceGetOrReadOptions<any>>(
 	return options;
 }
 
+function defaultInit(data: any[], { put }: ResourceControls<any>) {
+	put({ data, total: data.length }, { size: 30, query: {}, offset: 0 });
+}
+
 function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []): Resource<S> {
 	const dataMap = new Map<string, S[]>();
 	const metaMap = new Map<string, ResourceMeta<S>>();
@@ -306,7 +308,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		failed: new Map<string, Set<Invalidator>>(),
 		find: new Map<string, Set<Invalidator>>()
 	};
-	const { read, init, find } = template;
+	const { read, init = defaultInit, find } = template;
 
 	function get() {
 		const dataKey = getDataKey({ page: 1, size: 30, query: {} });
@@ -314,18 +316,14 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		return { data, total: data.length };
 	}
 
-	function put(data: S[], total: number) {
-		setData({ data, total }, { page: 1, size: 30, query: {} });
+	function put(response: ResourceResponse<S>, options: ResourceResponseOptions<S>) {
+		setData(response, options);
 	}
 
-	if (init) {
-		init(data, {
-			put,
-			get
-		});
-	} else if (data.length) {
-		setData({ data, total: data.length }, { page: 1, size: 30, query: {} });
-	}
+	init(data, {
+		put,
+		get
+	});
 
 	function invalidate(
 		types: ['find'],
@@ -445,10 +443,9 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		metaMap.set(metaKey, meta);
 	}
 
-	function setData(response: ResourceResponse<S>, options: { page: number; size: number; query: ResourceQuery<S> }) {
+	function setData(response: ResourceResponse<S>, options: ResourceResponseOptions<S>) {
 		const { data, total } = response;
-		const { size, page } = options;
-		const offset = (page - 1) * size;
+		const { size, offset, query } = options;
 		const dataKey = getDataKey(options);
 		const cachedData = dataMap.get(dataKey) || [];
 		const maxItem = total ? total : offset + data.length;
@@ -460,9 +457,25 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		}
 		clearStatus(dataKey);
 		dataMap.set(dataKey, cachedData);
-		setMeta(options, total);
-		invalidate(['data', 'meta', 'loading'], options);
+		setMeta({ size, query, page: Math.floor(offset / size) }, total);
+		invalidate(['data', 'meta', 'loading'], { size, query, page: Math.floor(offset / size) });
 		return cachedData.slice(offset, offset + size).filter(() => true);
+	}
+
+	function getCachedPageData(options: { page: number; size: number; query: ResourceQuery<S> }): S[] | undefined {
+		const { size, page } = options;
+		const metaKey = getMetaKey(options);
+		const dataKey = getDataKey(options);
+		const requestedPages = requestPageMap.get(metaKey) || [];
+		const cachedData = dataMap.get(dataKey);
+		if (cachedData) {
+			const offset = (page - 1) * size;
+			const requestedCachedData = cachedData.slice(offset, offset + size).filter(() => true);
+			setMeta(options, cachedData.length);
+			if (requestedCachedData.length === size || requestedPages.indexOf(page) !== -1) {
+				return requestedCachedData;
+			}
+		}
 	}
 
 	function getOrRead(options: ResourceGetOrReadOptions<S>): (undefined | S[])[] {
@@ -475,50 +488,46 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		for (let i = 0; i < pages.length; i++) {
 			const page = pages[i];
 			const offset = (page - 1) * size;
-			const dataKey = getDataKey({ page, size, query });
 			const statusKey = getKey({ page, size, query });
+			const metaKey = getMetaKey({ size, query, page });
+			const requestedPages = requestPageMap.get(metaKey) || [];
 			if (isLoading({ page, size, query }) || isFailed({ page, size, query })) {
 				getOrReadResponse.push(undefined);
 				continue;
 			}
-			const metaKey = getMetaKey({ size, query, page });
-			const requestedPages = requestPageMap.get(metaKey) || [];
-			const cachedData = dataMap.get(dataKey);
+
+			const cachedData = getCachedPageData({ size, query, page });
 			if (cachedData) {
-				const requestedCachedData = cachedData.slice(offset, offset + size).filter(() => true);
-				setMeta(options, cachedData.length);
-				if (requestedCachedData.length === size || requestedPages.indexOf(page) !== -1) {
-					getOrReadResponse.push(requestedCachedData);
-					continue;
-				}
+				getOrReadResponse.push(cachedData);
+				continue;
 			}
+
 			requestedPages.push(page);
 			requestPageMap.set(metaKey, requestedPages);
 			const response = read(
-				{ offset, size, query },
+				{ offset, size, query, page },
 				{
 					get,
 					put
 				}
 			);
 
-			if (isThenable(response)) {
+			if (isThenable<void>(response)) {
 				promises.push(response);
 				getOrReadResponse.push(undefined);
 				setStatus('LOADING', statusKey);
 				invalidate(['loading'], { size, page, query });
 				response
-					.then((result) => {
+					.then(() => {
 						clearStatus(statusKey);
 						invalidate(['data', 'loading', 'meta'], options);
-						setData(result, { size, page, query });
 					})
 					.catch(() => {
 						setStatus('FAILED', statusKey);
 						invalidate(['failed', 'loading'], { size, page, query });
 					});
 			} else {
-				getOrReadResponse.push(setData(response, { size, page, query }));
+				getOrReadResponse.push(getCachedPageData({ size, query, page }));
 			}
 		}
 		if (promises.length) {
@@ -565,12 +574,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 			}
 		}
 		has('dojo-debug') && console.warn('Template does not implement `find` but is being used.');
-		return {
-			item: undefined,
-			page: 1,
-			index: 0,
-			pageIndex: 0
-		};
+		return undefined;
 	}
 
 	function set(data: S[] = []) {
@@ -578,7 +582,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		metaMap.clear();
 		statusMap.clear();
 		requestPageMap.clear();
-		init && init(data, { get, put });
+		init(data, { get, put });
 	}
 
 	function meta(options: ResourceGetOrReadOptions<S>, read = false) {
@@ -625,22 +629,18 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: FindTy
 	return true;
 }
 
-function memoryResourceInit<S>(data: S[], { put }: ResourceOperations<S>) {
-	put(data, data.length);
-}
-
 export function createMemoryResourceTemplate<S = void>(
-	{ filter = defaultFilter, init = memoryResourceInit }: { filter?: ResourceFilter<S>; init: ResourceInit<S> } = {
-		filter: defaultFilter,
-		init: memoryResourceInit
+	{ filter = defaultFilter, init }: { filter?: ResourceFilter<S>; init?: ResourceInit<S> } = {
+		filter: defaultFilter
 	}
 ): ResourceTemplateFactory<S> {
 	return createResourceTemplate({
 		init,
-		read: ({ query }, { get }) => {
+		read: (options, { get, put }) => {
 			const { data } = get();
-			const filteredData = filter && query ? data.filter((i) => filter(query, i, 'contains')) : data;
-			return { data: filteredData, total: filteredData.length };
+			const filteredData =
+				filter && options.query ? data.filter((i) => filter(options.query, i, 'contains')) : data;
+			put({ data: filteredData, total: filteredData.length }, options);
 		},
 		find: (options, findOptions, { get }) => {
 			const { query, size } = options;

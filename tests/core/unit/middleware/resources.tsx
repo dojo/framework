@@ -179,8 +179,10 @@ describe('Resources Middleware', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 
 		const template = createResourceTemplate<{ hello: string }>({
-			read: () => {
-				return promise;
+			read: (options, { put }) => {
+				return promise.then((res) => {
+					put(res, options);
+				});
 			}
 		});
 
@@ -216,8 +218,10 @@ describe('Resources Middleware', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 
 		const template = createResourceTemplate<{ hello: string }>({
-			read: () => {
-				return promise;
+			read: (options, { put }) => {
+				return promise.then((res) => {
+					put(res, options);
+				});
 			}
 		});
 
@@ -615,8 +619,13 @@ describe('Resources Middleware', () => {
 		});
 
 		const memoryTemplate = createResourceTemplate<{ value: string }>({
-			read: ({ offset }) => {
-				return promiseMap.get(offset!)!.promise;
+			read: (options, { put }) => {
+				const payload = promiseMap.get(options.offset);
+				if (payload) {
+					return payload.promise.then((res: any) => {
+						put(res, options);
+					});
+				}
 			}
 		});
 
@@ -764,10 +773,12 @@ describe('Resources Middleware', () => {
 
 		const memoryTemplate = createResourceTemplate<{ value: string }>({
 			init: (data, { put }) => {
-				put(data, data.length);
+				put({ data, total: data.length }, { offset: 0, size: 30, query: {} });
 			},
-			read: () => {
-				return promise;
+			read: (options, { put }) => {
+				return promise.then((res) => {
+					put(res, options);
+				});
 			}
 		});
 
@@ -833,8 +844,13 @@ describe('Resources Middleware', () => {
 		});
 
 		const memoryTemplate = createResourceTemplate<{ value: string }>({
-			read: ({ offset }) => {
-				return promiseMap.get(offset!)!.promise;
+			read: (options, { put }) => {
+				const payload = promiseMap.get(options.offset);
+				if (payload) {
+					return payload.promise.then((res: any) => {
+						put(res, options);
+					});
+				}
 			}
 		});
 
@@ -911,8 +927,8 @@ describe('Resources Middleware', () => {
 				find: () => {
 					return promise;
 				},
-				read: () => {
-					return { data: [], total: 19 };
+				read: (options, { put }) => {
+					put({ data: [], total: 19 }, options);
 				}
 			});
 			const factory = create({ resource: createResourceMiddleware<{ value: string }>() });
