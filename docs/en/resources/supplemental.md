@@ -453,7 +453,7 @@ export default factory(function MyDataAwareWidget({ resource }) {
 
 ## `resource` middleware API
 
-### `options`
+### `options()`
 
 `options` returns the current `ResourceOptions` object for the resource. The result of the `options` function should be used when working with the `getOrRead`, `isLoading`, `isFailed` and `find` APIs. It is important to `options` rather than constructing a new `ResourceOptions` object in order to ensure that resources that [share control of the options](/learn/resources/composing-behavior-with-resources) work as expected.
 
@@ -467,55 +467,275 @@ interface ResourceOptions<S> {
 
 `options` optionally accepts a partial of the `ResourceOptions` in order to update the resources options.
 
-### `getOrRead`
+```tsx
+// will update the page of the options
+// leaving the existing options the same
+options({ page: 2 });
+```
+
+### `getOrRead()`
 
 The `getOrRead` function takes an `ResourceOptions` object and returns an array of data for each of the pages requested in the passed `options`. If the data is not already available, it will perform a `read` using the passed template. Once the `data` has been set in the resource, the widget will be invalidated in a reactive manner.
 
-```tsx
-const { options, getOrRead } = data();
-
-const [data] = getOrRead(options({ page: 1, size: 30 }));
-```
-
-Multiple pages can be passed in the `options`, each of the pages requested will be returned in the resulting array.
+> MyResourceAwareWidget.tsx
 
 ```tsx
-const { options, getOrRead } = data();
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
 
-const [pageOneData, pageTwoData, pageThreeData] = getOrRead(options({ page: [1, 2, 3], size: 30 }));
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getOrRead, options } = resource();
+	const [pageTenItems] = getOrRead(options({ page: 10, size: 30 }));
+
+	if (!pageTenItems) {
+		return <div>Loading...</div>;
+	}
+	return <ul>{pageTenItems.map((item) => <li>{item.label}</li>)}</ul>;
+});
 ```
 
-### `isLoading`
+The `query` object can be passed to specify a filter for a property of the data. If a `transform` was passed with the `template` then this query object will be mapped back to the original resources key when passed to the resource template's `read` function.
 
-The `isLoading` function takes an `ResourceOptions` object and returns a `boolean` to indicate if there is a in-flight read underway for the current `ResourceOptions`.
+> MyResourceAwareWidget.tsx
 
 ```tsx
-const { options, isLoading } = data();
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
 
-const loading = isLoading(options());
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getOrRead, options } = resource();
+	const [pageTenItems] = getOrRead(options({ page: 10, size: 30, query: { value: 'query-value' } }));
+
+	if (!pageTenItems) {
+		return <div>Loading...</div>;
+	}
+	return <ul>{pageTenItems.map((item) => <li>{item.label}</li>)}</ul>;
+});
 ```
 
-### `isFailed`
+Multiple pages can be passed in the `options`, each of the pages requested will be returned in the resulting array. When requesting multiple pages it's not safe to check the first array value to check if the `getOrRead` call could be fulfilled as it API will return any pages that were available and make the requests for the rest. To check the status of the request call the options can be passed into the [`isLoading`](/learn/resources/resource-middleware#isLoading) API. The pages are return in the same order that they are specified in the `options`, it can be useful to use `.flat()` on the array once it has been fully loaded.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getOrRead, options, isLoading } = resource();
+	// [pageOne, pageTwo, pageThree, pageFour]
+	const items = getOrRead(options({ page: [1, 2, 3, 4], size: 30 }));
+
+	if (!isLoading(options())) {
+		return <div>Loading...</div>;
+	}
+	return <ul>{items.flat().map((item) => <li>{item.label}</li>)}</ul>;
+});
+```
+
+### `meta()`
+
+The `meta` API returns the current meta information for the resources, including the current options themselves. The `MetaResponse` is also contains the registered `total` of resource, which can be used to determine conditional logic such as virtual rendering.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { meta } = resource();
+
+	// get the meta info for the current options
+	const metaInfo = meta(options());
+
+	if (metaInfo && metaInfo.total > 0) {
+		// do something if there is a known total
+	}
+});
+```
+
+By default calling meta will not initiate a request, meaning if there is not meta info (as `getOrRead` has not been called) then it will never populate them and invalidate without a separate call to `getOrRead`. A second parameter, `request` can be passed as `true` in order to make a request for the passed options if there is no existing meta information.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { meta } = resource();
+
+	// get the meta info for the current options and make a `getOrRead`
+	// request if there is no existing meta information. Once the request
+	// is completed the widget will re-render with the meta information
+	const metaInfo = meta(options(), true);
+
+	if (metaInfo && metaInfo.total > 0) {
+		// do something if there is a known total
+	}
+});
+```
+
+### `find()`
+
+The `find` function takes an `ResourceFindOptions` object and returns the `ResourceFindResult` or `undefined` depending on if the item could be found. The `ResourceFindResult` contains the identified item, the index of the resource data-set, the page the item belongs to (based on the page size set in the `options` property in the `ResourceFindOptions`) and the index of the item on that page. If the `find` result is not already known to the `resource` store and the request is asynchronous then the `find` call will return `undefined` and invalidate the widget once the find result available.
+
+The `ResourceFindOptions` requires a starting index, `start`, the `ResourceOptions`, `options`, the type of search, `type` (`contains` is the default find type) and a query object for the find operation:
+
+```ts
+interface ResourceFindOptions {
+	options: ResourceOptions;
+	start: number;
+	type: 'exact' | 'contains' | 'start';
+	query: ResourceQuery;
+}
+```
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { find, options } = resource();
+	const item = find({ options: options(), start: 0, type: 'contains', query: { value: 'find query' } });
+
+	if (item) {
+		return <div>{/* do something with the item */}</div>;
+	}
+	return <div>Loading</div>;
+});
+```
+
+### `isLoading()`
+
+The `isLoading` function takes an `ResourceOptions` or `ResourceFindOptions` object and returns a `boolean` to indicate if there is a in-flight read underway for the passed options.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getOrRead, options, isLoading } = resource();
+	const [items] = getOrRead(options({ page: 1, size: 30 }));
+
+	if (!isLoading(options())) {
+		return <div>Loading...</div>;
+	}
+	return <ul>{items().map((item) => <li>{item.label}</li>)}</ul>;
+});
+```
+
+### `isFailed()`
 
 The `isFailed` function takes an `ResourceOptions` object and returns a `boolean` to indicate if a read with the current `ResourceOptions` has failed.
 
+> MyResourceAwareWidget.tsx
+
 ```tsx
-const { options, isFailed } = data();
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
 
-const failed = isFailed(options());
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getOrRead, options, isFailed } = resource();
+	const [items] = getOrRead(options({ page: 1, size: 30 }));
+
+	if (!isFailed(options())) {
+		return <div>Failed...!</div>;
+	}
+	return <ul>{items().map((item) => <li>{item.label}</li>)}</ul>;
+});
 ```
-
-### `meta`
-
-Words about meta
-
-### `find`
-
-Words about find
 
 ### `getResource`
 
-Words about `getResource`
+`getResource` returns a resource object of the same instance, i.e. sharing the loaded data for the template, to get passed to widgets instead of passing a template that would create a new resource instance. By default the resource options are not shared meaning that if the parent widget sets their options it won't affect the widget it has been passed to.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+import OtherResourceWidget from './OtherResourceWidget';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getResource } = resource();
+
+	return <OtherResourceWidget resource={getResource()} />;
+});
+```
+
+There are scenarios where sharing the state of the resource options is desirable and come in especially useful when composing behaviors with [resources across multiple widgets](/learn/resources/composing-behavior-with-resources). In this example the option state is shared between the widget the created the shared resource and the widgets that the shared resource has been passed to, so clicking on the button will increment the page for all three widgets.
+
+> MyResourceAwareWidget.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+import OtherResourceWidget from './OtherResourceWidget';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const { getResource, options } = resource();
+	const sharedResource = getResource({ sharedOptions: true });
+
+	return (
+		<div>
+			<button onclick={() => {
+				const page = Array.isArray(options().page) ? options().page[0] : options().page;
+				options({ page: page + 1 });
+			}}>Next Page<button>
+			<OtherResourceWidget resource={sharedResource} />
+			<OtherResourceWidget resource={sharedResource} />
+		</div>
+	);
+});
+```
 
 ## Data initializer options
 
@@ -553,11 +773,41 @@ export default factory(function MyDataAwareWidget({ resource }) {
 
 ### `resource`
 
-If the `resource` is passed in via a different property, or multiple resources need to be provided, these can be given directly to the `data` initializer.
+If a `resource` is passed in via a different widget property, or resources for multiple templates are needed, these can be passed directly to the `resource` initializer. Each template passed will return back the middleware API specific for the resource instance created for the template.
+
+> MyResourceAwareWidget.tsx
 
 ```tsx
-const { namedResource } = properties();
-const { getOptions } = data({ resource: { template: namedResource, key: 'my-custom-resource' } });
+import { create, tsx } from '@dojo/framework/core/vdom';
+import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+
+import userResourceTemplate from './userResourceTemplate';
+import companyResourceTemplate from './companyResourceTemplate';
+
+const resource = createResourceMiddleware<{ value: string }>();
+
+const factory = create({ resource });
+
+export default factory(function MyDataAwareWidget({ resource }) {
+	const userResource = resource({ resource: { template: userResourceTemplate, key: 'user' } });
+	const companyResource = resource({ resource: { template: companyResourceTemplate, key: 'company' } });
+
+	const [users] = userResource.getOrRead(userResource.options());
+	const [companies] = companyResource.getOrRead(companyResource.options());
+
+	return (
+		<div>
+			<div>
+				<h1>Users</h1>
+				{users ? <ul>{users.map((user) => <li>user.name</li>)}</ul> : 'Loading Users'}
+			</div>
+			<div>
+				<h1>Companies</h1>
+				{companies ? <ul>{companies.map((company) => <li>company.name</li>)}</ul> : 'Loading Companies'}
+			</div>
+		</div>
+	);
+});
 ```
 
 # Composing behavior with resources
