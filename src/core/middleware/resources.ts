@@ -5,104 +5,100 @@ import Set from '../../shim/Set';
 import { auto } from '../diff';
 import has from '../has';
 
+// General Resource Types
 type SubscriptionType = 'data' | 'meta' | 'loading' | 'failed' | 'find';
 type InvalidatorMaps = { [key in SubscriptionType]: Map<string, Set<Invalidator>> };
 type StatusType = 'LOADING' | 'FAILED';
 type FindType = 'exact' | 'contains' | 'start';
 type ResourceWrapperType = 'WRAPPER';
 type ResourceTemplateType = 'TEMPLATE';
-
 export type ResourceQuery<S> = { [P in keyof S]?: any };
+export type TransformConfig<T, S = void> = { [P in keyof T]: S extends void ? string : keyof S };
 
-export interface ResourceFilter<S> {
-	(query: ResourceQuery<S>, v: S, type?: FindType): boolean;
-}
-
-export interface ResourceGetOrReadOptions<S> {
+// Resource Middleware Interfaces
+export interface ResourceOptions<S> {
 	page: number | number[];
 	query: ResourceQuery<S>;
 	size: number;
 }
-
 export interface ResourceFindOptions<S> {
+	options: ResourceOptions<S>;
 	query: ResourceQuery<S>;
 	start: number;
 	type?: FindType;
 }
+export interface ResourceFindResult<S> {
+	item: S;
+	page: number;
+	index: number;
+	pageIndex: number;
+}
+export interface ResourceMiddleware<T> {
+	getOrRead(options: ResourceOptions<T>): (T[] | undefined)[];
+	find(options: ResourceFindOptions<T>): ResourceFindResult<T> | undefined;
+	meta(options: ResourceOptions<T>, read?: boolean): ResourceMeta<T> | undefined;
+	options(newOptions?: Partial<ResourceOptions<T>>): ResourceOptions<T>;
+	isLoading(options: ResourceOptions<T> | ResourceFindOptions<T>): boolean;
+	isFailed(options: ResourceOptions<T>): boolean;
+	resource: ResourceWrapper<T, T>;
+	shared(): ResourceWrapper<T, T>;
+}
 
+export interface ResourceMiddlewareOptions<T> {
+	reset?: boolean;
+	resource?: {
+		template: ResourceWithTemplate<T>;
+		key: string;
+	};
+}
+
+// Resource Template Interfaces
+export interface ResourceReadRequest<S> {
+	offset: number;
+	size: number;
+	query: ResourceQuery<S>;
+}
+export interface ResourceReadResponse<S> {
+	data: S[];
+	total: number;
+}
+export interface ResourceFindRequest<S> {
+	options: ResourceOptions<S>;
+	query: ResourceQuery<S>;
+	start: number;
+	type: FindType;
+}
 export interface ResourceFindResponse<S> {
 	item: S;
 	page: number;
 	index: number;
 	pageIndex: number;
 }
-
-export interface OptionsWrapper<S> {
-	options(invalidator: Invalidator, options?: ResourceGetOrReadOptions<S>): ResourceGetOrReadOptions<S>;
+export interface ResourceGet<S> {
+	(request?: ResourceReadRequest<S>): ResourceReadResponse<S>;
 }
-
-export interface Resource<S = {}> {
-	find(
-		options: ResourceGetOrReadOptions<S>,
-		findOptions: ResourceFindOptions<S>
-	): ResourceFindResponse<S> | undefined;
-	getOrRead(options: ResourceGetOrReadOptions<S>): (undefined | S[])[];
-	meta(options: ResourceGetOrReadOptions<S>, read: boolean): ResourceMeta<S> | undefined;
-	isLoading(options: ResourceGetOrReadOptions<S>, findOptions?: ResourceFindOptions<S>): boolean;
-	isFailed(options: ResourceGetOrReadOptions<S>): boolean;
-	subscribe(
-		type: 'find',
-		options: ResourceGetOrReadOptions<S>,
-		findOptions: ResourceFindOptions<S>,
-		invalidator: Invalidator
-	): void;
-	subscribe(
-		type: 'data' | 'meta' | 'loading' | 'failed',
-		options: ResourceGetOrReadOptions<S>,
-		invalidator: Invalidator
-	): void;
-	unsubscribe(invalidator: Invalidator): void;
-	set(data?: S[]): void;
+export interface ResourcePut<S> {
+	(readResponse: ResourceReadResponse<S>, readRequest: ResourceReadRequest<S>): void;
+	(findResponse: ResourceFindResponse<S> | undefined, findRequest: ResourceFindRequest<S>): void;
 }
-
-export interface ResourceReadOptions<S> {
-	offset: number;
-	page: number;
-	size: number;
-	query: ResourceQuery<S>;
-}
-
 export interface ResourceControls<S> {
-	get: Getter<S>;
-	put: Putter<S>;
+	get: ResourceGet<S>;
+	put: ResourcePut<S>;
 }
-
-export type Putter<S> = (resourceResponse: ResourceResponse<S>, options: ResourceResponseOptions<S>) => void;
-
-export type Getter<S> = () => ResourceResponse<S>;
-
-export type ResourceResponse<S> = { data: S[]; total: number };
-
-export type ResourceResponseOptions<S> = { size: number; query: ResourceQuery<S>; offset: number };
-
-export type ResourceRead<S> = (options: ResourceReadOptions<S>, controls: ResourceControls<S>) => void | Promise<void>;
-
+export interface ResourceRead<S> {
+	(request: ResourceReadRequest<S>, controls: ResourceControls<S>): void | Promise<void>;
+}
 export interface ResourceFind<S> {
-	(options: ResourceGetOrReadOptions<S>, findOptions: ResourceFindOptions<S>, controls: ResourceControls<S>):
-		| ResourceFindResponse<S>
-		| Promise<ResourceFindResponse<S>>
-		| undefined;
+	(options: ResourceFindRequest<S>, controls: ResourceControls<S>): void | Promise<void>;
 }
-
-export type ResourceInit<S> = (data: S[], controls: ResourceControls<S>) => void;
-
+export interface ResourceInit<S> {
+	(data: S[], controls: ResourceControls<S>): void;
+}
 export interface ResourceTemplate<S = {}, T = {}> {
 	read: ResourceRead<S>;
 	init?: ResourceInit<S>;
 	find?: ResourceFind<S>;
 }
-
-export type TransformConfig<T, S = void> = { [P in keyof T]: S extends void ? string : keyof S };
 
 export interface ResourceTemplateFactory<S = {}, T = {}> {
 	(options?: { data?: S[] }): {
@@ -117,7 +113,11 @@ export interface ResourceTemplateFactory<S = {}, T = {}> {
 		data?: S[];
 		type: ResourceTemplateType;
 	};
-	read: ResourceRead<S>;
+}
+
+// Resource Types
+export interface OptionsWrapper<S> {
+	options(invalidator: Invalidator, options?: ResourceOptions<S>): ResourceOptions<S>;
 }
 
 export interface ResourceWrapper<T, R = {}> {
@@ -136,10 +136,6 @@ export type ResourceWithTemplate<T> = T extends infer R
 	  }
 	: any;
 
-export interface ResourceMiddlewareProperties<T> {
-	resource: ResourceWithTemplate<T> | ResourceWrapper<T>;
-}
-
 export interface ResourceMeta<S> {
 	page: number | number[];
 	size: number;
@@ -147,47 +143,51 @@ export interface ResourceMeta<S> {
 	query: ResourceQuery<S>;
 }
 
-export interface ResourceMiddleware<T> {
-	getOrRead(options: ResourceGetOrReadOptions<T>): (T[] | undefined)[];
-	find(
-		options: ResourceGetOrReadOptions<T>,
-		findOptions: ResourceFindOptions<T>
-	): ResourceFindResponse<T> | undefined;
-	meta(options: ResourceGetOrReadOptions<T>, read?: boolean): ResourceMeta<T> | undefined;
-	options(newOptions?: Partial<ResourceGetOrReadOptions<T>>): ResourceGetOrReadOptions<T>;
-	isLoading(options: ResourceGetOrReadOptions<T>, findOptions?: ResourceFindOptions<T>): boolean;
-	isFailed(options: ResourceGetOrReadOptions<T>): boolean;
-	resource: ResourceWrapper<T, T>;
-	shared(): ResourceWrapper<T, T>;
+export interface Resource<S = {}> {
+	find(options: ResourceFindOptions<S>): ResourceFindResult<S> | undefined;
+	getOrRead(options: ResourceOptions<S>): (undefined | S[])[];
+	meta(options: ResourceOptions<S>, read: boolean): ResourceMeta<S> | undefined;
+	isLoading(options: ResourceOptions<S> | ResourceFindOptions<S>): boolean;
+	isFailed(options: ResourceOptions<S>): boolean;
+	subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
+	subscribe(
+		type: 'data' | 'meta' | 'loading' | 'failed',
+		options: ResourceOptions<S>,
+		invalidator: Invalidator
+	): void;
+	subscribe(
+		type: 'loading' | 'failed',
+		options: ResourceOptions<S> | ResourceFindOptions<S>,
+		invalidator: Invalidator
+	): void;
+	unsubscribe(invalidator: Invalidator): void;
+	set(data?: S[]): void;
 }
 
-export interface ResourceMiddlewareOptions<T> {
-	reset?: boolean;
-	override?: {
-		resource: ResourceWithTemplate<T>;
-		key: string;
-	};
+export interface ResourceMiddlewareProperties<T> {
+	resource: ResourceWithTemplate<T> | ResourceWrapper<T>;
 }
 
-function getMetaKey({ query, size }: ResourceGetOrReadOptions<any>) {
+function getMetaKey({ query, size }: ResourceOptions<any>) {
 	return `size-${size}-query-${JSON.stringify(query)}`;
 }
 
-function getFindKey(options: Required<ResourceGetOrReadOptions<any>>, findOptions: ResourceFindOptions<any>) {
-	return `size-${options.size}-query-${JSON.stringify(options.query)}-find-options-${JSON.stringify(findOptions)}`;
+function getFindKey(findOptions: ResourceFindOptions<any>) {
+	const { options, ...find } = getFindOptions(findOptions);
+	return `size-${options.size}-query-${JSON.stringify(options.query)}-find-${JSON.stringify(find)}`;
 }
 
-function getKey({ page, size, query }: Required<ResourceGetOrReadOptions<any>>): string {
+function getKey({ page, size, query }: ResourceOptions<any>): string {
 	return `page-${JSON.stringify(page)}-size-${size}-query-${JSON.stringify(query)}`;
 }
 
-function getDataKey({ query }: ResourceResponseOptions<any> | ResourceGetOrReadOptions<any>): string {
+function getDataKey({ query }: ResourceOptions<any> | ResourceReadRequest<any>): string {
 	return `${JSON.stringify(query)}`;
 }
 
-function getFindOptions(options: ResourceFindOptions<any>) {
-	const { type = 'contains', start, query } = options;
-	return { type, start, query };
+function getFindOptions(findOptions: ResourceFindOptions<any>) {
+	const { type = 'contains', start, query, options } = findOptions;
+	return { type, start, query, options };
 }
 
 function isTemplate(resource: any): resource is ResourceWithTemplate<any> {
@@ -198,8 +198,20 @@ function isWrapper(resource: any): resource is ResourceWrapper<any> {
 	return resource && resource.type === 'WRAPPER';
 }
 
+function isFindOptions(options: any): options is ResourceFindOptions<any> {
+	return Boolean(options && !!options.options);
+}
+
+function isFindRequest(options: any): options is ResourceFindRequest<any> {
+	return isFindOptions(options);
+}
+
+function isFindResponse(options: any): options is ResourceFindResponse<any> {
+	return Boolean(options && !!options.item);
+}
+
 function createOptionsWrapper(): OptionsWrapper<any> {
-	let options: ResourceGetOrReadOptions<any> = {
+	let options: ResourceOptions<any> = {
 		page: 1,
 		size: 30,
 		query: {}
@@ -214,10 +226,7 @@ function createOptionsWrapper(): OptionsWrapper<any> {
 	}
 
 	return {
-		options(
-			invalidator: Invalidator,
-			newOptions?: Partial<ResourceGetOrReadOptions<any>>
-		): ResourceGetOrReadOptions<any> {
+		options(invalidator: Invalidator, newOptions?: Partial<ResourceOptions<any>>): ResourceOptions<any> {
 			invalidatorSet.add(invalidator);
 			if (newOptions) {
 				const calculatedOptions = { ...options, ...newOptions };
@@ -280,22 +289,28 @@ function transformQuery(query: ResourceQuery<any>, transformConfig: TransformCon
 	return transformedQuery;
 }
 
-function transformOptions<T extends ResourceGetOrReadOptions<any>>(
-	options: T,
+function transformOptions<R extends ResourceOptions<any> | ResourceFindOptions<any>>(
+	options: R,
 	transformConfig?: TransformConfig<any>
-): T {
-	if (options.query && transformConfig) {
-		const query = transformQuery(options.query, transformConfig);
-		return { ...options, query };
+): R {
+	if (transformConfig) {
+		if (isFindOptions(options) && options.options.query) {
+			const query = transformQuery(options.options.query, transformConfig);
+			options.options = { ...options.options, query };
+		}
+		if (options.query && transformConfig) {
+			const query = transformQuery(options.query, transformConfig);
+			return { ...options, query };
+		}
 	}
-	return options;
+	return { ...options };
 }
 
 function defaultInit(data: any[], { put }: ResourceControls<any>) {
 	put({ data, total: data.length }, { size: 30, query: {}, offset: 0 });
 }
 
-function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []): Resource<S> {
+function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): Resource<S> {
 	const dataMap = new Map<string, S[]>();
 	const metaMap = new Map<string, ResourceMeta<S>>();
 	const statusMap = new Map<string, StatusType>();
@@ -310,37 +325,40 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 	};
 	const { read, init = defaultInit, find } = template;
 
-	function get() {
-		const dataKey = getDataKey({ page: 1, size: 30, query: {} });
+	function get(options: ResourceReadRequest<S> = { offset: 0, size: 30, query: {} }) {
+		const { size, query, offset } = options;
+		const page = Math.floor(offset / size) + 1;
+		const dataKey = getDataKey({ page, size, query });
 		const data = dataMap.get(dataKey) || [];
 		return { data, total: data.length };
 	}
 
-	function put(response: ResourceResponse<S>, options: ResourceResponseOptions<S>) {
-		setData(response, options);
+	function put(response: ResourceReadResponse<S>, request: ResourceReadRequest<S>): void;
+	function put(response: ResourceFindResponse<S> | undefined, request: ResourceFindRequest<S>): void;
+	function put(
+		response: ResourceReadResponse<S> | ResourceFindResponse<S> | undefined,
+		request: ResourceReadRequest<S> | ResourceFindRequest<S>
+	) {
+		if (isFindRequest(request) && isFindResponse(response)) {
+			const key = getFindKey(request);
+			findMap.set(key, response);
+			clearStatus(key);
+			invalidate(['find'], request);
+		} else if (!isFindRequest(request) && !isFindResponse(response) && response) {
+			setData(response, request);
+		}
 	}
 
-	init(data, {
-		put,
-		get
-	});
+	if (data) {
+		init(data, {
+			put,
+			get
+		});
+	}
 
-	function invalidate(
-		types: ['find'],
-		options: ResourceGetOrReadOptions<S>,
-		findOptions: ResourceFindOptions<S>
-	): void;
-	function invalidate(types: ('data' | 'meta' | 'loading' | 'failed')[], options: ResourceGetOrReadOptions<S>): void;
-	function invalidate(
-		types: SubscriptionType[],
-		options: ResourceGetOrReadOptions<S>,
-		findOptions?: ResourceFindOptions<S>
-	) {
+	function invalidate(types: SubscriptionType[], options: ResourceOptions<S> | ResourceFindOptions<S>) {
 		types.forEach((type) => {
-			let key = getKey(options);
-			if (findOptions) {
-				key = getFindKey(options, findOptions);
-			}
+			const key = isFindOptions(options) ? getFindKey(options) : getKey(options);
 			const keyedInvalidatorMap = invalidatorMaps[type];
 			const invalidatorSet = keyedInvalidatorMap.get(key);
 			if (invalidatorSet) {
@@ -351,35 +369,21 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		});
 	}
 
-	function subscribe(
-		type: 'find',
-		options: ResourceGetOrReadOptions<S>,
-		findOptions: ResourceFindOptions<S>,
-		invalidator: Invalidator
-	): void;
+	function subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
 	function subscribe(
 		type: 'data' | 'meta' | 'loading' | 'failed',
-		options: ResourceGetOrReadOptions<S>,
+		options: ResourceOptions<S>,
 		invalidator: Invalidator
 	): void;
 	function subscribe(
 		type: SubscriptionType,
-		options: ResourceGetOrReadOptions<S>,
-		findOptionsOrInvalidator: ResourceFindOptions<S> | Invalidator,
-		invalidator?: Invalidator
+		options: ResourceOptions<S> | ResourceFindOptions<S>,
+		invalidator: Invalidator
 	) {
-		let invalidate: Invalidator;
-		let key = getKey(options);
-		if (typeof findOptionsOrInvalidator === 'function') {
-			invalidate = findOptionsOrInvalidator;
-		} else {
-			key = getFindKey(options, findOptionsOrInvalidator);
-			invalidate = invalidator!;
-		}
+		const key = isFindOptions(options) ? getFindKey(options) : getKey(options);
 		const keyedInvalidatorMap = invalidatorMaps[type];
 		const invalidatorSet = keyedInvalidatorMap.get(key) || new Set<Invalidator>();
-
-		invalidatorSet.add(invalidate);
+		invalidatorSet.add(invalidator);
 		keyedInvalidatorMap.set(key, invalidatorSet);
 	}
 
@@ -414,36 +418,32 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		statusMap.delete(key);
 	}
 
-	function isLoading(options: ResourceGetOrReadOptions<S>, findOptions?: ResourceFindOptions<S>) {
-		const key = findOptions ? getFindKey(options, getFindOptions(findOptions)) : getKey(options);
+	function isLoading(options: ResourceOptions<S> | ResourceFindOptions<S>) {
+		const key = isFindOptions(options) ? getFindKey(options) : getKey(options);
 		return isStatus('LOADING', key);
 	}
 
-	function isFailed(options: ResourceGetOrReadOptions<S>) {
-		const key = getKey(options);
+	function isFailed(options: ResourceOptions<S> | ResourceFindOptions<S>) {
+		const key = isFindOptions(options) ? getFindKey(options) : getKey(options);
 		return isStatus('FAILED', key);
 	}
 
-	function setMeta(options: ResourceGetOrReadOptions<S>, total: number) {
+	function setMeta(options: ResourceOptions<S>, total: number) {
 		const metaKey = getMetaKey(options);
-
-		let pages: number[] = [];
-		const noOfPages = Math.ceil(total / options.size);
-		for (let i = 0; i < noOfPages; i++) {
-			pages.push(i + 1);
-		}
-
 		let meta = metaMap.get(metaKey);
 		if (!meta) {
 			meta = { ...options, total };
 		} else {
-			meta.total = total;
 			meta.page = options.page;
+			if (!meta.total || total > meta.total) {
+				meta.total = total;
+			}
 		}
-		metaMap.set(metaKey, meta);
+		invalidate(['meta'], options);
+		metaMap.set(metaKey, { ...meta });
 	}
 
-	function setData(response: ResourceResponse<S>, options: ResourceResponseOptions<S>) {
+	function setData(response: ResourceReadResponse<S>, options: ResourceReadRequest<S>) {
 		const { data, total } = response;
 		const { size, offset, query } = options;
 		const dataKey = getDataKey(options);
@@ -457,8 +457,8 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		}
 		clearStatus(dataKey);
 		dataMap.set(dataKey, cachedData);
-		setMeta({ size, query, page: Math.floor(offset / size) }, total);
-		invalidate(['data', 'meta', 'loading'], { size, query, page: Math.floor(offset / size) });
+		setMeta({ size, query, page: Math.floor(offset / size) + 1 }, total);
+		invalidate(['data'], { size, query, page: Math.floor(offset / size) });
 		return cachedData.slice(offset, offset + size).filter(() => true);
 	}
 
@@ -478,7 +478,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		}
 	}
 
-	function getOrRead(options: ResourceGetOrReadOptions<S>): (undefined | S[])[] {
+	function getOrRead(options: ResourceOptions<S>): (undefined | S[])[] {
 		const pages = Array.isArray(options.page) ? options.page : [options.page];
 		const { size, query } = options;
 		const getOrReadResponse: (undefined | S[])[] = [];
@@ -505,7 +505,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 			requestedPages.push(page);
 			requestPageMap.set(metaKey, requestedPages);
 			const response = read(
-				{ offset, size, query, page },
+				{ offset, size, query },
 				{
 					get,
 					put
@@ -545,11 +545,8 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		return getOrReadResponse;
 	}
 
-	function resourceFind(
-		options: ResourceGetOrReadOptions<S>,
-		findOptions: ResourceFindOptions<S>
-	): ResourceFindResponse<S> | undefined {
-		const key = getFindKey(options, getFindOptions(findOptions));
+	function resourceFind(options: ResourceFindOptions<S>): ResourceFindResponse<S> | undefined {
+		const key = getFindKey(getFindOptions(options));
 		if (find) {
 			if (isStatus('LOADING', key) || isStatus('FAILED', key)) {
 				return undefined;
@@ -559,18 +556,16 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 				return findMap.get(key);
 			}
 
-			const response = find(options, getFindOptions(findOptions), { put, get });
+			const response = find(getFindOptions(options), { put, get });
 			if (isThenable(response)) {
 				setStatus('LOADING', key);
-				response.then((result) => {
+				response.then(() => {
 					clearStatus(key);
-					invalidate(['find'], options, findOptions);
-					findMap.set(key, result);
+					invalidate(['find'], options);
 				});
 				return undefined;
 			} else {
-				findMap.set(key, response);
-				return response;
+				return findMap.get(key);
 			}
 		}
 		has('dojo-debug') && console.warn('Template does not implement `find` but is being used.');
@@ -585,7 +580,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data: S[] = []
 		init(data, { get, put });
 	}
 
-	function meta(options: ResourceGetOrReadOptions<S>, read = false) {
+	function meta(options: ResourceOptions<S>, read = false) {
 		if (read) {
 			getOrRead(options);
 		}
@@ -629,46 +624,42 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: FindTy
 	return true;
 }
 
-export function createMemoryResourceTemplate<S = void>(
-	{ filter = defaultFilter, init }: { filter?: ResourceFilter<S>; init?: ResourceInit<S> } = {
-		filter: defaultFilter
-	}
-): ResourceTemplateFactory<S> {
-	return createResourceTemplate({
-		init,
-		read: (options, { get, put }) => {
-			const { data } = get();
-			const filteredData =
-				filter && options.query ? data.filter((i) => filter(options.query, i, 'contains')) : data;
-			put({ data: filteredData, total: filteredData.length }, options);
-		},
-		find: (options, findOptions, { get }) => {
-			const { query, size } = options;
-			const { type } = findOptions;
-			const { data } = get();
-			const filteredData = data.filter((item) => defaultFilter(query, item));
-			let found: ResourceFindResponse<any> | undefined;
-			for (let i = 0; i < filteredData.length; i++) {
-				const item = filteredData[i];
-				if (defaultFilter(findOptions.query, item, type)) {
-					found = {
-						item,
-						index: i,
-						page: Math.floor(i / size) + 1,
-						pageIndex: i % size
-					};
-					if (i >= findOptions.start) {
-						break;
-					}
+const memoryTemplate: ResourceTemplate<any> = {
+	read: (request, { get, put }) => {
+		const { data } = get();
+		const filteredData = request.query ? data.filter((i) => defaultFilter(request.query, i, 'contains')) : data;
+		put({ data: filteredData, total: filteredData.length }, request);
+	},
+	find: (request, { get, put }) => {
+		const { type, options } = request;
+		const { query, size } = options;
+		const { data } = get();
+		const filteredData = data.filter((item) => defaultFilter(query, item));
+		let found: ResourceFindResponse<any> | undefined;
+		for (let i = 0; i < filteredData.length; i++) {
+			const item = filteredData[i];
+			if (defaultFilter(request.query, item, type)) {
+				found = {
+					item,
+					index: i,
+					page: Math.floor(i / size) + 1,
+					pageIndex: i % size
+				};
+				if (i >= request.start) {
+					break;
 				}
 			}
-			return found;
 		}
-	});
+		put(found, request);
+	}
+};
+
+export function createMemoryResourceTemplate<S = void>(): ResourceTemplateFactory<S> {
+	return createResourceTemplate();
 }
 
 export function createResourceTemplate<S = void>(
-	resourceTemplate: ResourceTemplate<S> = createMemoryResourceTemplate<S>()
+	resourceTemplate: ResourceTemplate<S> = memoryTemplate
 ): ResourceTemplateFactory<S> {
 	const resourceTemplateFactory: any = (options: { transform?: TransformConfig<any, S>; data?: S[] } = {}) => {
 		const { data, transform } = options;
@@ -679,7 +670,6 @@ export function createResourceTemplate<S = void>(
 			type: 'TEMPLATE'
 		};
 	};
-	resourceTemplateFactory.read = resourceTemplate.read;
 	return resourceTemplateFactory;
 }
 
@@ -689,19 +679,19 @@ export function createResourceMiddleware<T = never>() {
 	return factory(({ middleware: { invalidator, destroy, diffProperty }, properties }) => {
 		const resourceWrapperMap = new Map<ResourceTemplate<any, any>, ResourceWrapper<any, any>>();
 		const optionsWrapperMap = new Map<Resource, Map<string, OptionsWrapper<any>>>();
-		const overrideResourceWrapperMap = new Map<string, { wrapper: ResourceWrapper<T, T>; data?: T[] }>();
+		const customResourceWrapperMap = new Map<string, { wrapper: ResourceWrapper<T, T>; data?: T[] }>();
 		destroy(() => {
 			[...resourceWrapperMap.values()].forEach((resource) => {
 				resource.resource.unsubscribe(invalidator);
 			});
-			[...overrideResourceWrapperMap.values()].forEach(({ wrapper }) => {
+			[...customResourceWrapperMap.values()].forEach(({ wrapper }) => {
 				wrapper.resource.unsubscribe(invalidator);
 			});
 			[...optionsWrapperMap.keys()].forEach((resource) => {
 				resource.unsubscribe(invalidator);
 			});
 			resourceWrapperMap.clear();
-			overrideResourceWrapperMap.clear();
+			customResourceWrapperMap.clear();
 			optionsWrapperMap.clear();
 		});
 
@@ -735,25 +725,25 @@ export function createResourceMiddleware<T = never>() {
 		return (resourceMiddlewareOptions: ResourceMiddlewareOptions<T> = {}): ResourceMiddleware<T> => {
 			const { reset = false } = resourceMiddlewareOptions;
 			function getResource() {
-				const { override } = resourceMiddlewareOptions;
-				if (override) {
-					const overrideWrapper = overrideResourceWrapperMap.get(override.key);
-					if (!overrideWrapper) {
+				const { resource } = resourceMiddlewareOptions;
+				if (resource) {
+					const resourceWrapper = customResourceWrapperMap.get(resource.key);
+					if (!resourceWrapper) {
 						const wrapper = createResourceWrapper(
-							createResource(override.resource.template, override.resource.data),
-							override.resource.transform
+							createResource(resource.template.template, resource.template.data),
+							resource.template.transform
 						);
-						overrideResourceWrapperMap.set(override.key, {
+						customResourceWrapperMap.set(resource.key, {
 							wrapper,
-							data: override.resource.data
+							data: resource.template.data
 						});
 						return wrapper;
 					}
-					if (auto(override.resource.data, overrideWrapper.data).changed) {
-						overrideWrapper.data = override.resource.data;
-						overrideWrapper.wrapper.resource.set(override.resource.data);
+					if (auto(resource.template.data, resourceWrapper.data).changed) {
+						resourceWrapper.data = resource.template.data;
+						resourceWrapper.wrapper.resource.set(resource.template.data);
 					}
-					return overrideWrapper.wrapper;
+					return resourceWrapper.wrapper;
 				}
 				return properties().resource as ResourceWrapper<T, T>;
 			}
@@ -779,7 +769,7 @@ export function createResourceMiddleware<T = never>() {
 				optionsWrapper = newOptionsWrapper;
 			}
 
-			function getOrRead(options: ResourceGetOrReadOptions<T>): (undefined | T[])[] {
+			function getOrRead(options: ResourceOptions<T>): (undefined | T[])[] {
 				const { resource, transform } = getResource();
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribe('data', resourceOptions, invalidator);
@@ -793,20 +783,17 @@ export function createResourceMiddleware<T = never>() {
 			}
 
 			return {
-				find(options: ResourceGetOrReadOptions<T>, findOptions: ResourceFindOptions<T>) {
+				find(options: ResourceFindOptions<T>) {
 					const { resource, transform } = getResource();
-					const resourceOptions = transformOptions(options, transform);
-					if (transform) {
-						findOptions.query = transformQuery(findOptions.query, transform);
-					}
-					resource.subscribe('find', resourceOptions, findOptions, invalidator);
-					const result = resource.find(resourceOptions, findOptions);
+					const findOptions = transformOptions(options, transform);
+					resource.subscribe('find', findOptions, invalidator);
+					const result = resource.find(findOptions);
 					if (result && result.item && transform) {
 						result.item = transformData(result.item, transform);
 					}
 					return result;
 				},
-				meta(options: ResourceGetOrReadOptions<T>, read = false) {
+				meta(options: ResourceOptions<T>, read = false) {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
 					if (read) {
@@ -815,22 +802,19 @@ export function createResourceMiddleware<T = never>() {
 					return resource.meta(resourceOptions, read);
 				},
 				getOrRead,
-				isLoading(options: ResourceGetOrReadOptions<T>, findOptions?: ResourceFindOptions<T>) {
+				isLoading(options: ResourceOptions<T> | ResourceFindOptions<T>) {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
-					if (transform && findOptions) {
-						findOptions.query = transformQuery(findOptions.query, transform);
-					}
 					resource.subscribe('loading', resourceOptions, invalidator);
-					return resource.isLoading(resourceOptions, findOptions);
+					return resource.isLoading(resourceOptions);
 				},
-				isFailed(options: ResourceGetOrReadOptions<T>) {
+				isFailed<R extends ResourceOptions<T>>(options: R) {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
 					resource.subscribe('failed', resourceOptions, invalidator);
 					return resource.isFailed(resourceOptions);
 				},
-				options(newOptions?: ResourceGetOrReadOptions<T>) {
+				options(newOptions?: ResourceOptions<T>) {
 					return optionsWrapper.options(invalidator, newOptions);
 				},
 				get resource() {

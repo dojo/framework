@@ -505,8 +505,8 @@ describe('Resources Middleware', () => {
 		const Widget = factory(({ middleware: { resource } }) => {
 			const { getOrRead, options } = resource();
 			const { getOrRead: customGetOrRead, options: customOptions } = resource({
-				override: {
-					resource: overrideTemplate({ transform: { hello: 'boo' }, data: [{ boo: '2' }] }),
+				resource: {
+					template: overrideTemplate({ transform: { hello: 'boo' }, data: [{ boo: '2' }] }),
 					key: 'hello'
 				}
 			});
@@ -543,8 +543,8 @@ describe('Resources Middleware', () => {
 			const data = icache.getOrSet('data', [{ boo: 'world' }, { boo: 'moon' }]);
 			const { getOrRead, options } = resource();
 			const { getOrRead: customGetOrRead, options: customOptions } = resource({
-				override: {
-					resource: overrideTemplate({ transform: { hello: 'boo' }, data }),
+				resource: {
+					template: overrideTemplate({ transform: { hello: 'boo' }, data }),
 					key: 'hello'
 				}
 			});
@@ -892,7 +892,7 @@ describe('Resources Middleware', () => {
 
 			const Widget = factory(({ middleware: { resource } }) => {
 				const { find, options } = resource();
-				const item = find(options(), { start: 0, query: { value: 'Unknown' } });
+				const item = find({ options: options(), start: 0, query: { value: 'Unknown' } });
 				return (
 					<div>
 						<div>{JSON.stringify(item)}</div>
@@ -924,8 +924,9 @@ describe('Resources Middleware', () => {
 				resolver = resolve;
 			});
 			const template = createResourceTemplate<{ hello: string }>({
-				find: () => {
-					return promise;
+				find: async (options, { put }) => {
+					const res = await promise;
+					put(res, options);
 				},
 				read: (options, { put }) => {
 					put({ data: [], total: 19 }, options);
@@ -935,9 +936,8 @@ describe('Resources Middleware', () => {
 
 			const Widget = factory(({ middleware: { resource } }) => {
 				const { find, options, isLoading } = resource();
-				let item = find(options(), { start: 0, query: { value: 'Unknown' } });
-				item = find(options(), { start: 0, query: { value: 'Unknown' } });
-				if (isLoading(options(), { start: 0, query: { value: 'Unknown' } })) {
+				const item = find({ options: options(), start: 0, query: { value: 'Unknown' } });
+				if (isLoading({ options: options(), start: 0, query: { value: 'Unknown' } })) {
 					return 'Loading';
 				}
 				return (
@@ -975,7 +975,7 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 0, query: { value: 'Golden' } });
+					const item = find({ options: options(), start: 0, query: { value: 'Golden' } });
 					if (item) {
 						return (
 							<div>
@@ -1013,7 +1013,7 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 95, query: { value: 'Golden' } });
+					const item = find({ options: options(), start: 95, query: { value: 'Golden' } });
 					if (item) {
 						return (
 							<div>
@@ -1052,7 +1052,7 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 0, query: { value: '2' }, type: 'start' });
+					const item = find({ options: options(), start: 0, query: { value: '2' }, type: 'start' });
 					if (item) {
 						return (
 							<div>
@@ -1086,7 +1086,7 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 95, query: { value: '2' }, type: 'start' });
+					const item = find({ options: options(), start: 95, query: { value: '2' }, type: 'start' });
 					if (item) {
 						return (
 							<div>
@@ -1121,7 +1121,12 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 0, query: { value: 'Item Golden 20' }, type: 'exact' });
+					const item = find({
+						options: options(),
+						start: 0,
+						query: { value: 'Item Golden 20' },
+						type: 'exact'
+					});
 					if (item) {
 						return (
 							<div>
@@ -1159,7 +1164,12 @@ describe('Resources Middleware', () => {
 
 				const Widget = factory(({ middleware: { resource } }) => {
 					const { find, options } = resource();
-					const item = find(options(), { start: 95, query: { value: 'Item Golden 90' }, type: 'exact' });
+					const item = find({
+						options: options(),
+						start: 95,
+						query: { value: 'Item Golden 90' },
+						type: 'exact'
+					});
 					if (item) {
 						return (
 							<div>
