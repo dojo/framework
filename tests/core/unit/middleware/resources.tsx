@@ -280,11 +280,12 @@ describe('Resources Middleware', () => {
 		});
 
 		const Parent = factory(({ middleware: { resource } }) => {
-			const { shared } = resource();
+			const { getResource } = resource();
+			const resourceWithSharedOptions = getResource({ sharedOptions: true });
 			return (
 				<div>
-					<WidgetOne resource={shared()} />
-					<WidgetTwo resource={shared()} />
+					<WidgetOne resource={resourceWithSharedOptions} />
+					<WidgetTwo resource={resourceWithSharedOptions} />
 				</div>
 			);
 		});
@@ -331,11 +332,12 @@ describe('Resources Middleware', () => {
 		});
 
 		const Parent = factory(({ middleware: { resource } }) => {
-			const { shared } = resource();
+			const { getResource } = resource();
+			const resourceWithSharedOptions = getResource({ sharedOptions: true });
 			return (
 				<div>
-					<WidgetOne resource={shared()} />
-					<WidgetTwo resource={shared()} />
+					<WidgetOne resource={resourceWithSharedOptions} />
+					<WidgetTwo resource={resourceWithSharedOptions} />
 				</div>
 			);
 		});
@@ -383,12 +385,13 @@ describe('Resources Middleware', () => {
 		});
 
 		const Parent = factory(({ middleware: { resource } }) => {
-			const { shared } = resource();
+			const { getResource } = resource();
+			const resourceWithSharedOptions = getResource({ sharedOptions: true });
 
 			return (
 				<div>
-					<WidgetOne resource={shared()} />
-					<WidgetTwo resource={shared()} />
+					<WidgetOne resource={resourceWithSharedOptions} />
+					<WidgetTwo resource={resourceWithSharedOptions} />
 				</div>
 			);
 		});
@@ -712,13 +715,13 @@ describe('Resources Middleware', () => {
 		});
 
 		const Widget = factory(({ middleware: { resource } }) => {
-			const { getOrRead, options, resource: myResource } = resource();
+			const { getOrRead, options, getResource } = resource();
 			const items = getOrRead(options({ size: 5, page: 1 }));
 			if (items) {
 				return (
 					<div>
 						<div>{JSON.stringify(items.flat())}</div>
-						<Child resource={myResource} />
+						<Child resource={getResource()} />
 					</div>
 				);
 			}

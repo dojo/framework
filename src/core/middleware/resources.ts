@@ -3,7 +3,6 @@ import { Invalidator } from '../interfaces';
 import { isThenable } from '../../shim/Promise';
 import Set from '../../shim/Set';
 import { auto } from '../diff';
-import has from '../has';
 
 // General Resource Types
 type SubscriptionType = 'data' | 'meta' | 'loading' | 'failed' | 'find';
@@ -40,8 +39,7 @@ export interface ResourceMiddleware<T> {
 	options(newOptions?: Partial<ResourceOptions<T>>): ResourceOptions<T>;
 	isLoading(options: ResourceOptions<T> | ResourceFindOptions<T>): boolean;
 	isFailed(options: ResourceOptions<T>): boolean;
-	resource: ResourceWrapper<T, T>;
-	shared(): ResourceWrapper<T, T>;
+	getResource(options?: { sharedOptions?: boolean }): ResourceWrapper<T, T>;
 }
 
 export interface ResourceMiddlewareOptions<T> {
@@ -70,12 +68,10 @@ export interface ResourceFindRequest<S> {
 }
 export interface ResourceFindResponse<S> {
 	item: S;
-	page: number;
 	index: number;
-	pageIndex: number;
 }
 export interface ResourceGet<S> {
-	(request?: ResourceReadRequest<S>): ResourceReadResponse<S>;
+	(request?: Partial<ResourceReadRequest<S>>): ResourceReadResponse<S>;
 }
 export interface ResourcePut<S> {
 	(readResponse: ResourceReadResponse<S>, readRequest: ResourceReadRequest<S>): void;
@@ -181,7 +177,7 @@ function getKey({ page, size, query }: ResourceOptions<any>): string {
 	return `page-${JSON.stringify(page)}-size-${size}-query-${JSON.stringify(query)}`;
 }
 
-function getDataKey({ query }: ResourceOptions<any> | ResourceReadRequest<any>): string {
+function getDataKey({ query = {} }: Partial<ResourceOptions<any>> | Partial<ResourceReadRequest<any>> = {}): string {
 	return `${JSON.stringify(query)}`;
 }
 
@@ -314,7 +310,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 	const dataMap = new Map<string, S[]>();
 	const metaMap = new Map<string, ResourceMeta<S>>();
 	const statusMap = new Map<string, StatusType>();
-	const findMap = new Map<string, any>();
+	const findMap = new Map<string, ResourceFindResult<S>>();
 	const requestPageMap = new Map<string, number[]>();
 	const invalidatorMaps: InvalidatorMaps = {
 		data: new Map<string, Set<Invalidator>>(),
@@ -323,12 +319,10 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		failed: new Map<string, Set<Invalidator>>(),
 		find: new Map<string, Set<Invalidator>>()
 	};
-	const { read, init = defaultInit, find } = template;
+	const { read, init = defaultInit, find = defaultFind } = template;
 
-	function get(options: ResourceReadRequest<S> = { offset: 0, size: 30, query: {} }) {
-		const { size, query, offset } = options;
-		const page = Math.floor(offset / size) + 1;
-		const dataKey = getDataKey({ page, size, query });
+	function get(request: Partial<ResourceReadRequest<S>> = {}) {
+		const dataKey = getDataKey(request);
 		const data = dataMap.get(dataKey) || [];
 		return { data, total: data.length };
 	}
@@ -340,10 +334,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		request: ResourceReadRequest<S> | ResourceFindRequest<S>
 	) {
 		if (isFindRequest(request) && isFindResponse(response)) {
-			const key = getFindKey(request);
-			findMap.set(key, response);
-			clearStatus(key);
-			invalidate(['find'], request);
+			setFind(response, request);
 		} else if (!isFindRequest(request) && !isFindResponse(response) && response) {
 			setData(response, request);
 		}
@@ -443,10 +434,10 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		metaMap.set(metaKey, { ...meta });
 	}
 
-	function setData(response: ResourceReadResponse<S>, options: ResourceReadRequest<S>) {
+	function setData(response: ResourceReadResponse<S>, request: ResourceReadRequest<S>) {
 		const { data, total } = response;
-		const { size, offset, query } = options;
-		const dataKey = getDataKey(options);
+		const { size, offset, query } = request;
+		const dataKey = getDataKey(request);
 		const cachedData = dataMap.get(dataKey) || [];
 		const maxItem = total ? total : offset + data.length;
 		for (let i = offset; i < maxItem; i += 1) {
@@ -460,6 +451,19 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		setMeta({ size, query, page: Math.floor(offset / size) + 1 }, total);
 		invalidate(['data'], { size, query, page: Math.floor(offset / size) });
 		return cachedData.slice(offset, offset + size).filter(() => true);
+	}
+
+	function setFind(response: ResourceFindResponse<S>, request: ResourceFindRequest<S>) {
+		const { options } = request;
+		const { size } = options;
+		const key = getFindKey(request);
+		findMap.set(key, {
+			...response,
+			page: Math.floor(response.index / size) + 1,
+			pageIndex: response.index % size
+		});
+		clearStatus(key);
+		invalidate(['find'], request);
 	}
 
 	function getCachedPageData(options: { page: number; size: number; query: ResourceQuery<S> }): S[] | undefined {
@@ -545,31 +549,27 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		return getOrReadResponse;
 	}
 
-	function resourceFind(options: ResourceFindOptions<S>): ResourceFindResponse<S> | undefined {
+	function resourceFind(options: ResourceFindOptions<S>): ResourceFindResult<S> | undefined {
 		const key = getFindKey(getFindOptions(options));
-		if (find) {
-			if (isStatus('LOADING', key) || isStatus('FAILED', key)) {
-				return undefined;
-			}
-
-			if (findMap.has(key)) {
-				return findMap.get(key);
-			}
-
-			const response = find(getFindOptions(options), { put, get });
-			if (isThenable(response)) {
-				setStatus('LOADING', key);
-				response.then(() => {
-					clearStatus(key);
-					invalidate(['find'], options);
-				});
-				return undefined;
-			} else {
-				return findMap.get(key);
-			}
+		if (isStatus('LOADING', key) || isStatus('FAILED', key)) {
+			return undefined;
 		}
-		has('dojo-debug') && console.warn('Template does not implement `find` but is being used.');
-		return undefined;
+
+		if (findMap.has(key)) {
+			return findMap.get(key);
+		}
+
+		const response = find(getFindOptions(options), { put, get });
+		if (isThenable(response)) {
+			setStatus('LOADING', key);
+			response.then(() => {
+				clearStatus(key);
+				invalidate(['find'], options);
+			});
+			return undefined;
+		} else {
+			return findMap.get(key);
+		}
 	}
 
 	function set(data: S[] = []) {
@@ -624,6 +624,19 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: FindTy
 	return true;
 }
 
+function defaultFind(request: ResourceFindRequest<any>, { put, get }: ResourceControls<any>) {
+	const { start, type, options } = request;
+	const { query } = options;
+	const { data } = get({ query });
+	for (let i = start; i < data.length; i++) {
+		const item = data[i];
+		if (defaultFilter(request.query, item, type)) {
+			put({ item, index: i }, request);
+			break;
+		}
+	}
+}
+
 const memoryTemplate: ResourceTemplate<any> = {
 	read: (request, { get, put }) => {
 		const { data } = get();
@@ -632,7 +645,7 @@ const memoryTemplate: ResourceTemplate<any> = {
 	},
 	find: (request, { get, put }) => {
 		const { type, options } = request;
-		const { query, size } = options;
+		const { query } = options;
 		const { data } = get();
 		const filteredData = data.filter((item) => defaultFilter(query, item));
 		let found: ResourceFindResponse<any> | undefined;
@@ -641,9 +654,7 @@ const memoryTemplate: ResourceTemplate<any> = {
 			if (defaultFilter(request.query, item, type)) {
 				found = {
 					item,
-					index: i,
-					page: Math.floor(i / size) + 1,
-					pageIndex: i % size
+					index: i
 				};
 				if (i >= request.start) {
 					break;
@@ -822,12 +833,13 @@ export function createResourceMiddleware<T = never>() {
 				options(newOptions?: ResourceOptions<T>) {
 					return optionsWrapper.options(invalidator, newOptions);
 				},
-				get resource() {
+				getResource(options: { sharedOptions?: boolean } = {}) {
+					const { sharedOptions } = options;
+					if (sharedOptions) {
+						const { resource, transform } = getResource();
+						return createResourceWrapper(resource, transform, optionsWrapper);
+					}
 					return resourceWrapper;
-				},
-				shared(): ResourceWrapper<T, T> {
-					const { resource, transform } = getResource();
-					return createResourceWrapper(resource, transform, optionsWrapper);
 				}
 			};
 		};
