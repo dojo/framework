@@ -72,7 +72,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let middleware: any = {};
 	let properties: any = {};
 	let children: any = [];
-	let customDiffs: any[] = [];
+	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
 	let mockMiddleware: [
@@ -141,10 +141,10 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 		mockMiddleware.push([destroy, factory(() => () => {})]);
 		mockMiddleware.push([
 			diffProperty,
-			factory(() => (propName: string, func: any) => {
+			factory(() => (propName: string, propertiesOrDiff: Function, diff?: Function) => {
 				if (customDiffNames.indexOf(propName) === -1) {
 					customDiffNames.push(propName);
-					customDiffs.push(func);
+					customDiffs.push([propName, diff || propertiesOrDiff]);
 				}
 			})
 		]);
@@ -187,7 +187,13 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 		let render: RenderResult;
 		const wNode = renderFunc();
 		if (isWidgetFunction(widget)) {
-			customDiffs.forEach((diff) => diff(properties, wNode.properties));
+			for (let i = 0; i < customDiffs.length; i++) {
+				const [name, diff] = customDiffs[i];
+				const result = diff(properties, wNode.properties);
+				if (result) {
+					wNode.properties = { ...wNode.properties, [name]: result };
+				}
+			}
 			propertiesDiff(
 				properties,
 				wNode.properties,
