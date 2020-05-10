@@ -777,7 +777,12 @@ export function createResourceMiddleware<T = never>() {
 				const data = resource.getOrRead(resourceOptions);
 
 				if (data && transform) {
-					return data.map((items: any) => items.map((item: any) => transformData(item, transform)));
+					return data.map((items: any) => {
+						if (items) {
+							return items.map((item: any) => transformData(item, transform));
+						}
+						return items;
+					});
 				}
 				return data;
 			}
