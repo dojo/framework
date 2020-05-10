@@ -2,6 +2,8 @@ const { it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { renderer, tsx, create } from '../../../../src/core/vdom';
+import Map from '../../../../src/shim/Map';
+import '../../../../src/shim/Promise';
 import { createResolvers } from '../../support/util';
 import {
 	createMemoryResourceTemplate,
