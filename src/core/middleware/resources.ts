@@ -145,17 +145,18 @@ export interface Resource<S = {}> {
 	meta(options: ResourceOptions<S>, read: boolean): ResourceMeta<S> | undefined;
 	isLoading(options: ResourceOptions<S> | ResourceFindOptions<S>): boolean;
 	isFailed(options: ResourceOptions<S>): boolean;
-	subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
+	subscribe(type: 'find', invalidator: Invalidator, options: ResourceFindOptions<S>): void;
 	subscribe(
-		type: 'data' | 'meta' | 'loading' | 'failed' | 'init',
-		options: ResourceOptions<S>,
-		invalidator: Invalidator
+		type: 'data' | 'meta' | 'loading' | 'failed',
+		invalidator: Invalidator,
+		options: ResourceOptions<S>
 	): void;
 	subscribe(
 		type: 'loading' | 'failed',
-		options: ResourceOptions<S> | ResourceFindOptions<S>,
-		invalidator: Invalidator
+		invalidator: Invalidator,
+		options: ResourceOptions<S> | ResourceFindOptions<S>
 	): void;
+	subscribe(type: 'init', invalidator: Invalidator): void;
 	unsubscribe(invalidator: Invalidator): void;
 	set(data?: S[]): void;
 }
@@ -361,18 +362,12 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		});
 	}
 
-	function subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
-	function subscribe(
-		type: 'data' | 'meta' | 'loading' | 'failed' | 'init',
-		options: ResourceOptions<S>,
-		invalidator: Invalidator
-	): void;
 	function subscribe(
 		type: SubscriptionType,
-		options: ResourceOptions<S> | ResourceFindOptions<S>,
-		invalidator: Invalidator
-	) {
-		const key = isFindOptions(options) ? getFindKey(options) : getKey(options);
+		invalidator: Invalidator,
+		options?: ResourceOptions<S> | ResourceFindOptions<S>
+	): void {
+		const key = options ? (isFindOptions(options) ? getFindKey(options) : getKey(options)) : type;
 		const keyedInvalidatorMap = invalidatorMaps[type];
 		const invalidatorSet = keyedInvalidatorMap.get(key) || new Set<Invalidator>();
 		invalidatorSet.add(invalidator);
@@ -739,7 +734,7 @@ export function createResourceMiddleware<T = never>() {
 				}
 				changed && isWrapperCached && wrapper.resource.set(nextResource.data);
 				if (!isWrapperCached) {
-					wrapper.resource.subscribe('init', {} as any, invalidator);
+					wrapper.resource.subscribe('init', invalidator);
 				}
 				resourceWrapperMap.set(nextResource.template, wrapper);
 				return wrapper as any;
@@ -751,7 +746,7 @@ export function createResourceMiddleware<T = never>() {
 					if (isWrapper(currentResource)) {
 						currentResource.resource.unsubscribe(invalidator);
 					}
-					nextResource.resource.subscribe('init', {} as any, invalidator);
+					nextResource.resource.subscribe('init', invalidator);
 					invalidator();
 				}
 			} else if (!nextResource) {
@@ -783,6 +778,7 @@ export function createResourceMiddleware<T = never>() {
 						resourceWrapper.data = resource.template.data;
 						resourceWrapper.wrapper.resource.set(resource.template.data);
 					}
+					resourceWrapper.wrapper.resource.subscribe('init', invalidator);
 					return resourceWrapper.wrapper;
 				}
 				return properties().resource as ResourceWrapper<T, T>;
@@ -812,7 +808,7 @@ export function createResourceMiddleware<T = never>() {
 			function getOrRead(options: ResourceOptions<T>): (undefined | T[])[] {
 				const { resource, transform } = getResource();
 				const resourceOptions = transformOptions(options, transform);
-				resource.subscribe('data', resourceOptions, invalidator);
+				resource.subscribe('data', invalidator, resourceOptions);
 
 				const data = resource.getOrRead(resourceOptions);
 
@@ -831,7 +827,7 @@ export function createResourceMiddleware<T = never>() {
 				find(options: ResourceFindOptions<T>) {
 					const { resource, transform } = getResource();
 					const findOptions = transformOptions(options, transform);
-					resource.subscribe('find', findOptions, invalidator);
+					resource.subscribe('find', invalidator, findOptions);
 					const result = resource.find(findOptions);
 					if (result && result.item && transform) {
 						result.item = transformData(result.item, transform);
@@ -842,7 +838,7 @@ export function createResourceMiddleware<T = never>() {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
 					if (read) {
-						resource.subscribe('meta', resourceOptions, invalidator);
+						resource.subscribe('meta', invalidator, resourceOptions);
 					}
 					return resource.meta(resourceOptions, read);
 				},
@@ -850,13 +846,13 @@ export function createResourceMiddleware<T = never>() {
 				isLoading(options: ResourceOptions<T> | ResourceFindOptions<T>) {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
-					resource.subscribe('loading', resourceOptions, invalidator);
+					resource.subscribe('loading', invalidator, resourceOptions);
 					return resource.isLoading(resourceOptions);
 				},
 				isFailed<R extends ResourceOptions<T>>(options: R) {
 					const { resource, transform } = getResource();
 					const resourceOptions = transformOptions(options, transform);
-					resource.subscribe('failed', resourceOptions, invalidator);
+					resource.subscribe('failed', invalidator, resourceOptions);
 					return resource.isFailed(resourceOptions);
 				},
 				options(newOptions?: ResourceOptions<T>) {
