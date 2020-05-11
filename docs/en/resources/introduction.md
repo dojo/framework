@@ -19,7 +19,6 @@ Dojo resources are created using the `createResourceTemplate` factory from `@doj
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import myResource from '@dojo/framework/core/middleware/resources';
 import DataAwareWidget from './DataAwareWidget';
 
 const factory = create();
@@ -32,7 +31,7 @@ const App = factory(function App() {
 
 # Customizing a template's data source
 
-Dojo resources can be configured for a user defined data source, for example a RESTful API. This is done by passing an object with a `read` function that is responsible for fetching and setting the external data.
+Dojo resources can be configured for a user defined data source, for example a RESTful API. This is done by passing an object with a `read` function that is responsible for fetching and setting the external data. The `read` function receives the request that contains details including the offset and page size and a set of controls, including `put` that need to be used to "set" the read response.
 
 > userResourceTemplate.tsx
 
@@ -41,12 +40,13 @@ import { createResourceTemplate } from '@dojo/framework/core/middleware/resource
 
 export default createResourceTemplate({
 	read: async (request: ResourceReadRequest, controls: ResourceControls) => {
-		// The template is injected with read options, offset, size and query
-		const { offset, size } = options;
-		// The options can be used to determine the data to fetch
+		// The template is injected with read request, offset, size and query
+		const { offset, size } = request;
+		// The request details are used to determine the data to fetch
 		const response = await fetch(`https://my.user.endpount.com?offset=${offset}&size=${size}`);
 		const data = await response.json();
-		// The template needs to return the array of data and the total number of items
+		// The template needs to set the response using the resource controls put function
+		// along with the original request
 		controls.put({ data: data.data, total: data.total }, request);
 	}
 });
