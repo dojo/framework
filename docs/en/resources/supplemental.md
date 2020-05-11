@@ -255,7 +255,7 @@ export default factory(function MyWidget({ properties }) {
 
 For more information please see the [Using Resource Templates](/learn/resource/using-resource-templates).
 
-## Custom Resource Templates
+## Custom Resource Templates
 
 To connect a resource to an custom data-source, such as a RESTful API the `createResourceTemplate()` factory can be used. At a minimum the `read` API needs to be fulfilled with the additional `init` and `find` optional.
 
