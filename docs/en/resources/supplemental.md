@@ -560,7 +560,7 @@ const resource = createResourceMiddleware<{ value: string }>();
 const factory = create({ resource });
 
 export default factory(function MyDataAwareWidget({ resource }) {
-	const { meta } = resource();
+	const { meta, options } = resource();
 
 	// get the meta info for the current options
 	const metaInfo = meta(options());
@@ -584,7 +584,7 @@ const resource = createResourceMiddleware<{ value: string }>();
 const factory = create({ resource });
 
 export default factory(function MyDataAwareWidget({ resource }) {
-	const { meta } = resource();
+	const { meta, options } = resource();
 
 	// get the meta info for the current options and make a `getOrRead`
 	// request if there is no existing meta information. Once the request
