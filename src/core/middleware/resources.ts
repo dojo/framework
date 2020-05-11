@@ -640,8 +640,9 @@ function defaultFind(request: ResourceFindRequest<any>, { put, get }: ResourceCo
 const memoryTemplate: ResourceTemplate<any> = {
 	read: (request, { get, put }) => {
 		const { data } = get();
+		const { offset, size } = request;
 		const filteredData = request.query ? data.filter((i) => defaultFilter(request.query, i, 'contains')) : data;
-		put({ data: filteredData, total: filteredData.length }, request);
+		put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, request);
 	},
 	find: (request, { get, put }) => {
 		const { type, options } = request;
