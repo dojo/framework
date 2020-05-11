@@ -142,9 +142,14 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 		mockMiddleware.push([
 			diffProperty,
 			factory(() => (propName: string, propertiesOrDiff: Function, diff?: Function) => {
+				const diffFunction = diff || propertiesOrDiff;
 				if (customDiffNames.indexOf(propName) === -1) {
 					customDiffNames.push(propName);
-					customDiffs.push([propName, diff || propertiesOrDiff]);
+					customDiffs.push([propName, diffFunction]);
+					const result = diffFunction({}, properties);
+					if (result) {
+						properties = { ...properties, [propName]: result };
+					}
 				}
 			})
 		]);

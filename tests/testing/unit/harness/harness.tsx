@@ -637,17 +637,17 @@ describe('harness', () => {
 			const h = harness(() => <App />);
 			h.expect(() => (
 				<div>
-					<button key="click-me">Click Me 0</button>
-				</div>
-			));
-			h.expect(() => (
-				<div>
 					<button key="click-me">Click Me 1</button>
 				</div>
 			));
 			h.expect(() => (
 				<div>
 					<button key="click-me">Click Me 2</button>
+				</div>
+			));
+			h.expect(() => (
+				<div>
+					<button key="click-me">Click Me 3</button>
 				</div>
 			));
 		});
@@ -677,6 +677,26 @@ describe('harness', () => {
 			h.expect(() => (
 				<div>
 					<button key="click-me">app 1</button>
+				</div>
+			));
+		});
+
+		it('should support returning a property value diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator }).properties<{ foo: string }>();
+			const App = factory(({ middleware: { diffProperty }, properties }) => {
+				diffProperty('foo', properties, () => {
+					return 'new';
+				});
+				return (
+					<div>
+						<button key="click-me">{properties().foo}</button>
+					</div>
+				);
+			});
+			const h = harness(() => <App foo="foo" />);
+			h.expect(() => (
+				<div>
+					<button key="click-me">new</button>
 				</div>
 			));
 		});
