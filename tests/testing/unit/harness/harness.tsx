@@ -683,9 +683,11 @@ describe('harness', () => {
 
 		it('should support returning a property value diffProperty middleware', () => {
 			const factory = create({ diffProperty, invalidator }).properties<{ foo: string }>();
-			const App = factory(({ middleware: { diffProperty }, properties }) => {
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator }, properties }) => {
 				diffProperty('foo', properties, () => {
-					return 'new';
+					invalidator();
+					return `new ${id++}`;
 				});
 				return (
 					<div>
@@ -696,7 +698,12 @@ describe('harness', () => {
 			const h = harness(() => <App foo="foo" />);
 			h.expect(() => (
 				<div>
-					<button key="click-me">new</button>
+					<button key="click-me">new 0</button>
+				</div>
+			));
+			h.expect(() => (
+				<div>
+					<button key="click-me">new 1</button>
 				</div>
 			));
 		});

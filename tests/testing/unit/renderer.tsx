@@ -649,9 +649,11 @@ describe('test renderer', () => {
 
 		it('should support returning a property value diffProperty middleware', () => {
 			const factory = create({ diffProperty, invalidator }).properties<{ foo: string }>();
-			const App = factory(({ middleware: { diffProperty }, properties }) => {
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator }, properties }) => {
 				diffProperty('foo', properties, () => {
-					return 'new';
+					invalidator();
+					return `new ${id++}`;
 				});
 				return (
 					<div>
@@ -663,7 +665,14 @@ describe('test renderer', () => {
 			r.expect(
 				assertion(() => (
 					<div>
-						<button key="click-me">new</button>
+						<button key="click-me">new 0</button>
+					</div>
+				))
+			);
+			r.expect(
+				assertion(() => (
+					<div>
+						<button key="click-me">new 1</button>
 					</div>
 				))
 			);
