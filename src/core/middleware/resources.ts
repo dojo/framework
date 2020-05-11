@@ -5,7 +5,7 @@ import Set from '../../shim/Set';
 import { auto } from '../diff';
 
 // General Resource Types
-type SubscriptionType = 'data' | 'meta' | 'loading' | 'failed' | 'find';
+type SubscriptionType = 'data' | 'meta' | 'loading' | 'failed' | 'find' | 'init';
 type InvalidatorMaps = { [key in SubscriptionType]: Map<string, Set<Invalidator>> };
 type StatusType = 'LOADING' | 'FAILED';
 type FindType = 'exact' | 'contains' | 'start';
@@ -147,7 +147,7 @@ export interface Resource<S = {}> {
 	isFailed(options: ResourceOptions<S>): boolean;
 	subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
 	subscribe(
-		type: 'data' | 'meta' | 'loading' | 'failed',
+		type: 'data' | 'meta' | 'loading' | 'failed' | 'init',
 		options: ResourceOptions<S>,
 		invalidator: Invalidator
 	): void;
@@ -317,7 +317,8 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 		meta: new Map<string, Set<Invalidator>>(),
 		loading: new Map<string, Set<Invalidator>>(),
 		failed: new Map<string, Set<Invalidator>>(),
-		find: new Map<string, Set<Invalidator>>()
+		find: new Map<string, Set<Invalidator>>(),
+		init: new Map<string, Set<Invalidator>>()
 	};
 	const { read, init = defaultInit, find = defaultFind } = template;
 
@@ -362,7 +363,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 
 	function subscribe(type: 'find', options: ResourceFindOptions<S>, invalidator: Invalidator): void;
 	function subscribe(
-		type: 'data' | 'meta' | 'loading' | 'failed',
+		type: 'data' | 'meta' | 'loading' | 'failed' | 'init',
 		options: ResourceOptions<S>,
 		invalidator: Invalidator
 	): void;
@@ -379,18 +380,33 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 	}
 
 	function unsubscribe(invalidator: Invalidator) {
+		let currentSubscribers = 0;
 		Object.keys(invalidatorMaps).forEach((type) => {
 			const keyedInvalidatorMap = invalidatorMaps[type as SubscriptionType];
-
 			const keys = keyedInvalidatorMap.keys();
 			[...keys].forEach((key) => {
 				const invalidatorSet = keyedInvalidatorMap.get(key);
 				if (invalidatorSet && invalidatorSet.has(invalidator)) {
 					invalidatorSet.delete(invalidator);
-					keyedInvalidatorMap.set(key, invalidatorSet);
+					if (invalidatorSet.size === 0) {
+						keyedInvalidatorMap.delete(key);
+					} else {
+						keyedInvalidatorMap.set(key, invalidatorSet);
+					}
 				}
 			});
+			currentSubscribers = currentSubscribers + keyedInvalidatorMap.size;
 		});
+		if (currentSubscribers === 0) {
+			releaseResource();
+		}
+	}
+
+	function releaseResource() {
+		dataMap.clear();
+		metaMap.clear();
+		statusMap.clear();
+		requestPageMap.clear();
 	}
 
 	function isStatus(statusType: StatusType, key: string) {
@@ -573,10 +589,7 @@ function createResource<S = never>(template: ResourceTemplate<S>, data?: S[]): R
 	}
 
 	function set(data: S[] = []) {
-		dataMap.clear();
-		metaMap.clear();
-		statusMap.clear();
-		requestPageMap.clear();
+		releaseResource();
 		init(data, { get, put });
 	}
 
@@ -637,7 +650,7 @@ function defaultFind(request: ResourceFindRequest<any>, { put, get }: ResourceCo
 	}
 }
 
-const memoryTemplate: ResourceTemplate<any> = {
+const memoryTemplate: ResourceTemplate<any> = Object.freeze({
 	read: (request, { get, put }) => {
 		const { data } = get();
 		const { offset, size } = request;
@@ -653,18 +666,20 @@ const memoryTemplate: ResourceTemplate<any> = {
 		for (let i = 0; i < filteredData.length; i++) {
 			const item = filteredData[i];
 			if (defaultFilter(request.query, item, type)) {
-				found = {
-					item,
-					index: i
-				};
-				if (i >= request.start) {
-					break;
+				if (!found || i >= request.start) {
+					found = {
+						item,
+						index: i
+					};
+					if (i >= request.start) {
+						break;
+					}
 				}
 			}
 		}
 		put(found, request);
 	}
-};
+});
 
 export function createMemoryResourceTemplate<S = void>(): ResourceTemplateFactory<S> {
 	return createResourceTemplate();
@@ -723,6 +738,9 @@ export function createResourceMiddleware<T = never>() {
 					invalidator();
 				}
 				changed && isWrapperCached && wrapper.resource.set(nextResource.data);
+				if (!isWrapperCached) {
+					wrapper.resource.subscribe('init', {} as any, invalidator);
+				}
 				resourceWrapperMap.set(nextResource.template, wrapper);
 				return wrapper as any;
 			} else if (isWrapper(nextResource)) {
@@ -730,7 +748,17 @@ export function createResourceMiddleware<T = never>() {
 					(isWrapper(currentResource) && currentResource.resource !== nextResource.resource) ||
 					!isWrapper(currentResource)
 				) {
+					if (isWrapper(currentResource)) {
+						currentResource.resource.unsubscribe(invalidator);
+					}
+					nextResource.resource.subscribe('init', {} as any, invalidator);
 					invalidator();
+				}
+			} else if (!nextResource) {
+				const current = isTemplate(currentResource) ? currentResource : ({} as ResourceWithTemplate<T>);
+				const wrapper = resourceWrapperMap.get(current.template);
+				if (wrapper) {
+					wrapper.resource.unsubscribe(invalidator);
 				}
 			}
 		});

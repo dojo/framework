@@ -313,6 +313,105 @@ describe('Resources Middleware', () => {
 		);
 	});
 
+	it('should be only destroy the resource once all subscribers have been removed', () => {
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>(), icache });
+		const template = createMemoryResourceTemplate<{ hello: string }>();
+
+		const WidgetOne = factory(({ middleware: { resource } }) => {
+			const { options } = resource();
+			return (
+				<button
+					onclick={() => {
+						options({ page: 2 });
+					}}
+				/>
+			);
+		});
+
+		const WidgetTwo = factory(({ middleware: { resource } }) => {
+			const { getOrRead, options } = resource();
+			options({ size: 1 });
+			const items = getOrRead(options());
+			return (
+				<div>
+					<div>{JSON.stringify(items)}</div>
+					<button
+						onclick={() => {
+							options({ page: 3 });
+						}}
+					/>
+				</div>
+			);
+		});
+
+		const Parent = factory(function Parent({ middleware: { resource, icache } }) {
+			const { getResource } = resource();
+			const show = icache.getOrSet<boolean>('show', true);
+			const resourceWithSharedOptions = getResource({ sharedOptions: true });
+			return (
+				<div>
+					<button
+						onclick={() => {
+							icache.set('show', (value) => !value);
+						}}
+					/>
+					{show && <WidgetOne resource={resourceWithSharedOptions} />}
+					<WidgetTwo resource={resourceWithSharedOptions} />
+				</div>
+			);
+		});
+
+		const App = create({ icache })(function App({ middleware: { icache } }) {
+			const show = icache.getOrSet<boolean>('show', true);
+			return (
+				<div>
+					{show && (
+						<Parent
+							resource={template({
+								data: [{ hello: 'world' }, { hello: 'world again' }, { hello: 'world the third' }]
+							})}
+						/>
+					)}
+					<button
+						onclick={() => {
+							icache.set('show', (value) => !value);
+						}}
+					/>
+				</div>
+			);
+		});
+
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><button></button><div><div>[[{"hello":"world"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[1] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[0] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[1].children[1] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><div><div>[[{"hello":"world the third"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[1] as any).click();
+		resolvers.resolveRAF();
+		resolvers.resolveRAF();
+		assert.strictEqual(root.innerHTML, '<div><button></button></div>');
+	});
+
 	it('should be force unique instance of resource when using reset', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 		const template = createMemoryResourceTemplate<{ hello: string }>();
