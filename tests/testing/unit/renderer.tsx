@@ -593,7 +593,7 @@ describe('test renderer', () => {
 			r.expect(
 				assertion(() => (
 					<div>
-						<button key="click-me">Click Me 0</button>
+						<button key="click-me">Click Me 1</button>
 					</div>
 				))
 			);
@@ -601,14 +601,14 @@ describe('test renderer', () => {
 			r.expect(
 				assertion(() => (
 					<div>
-						<button key="click-me">Click Me 1</button>
+						<button key="click-me">Click Me 2</button>
 					</div>
 				))
 			);
 			r.expect(
 				assertion(() => (
 					<div>
-						<button key="click-me">Click Me 2</button>
+						<button key="click-me">Click Me 3</button>
 					</div>
 				))
 			);
@@ -642,6 +642,37 @@ describe('test renderer', () => {
 				assertion(() => (
 					<div>
 						<button key="click-me">app 1</button>
+					</div>
+				))
+			);
+		});
+
+		it('should support returning a property value diffProperty middleware', () => {
+			const factory = create({ diffProperty, invalidator }).properties<{ foo: string }>();
+			let id = 0;
+			const App = factory(({ middleware: { diffProperty, invalidator }, properties }) => {
+				diffProperty('foo', properties, () => {
+					invalidator();
+					return `new ${id++}`;
+				});
+				return (
+					<div>
+						<button key="click-me">{properties().foo}</button>
+					</div>
+				);
+			});
+			const r = renderer(() => <App foo="foo" />);
+			r.expect(
+				assertion(() => (
+					<div>
+						<button key="click-me">new 0</button>
+					</div>
+				))
+			);
+			r.expect(
+				assertion(() => (
+					<div>
+						<button key="click-me">new 1</button>
 					</div>
 				))
 			);

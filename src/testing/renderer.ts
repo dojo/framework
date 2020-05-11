@@ -436,7 +436,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 	let middleware: any = {};
 	let properties: any = {};
 	let children: any = [];
-	let customDiffs: any[] = [];
+	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
 	let childInstructions = new Map<string, ChildInstruction>();
 	let propertyInstructions: PropertyInstruction[] = [];
@@ -493,10 +493,15 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		mockMiddleware.push([destroy, factory(() => () => {})]);
 		mockMiddleware.push([
 			diffProperty,
-			factory(() => (propName: string, func: any) => {
+			factory(() => (propName: string, propertiesOrDiff: Function, diff?: Function) => {
+				const diffFunction = diff || propertiesOrDiff;
 				if (customDiffNames.indexOf(propName) === -1) {
 					customDiffNames.push(propName);
-					customDiffs.push(func);
+					customDiffs.push([propName, diffFunction]);
+					const result = diffFunction({}, properties);
+					if (result) {
+						properties = { ...properties, [propName]: result };
+					}
 				}
 			})
 		]);
@@ -520,7 +525,13 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		let render: RenderResult;
 		const wNode = renderFunc();
 		if (isWidgetFunction(widget)) {
-			customDiffs.forEach((diff) => diff(properties, wNode.properties));
+			for (let i = 0; i < customDiffs.length; i++) {
+				const [name, diff] = customDiffs[i];
+				const result = diff(properties, wNode.properties);
+				if (result) {
+					wNode.properties = { ...wNode.properties, [name]: result };
+				}
+			}
 			propertiesDiff(
 				properties,
 				wNode.properties,
