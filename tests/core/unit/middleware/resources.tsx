@@ -214,16 +214,18 @@ describe('Resources Middleware', () => {
 
 	it('returns failed status of resource', async () => {
 		let rejector: () => void;
-		const promise = new Promise<{ data: any[]; total: number }>((_, reject) => {
+		let promise = new Promise<any>((_, reject) => {
 			rejector = reject;
 		});
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 
 		const template = createResourceTemplate<{ hello: string }>({
 			read: (options, { put }) => {
-				return promise.then((res) => {
+				const originalPromise = promise;
+				promise = promise.then((res) => {
 					put(res, options);
 				});
+				return originalPromise;
 			}
 		});
 
@@ -627,9 +629,11 @@ describe('Resources Middleware', () => {
 			read: (options, { put }) => {
 				const payload = promiseMap.get(options.offset);
 				if (payload) {
-					return payload.promise.then((res: any) => {
+					const originalPromise = payload.promise;
+					payload.promise = payload.promise.then((res: any) => {
 						put(res, options);
 					});
+					return originalPromise;
 				}
 			}
 		});
@@ -749,7 +753,7 @@ describe('Resources Middleware', () => {
 
 	it('should be able bootstrap custom template', async () => {
 		let resolver: any;
-		const promise = new Promise<{ data: any[]; total: number }>((resolve) => {
+		let promise = new Promise<any>((resolve) => {
 			resolver = resolve;
 		});
 
@@ -781,9 +785,11 @@ describe('Resources Middleware', () => {
 				put({ data, total: data.length }, { offset: 0, size: 30, query: {} });
 			},
 			read: (options, { put }) => {
-				return promise.then((res) => {
+				let originalPromise = promise;
+				promise = promise.then((res) => {
 					put(res, options);
 				});
+				return originalPromise;
 			}
 		});
 
@@ -852,9 +858,11 @@ describe('Resources Middleware', () => {
 			read: (options, { put }) => {
 				const payload = promiseMap.get(options.offset);
 				if (payload) {
-					return payload.promise.then((res: any) => {
+					const originalPromise = payload.promise;
+					payload.promise = payload.promise.then((res: any) => {
 						put(res, options);
 					});
+					return originalPromise;
 				}
 			}
 		});
