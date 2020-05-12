@@ -175,7 +175,7 @@ Returns a new assertion with the new children appended to the node's existing ch
 Returns a new assertion with the new children pre-pended to the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+.prepend(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
 #### `assertion.replaceChildren()`
@@ -183,7 +183,7 @@ Returns a new assertion with the new children pre-pended to the node's existing 
 Returns a new assertion with the new children replacing the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+.replaceChildren(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
 #### `assertion.insertSiblings()`
