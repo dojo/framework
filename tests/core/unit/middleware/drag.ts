@@ -13,7 +13,6 @@ const targetStub = {
 	setAttribute: () => {},
 	style: {}
 };
-const childTargetStub = { parentElement: targetStub };
 
 const createMockPointerEvent = (position = 0, target: any) => ({
 	button: 0,
@@ -75,11 +74,11 @@ describe('drag middleware', () => {
 			switch (name) {
 				case 'pointerdown':
 					listener(createMockPointerEvent(0, {}));
-					return listener(createMockPointerEvent(0, childTargetStub));
+					return listener(createMockPointerEvent(0, targetStub));
 				case 'pointermove':
-					return listener(createMockPointerEvent(1, childTargetStub));
+					return listener(createMockPointerEvent(1, targetStub));
 				case 'pointerup':
-					return listener(createMockPointerEvent(2, childTargetStub));
+					return listener(createMockPointerEvent(2, targetStub));
 			}
 		});
 

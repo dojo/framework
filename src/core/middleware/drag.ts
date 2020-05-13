@@ -62,7 +62,6 @@ export interface PositionMatrix {
 
 interface NodeData {
 	dragResults: DragResults;
-	invalidate: () => void;
 	last: PositionMatrix;
 	start: PositionMatrix;
 }
@@ -74,10 +73,9 @@ function getDelta(start: PositionMatrix, current: PositionMatrix): Position {
 	};
 }
 
-function createNodeData(invalidate: () => void): NodeData {
+function createNodeData(): NodeData {
 	return {
 		dragResults: deepAssign({}, emptyResults),
-		invalidate,
 		last: createPositionMatrix(),
 		start: createPositionMatrix()
 	};
@@ -136,9 +134,6 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		if (nodeMap.has(target)) {
 			return { state: nodeMap.get(target)!, target };
 		}
-		if (target.parentElement) {
-			return getData(target.parentElement);
-		}
 	}
 
 	function onDragStart(event: PointerEvent) {
@@ -146,7 +141,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		if (!event.isPrimary && dragging) {
 			const state = nodeMap.get(dragging)!;
 			state.dragResults.isDragging = false;
-			state.invalidate();
+			invalidator();
 			icache.set('dragging', undefined);
 			return;
 		}
@@ -161,7 +156,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 			state.dragResults.delta = createPosition();
 			state.dragResults.start = deepAssign({}, state.start);
 			state.dragResults.isDragging = true;
-			state.invalidate();
+			invalidator();
 
 			event.preventDefault();
 			event.stopPropagation();
@@ -177,7 +172,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		const state = nodeMap.get(dragging)!;
 		state.last = getPositionMatrix(event);
 		state.dragResults.delta = getDelta(state.start, state.last);
-		state.invalidate();
+		invalidator();
 
 		event.preventDefault();
 		event.stopPropagation();
@@ -193,19 +188,17 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		state.last = getPositionMatrix(event);
 		state.dragResults.delta = getDelta(state.start, state.last);
 		state.dragResults.isDragging = false;
-		state.invalidate();
+		invalidator();
 		icache.set('dragging', undefined);
 
 		event.preventDefault();
 		event.stopPropagation();
 	}
 
-	if (!icache.get('initialized')) {
-		const win: Window = global;
-		win.addEventListener('pointerdown', onDragStart);
-		win.addEventListener('pointermove', onDrag, true);
-		win.addEventListener('pointerup', onDragStop, true);
-	}
+	const win: Window = global;
+	win.addEventListener('pointerdown', onDragStart);
+	win.addEventListener('pointermove', onDrag, true);
+	win.addEventListener('pointerup', onDragStop, true);
 
 	destroy(() => {
 		const win: Window = global;
@@ -221,7 +214,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 			if (!domNode) return emptyResults;
 
 			if (!nodeMap.has(domNode)) {
-				nodeMap.set(domNode, createNodeData(invalidator));
+				nodeMap.set(domNode, createNodeData());
 				initNode(domNode);
 				return emptyResults;
 			}
