@@ -7,7 +7,7 @@ import { auto } from '../diff';
 
 // Resource General
 
-type SubscriptionType = 'read' | 'find' | 'meta' | 'loading';
+type SubscriptionType = 'read' | 'find' | 'meta' | 'loading' | 'failed';
 type InvalidatorMaps = { [key in SubscriptionType]: Map<string, Set<Invalidator>> };
 type StatusType = 'LOADING' | 'FAILED';
 type ResourceQuery<S> = { [P in keyof S]?: any };
@@ -116,6 +116,7 @@ export interface Resource<S = {}> {
 	subscribeRead(invalidator: Invalidator, options: ResourceOptions<S>): void;
 	subscribeMeta(invalidator: Invalidator, options: ResourceOptions<S>): void;
 	subscribeLoading(invalidator: Invalidator, options: ResourceOptions<S> | ResourceFindOptions<S>): void;
+	subscribeFailed(invalidator: Invalidator, options: ResourceOptions<S> | ResourceFindOptions<S>): void;
 	unsubscribe(invalidator: Invalidator): void;
 	init(initOptions: ResourceInitOptions<S>): void;
 	destroy(id: string): void;
@@ -262,6 +263,18 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		},
 		options: ResourceOptions<any> | ResourceFindOptions<any>
 	): boolean;
+	isFailed<T extends ResourceTemplate<any, any>>(
+		template: T,
+		options: ResourceOptions<any> | ResourceFindOptions<any>
+	): boolean;
+	isFailed<T extends ResourceTemplate<any, any>>(
+		template: {
+			template: T;
+			transform?: any;
+			data?: any;
+		},
+		options: ResourceOptions<any> | ResourceFindOptions<any>
+	): boolean;
 }
 
 export function createResourceTemplate<RESOURCE = void>(
@@ -308,7 +321,9 @@ export const memoryTemplate: ResourceTemplateWithInit<any> = Object.freeze({
 	read: (request, { get, put }) => {
 		const { data } = get();
 		const { offset, size } = request;
-		const filteredData = request.query ? data.filter((i) => defaultFilter(request.query, i, 'contains')) : data;
+		const filteredData = Object.keys(request.query).length
+			? data.filter((i) => defaultFilter(request.query, i, 'contains'))
+			: data;
 		put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, request);
 	},
 	find: (request, { get, put }) => {
@@ -435,6 +450,7 @@ export function createResource<S = never>(
 		read: new Map<string, Set<Invalidator>>(),
 		find: new Map<string, Set<Invalidator>>(),
 		meta: new Map<string, Set<Invalidator>>(),
+		failed: new Map<string, Set<Invalidator>>(),
 		loading: new Map<string, Set<Invalidator>>()
 	};
 	const { read, find } = template;
@@ -502,6 +518,14 @@ export function createResource<S = never>(
 			subscribe('loading', invalidator, getFindKey(options));
 		} else {
 			subscribe('loading', invalidator, getReadKey(options));
+		}
+	}
+
+	function subscribeFailed(invalidator: Invalidator, options: ResourceOptions<S> | ResourceFindOptions<S>) {
+		if (isFindOptions(options)) {
+			subscribe('failed', invalidator, getFindKey(options));
+		} else {
+			subscribe('failed', invalidator, getReadKey(options));
 		}
 	}
 
@@ -671,7 +695,7 @@ export function createResource<S = never>(
 					.catch(() => {
 						setStatus('FAILED', statusKey);
 						invalidate('loading', getReadKey({ size, page, query }));
-						// invalidate(['failed', 'loading'], { size, page, query });
+						invalidate('failed', getReadKey({ size, page, query }));
 					});
 			} else {
 				getOrReadResponse.push(getCachedPageData({ size, query, page }));
@@ -688,7 +712,7 @@ export function createResource<S = never>(
 				.catch(() => {
 					setStatus('FAILED', requestKey);
 					invalidate('loading', getReadKey(options));
-					// invalidate(['failed', 'loading'], options);
+					invalidate('failed', getReadKey(options));
 				});
 		}
 		return getOrReadResponse;
@@ -755,6 +779,7 @@ export function createResource<S = never>(
 		subscribeMeta,
 		subscribeRead,
 		subscribeFind,
+		subscribeFailed,
 		subscribeLoading,
 		unsubscribe,
 		isLoading,
@@ -897,7 +922,7 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 						const nextOptions = next.options;
 						const currOptions = current.options;
 						if (currOptions && currOptions !== nextOptions) {
-							const invalidatorSet = optionInvalidatorMap.get(currOptions);
+							const invalidatorSet = optionInvalidatorMap.get(currOptions.options);
 							if (invalidatorSet) {
 								invalidatorSet.delete(invalidator);
 								invalidator();
@@ -1002,6 +1027,13 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribeLoading(invalidator, resourceOptions);
 				return resource.isLoading(resourceOptions);
+			};
+			middleware.isFailed = (template: any, options: any) => {
+				const resource = getResource(template, middlewareId);
+				const transform = !isTemplate(template) && template.transform;
+				const resourceOptions = transformOptions(options, transform);
+				resource.subscribeFailed(invalidator, resourceOptions);
+				return resource.isFailed(resourceOptions);
 			};
 			return middleware;
 		}

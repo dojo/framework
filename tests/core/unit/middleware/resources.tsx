@@ -79,6 +79,37 @@ describe('Resources Middleware', () => {
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([[{ hello: '2' }]])}</div>`);
 	});
 
+	it('should be able to perform a read with a meta request', () => {
+		const root = document.createElement('div');
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+		const Widget = factory(({ id, properties, middleware: { resource } }) => {
+			const { createOptions, meta } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const metaInfo = meta(template, options(), true);
+			return (
+				<div>
+					<div>{`${metaInfo!.total}`}</div>
+				</div>
+			);
+		});
+
+		const template = createResourceTemplate<{ hello: string }>({
+			read: (request, controls) => {
+				controls.put({ data: [{ hello: 'world' }, { hello: 'world' }], total: 2 }, request);
+			}
+		});
+
+		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
+			return <Widget resource={resource({ template })} />;
+		});
+
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, `<div><div>2</div></div>`);
+	});
+
 	it('should transform data with getOrRead', () => {
 		const root = document.createElement('div');
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
@@ -251,54 +282,57 @@ describe('Resources Middleware', () => {
 		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([[{ hello: 'world' }]])}</div>`);
 	});
 
-	// it('returns failed status of resource', async () => {
-	// 	let rejector: () => void;
-	// 	let promise = new Promise<any>((_, reject) => {
-	// 		rejector = reject;
-	// 	});
-	// 	const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+	it('returns failed status of resource', async () => {
+		let rejector: () => void;
+		let promise = new Promise<any>((_, reject) => {
+			rejector = reject;
+		});
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 
-	// 	const template = createResourceTemplate<{ hello: string }>({
-	// 		read: (options, { put }) => {
-	// 			const originalPromise = promise;
-	// 			promise = promise.then((res) => {
-	// 				put(res, options);
-	// 			});
-	// 			return originalPromise;
-	// 		}
-	// 	});
+		const template = createResourceTemplate<{ hello: string }>({
+			read: (options, { put }) => {
+				const originalPromise = promise;
+				promise = promise.then((res) => {
+					put(res, options);
+				});
+				return originalPromise;
+			}
+		});
 
-	// 	const Widget = factory(({ middleware: { resource } }) => {
-	// 		const { getOrRead, isLoading, isFailed, options } = resource.api;
-	// 		const items = getOrRead(options({ size: 1, page: 1 }));
-	// 		const loading = isLoading(options({ size: 1, page: 1 }));
-	// 		const failed = isFailed(options({ size: 1, page: 1 }));
-	// 		if (loading) {
-	// 			return <div>Loading</div>;
-	// 		}
-	// 		if (failed) {
-	// 			return <div>Failed</div>;
-	// 		}
-	// 		return <div>{JSON.stringify(items)}</div>;
-	// 	});
+		const Widget = factory(({ id, properties, middleware: { resource } }) => {
+			const { getOrRead, createOptions, isLoading, isFailed } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const items = getOrRead(template, options({ size: 1, page: 1 }));
+			const loading = isLoading(template, options({ size: 1, page: 1 }));
+			const failed = isFailed(template, options({ size: 1, page: 1 }));
+			if (loading) {
+				return <div>Loading</div>;
+			}
+			if (failed) {
+				return <div>Failed</div>;
+			}
+			return <div>{JSON.stringify(items)}</div>;
+		});
 
-	// 	const App = create()(() => {
-	// 		return <Widget resource={template()} />;
-	// 	});
+		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+			return <Widget resource={resource({ template })} />;
+		});
 
-	// 	const r = renderer(() => <App />);
-	// 	const root = document.createElement('div');
-	// 	r.mount({ domNode: root });
-	// 	assert.strictEqual(root.innerHTML, `<div>Loading</div>`);
-	// 	rejector!();
-	// 	try {
-	// 		await promise;
-	// 		assert.fail('The promise should be rejected');
-	// 	} catch {
-	// 		resolvers.resolveRAF();
-	// 		assert.strictEqual(root.innerHTML, `<div>Failed</div>`);
-	// 	}
-	// });
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, `<div>Loading</div>`);
+		rejector!();
+		try {
+			await promise;
+			assert.fail('The promise should be rejected');
+		} catch {
+			resolvers.resolveRAF();
+			assert.strictEqual(root.innerHTML, `<div>Failed</div>`);
+		}
+	});
 
 	it('should be able to share basic resource across between widgets', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
@@ -367,104 +401,119 @@ describe('Resources Middleware', () => {
 		);
 	});
 
-	// it('should be only destroy the resource once all subscribers have been removed', () => {
-	// 	const factory = create({ resource: createResourceMiddleware<{ hello: string }>(), icache });
-	// 	const template = createMemoryResourceTemplate<{ hello: string }>();
+	it('should be only destroy the resource once all subscribers have been removed', () => {
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>(), icache });
+		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
 
-	// 	const WidgetOne = factory(({ middleware: { resource } }) => {
-	// 		const { options } = resource.api;
-	// 		return (
-	// 			<button
-	// 				onclick={() => {
-	// 					options({ page: 2 });
-	// 				}}
-	// 			/>
-	// 		);
-	// 	});
+		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
+			const { createOptions } = resource;
+			const {
+				resource: { options = createOptions(id) }
+			} = properties();
+			return (
+				<button
+					onclick={() => {
+						options({ page: 2 });
+					}}
+				/>
+			);
+		});
 
-	// 	const WidgetTwo = factory(({ middleware: { resource } }) => {
-	// 		const { getOrRead, options } = resource.api;
-	// 		options({ size: 1 });
-	// 		const items = getOrRead(options());
-	// 		return (
-	// 			<div>
-	// 				<div>{JSON.stringify(items)}</div>
-	// 				<button
-	// 					onclick={() => {
-	// 						options({ page: 3 });
-	// 					}}
-	// 				/>
-	// 			</div>
-	// 		);
-	// 	});
+		const WidgetTwo = factory(({ id, properties, middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const items = getOrRead(template, options({ size: 1 }));
+			return (
+				<div>
+					<div>{JSON.stringify(items)}</div>
+					<button
+						onclick={() => {
+							options({ page: 3 });
+						}}
+					/>
+				</div>
+			);
+		});
 
-	// 	const Parent = factory(function Parent({ middleware: { resource, icache } }) {
-	// 		const { getResource } = resource.api;
-	// 		const show = icache.getOrSet<boolean>('show', true);
-	// 		const resourceWithSharedOptions = getResource({ sharedOptions: true });
-	// 		return (
-	// 			<div>
-	// 				<button
-	// 					onclick={() => {
-	// 						icache.set('show', (value) => !value);
-	// 					}}
-	// 				/>
-	// 				{show && <WidgetOne resource={resourceWithSharedOptions} />}
-	// 				<WidgetTwo resource={resourceWithSharedOptions} />
-	// 			</div>
-	// 		);
-	// 	});
+		const Parent = factory(function Parent({ id, properties, middleware: { resource, icache } }) {
+			const { createOptions } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const show = icache.getOrSet<boolean>('show', true);
+			return (
+				<div>
+					<button
+						onclick={() => {
+							icache.set('show', (value) => !value);
+						}}
+					/>
+					{show && <WidgetOne resource={resource({ template, options })} />}
+					{show && <WidgetTwo resource={resource({ template, options })} />}
+					<WidgetTwo resource={resource({ template, options })} />
+				</div>
+			);
+		});
 
-	// 	const App = create({ icache })(function App({ middleware: { icache } }) {
-	// 		const show = icache.getOrSet<boolean>('show', true);
-	// 		return (
-	// 			<div>
-	// 				{show && (
-	// 					<Parent
-	// 						resource={template({
-	// 							data: [{ hello: 'world' }, { hello: 'world again' }, { hello: 'world the third' }]
-	// 						})}
-	// 					/>
-	// 				)}
-	// 				<button
-	// 					onclick={() => {
-	// 						icache.set('show', (value) => !value);
-	// 					}}
-	// 				/>
-	// 			</div>
-	// 		);
-	// 	});
+		const App = create({ resource: createResourceMiddleware(), icache })(function App({
+			id,
+			middleware: { icache, resource }
+		}) {
+			const show = icache.getOrSet<boolean>('show', true);
+			return (
+				<div>
+					{show && (
+						<Parent
+							resource={resource({
+								template,
+								initOptions: {
+									id,
+									data: [{ hello: 'world' }, { hello: 'world again' }, { hello: 'world the third' }]
+								}
+							})}
+						/>
+					)}
+					<button
+						onclick={() => {
+							icache.set('show', (value) => !value);
+						}}
+					/>
+				</div>
+			);
+		});
 
-	// 	const r = renderer(() => <App />);
-	// 	const root = document.createElement('div');
-	// 	r.mount({ domNode: root });
-	// 	assert.strictEqual(
-	// 		root.innerHTML,
-	// 		'<div><div><button></button><button></button><div><div>[[{"hello":"world"}]]</div><button></button></div></div><button></button></div>'
-	// 	);
-	// 	(root.children[0].children[0].children[1] as any).click();
-	// 	resolvers.resolveRAF();
-	// 	assert.strictEqual(
-	// 		root.innerHTML,
-	// 		'<div><div><button></button><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
-	// 	);
-	// 	(root.children[0].children[0].children[0] as any).click();
-	// 	resolvers.resolveRAF();
-	// 	assert.strictEqual(
-	// 		root.innerHTML,
-	// 		'<div><div><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
-	// 	);
-	// 	(root.children[0].children[0].children[1].children[1] as any).click();
-	// 	resolvers.resolveRAF();
-	// 	assert.strictEqual(
-	// 		root.innerHTML,
-	// 		'<div><div><button></button><div><div>[[{"hello":"world the third"}]]</div><button></button></div></div><button></button></div>'
-	// 	);
-	// 	(root.children[0].children[1] as any).click();
-	// 	resolvers.resolveRAF();
-	// 	resolvers.resolveRAF();
-	// 	assert.strictEqual(root.innerHTML, '<div><button></button></div>');
-	// });
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><button></button><div><div>[[{"hello":"world"}]]</div><button></button></div><div><div>[[{"hello":"world"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[1] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[0] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><div><div>[[{"hello":"world again"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[0].children[1].children[1] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div><button></button><div><div>[[{"hello":"world the third"}]]</div><button></button></div></div><button></button></div>'
+		);
+		(root.children[0].children[1] as any).click();
+		resolvers.resolveRAF();
+		resolvers.resolveRAF();
+		assert.strictEqual(root.innerHTML, '<div><button></button></div>');
+	});
 
 	it('should be able to share search query across widgets', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
@@ -575,6 +624,110 @@ describe('Resources Middleware', () => {
 			root.innerHTML,
 			`<div><button></button><div>${JSON.stringify([[{ hello: 'mars' }, { hello: 'venus' }]])}</div></div>`
 		);
+	});
+
+	it('should be able to change the options for a resource', () => {
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+
+		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const items = getOrRead(template, options());
+			return <div>{JSON.stringify(items)}</div>;
+		});
+
+		const App = create({ icache, resource: createResourceMiddleware() })(
+			({ id, middleware: { resource, icache } }) => {
+				const { createOptions } = resource;
+				const options = icache.getOrSet('options', () => {
+					const options = createOptions('one');
+					options({ size: 2 });
+					return options;
+				});
+				const data = icache.getOrSet('data', [{ hello: 'world' }, { hello: 'moon' }]);
+				return (
+					<div>
+						<button
+							onclick={() => {
+								icache.set('options', () => {
+									const options = createOptions('two');
+									options({ size: 1 });
+									return options;
+								});
+							}}
+						/>
+						<WidgetOne resource={resource({ template, options, initOptions: { id, data } })} />
+					</div>
+				);
+			}
+		);
+
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			`<div><button></button><div>${JSON.stringify([[{ hello: 'world' }, { hello: 'moon' }]])}</div></div>`
+		);
+		(root.children[0].children[0] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			`<div><button></button><div>${JSON.stringify([[{ hello: 'world' }]])}</div></div>`
+		);
+	});
+
+	it('should be able to use a resource directly in a widget', () => {
+		const template = createResourceTemplate<{ hello: string }>({
+			read: (request, controls) => {
+				controls.put({ data: [{ hello: 'world' }], total: 1 }, request);
+			}
+		});
+		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+			const { createOptions, getOrRead } = resource;
+			const options = createOptions('test');
+			const [items] = getOrRead(template, options());
+
+			return <div>{JSON.stringify(items)}</div>;
+		});
+
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div>[{"hello":"world"}]</div>');
+	});
+
+	it('should be able to use a resource directly in a widget with init options', () => {
+		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+			const { createOptions, getOrRead } = resource;
+			const { template: templateOne } = resource({
+				template,
+				initOptions: { id: 'one', data: [{ hello: 'template one' }] }
+			});
+			const { template: templateTwo } = resource({
+				template,
+				initOptions: { id: 'two', data: [{ hello: 'template two' }] }
+			});
+			const options = createOptions('test');
+			const [templateOneItems] = getOrRead(templateOne, options());
+			const [templateTwoItems] = getOrRead(templateTwo, options());
+
+			return (
+				<div>
+					{JSON.stringify(templateOneItems)}
+					{JSON.stringify(templateTwoItems)}
+				</div>
+			);
+		});
+
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, '<div>[{"hello":"template one"}][{"hello":"template two"}]</div>');
 	});
 
 	it('should destroy resources when widget is removed', () => {
