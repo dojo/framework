@@ -1,31 +1,35 @@
 # Dojo Resources
 
-Dojo Resources is designed to provide a consistent pattern to make widgets "resource aware". Resource can be configured to work with both external data sources and memory data sources. The resource is essentially a Dojo managed data store with caching, pagination and filtering built in. Coupled with the `resource` middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets needing to know about the fetching implementation or the raw data format.
+Dojo Resources is designed to provide a consistent pattern to make widgets "resource aware". Resource can be configured to work with both any type of data sources. The resource is essentially a Dojo managed data store with caching, pagination and filtering built in. Coupled with the `resource` middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets needing to know about the fetching implementation or the raw data format.
 
 | Feature                                   | Description                                                                                                                                                  |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Built in support for memory resources** | Default support for using resources with in-memory data.                                                                                                     |
+| **Support for memory resources**          | Support for using resources an in-memory data set.                                                                                                           |
 | **Single data source**                    | Resources allow creation of a single source of data for a given template that can be shared between multiple widgets using the data middleware.              |
-| **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume |
 | **Support for async and sync data reads** | Resource templates can read data in any way they like - once data becomes available, the resource middleware reactively invalidates any affected widgets.    |
+| **Data transforms**                       | Allows specifying the data format that a widget requires, and transparently transforms source data into the expected output format for the widget to consume |
 | **Consistent Resource Options**           | Resource options objects are passed to all api functions ensuring that all api functions are pure and provide only the data that was requested.              |
 | **Sharable Resource Options**             | Resource options can be shared between widgets via the resource middleware, allowing multiple widgets to react to resource changes.                          |
 
 # Basic Usage
 
-Dojo resources are created using the `createResourceTemplate` factory from `@dojo/framework/middleware/resources`. The default template comes with built-in support for working with in-memory data that can be used with data-aware widgets. This template can be used with "resource aware" widget, meaning any widget that uses the `resource` middleware from `@dojo/framework/core/middleware/resources`.
+In order to work with Dojo resources widgets need to use the `resource` middleware created with the `createResourceMiddleware` factory from `@dojo/framework/middleware/resources`. There are two types of "resource-aware" widgets, widgets that expose a `resource` on their property API and widgets that need to use a resource internally. The same factory is used to create both types of middleware, the main difference is for widgets that require resources to be passed via properties, a resource type is needed on creation.
+
+Using the `resource` middleware enables working with resource templates in your widget. Resources templates are created using the `createResourceTemplate` and `createResourceTemplateWithInit` factories from `@dojo/framework/middleware/resources`. Dojo resources also provides a utility factory `createMemoryResourceTemplate` which can be used to create a resource template that can be populated on initialization and works with the data in the client. The initialization include `data` and an `id` that is required it identify the instance of the resource and are passed with template into the `resource` middleware to use with a "resource" aware widget.
 
 > App.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
+import { createMemoryResourceTemplate, createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
 import DataAwareWidget from './DataAwareWidget';
 
-const factory = create();
-const template = createResourceTemplate<{ foo: string }>();
+const resource = createResourceMiddleware();
+const factory = create({ resource });
+const myTemplate = createMemoryResourceTemplate<{ foo: string }>();
 
-const App = factory(function App() {
-	return <DataAwareWidget resource={template({ data: [{ foo: 'string' }] })} />;
+const App = factory(function App({ id, middleware: { resource } }) {
+	return <DataAwareWidget resource={resource({ template, initOptions: { id, data: [{ foo: 'string' }] } })} />;
 });
 ```
 
@@ -72,9 +76,12 @@ const resource = createDataMiddleware<ResourceData>();
 
 const factory = create({ resource });
 
-export const DataAwareWidget = factory(function DataAwareWidget({ middleware: { resource } }) {
-	const { getOrRead, options } = resource();
-	const [items] = getOrRead(options());
+export const DataAwareWidget = factory(function DataAwareWidget({ id, properties, middleware: { resource } }) {
+	const { getOrRead, createOptions } = resource;
+	const {
+		resource: { template, options = createOptions(id) }
+	} = properties();
+	const [items] = getOrRead(template, options());
 	if (items) {
 		return <ul>{items.map((item) => <li>{item.value}</li>)}</ul>;
 	}
