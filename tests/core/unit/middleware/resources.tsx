@@ -9,7 +9,8 @@ import {
 	createResourceTemplateWithInit,
 	createResourceMiddleware,
 	memoryTemplate,
-	createResourceTemplate
+	createResourceTemplate,
+	defaultFind
 } from '../../../../src/core/middleware/resources';
 import icache from '../../../../src/core/middleware/icache';
 
@@ -102,7 +103,7 @@ describe('Resources Middleware', () => {
 			read: (request, controls) => {
 				controls.put({ data: [{ hello: 'world' }, { hello: 'world' }], total: 2 }, request);
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
@@ -264,7 +265,7 @@ describe('Resources Middleware', () => {
 					put(res, options);
 				});
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const Widget = factory(({ id, properties, middleware: { resource } }) => {
@@ -309,7 +310,7 @@ describe('Resources Middleware', () => {
 				});
 				return originalPromise;
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const Widget = factory(({ id, properties, middleware: { resource } }) => {
@@ -708,42 +709,54 @@ describe('Resources Middleware', () => {
 			read: (request, controls) => {
 				controls.put({ data: [{ hello: 'world' }], total: 1 }, request);
 			},
-			find: () => {}
+			find: defaultFind
 		});
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
-			const { createOptions, getOrRead } = resource;
+			const { createOptions, getOrRead, find } = resource;
 			const options = createOptions('test');
 			const [items] = getOrRead(template, options());
+			const item = find(template, { start: 0, query: { hello: 'world' }, options: options() });
 
-			return <div>{JSON.stringify(items)}</div>;
+			return (
+				<div>
+					<div>{JSON.stringify(item)}</div>
+					<div>{JSON.stringify(items)}</div>
+				</div>
+			);
 		});
 
 		const r = renderer(() => <App />);
 		const root = document.createElement('div');
 		r.mount({ domNode: root });
-		assert.strictEqual(root.innerHTML, '<div>[{"hello":"world"}]</div>');
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><div>{"item":{"hello":"world"},"index":0,"page":1,"pageIndex":0}</div><div>[{"hello":"world"}]</div></div>'
+		);
 	});
 
 	it('should be able to use a resource directly in a widget with init options', () => {
-		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
-			memoryTemplate
-		);
-		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+		const template = createResourceTemplateWithInit<
+			{ hello: string },
+			{ other: string; data: { hello: string }[] }
+		>(memoryTemplate);
+		const App = create({ icache, resource: createResourceMiddleware() })(({ middleware: { resource, icache } }) => {
 			const { createOptions, getOrRead } = resource;
-			const { template: templateOne } = resource({
-				template,
-				initOptions: { id: 'one', data: [{ hello: 'template one' }] }
-			});
-			const { template: templateTwo } = resource({
-				template,
-				initOptions: { id: 'two', data: [{ hello: 'template two' }] }
-			});
 			const options = createOptions('test');
-			const [templateOneItems] = getOrRead(templateOne, options());
-			const [templateTwoItems] = getOrRead(templateTwo, options());
+			const data = icache.getOrSet('data', [{ hello: 'template one' }]);
+			const [templateOneItems] = getOrRead(template, options(), { id: 'one', other: 'random', data });
+			const [templateTwoItems] = getOrRead(template, options(), {
+				id: 'two',
+				other: 'random',
+				data: [{ hello: 'template two' }]
+			});
 
 			return (
 				<div>
+					<button
+						onclick={() => {
+							icache.set('data', [{ hello: 'updated template one' }]);
+						}}
+					/>
 					{JSON.stringify(templateOneItems)}
 					{JSON.stringify(templateTwoItems)}
 				</div>
@@ -753,7 +766,16 @@ describe('Resources Middleware', () => {
 		const r = renderer(() => <App />);
 		const root = document.createElement('div');
 		r.mount({ domNode: root });
-		assert.strictEqual(root.innerHTML, '<div>[{"hello":"template one"}][{"hello":"template two"}]</div>');
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><button></button>[{"hello":"template one"}][{"hello":"template two"}]</div>'
+		);
+		(root.children[0].children[0] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			'<div><button></button>[{"hello":"updated template one"}][{"hello":"template two"}]</div>'
+		);
 	});
 
 	it('should destroy resources when widget is removed', () => {
@@ -864,7 +886,7 @@ describe('Resources Middleware', () => {
 					return originalPromise;
 				}
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
@@ -979,7 +1001,7 @@ describe('Resources Middleware', () => {
 				});
 				return originalPromise;
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
@@ -1061,7 +1083,7 @@ describe('Resources Middleware', () => {
 					return originalPromise;
 				}
 			},
-			find: () => {}
+			find: defaultFind
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {

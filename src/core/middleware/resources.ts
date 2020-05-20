@@ -28,9 +28,8 @@ export interface ResourceFindOptions<S> {
 	type?: string;
 }
 
-export interface ResourceInitOptions<RESOURCE> {
+export interface ResourceInitOptions {
 	id: string;
-	data: RESOURCE[];
 }
 
 // Resource Template
@@ -117,7 +116,7 @@ export interface Resource<S = {}> {
 	subscribeLoading(invalidator: Invalidator, options: ResourceOptions<S> | ResourceFindOptions<S>): void;
 	subscribeFailed(invalidator: Invalidator, options: ResourceOptions<S> | ResourceFindOptions<S>): void;
 	unsubscribe(invalidator: Invalidator): void;
-	init(initOptions: ResourceInitOptions<S>): void;
+	init(initOptions: ResourceInitOptions, requireDiff?: boolean): void;
 	destroy(id: string): void;
 }
 
@@ -126,7 +125,7 @@ export type ResourceProperty<MIDDLEWARE> = MIDDLEWARE extends infer RESOURCE
 			template: {
 				template: ResourceTemplate<RESOURCE, MIDDLEWARE>;
 				transform?: TransformConfig<MIDDLEWARE, any>;
-				initOptions?: ResourceInitOptions<any>;
+				initOptions?: ResourceInitOptions;
 				id?: string;
 			};
 			options?: Options<MIDDLEWARE>;
@@ -140,7 +139,7 @@ export interface ResourceMiddlewareProperties<MIDDLEWARE> {
 interface ResourceTemplateWrapper<RESOURCE = {}, MIDDLEWARE = {}> {
 	template: ResourceTemplate<RESOURCE, any>;
 	transform?: TransformConfig<{ [P in keyof MIDDLEWARE]: {} }, RESOURCE>;
-	initOptions?: ResourceInitOptions<any>;
+	initOptions?: ResourceInitOptions;
 	id?: string;
 }
 
@@ -212,15 +211,15 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		options: Options<{}>;
 	};
 	createOptions(id: string): Options<{}>;
-	getOrRead<T extends ResourceTemplate<any, any>>(
-		template: T,
+	getOrRead<RESOURCE>(
+		template: ResourceTemplate<RESOURCE> & { type: 'standard' },
 		options: ResourceOptions<any>
-	): T extends ResourceTemplate<infer RESOURCE> ? RESOURCE[][] : void;
-	getOrRead<T extends ResourceTemplateWithInit<any, any, any>>(
-		template: T,
+	): RESOURCE[][];
+	getOrRead<RESOURCE, INIT>(
+		template: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' },
 		options: ResourceOptions<any>,
-		initOptions: T extends ResourceTemplateWithInit<any, infer INIT> ? INIT : any
-	): T extends ResourceTemplateWithInit<infer RESOURCE> ? RESOURCE[][] : void;
+		initOptions: INIT & { id: string }
+	): RESOURCE[][];
 	getOrRead<T extends ResourceTemplate<any, any>>(
 		template: {
 			template: T;
@@ -229,10 +228,15 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		},
 		options: ResourceOptions<any>
 	): T extends ResourceTemplate<infer RESOURCE> ? RESOURCE[][] : void;
-	find<T extends ResourceTemplate<any, any>>(
-		template: T,
+	find<RESOURCE>(
+		template: ResourceTemplate<RESOURCE> & { type: 'standard' },
 		options: ResourceFindOptions<any>
-	): T extends ResourceTemplate<infer RESOURCE> ? ResourceFindResult<RESOURCE> | undefined : void;
+	): ResourceFindResult<RESOURCE> | undefined;
+	find<RESOURCE, INIT>(
+		template: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' },
+		options: ResourceFindOptions<any>,
+		initOptions: INIT & { id: string }
+	): ResourceFindResult<RESOURCE> | undefined;
 	find<T extends ResourceTemplate<any, any>>(
 		template: {
 			template: T;
@@ -241,9 +245,15 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		},
 		options: ResourceFindOptions<any>
 	): T extends ResourceTemplate<infer RESOURCE> ? ResourceFindResult<RESOURCE> | undefined : void;
-	meta<T extends ResourceTemplate<any, any>>(
-		template: T,
+	meta<RESOURCE>(
+		template: ResourceTemplate<RESOURCE> & { type: 'standard' },
 		options: ResourceOptions<any>,
+		request?: boolean
+	): ResourceMeta | undefined;
+	meta<RESOURCE, INIT>(
+		template: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' },
+		options: ResourceOptions<any>,
+		initOptions: INIT & { id: string },
 		request?: boolean
 	): ResourceMeta | undefined;
 	meta<T extends ResourceTemplate<any, any>>(
@@ -255,9 +265,14 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		options: ResourceOptions<any>,
 		request?: boolean
 	): ResourceMeta | undefined;
-	isLoading<T extends ResourceTemplate<any, any>>(
-		template: T,
+	isLoading<RESOURCE>(
+		template: ResourceTemplate<RESOURCE> & { type: 'standard' },
 		options: ResourceOptions<any> | ResourceFindOptions<any>
+	): boolean;
+	isLoading<RESOURCE, INIT>(
+		template: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' },
+		options: ResourceOptions<any> | ResourceFindOptions<any>,
+		initOptions: INIT & { id: string }
 	): boolean;
 	isLoading<T extends ResourceTemplate<any, any>>(
 		template: {
@@ -267,9 +282,14 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		},
 		options: ResourceOptions<any> | ResourceFindOptions<any>
 	): boolean;
-	isFailed<T extends ResourceTemplate<any, any>>(
-		template: T,
+	isFailed<RESOURCE>(
+		template: ResourceTemplate<RESOURCE> & { type: 'standard' },
 		options: ResourceOptions<any> | ResourceFindOptions<any>
+	): boolean;
+	isFailed<RESOURCE, INIT>(
+		template: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' },
+		options: ResourceOptions<any> | ResourceFindOptions<any>,
+		initOptions: INIT & { id: string }
 	): boolean;
 	isFailed<T extends ResourceTemplate<any, any>>(
 		template: {
@@ -283,14 +303,14 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 
 export function createResourceTemplate<RESOURCE = void>(
 	template: ResourceTemplate<RESOURCE>
-): ResourceTemplate<RESOURCE> {
-	return { ...template };
+): ResourceTemplate<RESOURCE> & { type: 'standard' } {
+	return template as ResourceTemplate<RESOURCE> & { type: 'standard' };
 }
 
 export function createResourceTemplateWithInit<RESOURCE = void, INIT = never>(
 	template: ResourceTemplateWithInit<RESOURCE, INIT>
-): ResourceTemplateWithInit<RESOURCE, INIT> {
-	return { ...template };
+): ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' } {
+	return template as ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' };
 }
 
 export function defaultFilter(query: ResourceQuery<any>, item: any, type: string = 'contains') {
@@ -316,6 +336,19 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: string
 		}
 	}
 	return true;
+}
+
+export function defaultFind(request: ResourceFindRequest<any>, { put, get }: ResourceControls<any>) {
+	const { start, type, options } = request;
+	const { query } = options;
+	const { data } = get({ query });
+	for (let i = start; i < data.length; i++) {
+		const item = data[i];
+		if (defaultFilter(request.query, item, type)) {
+			put({ item, index: i }, request);
+			break;
+		}
+	}
 }
 
 export const memoryTemplate: ResourceTemplateWithInit<any, { data: any }> = Object.freeze({
@@ -441,9 +474,14 @@ function isTemplateWithInit(value: any): value is ResourceTemplateWithInit<any> 
 	return Boolean(value && value.init);
 }
 
-export function createResource<S = never>(
+function diffInitOptions(current: any, next: any) {
+	const keys = new Set([...Object.keys(current), ...Object.keys(next)]);
+	return [...keys].some((initKey) => auto(current[initKey], next[initKey], 1).changed);
+}
+
+export function createResource<S = never, T extends ResourceInitOptions = ResourceInitOptions>(
 	template: ResourceTemplate<S> | ResourceTemplateWithInit<S>,
-	initOptions?: ResourceInitOptions<S>
+	initOptions?: T
 ): Resource<S> {
 	const dataMap = new Map<string, S[]>();
 	const metaMap = new Map<string, ResourceMeta>();
@@ -490,6 +528,17 @@ export function createResource<S = never>(
 				invalidator();
 			});
 		}
+	}
+
+	function invalidateAll() {
+		Object.keys(invalidatorMaps).forEach((key: string) => {
+			const map = invalidatorMaps[key as keyof InvalidatorMaps];
+			map.forEach((invalidatorSet) => {
+				invalidatorSet.forEach((invalidator) => {
+					invalidator();
+				});
+			});
+		});
 	}
 
 	function subscribe(type: SubscriptionType, invalidator: Invalidator, key: string): void {
@@ -741,11 +790,21 @@ export function createResource<S = never>(
 		}
 	}
 
-	function resourceInit(options: BaseResourceInitRequest) {
-		releaseResource();
+	function resourceInit(options: T, requireDiff = false) {
 		if (isTemplateWithInit(template)) {
-			template.init(options, { put, get });
+			let reset = true;
+			if (requireDiff) {
+				reset = diffInitOptions(initOptions, options);
+			}
+			if (reset) {
+				releaseResource();
+				template.init(options, { put, get });
+				invalidateAll();
+			}
+		} else {
+			releaseResource();
 		}
+		initOptions = options;
 	}
 
 	function meta(options: ResourceOptions<S>, request = false) {
@@ -807,12 +866,9 @@ function createOptionsWrapper(): Options<any> {
 	function setOptions(newOptions?: Partial<ResourceOptions<any>>): ResourceOptions<any> {
 		if (newOptions) {
 			const calculatedOptions = { ...options, ...newOptions };
-			const changed =
-				(newOptions.query && auto(options.query, newOptions.query).changed) ||
-				auto(options.page, calculatedOptions.page).changed ||
-				options.size !== calculatedOptions.size;
+			const changed = auto(options, calculatedOptions, 1);
 			if (changed) {
-				options = { ...options, ...newOptions };
+				options = calculatedOptions;
 				invalidate();
 			}
 		}
@@ -831,11 +887,15 @@ function isResource(value: any): value is ResourceTemplateWrapper {
 }
 
 function getResource(templateWrapper: ResourceTemplateWrapper, id: string): Resource<any>;
-function getResource(template: ResourceTemplate<any>, id: string): Resource<any>;
-function getResource(templateOrWrapper: ResourceTemplateWrapper | ResourceTemplate<any>, id: string): Resource<any> {
-	const templateId = (isResource(templateOrWrapper) && templateOrWrapper.id) || 'global';
+function getResource(template: ResourceTemplate<any>, id: string, init?: any): Resource<any>;
+function getResource(
+	templateOrWrapper: ResourceTemplateWrapper | ResourceTemplate<any>,
+	id: string,
+	init?: any
+): Resource<any> {
+	const templateId = (isResource(templateOrWrapper) ? templateOrWrapper.id : init && init.id) || 'global';
 	const template = isResource(templateOrWrapper) ? templateOrWrapper.template : templateOrWrapper;
-	const initOptions = isResource(templateOrWrapper) ? templateOrWrapper.initOptions : undefined;
+	const initOptions = isResource(templateOrWrapper) ? templateOrWrapper.initOptions : init;
 	const resourceMap = templateToResourceMap.get(template) || new Map<string, Resource<any>>();
 	let resource = resourceMap.get(templateId);
 	const registeredResources =
@@ -854,6 +914,9 @@ function getResource(templateOrWrapper: ResourceTemplateWrapper | ResourceTempla
 		}
 		registeredResources.add({ resource, type: isOwner ? 'owner' : 'subscribed' });
 	} else {
+		if (init) {
+			resource.init(init, true);
+		}
 		registeredResources.add({ resource, type: 'subscribed' });
 	}
 	idToResourceMap.set(id, registeredResources);
@@ -895,17 +958,7 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 							template: { initOptions: nextInitOptions }
 						} = next;
 						if (nextInitOptions) {
-							const keys = new Set([
-								...Object.keys(currentInitOptions || {}),
-								...Object.keys(nextInitOptions)
-							]);
-							const changed = [...keys].some(
-								(initKey) =>
-									auto(
-										((currentInitOptions || {}) as any)[initKey],
-										(nextInitOptions as any)[initKey]
-									).changed
-							);
+							const changed = diffInitOptions(currentInitOptions || {}, nextInitOptions);
 							if (changed) {
 								const resourceMap = templateToResourceMap.get(next.template.template);
 								if (resourceMap) {
@@ -981,8 +1034,8 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 				optionsMap.set(key, setOptions);
 				return setOptions;
 			};
-			middleware.getOrRead = (template: any, options: any) => {
-				const resource = getResource(template, middlewareId);
+			middleware.getOrRead = (template: any, options: any, init?: any) => {
+				const resource = getResource(template, middlewareId, init);
 				const transform = !isTemplate(template) && template.transform;
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribeRead(invalidator, options);
