@@ -1057,8 +1057,8 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 				}
 				return data;
 			};
-			middleware.find = (template: any, options: any) => {
-				const resource = getResource(template, middlewareId);
+			middleware.find = (template: any, options: any, init?: any) => {
+				const resource = getResource(template, middlewareId, init);
 				const transform = !isTemplate(template) && template.transform;
 				const findOptions = transformOptions(options, transform);
 				resource.subscribeFind(invalidator, findOptions);
@@ -1069,8 +1069,8 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 				return result;
 			};
 
-			middleware.meta = (template: any, options: any, request = false) => {
-				const resource = getResource(template, middlewareId);
+			middleware.meta = (template: any, options: any, request = false, init?: any) => {
+				const resource = getResource(template, middlewareId, init);
 				const transform = !isTemplate(template) && template.transform;
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribeMeta(invalidator, resourceOptions);
@@ -1079,15 +1079,15 @@ export function createResourceMiddleware<MIDDLEWARE = void>() {
 				}
 				return resource.meta(resourceOptions, request);
 			};
-			middleware.isLoading = (template: any, options: any) => {
-				const resource = getResource(template, middlewareId);
+			middleware.isLoading = (template: any, options: any, init?: any) => {
+				const resource = getResource(template, middlewareId, init);
 				const transform = !isTemplate(template) && template.transform;
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribeLoading(invalidator, resourceOptions);
 				return resource.isLoading(resourceOptions);
 			};
-			middleware.isFailed = (template: any, options: any) => {
-				const resource = getResource(template, middlewareId);
+			middleware.isFailed = (template: any, options: any, init?: any) => {
+				const resource = getResource(template, middlewareId, init);
 				const transform = !isTemplate(template) && template.transform;
 				const resourceOptions = transformOptions(options, transform);
 				resource.subscribeFailed(invalidator, resourceOptions);
