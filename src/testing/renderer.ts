@@ -81,8 +81,6 @@ export interface Property {
 	): void;
 }
 
-let middlewareId = 0;
-
 interface RendererOptions {
 	middleware?: [MiddlewareResultFactory<any, any, any, any>, MiddlewareResultFactory<any, any, any, any>][];
 }
@@ -448,7 +446,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		const resolveMiddleware = (middlewares: any, mocks: any[]) => {
 			const keys = Object.keys(middlewares);
 			const results: any = {};
-			const uniqueId = `${middlewareId++}`;
+			const uniqueId = uuid();
 			const mockMiddlewareMap = new Map(mocks);
 
 			for (let i = 0; i < keys.length; i++) {

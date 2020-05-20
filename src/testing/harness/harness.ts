@@ -12,6 +12,7 @@ import {
 import { WidgetBase } from '../../core/WidgetBase';
 import { isWidgetFunction } from '../../core/Registry';
 import { invalidator, diffProperty, destroy, create, propertiesDiff } from '../../core/vdom';
+import { uuid } from '../../core/util';
 
 export interface CustomComparator {
 	selector: string;
@@ -52,8 +53,6 @@ export interface HarnessAPI {
 	trigger: Trigger;
 	getRender: GetRender;
 }
-
-let middlewareId = 0;
 
 interface HarnessOptions {
 	customComparator?: CustomComparator[];
@@ -96,7 +95,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 		const resolveMiddleware = (middlewares: any, mocks: any[]) => {
 			const keys = Object.keys(middlewares);
 			const results: any = {};
-			const uniqueId = `${middlewareId++}`;
+			const uniqueId = uuid();
 			const mockMiddlewareMap = new Map(mocks);
 
 			for (let i = 0; i < keys.length; i++) {
