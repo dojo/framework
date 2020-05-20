@@ -84,24 +84,23 @@ export interface ResourceFind<RESOURCE> {
 	(options: ResourceFindRequest<RESOURCE>, controls: ResourceControls<RESOURCE>): void | Promise<void>;
 }
 
-interface ResourceInitRequest<RESOURCE> {
+interface BaseResourceInitRequest {
 	id: string;
-	data: RESOURCE[];
 }
 
-export interface ResourceInit<RESOURCE> {
-	(data: ResourceInitRequest<RESOURCE>, controls: ResourceControls<RESOURCE>): void;
+export interface ResourceInit<RESOURCE, INIT> {
+	(request: BaseResourceInitRequest & INIT, controls: ResourceControls<RESOURCE>): void;
 }
 
 interface ResourceTemplate<RESOURCE = {}, MIDDLEWARE = {}> {
 	read: ResourceRead<RESOURCE>;
-	find?: ResourceFind<RESOURCE>;
+	find: ResourceFind<RESOURCE>;
 }
 
-interface ResourceTemplateWithInit<RESOURCE = {}, MIDDLEWARE = {}> {
+interface ResourceTemplateWithInit<RESOURCE = {}, INIT = any, MIDDLEWARE = {}> {
+	init: ResourceInit<RESOURCE, INIT>;
 	read: ResourceRead<RESOURCE>;
-	init: ResourceInit<RESOURCE>;
-	find?: ResourceFind<RESOURCE>;
+	find: ResourceFind<RESOURCE>;
 }
 
 // Resource Interfaces
@@ -173,29 +172,29 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		};
 		options: Options<{}>;
 	};
-	<RESOURCE, DATA extends RESOURCE>(
+	<RESOURCE, INIT, DATA extends RESOURCE>(
 		options: {
-			template: ResourceTemplateWithInit<RESOURCE, MIDDLEWARE>;
-			initOptions: ResourceInitOptions<DATA>;
+			template: ResourceTemplateWithInit<RESOURCE, INIT, MIDDLEWARE>;
+			initOptions: INIT & { id: string };
 			options?: Options<{}>;
 		}
 	): {
 		template: {
-			template: ResourceTemplate<RESOURCE, MIDDLEWARE>;
+			template: ResourceTemplateWithInit<RESOURCE, INIT, MIDDLEWARE>;
 		};
 		options: Options<{}>;
 		transform?: any;
 	};
-	<RESOURCE, MIDDLEWARE, DATA extends RESOURCE>(
+	<RESOURCE, INIT, MIDDLEWARE, DATA extends RESOURCE>(
 		options: {
-			template: ResourceTemplateWithInit<RESOURCE, any>;
+			template: ResourceTemplateWithInit<RESOURCE, INIT, any>;
 			transform: TransformConfig<MIDDLEWARE, RESOURCE>;
-			initOptions: ResourceInitOptions<DATA>;
+			initOptions: INIT & { id: string };
 			options?: Options<{}>;
 		}
 	): {
 		template: {
-			template: ResourceTemplate<any, any>;
+			template: ResourceTemplateWithInit<any, INIT, any>;
 			transform: TransformConfig<MIDDLEWARE, RESOURCE>;
 		};
 		options: Options<{}>;
@@ -217,6 +216,11 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 		template: T,
 		options: ResourceOptions<any>
 	): T extends ResourceTemplate<infer RESOURCE> ? RESOURCE[][] : void;
+	getOrRead<T extends ResourceTemplateWithInit<any, any, any>>(
+		template: T,
+		options: ResourceOptions<any>,
+		initOptions: T extends ResourceTemplateWithInit<any, infer INIT> ? INIT : any
+	): T extends ResourceTemplateWithInit<infer RESOURCE> ? RESOURCE[][] : void;
 	getOrRead<T extends ResourceTemplate<any, any>>(
 		template: {
 			template: T;
@@ -283,9 +287,9 @@ export function createResourceTemplate<RESOURCE = void>(
 	return { ...template };
 }
 
-export function createResourceTemplateWithInit<RESOURCE = void>(
-	template: ResourceTemplateWithInit<RESOURCE>
-): ResourceTemplateWithInit<RESOURCE> {
+export function createResourceTemplateWithInit<RESOURCE = void, INIT = never>(
+	template: ResourceTemplateWithInit<RESOURCE, INIT>
+): ResourceTemplateWithInit<RESOURCE, INIT> {
 	return { ...template };
 }
 
@@ -314,7 +318,7 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: string
 	return true;
 }
 
-export const memoryTemplate: ResourceTemplateWithInit<any> = Object.freeze({
+export const memoryTemplate: ResourceTemplateWithInit<any, { data: any }> = Object.freeze({
 	init: ({ data }, { put }) => {
 		put({ data, total: data.length }, { offset: 0, size: 30, query: {} });
 	},
@@ -454,12 +458,6 @@ export function createResource<S = never>(
 		loading: new Map<string, Set<Invalidator>>()
 	};
 	const { read, find } = template;
-	let init: ResourceInit<S> = ({ data }: ResourceInitRequest<S>) => {
-		put({ data, total: data.length }, { size: 30, query: {}, offset: 0 });
-	};
-	if (isTemplateWithInit(template)) {
-		init = template.init;
-	}
 
 	function get(request: Partial<ResourceReadRequest<S>> = {}) {
 		const dataKey = getDataKey(request);
@@ -480,8 +478,8 @@ export function createResource<S = never>(
 		}
 	}
 
-	if (initOptions) {
-		init(initOptions, { put, get });
+	if (isTemplateWithInit(template)) {
+		template.init(initOptions, { put, get });
 	}
 
 	function invalidate(type: SubscriptionType, key: string) {
@@ -719,35 +717,35 @@ export function createResource<S = never>(
 	}
 
 	function resourceFind(options: ResourceFindOptions<S>): ResourceFindResult<S> | undefined {
-		if (find) {
-			const key = getFindKey(getFindOptions(options));
-			if (isStatus('LOADING', key) || isStatus('FAILED', key)) {
-				return undefined;
-			}
+		const key = getFindKey(getFindOptions(options));
+		if (isStatus('LOADING', key) || isStatus('FAILED', key)) {
+			return undefined;
+		}
 
-			if (findMap.has(key)) {
-				return findMap.get(key);
-			}
+		if (findMap.has(key)) {
+			return findMap.get(key);
+		}
 
-			const response = find(getFindOptions(options), { put, get });
-			if (isThenable(response)) {
-				setStatus('LOADING', key);
+		const response = find(getFindOptions(options), { put, get });
+		if (isThenable(response)) {
+			setStatus('LOADING', key);
+			invalidate('loading', getFindKey(options));
+			response.then(() => {
+				clearStatus(key);
+				invalidate('find', getFindKey(options));
 				invalidate('loading', getFindKey(options));
-				response.then(() => {
-					clearStatus(key);
-					invalidate('find', getFindKey(options));
-					invalidate('loading', getFindKey(options));
-				});
-				return undefined;
-			} else {
-				return findMap.get(key);
-			}
+			});
+			return undefined;
+		} else {
+			return findMap.get(key);
 		}
 	}
 
-	function resourceInit(options: ResourceInitRequest<S>) {
+	function resourceInit(options: BaseResourceInitRequest) {
 		releaseResource();
-		init(options, { put, get });
+		if (isTemplateWithInit(template)) {
+			template.init(options, { put, get });
+		}
 	}
 
 	function meta(options: ResourceOptions<S>, request = false) {

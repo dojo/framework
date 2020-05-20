@@ -2,7 +2,7 @@ const { it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { renderer, tsx, create } from '../../../../src/core/vdom';
-// import Map from '../../../../src/shim/Map';
+import Map from '../../../../src/shim/Map';
 import '../../../../src/shim/Promise';
 import { createResolvers } from '../../support/util';
 import {
@@ -35,7 +35,9 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options()))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return <Widget resource={resource({ template, initOptions: { data: [{ hello: '1' }], id } })} />;
@@ -57,11 +59,12 @@ describe('Resources Middleware', () => {
 				resource: { template, options = createOptions(id) }
 			} = properties();
 			set = options;
-			options({ size: 1 });
 			return <div>{JSON.stringify(getOrRead(template, options({ size: 1 })))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (
@@ -98,7 +101,8 @@ describe('Resources Middleware', () => {
 		const template = createResourceTemplate<{ hello: string }>({
 			read: (request, controls) => {
 				controls.put({ data: [{ hello: 'world' }, { hello: 'world' }], total: 2 }, request);
-			}
+			},
+			find: () => {}
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
@@ -128,7 +132,9 @@ describe('Resources Middleware', () => {
 			);
 		});
 
-		const template = createResourceTemplateWithInit<{ wrong: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ wrong: string }, { data: { wrong: string }[] }>(
+			memoryTemplate
+		);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (
@@ -159,7 +165,10 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options({ query: { hello: '2', foo: '1' } })))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ wrong: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<
+			{ wrong: string; foo: string },
+			{ data: { wrong: string; foo: string }[] }
+		>(memoryTemplate);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (
@@ -192,7 +201,7 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options({ query: { age: 10 } })))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ age: number }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ age: number }, { data: { age: number }[] }>(memoryTemplate);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (
@@ -221,7 +230,9 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options({ size: 1 })))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ wrong: number }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ wrong: number }, { data: { wrong: number }[] }>(
+			memoryTemplate
+		);
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (
@@ -252,7 +263,8 @@ describe('Resources Middleware', () => {
 				return promise.then((res) => {
 					put(res, options);
 				});
-			}
+			},
+			find: () => {}
 		});
 
 		const Widget = factory(({ id, properties, middleware: { resource } }) => {
@@ -296,7 +308,8 @@ describe('Resources Middleware', () => {
 					put(res, options);
 				});
 				return originalPromise;
-			}
+			},
+			find: () => {}
 		});
 
 		const Widget = factory(({ id, properties, middleware: { resource } }) => {
@@ -334,9 +347,11 @@ describe('Resources Middleware', () => {
 		}
 	});
 
-	it('should be able to share basic resource across between widgets', () => {
+	it('should be able to share resource options across between widgets', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const WidgetOne = factory(({ properties, id, middleware: { resource } }) => {
 			const { createOptions } = resource;
@@ -403,7 +418,9 @@ describe('Resources Middleware', () => {
 
 	it('should be only destroy the resource once all subscribers have been removed', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>(), icache });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
 			const { createOptions } = resource;
@@ -517,7 +534,9 @@ describe('Resources Middleware', () => {
 
 	it('should be able to share search query across widgets', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
 			const { createOptions } = resource;
@@ -584,7 +603,9 @@ describe('Resources Middleware', () => {
 
 	it('should update the data in the resource', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
 			const { getOrRead, createOptions } = resource;
@@ -628,7 +649,9 @@ describe('Resources Middleware', () => {
 
 	it('should be able to change the options for a resource', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 
 		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
 			const { getOrRead, createOptions } = resource;
@@ -684,7 +707,8 @@ describe('Resources Middleware', () => {
 		const template = createResourceTemplate<{ hello: string }>({
 			read: (request, controls) => {
 				controls.put({ data: [{ hello: 'world' }], total: 1 }, request);
-			}
+			},
+			find: () => {}
 		});
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
 			const { createOptions, getOrRead } = resource;
@@ -701,7 +725,9 @@ describe('Resources Middleware', () => {
 	});
 
 	it('should be able to use a resource directly in a widget with init options', () => {
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
 			const { createOptions, getOrRead } = resource;
 			const { template: templateOne } = resource({
@@ -732,7 +758,9 @@ describe('Resources Middleware', () => {
 
 	it('should destroy resources when widget is removed', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
-		const template = createResourceTemplateWithInit<{ hello: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
 		let renderCount = 0;
 		let callOptions: any;
 		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
@@ -835,7 +863,8 @@ describe('Resources Middleware', () => {
 					});
 					return originalPromise;
 				}
-			}
+			},
+			find: () => {}
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
@@ -889,7 +918,7 @@ describe('Resources Middleware', () => {
 			}
 		});
 
-		const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(memoryTemplate);
 		let data: { foo: string }[] = [];
 		for (let i = 0; i < 20; i++) {
 			data.push({ foo: `Item ${i}` });
@@ -939,7 +968,7 @@ describe('Resources Middleware', () => {
 			);
 		});
 
-		const template = createResourceTemplateWithInit<{ value: string }>({
+		const template = createResourceTemplateWithInit<{ value: string }, { data: { value: string }[] }>({
 			init: ({ data }, { put }) => {
 				put({ data, total: data.length }, { offset: 0, size: 30, query: {} });
 			},
@@ -949,7 +978,8 @@ describe('Resources Middleware', () => {
 					put(res, options);
 				});
 				return originalPromise;
-			}
+			},
+			find: () => {}
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
@@ -1030,7 +1060,8 @@ describe('Resources Middleware', () => {
 					});
 					return originalPromise;
 				}
-			}
+			},
+			find: () => {}
 		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
@@ -1082,7 +1113,9 @@ describe('Resources Middleware', () => {
 				);
 			});
 
-			const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+			const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+				memoryTemplate
+			);
 			let data: { foo: string }[] = [];
 			for (let i = 0; i < 200; i++) {
 				if (i % 10 === 0) {
@@ -1173,7 +1206,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 200; i++) {
 					if (i % 10 === 0) {
@@ -1213,7 +1248,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 200; i++) {
 					if (i % 10 === 0) {
@@ -1255,7 +1292,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 200; i++) {
 					data.push({ foo: `${i} Item` });
@@ -1296,7 +1335,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 201; i++) {
 					data.push({ foo: `${i} Item` });
@@ -1339,7 +1380,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 200; i++) {
 					if (i % 10 === 0) {
@@ -1384,7 +1427,9 @@ describe('Resources Middleware', () => {
 						);
 					}
 				});
-				const template = createResourceTemplateWithInit<{ foo: string }>(memoryTemplate);
+				const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string }[] }>(
+					memoryTemplate
+				);
 				let data: { foo: string }[] = [];
 				for (let i = 0; i < 200; i++) {
 					if (i % 10 === 0) {
