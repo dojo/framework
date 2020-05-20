@@ -313,6 +313,13 @@ export function createResourceTemplateWithInit<RESOURCE = void, INIT = never>(
 	return template as ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' };
 }
 
+export function createMemoryResourceTemplate<RESOURCE = void>(): ResourceTemplateWithInit<
+	RESOURCE,
+	{ data: RESOURCE[] }
+> & { type: 'init' } {
+	return { ...memoryTemplate } as ResourceTemplateWithInit<RESOURCE, { data: RESOURCE[] }> & { type: 'init' };
+}
+
 export function defaultFilter(query: ResourceQuery<any>, item: any, type: string = 'contains') {
 	const queryKeys = Object.keys(query);
 	for (let i = 0; i < queryKeys.length; i++) {
@@ -893,7 +900,7 @@ function getResource(
 	id: string,
 	init?: any
 ): Resource<any> {
-	const templateId = (isResource(templateOrWrapper) ? templateOrWrapper.id : init && init.id) || 'global';
+	const templateId = (isResource(templateOrWrapper) ? templateOrWrapper.id : init && `${id}/${init.id}`) || 'global';
 	const template = isResource(templateOrWrapper) ? templateOrWrapper.template : templateOrWrapper;
 	const initOptions = isResource(templateOrWrapper) ? templateOrWrapper.initOptions : init;
 	const resourceMap = templateToResourceMap.get(template) || new Map<string, Resource<any>>();

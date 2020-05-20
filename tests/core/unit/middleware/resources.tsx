@@ -8,6 +8,7 @@ import { createResolvers } from '../../support/util';
 import {
 	createResourceTemplateWithInit,
 	createResourceMiddleware,
+	createMemoryResourceTemplate,
 	memoryTemplate,
 	createResourceTemplate,
 	defaultFind
@@ -36,9 +37,7 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options()))}</div>;
 		});
 
-		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
-			memoryTemplate
-		);
+		const template = createMemoryResourceTemplate<{ hello: string }>();
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return <Widget resource={resource({ template, initOptions: { data: [{ hello: '1' }], id } })} />;
