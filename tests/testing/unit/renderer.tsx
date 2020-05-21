@@ -574,6 +574,23 @@ describe('test renderer', () => {
 			});
 		});
 
+		it('should handle undefined properties', () => {
+			const factory = create().properties<{ foo?: string }>();
+			const Foo = factory(() => 'foo');
+			const WidgetUnderTest = factory(({ properties }) => (
+				<div>
+					<Foo foo={properties().foo} />
+				</div>
+			));
+			const template = assertion(() => (
+				<div>
+					<Foo foo={undefined} />
+				</div>
+			));
+			const r = renderer(() => <WidgetUnderTest />);
+			r.expect(template);
+		});
+
 		it('should run diffProperty middleware', () => {
 			const factory = create({ diffProperty, invalidator });
 			let id = 0;

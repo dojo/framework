@@ -126,7 +126,7 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 				const propertyKeys = Object.keys(expectedNode.properties);
 				for (let i = 0; i < propertyKeys.length; i++) {
 					const key = propertyKeys[i];
-					if (expectedNode.properties[key].type === 'compare') {
+					if (expectedNode.properties[key] != null && expectedNode.properties[key].type === 'compare') {
 						const result = expectedNode.properties[key](actualNode.properties[key]);
 						if (result) {
 							expectedNode.properties[key] = actualNode.properties[key];
