@@ -124,7 +124,7 @@ describe('new/assertion', () => {
 			<div>
 				<AWidget>
 					{{
-						foo: () => <WrappedDiv>child</WrappedDiv>
+						foo: () => [<WrappedDiv>child</WrappedDiv>]
 					}}
 				</AWidget>
 			</div>
@@ -215,12 +215,15 @@ describe('new/assertion', () => {
 	});
 
 	it('can set a child of a functional child widget', () => {
-		const AWidget = create().children<{ foo(): RenderResult }>()(({ children }) => (
-			<div>{children()[0].foo()}</div>
+		const AWidget = create().children<{ bar: RenderResult; foo(): RenderResult }>()(({ children }) => (
+			<div>
+				{children()[0].foo()}
+				{children()[0].bar}
+			</div>
 		));
 		const ParentWidget = create()(() => (
 			<div>
-				<AWidget>{{ foo: () => <div>bar</div> }}</AWidget>
+				<AWidget>{{ foo: () => <div>bar</div>, bar: <div>foo</div> }}</AWidget>
 			</div>
 		));
 		const WrappedWidget = wrap(AWidget);
@@ -231,7 +234,8 @@ describe('new/assertion', () => {
 			<div>
 				<WrappedWidget>
 					{{
-						foo: () => <WrappedDiv>foo</WrappedDiv>
+						foo: () => <WrappedDiv>foo</WrappedDiv>,
+						bar: <div>foo</div>
 					}}
 				</WrappedWidget>
 			</div>
