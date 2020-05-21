@@ -389,6 +389,14 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 			outlet: matchedRouteId,
 			context: this._currentMatchedRoute
 		});
+		if (this._options.resetScroll) {
+			const { window = global.window } = this._options;
+			try {
+				window.scroll(0, 0);
+			} catch (e) {
+				// Catch errors if we're in an environment without window.scroll
+			}
+		}
 	};
 }
 
