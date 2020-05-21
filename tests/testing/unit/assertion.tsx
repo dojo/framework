@@ -4,7 +4,7 @@ const { assert } = intern.getPlugin('chai');
 import { renderer, wrap, ignore, assertion } from '../../../src/testing/renderer';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { v, w, tsx, create } from '../../../src/core/vdom';
-import { DNode } from '../../../src/core/interfaces';
+import { DNode, RenderResult } from '../../../src/core/interfaces';
 
 class MyWidget extends WidgetBase<{
 	toggleProperty?: boolean;
@@ -117,6 +117,21 @@ describe('new/assertion', () => {
 		assert.equal(Array.isArray(children) ? children[0] : children, 'hello');
 	});
 
+	it('can get a child of a functional child widget', () => {
+		const AWidget = create().children<{ foo(): RenderResult }>()(({ children }) => children()[0].foo());
+		const WrappedDiv = wrap('div');
+		const testAssertion = assertion(() => (
+			<div>
+				<AWidget>
+					{{
+						foo: () => <WrappedDiv>child</WrappedDiv>
+					}}
+				</AWidget>
+			</div>
+		));
+		assert.deepEqual(testAssertion.getChildren(WrappedDiv), ['child']);
+	});
+
 	it('can assert a base assertion', () => {
 		const r = renderer(() => w(MyWidget, {}));
 		r.expect(baseAssertion);
@@ -197,6 +212,31 @@ describe('new/assertion', () => {
 	it('can set a child', () => {
 		const r = renderer(() => w(MyWidget, { replaceChild: true }));
 		r.expect(baseAssertion.setChildren(WrappedHeader, () => ['replace']));
+	});
+
+	it('can set a child of a functional child widget', () => {
+		const AWidget = create().children<{ foo(): RenderResult }>()(({ children }) => (
+			<div>{children()[0].foo()}</div>
+		));
+		const ParentWidget = create()(() => (
+			<div>
+				<AWidget>{{ foo: () => <div>bar</div> }}</AWidget>
+			</div>
+		));
+		const WrappedWidget = wrap(AWidget);
+		const r = renderer(() => <ParentWidget />);
+		r.child(WrappedWidget, { foo: [] });
+		const WrappedDiv = wrap('div');
+		const testAssertion = assertion(() => (
+			<div>
+				<WrappedWidget>
+					{{
+						foo: () => <WrappedDiv>foo</WrappedDiv>
+					}}
+				</WrappedWidget>
+			</div>
+		));
+		r.expect(testAssertion.setChildren(WrappedDiv, () => ['bar']));
 	});
 
 	it('children set should be immutable', () => {
