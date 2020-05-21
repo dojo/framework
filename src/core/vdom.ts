@@ -293,12 +293,18 @@ export function isWNode<W extends WidgetBaseTypes = any>(child: any): child is W
 
 export function isVNode(child: DNode): child is VNode {
 	return Boolean(
-		child && child !== true && typeof child !== 'string' && (child.type === VNODE || child.type === DOMVNODE)
+		child &&
+			child !== true &&
+			typeof child !== 'number' &&
+			typeof child !== 'string' &&
+			(child.type === VNODE || child.type === DOMVNODE)
 	);
 }
 
 export function isDomVNode(child: DNode): child is DomVNode {
-	return Boolean(child && child !== true && typeof child !== 'string' && child.type === DOMVNODE);
+	return Boolean(
+		child && child !== true && typeof child !== 'number' && typeof child !== 'string' && child.type === DOMVNODE
+	);
 }
 
 export function isElementNode(value: any): value is Element {
@@ -1301,7 +1307,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			if (!renderedItem || renderedItem === true) {
 				continue;
 			}
-			if (typeof renderedItem === 'string') {
+			if (typeof renderedItem === 'string' || typeof renderedItem === 'number') {
 				renderedItem = toTextVNode(renderedItem);
 			}
 			const owningNode = _nodeToWrapperMap.get(renderedItem);
