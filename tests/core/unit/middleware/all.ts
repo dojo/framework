@@ -1,7 +1,6 @@
 import './block';
 import './breakpoint';
 import './cache';
-import './data';
 import './dimensions';
 import './drag';
 import './i18n';
@@ -11,6 +10,7 @@ import './inert';
 import './injector';
 import './intersection';
 import './resize';
+import './resources';
 import './store';
 import './theme';
 import './validity';
