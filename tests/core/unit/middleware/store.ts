@@ -4,7 +4,7 @@ import { sandbox } from 'sinon';
 
 import { createProcess } from '../../../../src/stores/process';
 import { replace } from '../../../../src/stores/state/operations';
-import Store from '../../../../src/stores/Store';
+import Store, { DefaultState } from '../../../../src/stores/Store';
 import createStoreMiddleware from '../../../../src/core/middleware/store';
 
 const sb = sandbox.create();
@@ -161,10 +161,10 @@ describe('store middleware', () => {
 		assert.isTrue(init.calledOnce);
 	});
 
-	it('Should accept an initial store', () => {
-		const store = new Store<{ foo: string }>();
-		store.apply([replace(store.path('foo'), 'foo')]);
-		storeMiddleware = createStoreMiddleware(store);
-		assert.equal(store.get(store.path('foo')), 'foo');
+	it('Should accept an initial state', () => {
+		const state = new DefaultState<{ foo: string }>();
+		state.apply([replace(state.path('foo'), 'foo')]);
+		storeMiddleware = createStoreMiddleware(state);
+		assert.equal(state.get(state.path('foo')), 'foo');
 	});
 });
