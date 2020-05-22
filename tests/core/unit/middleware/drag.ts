@@ -42,13 +42,14 @@ describe('drag middleware', () => {
 
 	it('should invalidate when drag occurs', () => {
 		const invalidatorStub = sb.stub();
+		const icacheInvalidatorStub = sb.stub();
 
 		const icache = icacheMiddleware().callback({
 			children: () => [],
 			id: 'test-cache',
 			middleware: {
 				destroy: () => {},
-				invalidator: () => {}
+				invalidator: icacheInvalidatorStub
 			},
 			properties: () => ({})
 		});
@@ -96,18 +97,20 @@ describe('drag middleware', () => {
 			isDragging: false
 		});
 
-		assert.isTrue(invalidatorStub.calledThrice);
+		assert.isTrue(invalidatorStub.calledTwice);
+		assert.isTrue(icacheInvalidatorStub.calledTwice);
 	});
 
 	it('should stop drag when secondary pointer is detected', () => {
 		const invalidatorStub = sb.stub();
+		const icacheInvalidatorStub = sb.stub();
 
 		const icache = icacheMiddleware().callback({
 			children: () => [],
 			id: 'test-cache',
 			middleware: {
 				destroy: () => {},
-				invalidator: () => {}
+				invalidator: icacheInvalidatorStub
 			},
 			properties: () => ({})
 		});
@@ -163,7 +166,8 @@ describe('drag middleware', () => {
 			isDragging: false
 		});
 
-		assert.isTrue(invalidatorStub.calledThrice);
+		assert.isTrue(invalidatorStub.calledTwice);
+		assert.isTrue(icacheInvalidatorStub.calledTwice);
 	});
 
 	it('should ignore secondary pointer events', () => {

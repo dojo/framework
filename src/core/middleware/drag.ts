@@ -1,6 +1,5 @@
 import global from '../../shim/global';
 import { assign } from '../../shim/object';
-import { deepAssign } from '../util';
 import { create, destroy, invalidator, node } from '../vdom';
 import icache from './icache';
 
@@ -75,7 +74,7 @@ function getDelta(start: PositionMatrix, current: PositionMatrix): Position {
 
 function createNodeData(): NodeData {
 	return {
-		dragResults: deepAssign({}, emptyResults),
+		dragResults: { ...emptyResults },
 		last: createPositionMatrix(),
 		start: createPositionMatrix()
 	};
@@ -128,11 +127,12 @@ const emptyResults = Object.freeze({
 const factory = create({ destroy, icache, invalidator, node });
 
 export const drag = factory(({ middleware: { destroy, icache, invalidator, node } }) => {
-	const nodeMap = icache.getOrSet('nodeMap', () => new WeakMap<HTMLElement, NodeData>());
+	const nodeMap = new WeakMap<HTMLElement, NodeData>();
 
 	function getData(target: HTMLElement): { state: NodeData; target: HTMLElement } | undefined {
-		if (nodeMap.has(target)) {
-			return { state: nodeMap.get(target)!, target };
+		const state = nodeMap.get(target);
+		if (state) {
+			return { state, target };
 		}
 	}
 
@@ -141,7 +141,6 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		if (!event.isPrimary && dragging) {
 			const state = nodeMap.get(dragging)!;
 			state.dragResults.isDragging = false;
-			invalidator();
 			icache.set('dragging', undefined);
 			return;
 		}
@@ -154,7 +153,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 			icache.set('dragging', target);
 			state.last = state.start = getPositionMatrix(event);
 			state.dragResults.delta = createPosition();
-			state.dragResults.start = deepAssign({}, state.start);
+			state.dragResults.start = { ...state.start };
 			state.dragResults.isDragging = true;
 			invalidator();
 
@@ -188,7 +187,6 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		state.last = getPositionMatrix(event);
 		state.dragResults.delta = getDelta(state.start, state.last);
 		state.dragResults.isDragging = false;
-		invalidator();
 		icache.set('dragging', undefined);
 
 		event.preventDefault();
@@ -211,7 +209,9 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		get(key: string | number): Readonly<DragResults> {
 			const domNode = node.get(key);
 
-			if (!domNode) return emptyResults;
+			if (!domNode) {
+				return emptyResults;
+			}
 
 			if (!nodeMap.has(domNode)) {
 				nodeMap.set(domNode, createNodeData());
