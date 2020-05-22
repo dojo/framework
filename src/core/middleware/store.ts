@@ -5,10 +5,10 @@ import { Process } from '../../stores/process';
 
 const factory = create({ destroy, invalidator, injector });
 
-export const createStoreMiddleware = <S = any>(initial?: (store: Store<S>) => void) => {
-	let store = new Store<S>();
+export const createStoreMiddleware = <S = any>(initial?: Store<S> | ((store: Store<S>) => void)) => {
+	let store = initial && typeof initial !== 'function' ? initial : new Store<S>();
 	let initialized = false;
-	initial && initial(store);
+	typeof initial === 'function' && initial(store);
 	const storeMiddleware = factory(({ middleware: { destroy, invalidator, injector } }) => {
 		const handles: any[] = [];
 		destroy(() => {

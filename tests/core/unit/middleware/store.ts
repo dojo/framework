@@ -160,4 +160,11 @@ describe('store middleware', () => {
 		storeMiddleware = createStoreMiddleware(init);
 		assert.isTrue(init.calledOnce);
 	});
+
+	it('Should accept an initial store', () => {
+		const store = new Store<{ foo: string }>();
+		store.apply([replace(store.path('foo'), 'foo')]);
+		storeMiddleware = createStoreMiddleware(store);
+		assert.equal(store.get(store.path('foo')), 'foo');
+	});
 });
