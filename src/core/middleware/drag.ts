@@ -127,7 +127,7 @@ const emptyResults = Object.freeze({
 const factory = create({ destroy, icache, invalidator, node });
 
 export const drag = factory(({ middleware: { destroy, icache, invalidator, node } }) => {
-	const nodeMap = new WeakMap<HTMLElement, NodeData>();
+	let nodeMap = new WeakMap<HTMLElement, NodeData>();
 
 	function getData(target: HTMLElement): { state: NodeData; target: HTMLElement } | undefined {
 		const state = nodeMap.get(target);
@@ -203,6 +203,7 @@ export const drag = factory(({ middleware: { destroy, icache, invalidator, node 
 		win.removeEventListener('pointerdown', onDragStart);
 		win.removeEventListener('pointermove', onDrag, true);
 		win.removeEventListener('pointerup', onDragStop, true);
+		nodeMap = new WeakMap();
 	});
 
 	return {
