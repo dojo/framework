@@ -42,6 +42,39 @@ function getTagName(node: VNode | WNode): string {
 	return name;
 }
 
+function formatObject(obj: { [index: string]: any }, depth = 0): string {
+	const objectKeys = Object.keys(obj).sort();
+	if (!objectKeys) {
+		return '';
+	}
+	const tabs = getTabs(depth + 1);
+	return objectKeys.reduce((props, propKey, index) => {
+		const prop = obj[propKey];
+
+		if (index < objectKeys.length) {
+			props = `${props}${LINE_BREAK}${tabs}`;
+		}
+		props = `${props}${propKey}=`;
+		switch (typeof prop) {
+			case 'function':
+				props = `${props}{function}`;
+				break;
+			case 'object':
+				const isArrayLike = prop instanceof Set || prop instanceof Map || Array.isArray(prop);
+				if (isArrayLike) {
+					props = `${props}{${JSON.stringify(arrayFrom(prop))}}`;
+				} else {
+					props = `${props}{{${formatObject(prop, depth + 1)}${LINE_BREAK}${tabs}}}`;
+				}
+				break;
+			default:
+				props = `${props}{${JSON.stringify(prop)}}`;
+				break;
+		}
+		return props;
+	}, '');
+}
+
 function format(nodes: DNode | DNode[], depth = 0): string {
 	nodes = Array.isArray(nodes) ? nodes : [nodes];
 	const nodeString = nodes.reduce((str: string, node, index) => {
@@ -62,18 +95,10 @@ function format(nodes: DNode | DNode[], depth = 0): string {
 
 		const propertyKeys = Object.keys(node.properties).sort();
 		if (propertyKeys.length) {
-			const properties = propertyKeys.reduce((props, propKey) => {
-				return `${props} ${propKey}=${typeof node.properties[propKey] === 'string' ? '"' : '{'}${
-					typeof node.properties[propKey] === 'function'
-						? `"function"`
-						: node.properties[propKey] instanceof Set || node.properties[propKey] instanceof Map
-							? arrayFrom(node.properties[propKey])
-							: node.properties[propKey]
-				}${typeof node.properties[propKey] === 'string' ? '"' : '}'}`;
-			}, '');
-
-			str = `${str}${properties}`;
+			str = `${str}${formatObject(node.properties, depth)}`;
+			str = `${str}${LINE_BREAK}${getTabs(depth)}`;
 		}
+
 		str = `${str}>`;
 
 		if (node.children && node.children.length) {
