@@ -140,6 +140,40 @@ describe('test renderer', () => {
 			);
 		});
 
+		it('should pass all parameters to the triggered property', () => {
+			const factory = create({ icache });
+			const Button = create().properties<{ onClick: (first: string, second: string) => void }>()(
+				function Button() {
+					return '';
+				}
+			);
+			const Widget = factory(function Widget({ middleware: { icache } }) {
+				const value = icache.getOrSet('value', '');
+				return (
+					<div>
+						<Button
+							onClick={(first, second) => {
+								icache.set('value', `${first}-${second}`);
+							}}
+						/>
+						<span>{value}</span>
+					</div>
+				);
+			});
+			const WrappedButton = wrap(Button);
+			const WrappedSpan = wrap('span');
+			const baseTemplate = assertion(() => (
+				<div>
+					<WrappedButton onClick={() => {}} />
+					<WrappedSpan />
+				</div>
+			));
+			const r = renderer(() => w(Widget, {}));
+			r.expect(baseTemplate);
+			r.property(WrappedButton, 'onClick', 'one', 'two');
+			r.expect(baseTemplate.replaceChildren(WrappedSpan, () => ['one-two']));
+		});
+
 		it('trigger property of wrapped widget', () => {
 			const WrappedChild = wrap(ChildWidget);
 			const baseTemplate = assertion(() =>
