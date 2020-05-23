@@ -4,14 +4,20 @@ const { assert } = intern.getPlugin('chai');
 import Set from '../../../src/shim/Set';
 import Map from '../../../src/shim/Map';
 import assertRender from '../../../src/testing/assertRender';
-import { v, w } from '../../../src/core/vdom';
+import { v, w, create } from '../../../src/core/vdom';
+import Themed from '../../../src/core/mixins/Themed';
 import WidgetBase from '../../../src/core/WidgetBase';
+import { RenderResult } from '../../../src/core/interfaces';
 
-class MockWidget extends WidgetBase {
+class MockWidget extends Themed(WidgetBase) {
 	render() {
 		return v('div');
 	}
 }
+
+const WidgetWithNamedChildren = create().children<{ content: RenderResult }>()(function WidgetWithNamedChildren() {
+	return '';
+});
 
 class OtherWidget extends WidgetBase {
 	render() {
@@ -38,31 +44,67 @@ class WidgetWithMap extends WidgetBase {
 }
 
 function getExpectedError() {
-	const widgetName = (MockWidget as any).name || 'Widget-3';
+	const mockWidgetName = (MockWidget as any).name || 'Widget-3';
+	const widgetWithChildrenName = (MockWidget as any).name ? 'WidgetWithNamedChildren' : 'Widget-4';
 	return `
-(A)<div classes="class" key="one">
-(E)<div classes="other" extras="foo" key="two">
-(E)	<span>
-(E)		text node
-(E)		other
-(E)	</span>
-(E)	<span>
-(E)	</span>
+<div
+(A)	classes={["one","two","three"]}
+(E)	classes={"other"}
+	extras={"foo"}
+(A)	func={function}
+	key={"two"}
+>
+	<span>
+		text node
+		other
+	</span>
+	<span>
+	</span>
 	text node
-(A)	<${widgetName}>
-(A)	</${widgetName}>
-(E)	<span>
-(E)	</span>
+	<span>
+	</span>
+(A)	<${mockWidgetName}
+(A)		classes={{
+(A)			widget/Widget={{
+(A)				root={["class"]}
+(A)			}}
+(A)		}}
+(A)		theme={{
+(A)			widget/Widget={{
+(A)				root={"theme-class"}
+(A)			}}
+(A)		}}
+(A)	>
+(A)	</${mockWidgetName}>
+(A)	<${widgetWithChildrenName}>
+(A)		{
+(A)			content: (
+(A)				<div>
+(A)					<span>
+(A)						Child
+(A)					</span>
+(A)				</div>
+(A)			)
+(A)		}
+(A)	</${widgetWithChildrenName}>
 </div>`;
 }
 
 describe('new/assertRender', () => {
 	it('should create an informative error message', () => {
-		const widget = new OtherWidget();
-		const renderResult = widget.__render__();
 		try {
 			assertRender(
-				renderResult,
+				v('div', { extras: 'foo', key: 'two', classes: ['one', 'two', 'three'], func: () => {} }, [
+					v('span', ['text node', 'other']),
+					v('span'),
+					'text node',
+					v('span'),
+					w(MockWidget, {
+						theme: { 'widget/Widget': { root: 'theme-class' } },
+						classes: { 'widget/Widget': { root: ['class'] } }
+					}),
+					w(WidgetWithNamedChildren, {}, [{ content: v('div', [v('span', ['Child'])]) }])
+				]),
 				v('div', { extras: 'foo', key: 'two', classes: 'other' }, [
 					v('span', ['text node', 'other']),
 					v('span'),
