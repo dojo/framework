@@ -873,7 +873,7 @@ function createOptionsWrapper(): Options<any> {
 	function setOptions(newOptions?: Partial<ResourceOptions<any>>): ResourceOptions<any> {
 		if (newOptions) {
 			const calculatedOptions = { ...options, ...newOptions };
-			const changed = auto(options, calculatedOptions, 1);
+			const { changed } = auto(options, calculatedOptions, 2);
 			if (changed) {
 				options = calculatedOptions;
 				invalidate();

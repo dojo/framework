@@ -50,16 +50,22 @@ describe('Resources Middleware', () => {
 
 	it('should update when options called', () => {
 		const root = document.createElement('div');
-		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+		const factory = create({ icache, resource: createResourceMiddleware<{ hello: string }>() });
 
 		let set: any;
-		const Widget = factory(({ id, properties, middleware: { resource } }) => {
+		const Widget = factory(({ id, properties, middleware: { resource, icache } }) => {
 			const { getOrRead, createOptions } = resource;
 			const {
 				resource: { template, options = createOptions(id) }
 			} = properties();
+			const counter = icache.set<number>('counter', (counter = 0) => ++counter);
 			set = options;
-			return <div>{JSON.stringify(getOrRead(template, options({ size: 1 })))}</div>;
+			return (
+				<div>
+					<div>{JSON.stringify(getOrRead(template, options({ size: 1 })))}</div>
+					<div>{`${counter}`}</div>
+				</div>
+			);
 		});
 
 		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
@@ -76,10 +82,13 @@ describe('Resources Middleware', () => {
 
 		const r = renderer(() => <App />);
 		r.mount({ domNode: root });
-		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([[{ hello: '1' }]])}</div>`);
+		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '1' }]])}</div><div>1</div></div>`);
+		set({ page: 1, query: {} });
+		resolvers.resolveRAF();
+		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '1' }]])}</div><div>1</div></div>`);
 		set({ page: 2 });
 		resolvers.resolveRAF();
-		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([[{ hello: '2' }]])}</div>`);
+		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '2' }]])}</div><div>2</div></div>`);
 	});
 
 	it('should be able to perform a read with a meta request', () => {
