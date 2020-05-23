@@ -3,7 +3,7 @@ import { create, invalidator, diffProperty, getRegistry } from '../vdom';
 import icache from './icache';
 import injector from './injector';
 import Set from '../../shim/Set';
-import { shallow, auto } from '../diff';
+import { auto } from '../diff';
 import Registry from '../Registry';
 import {
 	ThemeInjector,
@@ -41,8 +41,8 @@ export const theme = factory(
 		let themeKeys = new Set();
 
 		diffProperty('theme', properties, (current, next) => {
-			const diffResult = auto(current.theme, next.theme);
-			if (diffResult.changed) {
+			const { changed } = auto(current.theme, next.theme, 3);
+			if (changed) {
 				icache.clear();
 				invalidator();
 			}
@@ -55,7 +55,7 @@ export const theme = factory(
 				const keys = [...themeKeys.values()];
 				for (let i = 0; i < keys.length; i++) {
 					let key = keys[i];
-					result = shallow(current.classes[key], next.classes[key], 1).changed;
+					result = auto(current.classes[key], next.classes[key], 2).changed;
 					if (result) {
 						break;
 					}
