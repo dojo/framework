@@ -47,7 +47,7 @@ export function shallow(previousProperty: any, newProperty: any, depth = 0): Pro
 	} else {
 		changed = newKeys.some((key) => {
 			if (depth > 0) {
-				return shallow(newProperty[key], previousProperty[key], depth - 1).changed;
+				return auto(newProperty[key], previousProperty[key], depth - 1).changed;
 			}
 			return newProperty[key] !== previousProperty[key];
 		});

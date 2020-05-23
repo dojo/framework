@@ -83,7 +83,7 @@ describe('Resources Middleware', () => {
 		const r = renderer(() => <App />);
 		r.mount({ domNode: root });
 		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '1' }]])}</div><div>1</div></div>`);
-		set({ page: 1 });
+		set({ page: 1, query: {} });
 		resolvers.resolveRAF();
 		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '1' }]])}</div><div>1</div></div>`);
 		set({ page: 2 });
