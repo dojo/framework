@@ -584,7 +584,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 			childInstructions.set(wrapped.id, { wrapped, params, type: 'child' });
 			invalidated = true;
 		},
-		property(wrapped: any, key: any, params: any = []) {
+		property(wrapped: any, key: any, ...params: any[]) {
 			if (!expectedRenderResult) {
 				throw new Error('To use `.property` please perform an initial expect');
 			}
