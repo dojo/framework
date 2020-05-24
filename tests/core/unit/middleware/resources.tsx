@@ -1218,6 +1218,55 @@ describe('Resources Middleware', () => {
 				'<div><div>{"item":{"value":"world"},"page":1,"index":10,"pageIndex":10}</div></div>'
 			);
 		});
+
+		it('should only try and filter against known items', () => {
+			const data: any = {};
+			for (let i = 0; i < 200; i++) {
+				const page = Math.floor(i / 30) + 1;
+				const item = { value: `Item ${i}` };
+				const pageData = data[page] || [];
+				pageData.push(item);
+				data[page] = pageData;
+			}
+			const template = createResourceTemplate<{ value: string }>({
+				find: defaultFind,
+				read: (request, { put }) => {
+					const { offset, size } = request;
+					const page = Math.floor(offset / size) + 1;
+					const pageData = data[page];
+					put({ data: pageData, total: 200 }, request);
+				}
+			});
+			const factory = create({ resource: createResourceMiddleware<{ value: string }>() });
+
+			const Widget = factory(({ id, properties, middleware: { resource } }) => {
+				const { createOptions, find, getOrRead } = resource;
+				const {
+					resource: { template, options = createOptions(id) }
+				} = properties();
+				const [items] = getOrRead(template, options({ page: 3 }));
+				const item = find(template, { options: options(), start: 0, query: { value: 'Item 65' } });
+				return (
+					<div>
+						<div>{JSON.stringify(items)}</div>
+						<div>{JSON.stringify(item)}</div>
+					</div>
+				);
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+				return <Widget resource={resource({ template })} />;
+			});
+
+			const r = renderer(() => <App />);
+			const root = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><div>[{"value":"Item 60"},{"value":"Item 61"},{"value":"Item 62"},{"value":"Item 63"},{"value":"Item 64"},{"value":"Item 65"},{"value":"Item 66"},{"value":"Item 67"},{"value":"Item 68"},{"value":"Item 69"},{"value":"Item 70"},{"value":"Item 71"},{"value":"Item 72"},{"value":"Item 73"},{"value":"Item 74"},{"value":"Item 75"},{"value":"Item 76"},{"value":"Item 77"},{"value":"Item 78"},{"value":"Item 79"},{"value":"Item 80"},{"value":"Item 81"},{"value":"Item 82"},{"value":"Item 83"},{"value":"Item 84"},{"value":"Item 85"},{"value":"Item 86"},{"value":"Item 87"},{"value":"Item 88"},{"value":"Item 89"}]</div><div>{"item":{"value":"Item 65"},"index":65,"page":3,"pageIndex":5}</div></div>'
+			);
+		});
+
 		describe('contains (default)', () => {
 			it('Should find the first matching item', () => {
 				const root = document.createElement('div');
