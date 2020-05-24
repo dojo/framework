@@ -15,9 +15,11 @@ class MockWidget extends Themed(WidgetBase) {
 	}
 }
 
-const WidgetWithNamedChildren = create().children<{ content: RenderResult }>()(function WidgetWithNamedChildren() {
-	return '';
-});
+const WidgetWithNamedChildren = create().children<{ content: RenderResult; other: RenderResult }>()(
+	function WidgetWithNamedChildren() {
+		return '';
+	}
+);
 
 class OtherWidget extends WidgetBase {
 	render() {
@@ -49,6 +51,7 @@ function getExpectedError() {
 	return `
 <div
 (A)	classes={["one","two","three"]}
+(A)	disabled={false}
 (E)	classes={"other"}
 	extras={"foo"}
 (A)	func={function}
@@ -65,14 +68,15 @@ function getExpectedError() {
 	</span>
 (A)	<${mockWidgetName}
 (A)		classes={{
-(A)			widget/Widget={{
-(A)				root={["class"]}
-(A)			}}
+(A)			"widget/Widget": {
+(A)				"root": ["class"]
+(A)			}
 (A)		}}
 (A)		theme={{
-(A)			widget/Widget={{
-(A)				root={"theme-class"}
-(A)			}}
+(A)			"widget/Widget": {
+(A)				"other": "root-other",
+(A)				"root": "theme-class"
+(A)			}
 (A)		}}
 (A)	>
 (A)	</${mockWidgetName}>
@@ -82,6 +86,13 @@ function getExpectedError() {
 (A)				<div>
 (A)					<span>
 (A)						Child
+(A)					</span>
+(A)				</div>
+(A)			),
+(A)			other: (
+(A)				<div>
+(A)					<span>
+(A)						Other
 (A)					</span>
 (A)				</div>
 (A)			)
@@ -94,17 +105,23 @@ describe('new/assertRender', () => {
 	it('should create an informative error message', () => {
 		try {
 			assertRender(
-				v('div', { extras: 'foo', key: 'two', classes: ['one', 'two', 'three'], func: () => {} }, [
-					v('span', ['text node', 'other']),
-					v('span'),
-					'text node',
-					v('span'),
-					w(MockWidget, {
-						theme: { 'widget/Widget': { root: 'theme-class' } },
-						classes: { 'widget/Widget': { root: ['class'] } }
-					}),
-					w(WidgetWithNamedChildren, {}, [{ content: v('div', [v('span', ['Child'])]) }])
-				]),
+				v(
+					'div',
+					{ extras: 'foo', key: 'two', disabled: false, classes: ['one', 'two', 'three'], func: () => {} },
+					[
+						v('span', ['text node', 'other']),
+						v('span'),
+						'text node',
+						v('span'),
+						w(MockWidget, {
+							theme: { 'widget/Widget': { root: 'theme-class', other: 'root-other' } },
+							classes: { 'widget/Widget': { root: ['class'] } }
+						}),
+						w(WidgetWithNamedChildren, {}, [
+							{ content: v('div', [v('span', ['Child'])]), other: v('div', [v('span', ['Other'])]) }
+						])
+					]
+				),
 				v('div', { extras: 'foo', key: 'two', classes: 'other' }, [
 					v('span', ['text node', 'other']),
 					v('span'),

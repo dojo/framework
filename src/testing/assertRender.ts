@@ -42,34 +42,49 @@ function getTagName(node: VNode | WNode): string {
 	return name;
 }
 
-function formatObject(obj: { [index: string]: any }, depth = 0): string {
+function formatObject(obj: { [index: string]: any }, depth = 0, style: 'prop' | 'object'): string {
 	const objectKeys = Object.keys(obj).sort();
 	if (!objectKeys) {
 		return '';
 	}
 	const tabs = getTabs(depth + 1);
+	const sep = style === 'prop' ? '=' : ': ';
+	const opening = style === 'prop' ? '{' : '';
+	const closing = style === 'prop' ? '}' : '';
 	return objectKeys.reduce((props, propKey, index) => {
 		const prop = obj[propKey];
+		propKey = style === 'object' ? `"${propKey}"` : propKey;
 
 		if (index < objectKeys.length) {
 			props = `${props}${LINE_BREAK}${tabs}`;
 		}
-		props = `${props}${propKey}=`;
+		props = `${props}${propKey}${sep}`;
+
 		switch (typeof prop) {
 			case 'function':
-				props = `${props}{function}`;
+				props = `${props}${opening}function${closing}`;
+				break;
+			case 'boolean':
+				props = `${props}${opening}${prop}${closing}`;
 				break;
 			case 'object':
 				const isArrayLike = prop instanceof Set || prop instanceof Map || Array.isArray(prop);
 				if (isArrayLike) {
-					props = `${props}{${JSON.stringify(arrayFrom(prop))}}`;
+					props = `${props}${opening}${JSON.stringify(arrayFrom(prop))}${closing}`;
 				} else {
-					props = `${props}{{${formatObject(prop, depth + 1)}${LINE_BREAK}${tabs}}}`;
+					props = `${props}${opening}{${formatObject(
+						prop,
+						depth + 1,
+						'object'
+					)}${LINE_BREAK}${tabs}}${closing}`;
 				}
 				break;
 			default:
-				props = `${props}{${JSON.stringify(prop)}}`;
+				props = `${props}${opening}${JSON.stringify(prop)}${closing}`;
 				break;
+		}
+		if (style === 'object' && index < objectKeys.length - 1) {
+			props = `${props},`;
 		}
 		return props;
 	}, '');
@@ -95,7 +110,7 @@ function format(nodes: DNode | DNode[], depth = 0): string {
 
 		const propertyKeys = Object.keys(node.properties).sort();
 		if (propertyKeys.length) {
-			str = `${str}${formatObject(node.properties, depth)}`;
+			str = `${str}${formatObject(node.properties, depth, 'prop')}`;
 			str = `${str}${LINE_BREAK}${getTabs(depth)}`;
 		}
 
@@ -124,6 +139,9 @@ function format(nodes: DNode | DNode[], depth = 0): string {
 							str = `${str}${LINE_BREAK}${getTabs(depth + 3)}"child function"`;
 						}
 						str = `${str}${LINE_BREAK}${getTabs(depth + 2)})`;
+						if (j < childrenKeys.length - 1) {
+							str = `${str},`;
+						}
 					}
 					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}}`;
 				}
