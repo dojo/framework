@@ -15,9 +15,11 @@ class MockWidget extends Themed(WidgetBase) {
 	}
 }
 
-const WidgetWithNamedChildren = create().children<{ content: RenderResult }>()(function WidgetWithNamedChildren() {
-	return '';
-});
+const WidgetWithNamedChildren = create().children<{ content: RenderResult; other: RenderResult }>()(
+	function WidgetWithNamedChildren() {
+		return '';
+	}
+);
 
 class OtherWidget extends WidgetBase {
 	render() {
@@ -66,13 +68,14 @@ function getExpectedError() {
 	</span>
 (A)	<${mockWidgetName}
 (A)		classes={{
-(A)			widget/Widget: {
-(A)				root: ["class"]
+(A)			"widget/Widget": {
+(A)				"root": ["class"]
 (A)			}
 (A)		}}
 (A)		theme={{
-(A)			widget/Widget: {
-(A)				root: "theme-class"
+(A)			"widget/Widget": {
+(A)				"other": "root-other",
+(A)				"root": "theme-class"
 (A)			}
 (A)		}}
 (A)	>
@@ -83,6 +86,13 @@ function getExpectedError() {
 (A)				<div>
 (A)					<span>
 (A)						Child
+(A)					</span>
+(A)				</div>
+(A)			),
+(A)			other: (
+(A)				<div>
+(A)					<span>
+(A)						Other
 (A)					</span>
 (A)				</div>
 (A)			)
@@ -104,10 +114,12 @@ describe('new/assertRender', () => {
 						'text node',
 						v('span'),
 						w(MockWidget, {
-							theme: { 'widget/Widget': { root: 'theme-class' } },
+							theme: { 'widget/Widget': { root: 'theme-class', other: 'root-other' } },
 							classes: { 'widget/Widget': { root: ['class'] } }
 						}),
-						w(WidgetWithNamedChildren, {}, [{ content: v('div', [v('span', ['Child'])]) }])
+						w(WidgetWithNamedChildren, {}, [
+							{ content: v('div', [v('span', ['Child'])]), other: v('div', [v('span', ['Other'])]) }
+						])
 					]
 				),
 				v('div', { extras: 'foo', key: 'two', classes: 'other' }, [

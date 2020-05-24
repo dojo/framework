@@ -53,6 +53,7 @@ function formatObject(obj: { [index: string]: any }, depth = 0, style: 'prop' | 
 	const closing = style === 'prop' ? '}' : '';
 	return objectKeys.reduce((props, propKey, index) => {
 		const prop = obj[propKey];
+		propKey = style === 'object' ? `"${propKey}"` : propKey;
 
 		if (index < objectKeys.length) {
 			props = `${props}${LINE_BREAK}${tabs}`;
@@ -81,6 +82,9 @@ function formatObject(obj: { [index: string]: any }, depth = 0, style: 'prop' | 
 			default:
 				props = `${props}${opening}${JSON.stringify(prop)}${closing}`;
 				break;
+		}
+		if (style === 'object' && index < objectKeys.length - 1) {
+			props = `${props},`;
 		}
 		return props;
 	}, '');
@@ -135,6 +139,9 @@ function format(nodes: DNode | DNode[], depth = 0): string {
 							str = `${str}${LINE_BREAK}${getTabs(depth + 3)}"child function"`;
 						}
 						str = `${str}${LINE_BREAK}${getTabs(depth + 2)})`;
+						if (j < childrenKeys.length - 1) {
+							str = `${str},`;
+						}
 					}
 					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}}`;
 				}
@@ -165,6 +172,8 @@ export function assertRender(actual: DNode | DNode[], expected: DNode | DNode[])
 		}
 		return result;
 	}, '\n');
+
+	console.log(parsedDiff);
 
 	if (diffFound) {
 		throw new Error(parsedDiff);
