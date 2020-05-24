@@ -486,7 +486,7 @@ function diffInitOptions(current: any, next: any) {
 	return [...keys].some((initKey) => auto(current[initKey], next[initKey], 1).changed);
 }
 
-export function createResource<S = never, T extends ResourceInitOptions = ResourceInitOptions>(
+function createResource<S = never, T extends ResourceInitOptions = ResourceInitOptions>(
 	template: ResourceTemplate<S> | ResourceTemplateWithInit<S>,
 	initOptions?: T
 ): Resource<S> {
