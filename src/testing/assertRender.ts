@@ -173,8 +173,6 @@ export function assertRender(actual: DNode | DNode[], expected: DNode | DNode[])
 		return result;
 	}, '\n');
 
-	console.log(parsedDiff);
-
 	if (diffFound) {
 		throw new Error(parsedDiff);
 	}
