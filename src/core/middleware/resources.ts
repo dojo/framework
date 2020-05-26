@@ -346,16 +346,25 @@ export function defaultFilter(query: ResourceQuery<any>, item: any, type: string
 }
 
 export function defaultFind(request: ResourceFindRequest<any>, { put, get }: ResourceControls<any>) {
-	const { start, type, options } = request;
+	const { type, options } = request;
 	const { query } = options;
 	const { data } = get({ query });
-	for (let i = start; i < data.length; i++) {
+	let found: ResourceFindResponse<any> | undefined;
+	for (let i = 0; i < data.length; i++) {
 		const item = data[i];
-		if (defaultFilter(request.query, item, type)) {
-			put({ item, index: i }, request);
-			break;
+		if (item && defaultFilter(request.query, item, type)) {
+			if (!found || i >= request.start) {
+				found = {
+					item,
+					index: i
+				};
+				if (i >= request.start) {
+					break;
+				}
+			}
 		}
 	}
+	put(found, request);
 }
 
 export const memoryTemplate: ResourceTemplateWithInit<any, { data: any }> = Object.freeze({
@@ -366,19 +375,21 @@ export const memoryTemplate: ResourceTemplateWithInit<any, { data: any }> = Obje
 		const { data } = get();
 		const { offset, size } = request;
 		const filteredData = Object.keys(request.query).length
-			? data.filter((i) => defaultFilter(request.query, i, 'contains'))
+			? data.filter((item) => item && defaultFilter(request.query, item, 'contains'))
 			: data;
 		put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, request);
 	},
 	find: (request, { get, put }) => {
 		const { type, options } = request;
 		const { query } = options;
-		const { data } = get();
-		const filteredData = data.filter((item) => defaultFilter(query, item));
+		let { data } = get({ query });
+		if (!data.length) {
+			data = get().data.filter((item) => defaultFilter(query, item));
+		}
 		let found: ResourceFindResponse<any> | undefined;
-		for (let i = 0; i < filteredData.length; i++) {
-			const item = filteredData[i];
-			if (defaultFilter(request.query, item, type)) {
+		for (let i = 0; i < data.length; i++) {
+			const item = data[i];
+			if (item && defaultFilter(request.query, item, type)) {
 				if (!found || i >= request.start) {
 					found = {
 						item,

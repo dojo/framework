@@ -1218,6 +1218,73 @@ describe('Resources Middleware', () => {
 				'<div><div>{"item":{"value":"world"},"page":1,"index":10,"pageIndex":10}</div></div>'
 			);
 		});
+
+		it('should only try and filter against known items', () => {
+			const data: any = {};
+			for (let i = 0; i < 200; i++) {
+				const page = Math.floor(i / 30) + 1;
+				const item = { value: `Item ${i}` };
+				const pageData = data[page] || [];
+				pageData.push(item);
+				data[page] = pageData;
+			}
+			const template = createResourceTemplate<{ value: string }>({
+				find: defaultFind,
+				read: (request, { put }) => {
+					const { offset, size } = request;
+					const page = Math.floor(offset / size) + 1;
+					const pageData = data[page];
+					put({ data: pageData, total: 200 }, request);
+				}
+			});
+			const factory = create({ icache, resource: createResourceMiddleware<{ value: string }>() });
+
+			const Widget = factory(({ id, properties, middleware: { icache, resource } }) => {
+				const searchTerm = icache.getOrSet('search', 'Item 65');
+				const { createOptions, find, getOrRead } = resource;
+				const {
+					resource: { template, options = createOptions(id) }
+				} = properties();
+				getOrRead(template, options({ page: 1 }));
+				getOrRead(template, options({ page: 2 }));
+				getOrRead(template, options({ page: 3 }));
+				const item = find(template, {
+					options: options(),
+					start: 60,
+					type: 'exact',
+					query: { value: searchTerm }
+				});
+				return (
+					<div>
+						<button
+							onclick={() => {
+								icache.set('search', 'Item 1');
+							}}
+						/>
+						<div>{JSON.stringify(item)}</div>
+					</div>
+				);
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(({ middleware: { resource } }) => {
+				return <Widget resource={resource({ template })} />;
+			});
+
+			const r = renderer(() => <App />);
+			const root = document.createElement('div');
+			r.mount({ domNode: root });
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button></button><div>{"item":{"value":"Item 65"},"index":65,"page":3,"pageIndex":5}</div></div>'
+			);
+			(root.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button></button><div>{"item":{"value":"Item 1"},"index":1,"page":1,"pageIndex":1}</div></div>'
+			);
+		});
+
 		describe('contains (default)', () => {
 			it('Should find the first matching item', () => {
 				const root = document.createElement('div');
