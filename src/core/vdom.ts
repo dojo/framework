@@ -27,7 +27,8 @@ import {
 	RegistryLabel,
 	DeferredVirtualProperties,
 	DomOptions,
-	DefaultChildrenWNodeFactory
+	DefaultChildrenWNodeFactory,
+	SVGAttributes
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -41,6 +42,7 @@ declare global {
 			__properties__: {};
 		}
 		interface IntrinsicElements {
+			svg: SVGAttributes;
 			[key: string]: VNodeProperties;
 		}
 		interface ElementChildrenAttribute {
