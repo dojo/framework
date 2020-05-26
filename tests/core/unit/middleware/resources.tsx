@@ -1237,18 +1237,30 @@ describe('Resources Middleware', () => {
 					put({ data: pageData, total: 200 }, request);
 				}
 			});
-			const factory = create({ resource: createResourceMiddleware<{ value: string }>() });
+			const factory = create({ icache, resource: createResourceMiddleware<{ value: string }>() });
 
-			const Widget = factory(({ id, properties, middleware: { resource } }) => {
+			const Widget = factory(({ id, properties, middleware: { icache, resource } }) => {
+				const searchTerm = icache.getOrSet('search', 'Item 65');
 				const { createOptions, find, getOrRead } = resource;
 				const {
 					resource: { template, options = createOptions(id) }
 				} = properties();
-				const [items] = getOrRead(template, options({ page: 3 }));
-				const item = find(template, { options: options(), start: 0, query: { value: 'Item 65' } });
+				getOrRead(template, options({ page: 1 }));
+				getOrRead(template, options({ page: 2 }));
+				getOrRead(template, options({ page: 3 }));
+				const item = find(template, {
+					options: options(),
+					start: 60,
+					type: 'exact',
+					query: { value: searchTerm }
+				});
 				return (
 					<div>
-						<div>{JSON.stringify(items)}</div>
+						<button
+							onclick={() => {
+								icache.set('search', 'Item 1');
+							}}
+						/>
 						<div>{JSON.stringify(item)}</div>
 					</div>
 				);
@@ -1263,7 +1275,13 @@ describe('Resources Middleware', () => {
 			r.mount({ domNode: root });
 			assert.strictEqual(
 				root.innerHTML,
-				'<div><div>[{"value":"Item 60"},{"value":"Item 61"},{"value":"Item 62"},{"value":"Item 63"},{"value":"Item 64"},{"value":"Item 65"},{"value":"Item 66"},{"value":"Item 67"},{"value":"Item 68"},{"value":"Item 69"},{"value":"Item 70"},{"value":"Item 71"},{"value":"Item 72"},{"value":"Item 73"},{"value":"Item 74"},{"value":"Item 75"},{"value":"Item 76"},{"value":"Item 77"},{"value":"Item 78"},{"value":"Item 79"},{"value":"Item 80"},{"value":"Item 81"},{"value":"Item 82"},{"value":"Item 83"},{"value":"Item 84"},{"value":"Item 85"},{"value":"Item 86"},{"value":"Item 87"},{"value":"Item 88"},{"value":"Item 89"}]</div><div>{"item":{"value":"Item 65"},"index":65,"page":3,"pageIndex":5}</div></div>'
+				'<div><button></button><div>{"item":{"value":"Item 65"},"index":65,"page":3,"pageIndex":5}</div></div>'
+			);
+			(root.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button></button><div>{"item":{"value":"Item 1"},"index":1,"page":1,"pageIndex":1}</div></div>'
 			);
 		});
 
