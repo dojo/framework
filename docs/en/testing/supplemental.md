@@ -1,6 +1,6 @@
 # Test Renderer
 
-Dojo provides a simple and type safe test renderer for shallowly asserting the expected output and behavior from a widget. The test renderer's API has been designed to encourage unit testing best practices from the outset to ensure high confidence in you Dojo application.
+Dojo provides a simple and type safe test renderer for shallowly asserting the expected output and behavior from a widget. The test renderer's API has been designed to encourage unit testing best practices from the outset to ensure high confidence in your Dojo application.
 
 Working with [assertions](/learn/testing/test-renderer#assertion) and the test renderer is done using [wrapped test nodes](/learn/testing/test-renderer#wrapped-test-nodes) that are defined in the assertion structure, ensuring type safety throughout the testing life-cycle.
 
@@ -175,7 +175,7 @@ Returns a new assertion with the new children appended to the node's existing ch
 Returns a new assertion with the new children pre-pended to the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+.prepend(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
 #### `assertion.replaceChildren()`
@@ -183,7 +183,7 @@ Returns a new assertion with the new children pre-pended to the node's existing 
 Returns a new assertion with the new children replacing the node's existing children.
 
 ```tsx
-.append(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
+.replaceChildren(wrapped: Wrapped, children: () => RenderResult): AssertionResult;
 ```
 
 #### `assertion.insertSiblings()`
