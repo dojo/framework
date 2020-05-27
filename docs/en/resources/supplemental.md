@@ -1,6 +1,6 @@
 # Resource Concepts
 
-Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. These are the core concepts for Dojo Resources:
+Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. There are 3 core concepts for Dojo Resources:
 
 -   Resource Templates
 -   Resource Store
