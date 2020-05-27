@@ -484,7 +484,7 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	readonly [index: string]: any;
 }
 
-export interface SVGAttributes extends VNodeProperties {
+export interface SVGAttributes extends VNodeProperties<SVGElement> {
 	'accent-height'?: string;
 	accumulate?: 'none' | 'sum';
 	additive?: 'replace' | 'sum';
@@ -741,6 +741,385 @@ export interface SVGAttributes extends VNodeProperties {
 	yChannelSelector?: string;
 	z?: string;
 	zoomAndPan?: string;
+}
+
+export interface AnchorAttributes extends VNodeProperties<HTMLAnchorElement> {
+	download?: string;
+	href?: string;
+	hreflang?: string;
+	ping?: string;
+	rel?: string;
+	target?: string;
+	type?: string;
+	media?: string;
+}
+
+export interface AreaAttributes extends VNodeProperties<HTMLAreaElement> {
+	alt?: string;
+	coords?: string;
+	download?: string;
+	href?: string;
+	media?: string;
+	hreflang?: string;
+	ping?: string;
+	rel?: string;
+	shape?: string;
+	target?: string;
+}
+
+export interface AudioAttributes extends VNodeProperties<HTMLAudioElement> {
+	autoplay?: boolean;
+	controls?: boolean;
+	crossOrigin?: 'anonymous' | 'use-credentials';
+	loop?: boolean;
+	mediaGroup?: string;
+	muted?: boolean;
+	preload?: 'none' | 'metadata' | 'auto' | '';
+	src?: string;
+}
+
+export interface BaseAttributes extends VNodeProperties<HTMLBaseElement> {
+	href?: string;
+	target?: string;
+}
+
+export interface BlockquoteAttributes extends VNodeProperties<HTMLQuoteElement> {
+	cite?: string;
+}
+
+export interface ButtonAttributes extends VNodeProperties<HTMLButtonElement> {
+	autofocus?: boolean;
+	disabled?: boolean;
+	form?: string;
+	formAction?: string;
+	formEncType?: string;
+	formMethod?: string;
+	formNoValidate?: boolean;
+	formTarget?: string;
+	name?: string;
+	type?: 'submit' | 'reset' | 'button';
+}
+
+export interface CanvasAttributes extends VNodeProperties<HTMLCanvasElement> {
+	height?: number | string;
+	width?: number | string;
+}
+
+export interface ColAttributes extends VNodeProperties<HTMLTableColElement> {
+	span?: number;
+	width?: number | string;
+}
+
+export interface ColgroupAttributes extends VNodeProperties {
+	span?: number;
+}
+
+export interface DetailsAttributes extends VNodeProperties<HTMLDetailsElement> {
+	open?: boolean;
+}
+
+export interface DelAttributes extends VNodeProperties {
+	cite?: string;
+	dateTime?: string;
+}
+
+export interface DialogAttributes extends VNodeProperties<HTMLDialogElement> {
+	open?: boolean;
+}
+
+export interface EmbedAttributes extends VNodeProperties<HTMLEmbedElement> {
+	height?: number | string;
+	src?: string;
+	type?: string;
+	width?: number | string;
+}
+
+export interface FieldsetAttributes extends VNodeProperties<HTMLFieldSetElement> {
+	disabled?: boolean;
+	form?: string;
+	name?: string;
+}
+
+export interface FormAttributes extends VNodeProperties<HTMLFormElement> {
+	acceptCharset?: string;
+	action?: string;
+	autoComplete?: string;
+	encType?: string;
+	method?: string;
+	name?: string;
+	noValidate?: boolean;
+	target?: string;
+}
+
+export interface HtmlAttributes extends VNodeProperties<HTMLHtmlElement> {
+	manifest?: string;
+}
+
+export interface IFrameAttributes extends VNodeProperties<HTMLIFrameElement> {
+	allow?: string;
+	allowFullScreen?: boolean;
+	allowTransparency?: boolean;
+	frameBorder?: number | string;
+	height?: number | string;
+	marginHeight?: number;
+	marginWidth?: number;
+	name?: string;
+	referrerPolicy?: string;
+	sandbox?: string;
+	scrolling?: string;
+	seamless?: boolean;
+	src?: string;
+	srcDoc?: string;
+	width?: number | string;
+}
+
+export interface ImgAttributes extends VNodeProperties<HTMLImageElement> {
+	alt?: string;
+	crossOrigin?: 'anonymous' | 'use-credentials' | '';
+	decoding?: 'async' | 'auto' | 'sync';
+	height?: number | string;
+	loading?: 'eager' | 'lazy';
+	referrerPolicy?: 'no-referrer' | 'origin' | 'unsafe-url';
+	sizes?: string;
+	src?: string;
+	srcSet?: string;
+	useMap?: string;
+	width?: number | string;
+}
+
+export interface InsAttributes extends VNodeProperties {
+	cite?: string;
+	dateTime?: string;
+}
+
+export interface InputAttributes extends VNodeProperties<HTMLInputElement> {
+	accept?: string;
+	alt?: string;
+	autoComplete?: string;
+	autofocus?: boolean;
+	capture?: boolean | string;
+	checked?: boolean;
+	crossOrigin?: string;
+	disabled?: boolean;
+	form?: string;
+	formAction?: string;
+	formEncType?: string;
+	formMethod?: string;
+	formNoValidate?: boolean;
+	formTarget?: string;
+	height?: number | string;
+	list?: string;
+	max?: number | string;
+	maxLength?: number;
+	min?: number | string;
+	minLength?: number;
+	multiple?: boolean;
+	name?: string;
+	pattern?: string;
+	placeholder?: string;
+	readOnly?: boolean;
+	required?: boolean;
+	size?: number;
+	src?: string;
+	step?: number | string;
+	type?: string;
+	width?: number | string;
+}
+
+interface KeygenAttributes extends VNodeProperties {
+	autofocus?: boolean;
+	challenge?: string;
+	disabled?: boolean;
+	form?: string;
+	keyType?: string;
+	keyParams?: string;
+	name?: string;
+}
+
+interface LabelAttributes extends VNodeProperties<HTMLLabelElement> {
+	for?: string;
+	form?: string;
+}
+
+interface LinkAttributes extends VNodeProperties<HTMLLinkElement> {
+	as?: string;
+	crossOrigin?: string;
+	href?: string;
+	hrefLang?: string;
+	integrity?: string;
+	media?: string;
+	rel?: string;
+	sizes?: string;
+	type?: string;
+	charSet?: string;
+}
+
+interface MapAttributes extends VNodeProperties<HTMLMapElement> {
+	name?: string;
+}
+
+interface MenuAttributes extends VNodeProperties<HTMLMenuElement> {
+	type?: string;
+}
+
+interface MetaAttributes extends VNodeProperties<HTMLMetaElement> {
+	charSet?: string;
+	content?: string;
+	httpEquiv?: string;
+	name?: string;
+}
+
+interface MeterAttributes extends VNodeProperties<HTMLMeterElement> {
+	form?: string;
+	high?: number;
+	low?: number;
+	max?: number | string;
+	min?: number | string;
+	optimum?: number;
+}
+
+interface ObjectAttributes extends VNodeProperties<HTMLObjectElement> {
+	classID?: string;
+	data?: string;
+	form?: string;
+	height?: number | string;
+	name?: string;
+	type?: string;
+	useMap?: string;
+	width?: number | string;
+	wmode?: string;
+}
+
+interface OlAttributes extends VNodeProperties<HTMLOListElement> {
+	reversed?: boolean;
+	start?: number;
+	type?: '1' | 'a' | 'A' | 'i' | 'I';
+}
+
+interface OptgroupAttributes extends VNodeProperties<HTMLOptGroupElement> {
+	disabled?: boolean;
+	label?: string;
+}
+
+interface OptionAttributes extends VNodeProperties<HTMLOptionElement> {
+	disabled?: boolean;
+	label?: string;
+	selected?: boolean;
+}
+
+interface OutputAttributes extends VNodeProperties<HTMLOutputElement> {
+	form?: string;
+	for?: string;
+	name?: string;
+}
+
+interface ParamAttributes extends VNodeProperties<HTMLParamElement> {
+	name?: string;
+}
+
+interface ProgressAttributes extends VNodeProperties<HTMLProgressElement> {
+	max?: number | string;
+}
+
+interface QuoteAttributes extends VNodeProperties<HTMLQuoteElement> {
+	cite?: string;
+}
+
+interface SlotAttributes extends VNodeProperties<HTMLSlotElement> {
+	name?: string;
+}
+
+interface SelectAttributes extends VNodeProperties<HTMLSelectElement> {
+	autoComplete?: string;
+	autofocus?: boolean;
+	disabled?: boolean;
+	form?: string;
+	multiple?: boolean;
+	name?: string;
+	required?: boolean;
+	size?: number;
+}
+
+interface SourceAttributes extends VNodeProperties<HTMLSourceElement> {
+	media?: string;
+	sizes?: string;
+	src?: string;
+	srcSet?: string;
+	type?: string;
+}
+
+interface StyleAttributes extends VNodeProperties<HTMLStyleElement> {
+	media?: string;
+	nonce?: string;
+	type?: string;
+}
+
+interface TableAttributes extends VNodeProperties<HTMLTableElement> {
+	cellPadding?: number | string;
+	cellSpacing?: number | string;
+	summary?: string;
+}
+
+interface TextareaAttributes extends VNodeProperties<HTMLTextAreaElement> {
+	autoComplete?: string;
+	autofocus?: boolean;
+	cols?: number;
+	dirName?: string;
+	disabled?: boolean;
+	form?: string;
+	maxLength?: number;
+	minLength?: number;
+	name?: string;
+	placeholder?: string;
+	readOnly?: boolean;
+	required?: boolean;
+	rows?: number;
+	wrap?: string;
+}
+
+interface TdAttributes extends VNodeProperties<HTMLTableDataCellElement> {
+	align?: 'left' | 'center' | 'right' | 'justify' | 'char';
+	colSpan?: number;
+	headers?: string;
+	rowSpan?: number;
+	scope?: string;
+	abbr?: string;
+	valign?: 'top' | 'middle' | 'bottom' | 'baseline';
+}
+
+interface ThAttributes extends VNodeProperties<HTMLTableHeaderCellElement> {
+	align?: 'left' | 'center' | 'right' | 'justify' | 'char';
+	colSpan?: number;
+	headers?: string;
+	rowSpan?: number;
+	scope?: string;
+	abbr?: string;
+}
+
+interface TimeAttributes extends VNodeProperties<HTMLTimeElement> {
+	dateTime?: string;
+}
+
+interface TrackAttributes extends VNodeProperties<HTMLTrackElement> {
+	default?: boolean;
+	kind?: string;
+	label?: string;
+	src?: string;
+	srcLang?: string;
+}
+
+export interface VideoAttributes extends VNodeProperties<HTMLVideoElement> {
+	autoPlay?: boolean;
+	controls?: boolean;
+	crossOrigin?: 'anonymous' | 'use-credentials';
+	loop?: boolean;
+	mediaGroup?: string;
+	muted?: boolean;
+	playsInline?: boolean;
+	preload?: 'none' | 'metadata' | 'auto' | '';
+	src?: string;
+	height?: number | string;
+	width?: number | string;
 }
 
 /**

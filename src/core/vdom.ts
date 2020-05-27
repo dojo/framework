@@ -28,7 +28,51 @@ import {
 	DeferredVirtualProperties,
 	DomOptions,
 	DefaultChildrenWNodeFactory,
-	SVGAttributes
+	SVGAttributes,
+	AnchorAttributes,
+	AudioAttributes,
+	BaseAttributes,
+	BlockquoteAttributes,
+	ButtonAttributes,
+	CanvasAttributes,
+	ColAttributes,
+	ColgroupAttributes,
+	DelAttributes,
+	DetailsAttributes,
+	DialogAttributes,
+	EmbedAttributes,
+	FieldsetAttributes,
+	FormAttributes,
+	IFrameAttributes,
+	ImgAttributes,
+	InsAttributes,
+	InputAttributes,
+	KeygenAttributes,
+	LabelAttributes,
+	LinkAttributes,
+	MapAttributes,
+	MenuAttributes,
+	MetaAttributes,
+	MeterAttributes,
+	QuoteAttributes,
+	ObjectAttributes,
+	OlAttributes,
+	OptgroupAttributes,
+	OptionAttributes,
+	OutputAttributes,
+	ParamAttributes,
+	ProgressAttributes,
+	SlotAttributes,
+	SelectAttributes,
+	SourceAttributes,
+	StyleAttributes,
+	TableAttributes,
+	TextareaAttributes,
+	TdAttributes,
+	ThAttributes,
+	TimeAttributes,
+	TrackAttributes,
+	VideoAttributes
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -43,6 +87,50 @@ declare global {
 		}
 		interface IntrinsicElements {
 			svg: SVGAttributes;
+			a: AnchorAttributes;
+			audio: AudioAttributes;
+			base: BaseAttributes;
+			blockquote: BlockquoteAttributes;
+			button: ButtonAttributes;
+			canvas: CanvasAttributes;
+			col: ColAttributes;
+			colgroup: ColgroupAttributes;
+			del: DelAttributes;
+			details: DetailsAttributes;
+			dialog: DialogAttributes;
+			embed: EmbedAttributes;
+			fieldset: FieldsetAttributes;
+			form: FormAttributes;
+			iframe: IFrameAttributes;
+			img: ImgAttributes;
+			ins: InsAttributes;
+			input: InputAttributes;
+			keygen: KeygenAttributes;
+			label: LabelAttributes;
+			link: LinkAttributes;
+			map: MapAttributes;
+			menu: MenuAttributes;
+			meta: MetaAttributes;
+			meter: MeterAttributes;
+			object: ObjectAttributes;
+			ol: OlAttributes;
+			optgroup: OptgroupAttributes;
+			option: OptionAttributes;
+			output: OutputAttributes;
+			param: ParamAttributes;
+			progress: ProgressAttributes;
+			q: QuoteAttributes;
+			slot: SlotAttributes;
+			select: SelectAttributes;
+			source: SourceAttributes;
+			style: StyleAttributes;
+			table: TableAttributes;
+			td: TdAttributes;
+			textarea: TextareaAttributes;
+			th: ThAttributes;
+			time: TimeAttributes;
+			track: TrackAttributes;
+			video: VideoAttributes;
 			[key: string]: VNodeProperties;
 		}
 		interface ElementChildrenAttribute {
