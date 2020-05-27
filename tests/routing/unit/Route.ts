@@ -57,14 +57,16 @@ describe('Route', () => {
 	});
 
 	it('returns null if rendered without an available router', () => {
-		const r = renderer(() =>
-			w(Route, {
-				id: 'foo',
-				renderer() {
-					return w(Widget, {});
-				},
-				routerKey: 'Does not exist'
-			})
+		const r = renderer(
+			() =>
+				w(Route, {
+					id: 'foo',
+					renderer() {
+						return w(Widget, {});
+					},
+					routerKey: 'Does not exist'
+				}),
+			{ middleware: [[getRegistry, mockGetRegistry]] }
 		);
 		r.expect(assertion(() => null));
 	});
