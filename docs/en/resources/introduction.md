@@ -1,6 +1,6 @@
 # Dojo Resources
 
-Dojo Resources is designed to provide a consistent pattern to make widgets "resource aware". Resources can be configured to work with any type of data sources. A resource is essentially a Dojo managed data store with built-in caching, pagination and filtering. Coupled with the `resource` middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets needing to know about the fetching implementation or the raw data format.
+Dojo Resources is designed to provide a consistent pattern to make widgets "resource aware". Resources can be configured to work with any type of data sources. A resource is essentially a Dojo managed data store with built-in caching, pagination, and filtering. Coupled with the `resource` middleware, resources allow consistent, source-agnostic data access for widgets, without the widgets needing to know about the fetching implementation or the raw data format.
 
 | Feature                                   | Description                                                                                                                                                  |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
