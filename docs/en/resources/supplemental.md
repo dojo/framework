@@ -1,6 +1,6 @@
 # Resource Concepts
 
-Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. There are core concepts for Dojo Resources:
+Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. There are 3 core concepts for Dojo Resources:
 
 -   Resource Templates
 -   Resource Store
@@ -8,9 +8,9 @@ Dojo resources is designed to provide a cohesive and consistent mechanism for wo
 
 ## Templates
 
-The resource template is a description that the resources uses to `read`, `find` and `init` data in the store. Resource templates are flexible to enable connecting resources to multiple different providers, for example RESTful APIs, client data (using an in-memory template).
+The resource template is a description that the resource uses to `read`, `find`, and `init` data in the store. Resource templates are flexible enough to enable connecting resources to multiple different providers, such as RESTful APIs or client data (using an in-memory template).
 
-Templates should be stateless so that they can be re-used across through-out an application, using the resource options to determine the data required and the resource controls to interact with the resource store, for example putting the data into the store.
+Templates should be stateless so they can be re-used throughout an application by using the resource options to determine the data required and the resource controls to interact with the resource store, such as putting the data into the store.
 
 Create a template using `createResourceTemplate` from the `@dojo/framework/core/middleware/resources` module.
 
@@ -45,7 +45,7 @@ See the [Resource Templates section](/learn/resources/resource-templates) for mo
 
 ## Store
 
-The resource store is where all the data is stored and responsible for wiring widgets using the `resource` middleware with the `ResourceTemplate` passed to the widget. The store invalidates all widgets that have subscribed for events based on the type and details of the event as well as handling asynchronous results from the resource template. The resource store is automatically created for a template that is passed to a widget. A user never explicitly creates or works directly with the resource store.
+The resource store is where all the data is stored and is responsible for wiring widgets using the `resource` middleware with the `ResourceTemplate` passed to the widget. The store invalidates all widgets that have subscribed for events based on the type and details of the event as well as handling asynchronous results from the resource template. The resource store is automatically created for a template that is passed to a widget. A user never explicitly creates or works directly with the resource store.
 
 > MyWidget.tsx
 
@@ -71,7 +71,7 @@ export default factory(function MyWidget({ middleware: { resource }}) {
 
 ## Middleware
 
-The `resource` middleware is the interface required to work with resource templates and "resource-aware" widgets. The middleware exposes the complete API for working with resource templates.
+The `resource` middleware is the interface required to work with resource templates and "resource-aware" widgets. The middleware exposes a complete API for working with resource templates.
 
 > MyResourceAwareWidget.tsx
 
@@ -103,7 +103,7 @@ export default factory(function MyResourceAwareWidget({ id, properties, middlewa
 	// createOptions function from `resource`
 	const {
 		resource: { template, options = createOptions(id) }
-	};
+	} = properties();
 	// Call `getOrRead` to request the data based on the `template` and `options`
 	const [items = []] = getOrRead(template, options({ page: 1, size: 20 }));
 	// Check if the resource is current loading
@@ -120,7 +120,7 @@ Please see the [`resource` middleware](/learn/resources/resource-middleware) for
 
 # Resource Templates
 
-A resource template describes how Dojo resources interact with it's data-source based on the options passed. Resource templates are statically defined and used through an application to power "resource aware" widgets. There are two types of `ResourceTemplate` that can be used, a standard template and a template that accepts initialization options.
+A resource template describes how Dojo resources interact with its data-source based on the options passed. Resource templates are statically defined and used throughout an application to power "resource aware" widgets. There are two types of `ResourceTemplate` that can be used: a standard template, and a template that accepts initialization options.
 
 A `ResourceTemplate` consists of two APIs:
 
@@ -175,7 +175,7 @@ interface ResourceRead<S> {
 }
 ```
 
-The `ResourceReadRequest` has the offset, page size and query of the request. The `query` is a an object with the key mapping to a key of the resource item data interface for the associated value.
+The `ResourceReadRequest` contains the offset, page size, and query of the request. The `query` is a an object with the key mapping to a key of the resource item data interface for the associated value.
 
 ```tsx
 type ResourceQuery<S> = { [P in keyof S]?: any };
@@ -197,7 +197,7 @@ export interface ResourceFind<S> {
 }
 ```
 
-The `ResourceFindRequest` has the current resource `options`, `query`, `type` and `start` index for the find request. The `query` is the same as the `query` object used with `ResourceFindRequest`, an object with the key mapping to a key of the resource item data interface for the associated value.
+The `ResourceFindRequest` contains the current resource `options`, `query`, `type`, and `start` index for the find request. The `query` is the same as the `query` object used with `ResourceFindRequest`: an object with the key mapping to a key of the resource item data interface for the associated value.
 
 ```tsx
 type FindType = 'exact' | 'contains' | 'start';
@@ -293,7 +293,7 @@ For more information please see the [Using Resource Templates](/learn/resource/u
 
 ## Custom Resource Templates
 
-To connect a resource to an custom data-source, such as a RESTful API the `createResourceTemplate()` factory can be used. At a minimum the `read` API needs to be fulfilled with the additional `init` and `find` optional.
+To connect a resource to an custom data-source - such as a RESTful API - the `createResourceTemplate()` factory can be used. At a minimum, the `read` API needs to be fulfilled while `init` and `find` are optional.
 
 > myResourceTemplate.ts
 
@@ -328,7 +328,7 @@ export default createResourceTemplate<MyResource>({
 
 ### Create a Resource Template with initialization options
 
-If the resource template needs to support custom initialization the `createResourceTemplateWithInit` can be used, which requires the template to have an `init` API that will be called when a backing resource is created. The initialize options required are typed using the second generic on the factory function.
+If the resource template needs to support custom initialization the `createResourceTemplateWithInit` can be used. This requires the template to have an `init` API that will be called when a backing resource is created. The initialize options required are typed using the second generic on the factory function.
 
 ```tsx
 import { createResourceTemplateWithInit } from '@dojo/framework/core/middleware/resources';
@@ -366,7 +366,7 @@ export default createResourceTemplateWithInit<MyResource, { data: MyResource[] }
 
 ## Typing Resource Templates
 
-The resource template factories all accept a generic that is used to type the shape of the resource data. It is highly recommended to provide typings to the template so that when the template is passed to a widget the typings for data and transform can be inferred correctly. As referenced in the previous examples, typing a resource requires passing the resource data type interface on creation of the template.
+All resource template factories accept a generic that is used to type the shape of the resource data. It is highly recommended to provide typings to the template so that when the template is passed to a widget the typings for data and transform can be inferred correctly. As referenced in the previous examples, typing a resource requires passing the resource data type interface on creation of the template.
 
 > userResourceTemplate.ts
 
@@ -422,7 +422,7 @@ export factory(function MyWidget({ middleware: { resource }}) {
 
 ## Passing Initialization Options
 
-Initialization options can be passed with any template created using the `createResourceTemplateWithInit` factory and are passed to the template's `init` function to initialize the resource. The `initOptions` include an `id` used to identify the backing resource and optional `data` that can be added to the resource on creation.
+Initialization options can be passed with any template created using the `createResourceTemplateWithInit` factory and are passed to the template's `init` function to initialize the resource. The `initOptions` includes an `id` used to identify the backing resource and optional `data` that can be added to the resource on creation.
 
 > MyWidget.ts
 
@@ -457,7 +457,7 @@ export factory(function MyWidget({ id, middleware: { resource }}) {
 
 ## Transforming Data
 
-When a widget has been configured with to use `resources` middleware with a different data interface to the template a "transform" descriptor is required. The `transform` is an object keyed by a key of the `resources` middleware type that maps to a key of the resource template type.
+When a widget has been configured to use `resources` middleware with a data interface different than the template, a "transform" descriptor is required. The `transform` is an object keyed by a key of the `resources` middleware type that maps to a key of the resource template type.
 
 > MyWidget.ts
 
@@ -492,9 +492,9 @@ export factory(function MyWidget({ id, middleware: { resource }}) {
 
 # Resource Middleware
 
-The `resource` middleware is required to use resource templates and access resources, the middleware optionally automatically decorates the widget with the required `resource` property depending on whether an interface is passed to the `createResourceMiddleware` factory. The `resource` property is used by the widget to interact with any resource passed. The `resource` middleware passed to the widget is a factory that returns back the complete API for working with resources. The simplest scenario is using the `resource` middleware to return data for a requested page. This is done using the `getOrRead` API that requires the template and the resource options, `getOrRead(template, options())`, the `getOrRead` function is designed to be reactive, meaning if the data is not immediately available (i.e. the resource is asynchronous and not already been read for the provided options) then it will return `undefined` for each page requested, so that the widget can deal with the "loading" data scenario.
+The `resource` middleware is required to use resource templates and access resources. The middleware optionally automatically decorates the widget with the required `resource` property depending on whether an interface is passed to the `createResourceMiddleware` factory. The `resource` property is used by the widget to interact with any resource passed. The `resource` middleware passed to the widget is a factory that returns back the complete API for working with resources. The simplest scenario is using the `resource` middleware to return data for a requested page. This is done using the `getOrRead` API that requires the template and the resource options: `getOrRead(template, options())`. The `getOrRead` function is designed to be reactive, so if the data is not immediately available - i.e. the resource is asynchronous and not already been read for the provided options - it will return `undefined` for each page requested allowing the widget to deal with the "loading" data scenario.
 
-The `resource` property consists of the `template` and an optional set of `options`, these are used to interact with the `template'`s resource store. As the `options` can be undefined, they needed to be defaulted with options created using the `createOptions` API. The `createOptions` function takes an identifer used to track the options across renders. This `id` can usually use the widgets `id` injected into the widget along with the properties, children and middleware.
+The `resource` property consists of the `template` and an optional set of `options` which are used to interact with the `template'`s resource store. As the `options` can be undefined, they needed to be defaulted with options created using the `createOptions` API. The `createOptions` function takes an identifer used to track the options across renders. This `id` can usually use the widget's `id` injected into the widget along with the properties, children and middleware.
 
 > MyResourceAwareWidget.tsx
 
@@ -529,13 +529,13 @@ export default factory(function MyDataAwareWidget({ id, properties, resource }) 
 
 ### `createOptions()`
 
-`createOptions` creates a new instance of options that can be used with the `resource` API, an `id` is required in order to identify the options instance across renders. The result of the `createOptions` function should be used when working with the `getOrRead`, `isLoading`, `isFailed` and `find` APIs. It is important to use `options` rather than constructing a new `ResourceOptions` object in order to ensure that resources that correctly invalidate when options have changed.
+`createOptions` creates a new instance of options that can be used with the `resource` API. An `id` is required in order to identify the option's instance across renders. The result of the `createOptions` function should be used when working with the `getOrRead`, `isLoading`, `isFailed`, and `find` APIs. It is important to use `options` rather than constructing a new `ResourceOptions` object in order to ensure that resources correctly invalidate when options have changed.
 
 ```tsx
 const options = createOptions('id');
 ```
 
-The resulting `options` variable is a function that can be used to set and get the instances option data
+The resulting `options` variable is a function that can be used to set and get the instances option data.
 
 ```tsx
 interface ResourceOptions<S> {
@@ -547,7 +547,7 @@ interface ResourceOptions<S> {
 
 ### `getOrRead()`
 
-The `getOrRead` function takes a `template`, the `ResourceOptions` and optionally any `initOptions` that are required. `getOrRead` returns an array of data for each of the pages requested in the passed `ResourceOptions`. If the data is not already available, it will perform a `read` using the passed template. Once the `data` has been set in the resource, the widget will be invalidated in a reactive manner.
+The `getOrRead` function takes a `template`, the `ResourceOptions`, and optionally any `initOptions` that are required. `getOrRead` returns an array of data for each of the pages requested in the passed `ResourceOptions`. If the data is not already available, it will perform a `read` using the passed template. Once the `data` has been set in the resource, the widget will be invalidated in a reactive manner.
 
 > MyResourceAwareWidget.tsx
 
@@ -573,7 +573,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 });
 ```
 
-The `query` object can be passed to specify a filter for a property of the data. If a `transform` was passed with the `template` then this query object will be mapped back to the original resources key when passed to the resource template's `read` function.
+The `query` object can be passed to specify a filter for a property of the data. If a `transform` was passed with the `template` then this query object will be mapped back to the original resource's key when passed to the resource template's `read` function.
 
 > MyResourceAwareWidget.tsx
 
@@ -599,7 +599,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 });
 ```
 
-Multiple pages can be passed in the `options`, each of the pages requested will be returned in the resulting array. When requesting multiple pages it's not safe to check the first array value to check if the `getOrRead` call could be fulfilled as it API will return any pages that were available and make the requests for the rest. To check the status of the request call the options can be passed into the [`isLoading`](/learn/resources/resource-middleware#isLoading) API. The pages are return in the same order that they are specified in the `options`, it can be useful to use `.flat()` on the array once it has been fully loaded.
+Multiple pages can be passed in the `options`. Each of the pages requested will be returned in the resulting array. When requesting multiple pages it's not safe to check the first array value to determine if the `getOrRead` call could be fulfilled as its API will return any pages that were available and make the requests for the rest. To check the status of the request, the options can be passed into the [`isLoading`](/learn/resources/resource-middleware#isLoading) API. The pages are return in the same order that they are specified in the `options`. If desired, it may be useful to use `.flat()` on the pages array once it has been fully loaded to consolidate individual page results into a single list.
 
 > MyResourceAwareWidget.tsx
 
@@ -628,7 +628,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 
 ### `meta()`
 
-The `meta` API returns the current meta information for the resources, including the current options themselves. The `MetaResponse` is also contains the registered `total` of resource, which can be used to determine conditional logic such as virtual rendering.
+The `meta` API returns the current meta information for the resources, including the current options themselves. The `MetaResponse` also contains the registered `total` of the resource, which can be used to determine conditional logic such as virtual rendering.
 
 ```tsx
 meta(template, options, request): MetaResponse;
@@ -660,7 +660,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 });
 ```
 
-By default calling meta will not initiate a request, meaning if there is not meta info (as `getOrRead` has not been called) then it will never populate them and invalidate without a separate call to `getOrRead`. A additional parameter, `request` can be passed as `true` in order to make a request for the passed options if there is no existing meta information.
+By default, calling meta will not initiate a request. If there is no meta info - i.e., `getOrRead` has not been called - it will never populate them and invalidate without a separate call to `getOrRead`. An additional parameter, `request`, can be passed as `true` in order to make a request for the passed options if there is no existing meta information.
 
 > MyResourceAwareWidget.tsx
 
@@ -691,9 +691,9 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 
 ### `find()`
 
-The `find` function takes the `template`, `ResourceFindOptions` and `initOptions` if required by the template. `find` returns the `ResourceFindResult` or `undefined` depending on if the item could be found. The `ResourceFindResult` contains the identified item, the index of the resource data-set, the page the item belongs to (based on the page size set in the `options` property in the `ResourceFindOptions`) and the index of the item on that page. If the `find` result is not already known to the `resource` store and the request is asynchronous then the `find` call will return `undefined` and invalidate the widget once the find result available.
+The `find` function takes the `template`, `ResourceFindOptions`, and `initOptions` if required by the template. `find` returns the `ResourceFindResult` or `undefined` depending on if the item could be found. The `ResourceFindResult` contains the identified item, the index of the resource data-set, the page the item belongs to (based on the page size set in the `options` property in the `ResourceFindOptions`), and the index of the item on that page. If the `find` result is not already known to the `resource` store and the request is asynchronous then the `find` call will return `undefined` and invalidate the widget once the find result available.
 
-The `ResourceFindOptions` requires a starting index, `start`, the `ResourceOptions`, `options`, the type of search, `type` (`contains` is the default find type) and a query object for the find operation:
+The `ResourceFindOptions` requires a starting index, `start`, the `ResourceOptions`, `options`, the type of search, `type` (`contains` is the default find type), and a query object for the find operation:
 
 ```ts
 interface ResourceFindOptions {
@@ -730,7 +730,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 
 ### `isLoading()`
 
-The `isLoading` function takes a `template`, `ResourceOptions` or `ResourceFindOptions` object and `initOptions` if required by the template. `isLoading` returns a `boolean` to indicate if there is a in-flight read underway for the passed options.
+The `isLoading` function takes a `template`, `ResourceOptions` or `ResourceFindOptions` object, and `initOptions` if required by the template. `isLoading` returns a `boolean` to indicate if there is an in-flight read underway for the passed options.
 
 > MyResourceAwareWidget.tsx
 
@@ -786,7 +786,7 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 
 # Composing behavior with resources
 
-Resources can be used in multiple widgets and the cached data will be shared, however sharing the data is sometimes not enough when composing multiple "data-aware" widgets together. There are occasions that multiple widgets want to be able to share the current resource options, such that one widget can set a filter and another widget can react and render the filtered data set. This is where creating a resource with shared options come in, a resource with shared options can be created by the `resources` middleware and passed into multiple widgets that will both share resource options, so that a pagination widget can set the `page` and another widget is used to render the page of items will react to the page change and fetch the new results.
+Resources can be used in multiple widgets and the cached data will be shared. However, sharing the data is sometimes not sufficient when composing multiple "data-aware" widgets together. There are occasions that multiple widgets want to be able to share the current resource options. For example, one widget can set a filter and another widget can react and render the filtered data set. This is where creating a resource with shared options come in. A resource with shared options can be created by the `resources` middleware and passed into multiple widgets that will both share resource options, so that a pagination widget can set the `page` and another widget, which renders the items, will react to the page change and fetch the new results.
 
 > MyComposedWidget.tsx
 
