@@ -47,4 +47,18 @@ describe('block mock', () => {
 			))
 		);
 	});
+
+	it('should return a default', () => {
+		function func() {
+			return null;
+		}
+		const blockMock = createBlockMock();
+		const factory = create({ block });
+		const App = factory(({ middleware: { block } }) => {
+			const blockResult = block(func)();
+			return <div key="root">{blockResult}</div>;
+		});
+		const r = renderer(() => <App key="app" />, { middleware: [[block, blockMock]] });
+		r.expect(assertion(() => <div key="root" />));
+	});
 });
