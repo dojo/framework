@@ -6,3 +6,4 @@ import './store';
 import './breakpoint';
 import './icache';
 import './validity';
+import './block';
