@@ -1982,7 +1982,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		checkDistinguishable(childNodes, index, parentWNodeWrapper);
 	}
 
-	function createKeyMap(wrappers: DNodeWrapper[]): Map<any, any> {
+	function createKeyMap(wrappers: DNodeWrapper[]): Map<string, DNodeWrapper> {
 		const keys = new Map();
 		for (let i = 0; i < wrappers.length; i++) {
 			const wrapper = wrappers[i];
@@ -1995,7 +1995,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
 		let { mergeNodes = [], oldIndex = 0, newIndex = 0, currentKeyMap } = meta;
-		let currentLength = current.length;
+		const currentLength = current.length;
 		const nextLength = next.length;
 		const hasPreviousSiblings = currentLength > 1 || (currentLength > 0 && currentLength < nextLength);
 		let instructions: Instruction[] = [];
@@ -2021,7 +2021,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 
 		if (replace || (currentLength === 0 && !_mountOptions.merge)) {
-			for (let i = 0; i < next.length; i++) {
+			for (let i = 0; i < nextLength; i++) {
 				instructions.push({ current: undefined, next: next[i] });
 			}
 		} else {
@@ -2046,14 +2046,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						instructions.push({ current: currentWrapper, next: nextWrapper });
 					}
 				} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-					has('dojo-debug') && current.length && distinguishableCheck(next, newIndex);
+					has('dojo-debug') && currentLength && distinguishableCheck(next, newIndex);
 					const foundWrapper = currentKeyMap.get(nextWrapper.node.properties.key);
 					if (foundWrapper && same(foundWrapper, nextWrapper)) {
-						nextWrapper.domNode = foundWrapper.domNode;
-						current.splice(current.indexOf(foundWrapper), 1);
-						currentLength--;
+						const { domNode, id } = foundWrapper;
+						nextWrapper.domNode = domNode;
+						nextWrapper.reparent = id;
 						currentKeyMap.delete(nextWrapper.node.properties.key);
-						nextWrapper.reparent = foundWrapper.id;
 					}
 					instructions.push({ current: undefined, next: nextWrapper });
 					newIndex++;
@@ -2066,10 +2065,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					has('dojo-debug') && distinguishableCheck(current, oldIndex);
 					const foundWrapper = currentKeyMap.get(nextWrapper.node.properties.key);
 					if (foundWrapper && same(foundWrapper, nextWrapper)) {
-						nextWrapper.domNode = foundWrapper.domNode;
-						nextWrapper.reparent = foundWrapper.id;
-						foundWrapper.reparent = foundWrapper.id;
-						currentWrapper.reparent = foundWrapper.id;
+						const { domNode, id } = foundWrapper;
+						nextWrapper.domNode = domNode;
+						nextWrapper.reparent = id;
+						foundWrapper.reparent = id;
+						currentWrapper.reparent = id;
 						currentKeyMap.delete(nextWrapper.node.properties.key);
 						instructions.push({ current: foundWrapper, next: undefined });
 					}
