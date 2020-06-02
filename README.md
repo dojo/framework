@@ -61,6 +61,14 @@ See the [v4 migration guide](./docs/V4-Migration-Guide.md) for details on upgrad
 
 See the [v5 migration guide](./docs/V5-Migration-Guide.md) for details on upgrading from version 4.x to version 5.x.
 
+### Version 5.x to 6.x Migration Guide
+
+See the [v6 migration guide](./docs/V6-Migration-Guide.md) for details on upgrading from version 5.x to version 6.x.
+
+### Version 6.x to 7.x Migration Guide
+
+See the [v7 migration guide](./docs/V7-Migration-Guide.md) for details on upgrading from version 6.x to version 7.x.
+
 ### Examples
 
 We have added a repository of examples which have been built on Dojo. Those examples are available
@@ -91,7 +99,8 @@ TypeScript and Dojo both iterate rapidly. In general Dojo strives for maximum co
 | 4.0          | 2.6.x                        | 3.1.x                        |
 | 5.0          | 2.6.x                        | 3.2.x                        |
 | 6.0          | 3.4.5                        | 3.4.5                        |
+| 7.0          | 3.4.5                        | 3.8.x                        |
 
 ## Licensing information
 
-© 2019 [OpenJS Foundation](https://openjsf.org) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
+© 2020 [OpenJS Foundation](https://openjsf.org) & contributors. [New BSD](http://opensource.org/licenses/BSD-3-Clause) license.
