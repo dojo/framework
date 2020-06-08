@@ -283,6 +283,14 @@ function isBodyWrapper(wrapper?: DNodeWrapper): boolean {
 	return isVNodeWrapper(wrapper) && wrapper.node.tag === 'body';
 }
 
+function isHeadWrapper(wrapper?: DNodeWrapper): boolean {
+	return isVNodeWrapper(wrapper) && wrapper.node.tag === 'head';
+}
+
+function isSpecialWrapper(wrapper?: DNodeWrapper): boolean {
+	return isHeadWrapper(wrapper) || isBodyWrapper(wrapper) || isVirtualWrapper(wrapper);
+}
+
 function isAttachApplication(value: any): value is AttachApplication | DetachApplication {
 	return !!value.type;
 }
@@ -1392,7 +1400,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 					if (nextSibling.childDomWrapperId) {
 						const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
-						if (childWrapper && !isBodyWrapper(childWrapper)) {
+						if (childWrapper && !isBodyWrapper(childWrapper) && !isHeadWrapper(childWrapper)) {
 							domNode = childWrapper.domNode;
 						}
 					}
@@ -2285,6 +2293,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const parentDomNode = findParentDomNode(next)!;
 		const isVirtual = isVirtualWrapper(next);
 		const isBody = isBodyWrapper(next);
+		const isHead = isHeadWrapper(next);
 		let mergeNodes: Node[] = [];
 		next.id = `${wrapperId++}`;
 		_idToWrapperMap.set(next.id, next);
@@ -2297,6 +2306,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 				if (isBody) {
 					next.domNode = global.document.body;
+				} else if (isHead) {
+					next.domNode = global.document.head;
 				} else if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
 						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
@@ -2332,14 +2343,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				_idToChildrenWrappers.set(next.id, children);
 			}
 		}
-		const dom: ApplicationInstruction | undefined =
-			isVirtual || isBody
-				? undefined
-				: {
-						next: next!,
-						parentDomNode: parentDomNode,
-						type: 'create'
-				  };
+		const dom: ApplicationInstruction | undefined = isSpecialWrapper(next)
+			? undefined
+			: {
+					next: next!,
+					parentDomNode: parentDomNode,
+					type: 'create'
+			  };
 		if (children) {
 			return {
 				item: {
@@ -2380,8 +2390,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
-		const isVirtual = isVirtualWrapper(current);
-		const isBody = isBodyWrapper(current);
+		const isSpecial = isSpecialWrapper(current);
 		const children = _idToChildrenWrappers.get(current.id);
 		_idToChildrenWrappers.delete(current.id);
 		_idToWrapperMap.delete(current.id);
@@ -2396,10 +2405,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				instanceData && instanceData.nodeHandler.remove(current.node.properties.key);
 			}
 		}
-		if (current.hasAnimations || isVirtual || isBody) {
+		if (current.hasAnimations || isSpecial) {
 			return {
 				item: { current: children, meta: {} },
-				dom: isVirtual || isBody ? undefined : { type: 'delete', current }
+				dom: isSpecial ? undefined : { type: 'delete', current }
 			};
 		}
 
@@ -2407,7 +2416,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			_deferredRenderCallbacks.push(() => {
 				let wrappers = children || [];
 				let wrapper: DNodeWrapper | undefined;
-				let bodyIds = [];
+				let specialIds = [];
 				while ((wrapper = wrappers.pop())) {
 					if (isWNodeWrapper(wrapper)) {
 						wrapper = getWNodeWrapper(wrapper.id) || wrapper;
@@ -2428,11 +2437,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					if (wrapperChildren) {
 						wrappers.push(...wrapperChildren);
 					}
-					if (isBodyWrapper(wrapper)) {
-						bodyIds.push(wrapper.id);
-					} else if (bodyIds.indexOf(wrapper.parentId) !== -1) {
+					if (isBodyWrapper(wrapper) || isHeadWrapper(wrapper)) {
+						specialIds.push(wrapper.id);
+					} else if (specialIds.indexOf(wrapper.parentId) !== -1) {
 						if (isWNodeWrapper(wrapper) || isVirtualWrapper(wrapper)) {
-							bodyIds.push(wrapper.id);
+							specialIds.push(wrapper.id);
 						} else if (wrapper.domNode && wrapper.domNode.parentNode) {
 							wrapper.domNode.parentNode.removeChild(wrapper.domNode);
 						}
