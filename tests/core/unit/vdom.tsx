@@ -4850,6 +4850,258 @@ jsdomDescribe('vdom', () => {
 		});
 	});
 
+	describe('head node', () => {
+		let root = document.createElement('div');
+		beforeEach(() => {
+			root = document.createElement('div');
+			document.body.appendChild(root);
+		});
+
+		afterEach(() => {
+			document.body.removeChild(root);
+		});
+
+		it('can attach a node to the head', () => {
+			let show = true;
+			const factory = create({ invalidator });
+			const App = factory(function App({ middleware: { invalidator } }) {
+				return v('div', [
+					v('button', {
+						onclick: () => {
+							show = !show;
+							invalidator();
+						}
+					}),
+					v('head', [show ? v('div', { id: 'my-head-node-1' }, ['My head Div 1']) : null]),
+					v('head', [show ? v('div', { id: 'my-head-node-2' }, ['My head Div 2']) : null])
+				]);
+			});
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			let headNodeOne = document.getElementById('my-head-node-1')!;
+			assert.isOk(headNodeOne);
+			assert.strictEqual(headNodeOne.outerHTML, '<div id="my-head-node-1">My head Div 1</div>');
+			assert.strictEqual(headNodeOne.parentNode, document.head);
+			assert.isNull(root.querySelector('#my-head-node-1'));
+			let headNodeTwo = document.getElementById('my-head-node-2')!;
+			assert.isOk(headNodeTwo);
+			assert.strictEqual(headNodeTwo.outerHTML, '<div id="my-head-node-2">My head Div 2</div>');
+			assert.strictEqual(headNodeTwo.parentNode, document.head);
+			assert.isNull(root.querySelector('#my-head-node-2'));
+			sendEvent(root.childNodes[0].childNodes[0] as Element, 'click');
+			resolvers.resolve();
+			headNodeOne = document.getElementById('my-head-node-1')!;
+			assert.isNull(headNodeOne);
+			assert.isNull(root.querySelector('#my-head-node-1'));
+			headNodeTwo = document.getElementById('my-head-node-2')!;
+			assert.isNull(headNodeTwo);
+			assert.isNull(root.querySelector('#my-head-node-2'));
+		});
+
+		it('can attach head and have widgets inserted nodes that are positioned after the head', () => {
+			const factory = create({ icache });
+			const Button = factory(function Button({ children }) {
+				return (
+					<div>
+						<button>{children()}</button>
+					</div>
+				);
+			});
+			const Head = factory(function Button({ children }) {
+				return (
+					<head>
+						<div id="head-node">{children()}</div>
+					</head>
+				);
+			});
+			const App = factory(function App({ middleware }) {
+				const open = middleware.icache.getOrSet('open', false);
+				return (
+					<div>
+						<div>first</div>
+						{open && <Button>Close</Button>}
+						{open && <Head>Head</Head>}
+						<div>
+							<button
+								onclick={() => {
+									middleware.icache.set('open', !middleware.icache.getOrSet('open', false));
+								}}
+							>
+								Click Me
+							</button>
+						</div>
+					</div>
+				);
+			});
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			(root as any).children[0].children[1].children[0].click();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><div>first</div><div><button>Close</button></div><div><button>Click Me</button></div></div>'
+			);
+			const headNode = document.getElementById('head-node');
+			assert.isNotNull(headNode);
+			assert.strictEqual(headNode!.outerHTML, '<div id="head-node">Head</div>');
+		});
+
+		it('should detach nested head nodes from dom', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('head', [v('span', { classes: ['head-span'] }, ['and im in the head!'])])]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private renderWidget = false;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.renderWidget = !this.renderWidget;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.renderWidget && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach widgets nested in a head tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [v('head', [w(B, {})])]);
+				}
+			}
+
+			class B extends WidgetBase<any> {
+				render() {
+					return v('span', { classes: ['head-span'] }, ['and im in the head!!']);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+		});
+
+		it('should detach virtual nodes nested in a head tag', () => {
+			let doShow: any;
+
+			class A extends WidgetBase<any> {
+				render() {
+					return v('div', [
+						v('head', [v('virtual', [v('span', { classes: ['head-span'] }, ['and im in the head!!'])])])
+					]);
+				}
+			}
+
+			class App extends WidgetBase {
+				private show = true;
+
+				constructor() {
+					super();
+					doShow = () => {
+						this.show = !this.show;
+						this.invalidate();
+					};
+				}
+
+				protected render() {
+					return v('div', [this.show && w(A, {})]);
+				}
+			}
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+
+			let results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 1);
+			doShow();
+			resolvers.resolveRAF();
+			resolvers.resolveRAF();
+			results = document.querySelectorAll('.head-span');
+			assert.lengthOf(results, 0);
+		});
+	});
+
 	describe('virtual node', () => {
 		it('can use a virtual node', () => {
 			const [Widget, meta] = getWidget(v('virtual', [v('div', ['one', 'two', v('div', ['three'])])]));
