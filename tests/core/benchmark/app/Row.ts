@@ -35,7 +35,7 @@ export class Row extends WidgetBase<RowProperties> {
 				v('td', { classes: ['col-md-1'] }, [
 					v('a', { onclick: this._onDelete }, [
 						v('span', {
-							'aria-hidden': true,
+							'aria-hidden': 'true',
 							classes: ['glyphicon', 'glyphicon-remove']
 						})
 					])
