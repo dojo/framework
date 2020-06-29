@@ -1359,7 +1359,7 @@ export interface WNode<W extends WidgetBaseTypes = any> {
 /**
  * union type for all possible return types from render
  */
-export type DNode<W extends WidgetBaseTypes = any> = VNode | WNode<W> | undefined | null | string | boolean;
+export type DNode<W extends WidgetBaseTypes = any> = VNode | WNode<W> | undefined | null | string | boolean | number;
 
 /**
  * Property Change record for specific property diff functions

@@ -43,7 +43,7 @@ export function formatDNodes(nodes: DNode | DNode[], depth: number = 0): string 
 		}
 		result = `${result}${tabs}`;
 
-		if (typeof node === 'string') {
+		if (typeof node === 'string' || typeof node === 'number') {
 			return `${result}"${node}"`;
 		}
 

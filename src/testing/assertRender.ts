@@ -101,7 +101,7 @@ function format(nodes: DNode | DNode[], depth = 0): string {
 			str = `${str}\n${getTabs(depth)}`;
 		}
 
-		if (typeof node === 'string') {
+		if (typeof node === 'string' || typeof node === 'number') {
 			return `${str}${node}`;
 		}
 
