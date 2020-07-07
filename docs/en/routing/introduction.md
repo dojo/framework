@@ -212,6 +212,53 @@ export default [
 ];
 ```
 
+## Wildcard Routes
+
+The `*` character can be used to indicate a wildcard route. The route will be matched normally up until the `*` and will match
+any path at that point. A wildcard route will never be preferred over another matching route without a wildcard. The `*` implicitly indicates the end of the
+match, and any segments specified after the `*` in the route config will be ignored. Any additional segments in the actual URL will be passed with
+the `matchDetails` in an array property called `wildcardSegments`.
+
+```ts
+export default [
+	{
+		id: 'catchall',
+		// Anything after the asterisk will be ignored in this config
+		path: '*',
+		outlet: 'catchall'
+	},
+	// This path will be preferred to the wildcard as long as it matches
+	{
+		id: 'home',
+		path: 'home',
+		outlet: 'home'
+	}
+];
+```
+
+All segments after and including the matched `*` will be injected into the matching `Route`'s `renderer` property as `wildcardSegments`.
+
+> src/App.tsx
+
+```tsx
+import { create, tsx } from '@dojo/framework/core/vdom';
+import Route from '@dojo/framework/routing/Route';
+
+const factory = create();
+
+export default factory(function App() {
+	return (
+		<div>
+			<Route id="home" renderer={(matchDetails) => <div>{`Home ${matchDetails.params.page}`}</div>} />
+			<Route
+				id="catchall"
+				renderer={(matchDetails) => <div>{`Matched Route ${matchDetails.wildcardSegments.join(', ')}`}</div>}
+			/>
+		</div>
+	);
+});
+```
+
 ## Using link widgets
 
 The `Link` widget is a wrapper around an anchor tag that enables consumers to specify a route `id` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
