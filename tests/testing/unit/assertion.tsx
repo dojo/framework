@@ -70,10 +70,11 @@ class ListWidget extends WidgetBase {
 
 const baseListAssertion = assertion(() => v('div', { classes: ['root'] }, [v(WrappedList.tag, [])]));
 
+const First = create().children<string>()(({ children }) => <div>{children()}</div>);
 class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 	render() {
 		const { after, last = true } = this.properties;
-		const result = [v('div', ['first'])];
+		const result: DNode[] = [w(First, {}, ['first'])];
 		if (after) {
 			result.push(v('div', ['after']));
 		}
@@ -84,10 +85,13 @@ class MultiRootWidget extends WidgetBase<{ after?: boolean; last?: boolean }> {
 	}
 }
 
-const WrappedFirst = wrap('div');
+const WrappedFirst = wrap(First);
 const WrappedSecond = wrap('div');
 
-const baseMultiRootAssertion = assertion(() => [v(WrappedFirst.tag, ['first']), v(WrappedSecond.tag, ['last'])]);
+const baseMultiRootAssertion = assertion(() => [
+	<WrappedFirst>first</WrappedFirst>,
+	<WrappedSecond>last</WrappedSecond>
+]);
 
 const tsxAssertion = assertion(() => (
 	<div classes={['root']}>
@@ -256,7 +260,7 @@ describe('new/assertion', () => {
 	});
 
 	it('can insert after a node in the root', () => {
-		const insertionAssertion = baseMultiRootAssertion.insertAfter(WrappedFirst, () => [v('div', {}, ['after'])]);
+		const insertionAssertion = baseMultiRootAssertion.insertAfter(WrappedFirst, () => [<div>after</div>]);
 		const r = renderer(() => w(MultiRootWidget, { after: true }));
 		r.expect(insertionAssertion);
 	});
