@@ -180,11 +180,11 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				(propName) => !WidgetConstructor.hasResource || propName !== 'resource'
 			);
 			const resourceProps = [
-				'resourceTemplate',
-				'resourceInitOptions',
-				'resourceOptions',
-				'resourceTransform',
-				'resourceId'
+				'dojoResourceTemplate',
+				'dojoResourceInitOptions',
+				'dojoResourceOptions',
+				'dojoResourceTransform',
+				'dojoResourceId'
 			];
 
 			const useResource =
@@ -195,7 +195,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				props.push(...resourceProps);
 				this._properties = {
 					...this._properties,
-					resourceTemplate: createMemoryResourceTemplate(),
+					dojoResourceTemplate: createMemoryResourceTemplate(),
 					...this._propertiesWithAttributes(resourceProps)
 				};
 
@@ -300,19 +300,19 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				}
 
 				const {
-					resourceTemplate,
-					resourceInitOptions,
-					resourceOptions,
-					resourceTransform,
-					resourceId,
+					dojoResourceTemplate,
+					dojoResourceOptions,
+					dojoResourceTransform,
+					dojoResourceId,
+					dojoResourceInitOptions = { id: dojoResourceId || '', data: [] },
 					...childProperties
 				} = widgetProperties;
 
 				const resourceProp = resource({
-					template: resourceTemplate,
-					transform: resourceTransform,
-					options: resourceOptions || (resourceId && this._resource.createOptions(resourceId)),
-					initOptions: resourceInitOptions
+					template: dojoResourceTemplate,
+					transform: dojoResourceTransform,
+					options: dojoResourceOptions || (dojoResourceId && this._resource.createOptions(dojoResourceId)),
+					initOptions: dojoResourceInitOptions
 				});
 
 				return w(WidgetConstructor, { ...childProperties, resource: resourceProp }, renderChildren());
