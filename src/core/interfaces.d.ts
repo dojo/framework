@@ -797,7 +797,7 @@ export interface ButtonAttributes extends VNodeProperties<HTMLButtonElement> {
 	formNoValidate?: boolean;
 	formTarget?: string;
 	name?: string;
-	type?: 'submit' | 'reset' | 'button';
+	type?: 'submit' | 'reset' | 'button' | 'menu';
 }
 
 export interface CanvasAttributes extends VNodeProperties<HTMLCanvasElement> {
