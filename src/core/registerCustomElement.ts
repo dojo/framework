@@ -12,6 +12,7 @@ import { from } from '../shim/array';
 import global from '../shim/global';
 import ThemeInjector from './ThemeInjector';
 import { DomVNode, WNode } from './interfaces';
+import { createMemoryResourceTemplate, createResourceMiddleware } from './middleware/resources';
 
 const RESERVED_PROPS = ['focus'];
 
@@ -75,7 +76,8 @@ function dom(options: any, children?: any): DomVNode {
 	return wrapper as any;
 }
 
-const factory = vdomCreate({ diffProperty, invalidator }).properties<any>();
+const resource = createResourceMiddleware();
+const factory = vdomCreate({ diffProperty, invalidator, resource }).properties<any>();
 
 export function DomToWidgetWrapper(domNode: HTMLElement): any {
 	const wrapper = factory(function DomToWidgetWrapper({ properties, middleware: { invalidator, diffProperty } }) {
@@ -128,6 +130,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 		private _propertiesMap: any = {};
 		private _initialised = false;
 		private _childType = descriptor.childType;
+		private _resource?: any;
 
 		public connectedCallback() {
 			if (this._initialised) {
@@ -164,7 +167,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				}, 100);
 			}
 		}
-
 		private _readyCallback() {
 			const domProperties: any = {};
 			const { properties = [], events = [] } = descriptor;
@@ -174,7 +176,46 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				...this._attributesToProperties(attributes)
 			};
 
-			[...attributes, ...properties].forEach((propertyName: string) => {
+			const props = [...attributes, ...properties].filter(
+				(propName) => !WidgetConstructor.hasResource || propName !== 'resource'
+			);
+			const resourceProps = [
+				'resourceTemplate',
+				'resourceInitOptions',
+				'resourceOptions',
+				'resourceTransform',
+				'resourceId'
+			];
+
+			const useResource =
+				WidgetConstructor.hasResource &&
+				!resourceProps.some((resourceProp) => props.indexOf(resourceProp) > -1);
+
+			if (useResource) {
+				props.push(...resourceProps);
+				this._properties = {
+					...this._properties,
+					resourceTemplate: createMemoryResourceTemplate(),
+					...this._propertiesWithAttributes(resourceProps)
+				};
+
+				resourceProps.forEach((resourcePropertyName) => {
+					const value = this._propertiesMap[resourcePropertyName] || (this as any)[resourcePropertyName];
+
+					if (value !== undefined) {
+						this._properties[resourcePropertyName] = value;
+					}
+
+					domProperties[resourcePropertyName] = {
+						get: () => this._getProperty(resourcePropertyName),
+						set: (value: any) => {
+							this._setProperty(resourcePropertyName, value);
+						}
+					};
+				});
+			}
+
+			props.forEach((propertyName: string) => {
 				const isReservedProp = RESERVED_PROPS.indexOf(propertyName) !== -1;
 				const value =
 					this._propertiesMap[propertyName] || !isReservedProp ? (this as any)[propertyName] : undefined;
@@ -253,7 +294,30 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 
 			const widgetProperties = this._properties;
 			const renderChildren = () => this.__children__();
-			const Wrapper = factory(() => w(WidgetConstructor, widgetProperties, renderChildren()));
+			const Wrapper = factory(({ middleware: { resource } }) => {
+				if (!useResource) {
+					return w(WidgetConstructor, widgetProperties, renderChildren());
+				}
+
+				const {
+					resourceTemplate,
+					resourceInitOptions,
+					resourceOptions,
+					resourceTransform,
+					resourceId,
+					...childProperties
+				} = widgetProperties;
+
+				const resourceProp = resource({
+					template: resourceTemplate,
+					transform: resourceTransform,
+					options: resourceOptions || (resourceId && this._resource.createOptions(resourceId)),
+					initOptions: resourceInitOptions
+				});
+
+				return w(WidgetConstructor, { ...childProperties, resource: resourceProp }, renderChildren());
+			});
+
 			const registry = registryFactory();
 			const themeContext = registerThemeInjector(
 				this._getVariant() ? { theme: this._getTheme(), variant: this._getVariant() } : this._getTheme(),

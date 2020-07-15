@@ -805,6 +805,7 @@ function createFactory(callback: any, middlewares: any, key?: any): any {
 		return factory;
 	};
 	callback.keys = keys;
+	factory.hasResource = Boolean(middlewares['resource']);
 	factory.keys = keys;
 	factory.isFactory = true;
 	return factory;
