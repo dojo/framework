@@ -176,9 +176,6 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				...this._attributesToProperties(attributes)
 			};
 
-			const props = [...attributes, ...properties].filter(
-				(propName) => !WidgetConstructor.hasResource || propName !== 'resource'
-			);
 			const resourceProps = [
 				'dojoResourceTemplate',
 				'dojoResourceInitOptions',
@@ -186,13 +183,14 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 				'dojoResourceTransform',
 				'dojoResourceId'
 			];
-
-			const useResource =
-				WidgetConstructor.hasResource &&
-				!resourceProps.some((resourceProp) => props.indexOf(resourceProp) > -1);
+			let props = [...attributes, ...properties];
+			const middlewares = WidgetConstructor.isFactory && WidgetConstructor().middlewares;
+			const middlewaresKeys = middlewares && Object.keys(middlewares);
+			const hasResource = middlewaresKeys && middlewaresKeys.some((key) => middlewares[key].isResourceMiddleware);
+			const useResource = hasResource && !resourceProps.some((resourceProp) => props.indexOf(resourceProp) > -1);
 
 			if (useResource) {
-				props.push(...resourceProps);
+				props = [...props.filter((propName) => !useResource || propName !== 'resource'), ...resourceProps];
 				this._properties = {
 					...this._properties,
 					dojoResourceTemplate: createMemoryResourceTemplate(),
