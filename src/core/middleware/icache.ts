@@ -124,7 +124,7 @@ const icacheFactory = factory(
 	}
 );
 
-export const createICacheMiddleware = <S = void>() => icacheFactory.returns<ICacheResult<S>>();
+export const createICacheMiddleware = <S = void>() => icacheFactory.withType<ICacheResult<S>>();
 
 export const icache = createICacheMiddleware();
 

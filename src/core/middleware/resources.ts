@@ -1107,7 +1107,7 @@ const resourceMiddlewareFactory = factory(
 );
 
 export function createResourceMiddleware<MIDDLEWARE = void>() {
-	return resourceMiddlewareFactory.returns<
+	return resourceMiddlewareFactory.withType<
 		ResourceMiddleware<MIDDLEWARE>,
 		MIDDLEWARE extends void ? {} : ResourceMiddlewareProperties<MIDDLEWARE>
 	>();

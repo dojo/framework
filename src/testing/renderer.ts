@@ -86,7 +86,7 @@ interface RendererOptions {
 		MiddlewareResultFactory<any, any, any, any>,
 		Pick<
 			MiddlewareResultFactory<any, any, any, any>,
-			Exclude<keyof MiddlewareResultFactory<any, any, any, any>, 'returns'>
+			Exclude<keyof MiddlewareResultFactory<any, any, any, any>, 'withType'>
 		>
 	][];
 }

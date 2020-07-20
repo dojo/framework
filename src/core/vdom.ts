@@ -803,7 +803,7 @@ function createFactory(callback: any, middlewares: any, key?: any): any {
 		return keys;
 	}, key ? [key] : []);
 
-	factory.returns = () => {
+	factory.withType = () => {
 		return factory;
 	};
 	callback.keys = keys;

@@ -1280,7 +1280,7 @@ export interface DefaultMiddlewareResult extends MiddlewareResult<any, any, any,
 
 export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValue> {
 	(): MiddlewareResult<Props, Children, Middleware, ReturnValue>;
-	returns: <Api extends ReturnValue, CustomProps = Props>() => MiddlewareResultFactory<
+	withType: <Api extends ReturnValue, CustomProps = Props>() => MiddlewareResultFactory<
 		CustomProps,
 		Children,
 		Middleware,
