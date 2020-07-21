@@ -1490,6 +1490,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		while (!insertBefore) {
 			const nextSibling = _wrapperSiblingMap.get(searchNode);
 			if (nextSibling) {
+				if (isBodyWrapper(nextSibling) || isHeadWrapper(nextSibling)) {
+					searchNode = nextSibling;
+					continue;
+				}
 				let domNode = nextSibling.domNode;
 				if (isWNodeWrapper(nextSibling) || isVirtualWrapper(nextSibling)) {
 					if (!nextSibling.childDomWrapperId) {
