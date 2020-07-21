@@ -1,5 +1,3 @@
-import createICacheMock from '../../../../src/testing/mocks/middleware/icache';
-
 const { describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
@@ -605,42 +603,6 @@ describe('harness', () => {
 				);
 			});
 			const h = harness(() => <App />);
-			h.expect(() => (
-				<div>
-					<button key="click-me" onclick={() => {}}>
-						Click Me 0
-					</button>
-				</div>
-			));
-			h.trigger('@click-me', 'onclick');
-			h.expect(() => (
-				<div>
-					<button key="click-me" onclick={() => {}}>
-						Click Me 1
-					</button>
-				</div>
-			));
-		});
-
-		it('should mock icache middleware', () => {
-			const factory = create({ icache });
-
-			const App = factory(({ middleware: { icache } }) => {
-				const counter = icache.get<number>('counter') || 0;
-				return (
-					<div>
-						<button
-							key="click-me"
-							onclick={() => {
-								const counter = icache.get<number>('counter') || 0;
-								icache.set('counter', counter + 1);
-							}}
-						>{`Click Me ${counter}`}</button>
-					</div>
-				);
-			});
-			const mockIcache = createICacheMock();
-			const h = harness(() => <App />, { middleware: [[icache, mockIcache]] });
 			h.expect(() => (
 				<div>
 					<button key="click-me" onclick={() => {}}>
