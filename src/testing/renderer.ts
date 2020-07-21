@@ -11,7 +11,8 @@ import {
 	OptionalWNodeFactory,
 	WidgetBaseInterface,
 	DefaultChildrenWNodeFactory,
-	VNode
+	VNode,
+	DefaultMiddlewareResult
 } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
@@ -82,13 +83,7 @@ export interface Property {
 }
 
 interface RendererOptions {
-	middleware?: [
-		MiddlewareResultFactory<any, any, any, any>,
-		Pick<
-			MiddlewareResultFactory<any, any, any, any>,
-			Exclude<keyof MiddlewareResultFactory<any, any, any, any>, 'withType'>
-		>
-	][];
+	middleware?: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][];
 }
 
 export type PropertiesComparatorFunction<T = any> = (actualProperties: T) => T;
