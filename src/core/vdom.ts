@@ -79,63 +79,61 @@ import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
 
-declare global {
-	namespace JSX {
-		type Element = WNode;
-		interface ElementAttributesProperty {
-			__properties__: {};
-		}
-		interface IntrinsicElements {
-			svg: SVGAttributes;
-			a: AnchorAttributes;
-			audio: AudioAttributes;
-			base: BaseAttributes;
-			blockquote: BlockquoteAttributes;
-			button: ButtonAttributes;
-			canvas: CanvasAttributes;
-			col: ColAttributes;
-			colgroup: ColgroupAttributes;
-			del: DelAttributes;
-			details: DetailsAttributes;
-			dialog: DialogAttributes;
-			embed: EmbedAttributes;
-			fieldset: FieldsetAttributes;
-			form: FormAttributes;
-			iframe: IFrameAttributes;
-			img: ImgAttributes;
-			ins: InsAttributes;
-			input: InputAttributes;
-			keygen: KeygenAttributes;
-			label: LabelAttributes;
-			link: LinkAttributes;
-			map: MapAttributes;
-			menu: MenuAttributes;
-			meta: MetaAttributes;
-			meter: MeterAttributes;
-			object: ObjectAttributes;
-			ol: OlAttributes;
-			optgroup: OptgroupAttributes;
-			option: OptionAttributes;
-			output: OutputAttributes;
-			param: ParamAttributes;
-			progress: ProgressAttributes;
-			q: QuoteAttributes;
-			slot: SlotAttributes;
-			select: SelectAttributes;
-			source: SourceAttributes;
-			style: StyleAttributes;
-			table: TableAttributes;
-			td: TdAttributes;
-			textarea: TextareaAttributes;
-			th: ThAttributes;
-			time: TimeAttributes;
-			track: TrackAttributes;
-			video: VideoAttributes;
-			[key: string]: VNodeProperties;
-		}
-		interface ElementChildrenAttribute {
-			__children__: {};
-		}
+export namespace tsx.JSX {
+	export type Element = WNode;
+	export interface ElementAttributesProperty {
+		__properties__: {};
+	}
+	export interface IntrinsicElements {
+		svg: SVGAttributes;
+		a: AnchorAttributes;
+		audio: AudioAttributes;
+		base: BaseAttributes;
+		blockquote: BlockquoteAttributes;
+		button: ButtonAttributes;
+		canvas: CanvasAttributes;
+		col: ColAttributes;
+		colgroup: ColgroupAttributes;
+		del: DelAttributes;
+		details: DetailsAttributes;
+		dialog: DialogAttributes;
+		embed: EmbedAttributes;
+		fieldset: FieldsetAttributes;
+		form: FormAttributes;
+		iframe: IFrameAttributes;
+		img: ImgAttributes;
+		ins: InsAttributes;
+		input: InputAttributes;
+		keygen: KeygenAttributes;
+		label: LabelAttributes;
+		link: LinkAttributes;
+		map: MapAttributes;
+		menu: MenuAttributes;
+		meta: MetaAttributes;
+		meter: MeterAttributes;
+		object: ObjectAttributes;
+		ol: OlAttributes;
+		optgroup: OptgroupAttributes;
+		option: OptionAttributes;
+		output: OutputAttributes;
+		param: ParamAttributes;
+		progress: ProgressAttributes;
+		q: QuoteAttributes;
+		slot: SlotAttributes;
+		select: SelectAttributes;
+		source: SourceAttributes;
+		style: StyleAttributes;
+		table: TableAttributes;
+		td: TdAttributes;
+		textarea: TextareaAttributes;
+		th: ThAttributes;
+		time: TimeAttributes;
+		track: TrackAttributes;
+		video: VideoAttributes;
+		[key: string]: VNodeProperties;
+	}
+	export interface ElementChildrenAttribute {
+		__children__: {};
 	}
 }
 
