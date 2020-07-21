@@ -455,6 +455,12 @@ export interface DefaultMiddlewareResult extends MiddlewareResult<any, any, any,
 
 export interface MiddlewareResultFactory<Props, Children, Middleware, ReturnValue> {
 	(): MiddlewareResult<Props, Children, Middleware, ReturnValue>;
+	withType: <Api extends ReturnValue, CustomProps = Props>() => MiddlewareResultFactory<
+		CustomProps,
+		Children,
+		Middleware,
+		Api
+	>;
 }
 
 export interface DefaultChildrenWNodeFactory<W extends WNodeFactoryTypes> {
