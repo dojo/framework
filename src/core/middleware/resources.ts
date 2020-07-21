@@ -941,170 +941,174 @@ function getResource(
 	return resource;
 }
 
-export function createResourceMiddleware<MIDDLEWARE = void>() {
-	const factory = create({ diffProperty, invalidator, destroy }).properties<
-		MIDDLEWARE extends void ? {} : ResourceMiddlewareProperties<MIDDLEWARE>
-	>();
-	return factory(
-		({ id: middlewareId, middleware: { diffProperty, invalidator, destroy } }): ResourceMiddleware<MIDDLEWARE> => {
-			const optionsMap = new Map<string, Options<MIDDLEWARE>>();
-			destroy(() => {
-				const resources = idToResourceMap.get(middlewareId);
-				if (resources) {
-					resources.forEach((resource) => {
-						if (resource.type === 'subscribed') {
-							resource.resource.unsubscribe(invalidator);
-						} else {
-							resource.resource.destroy(middlewareId);
-						}
-					});
-				}
-				idToResourceMap.delete(middlewareId);
-			});
-			diffProperty(
-				'resource',
-				(): ResourceMiddlewareProperties<MIDDLEWARE> => {
-					return {} as any;
-				},
-				({ resource: current }, { resource: next }) => {
-					if (current && next) {
-						const id = next.template.id || 'global';
-						const {
-							template: { initOptions: currentInitOptions }
-						} = current;
-						const {
-							template: { initOptions: nextInitOptions }
-						} = next;
-						if (nextInitOptions) {
-							const changed = diffInitOptions(currentInitOptions || {}, nextInitOptions);
-							if (changed) {
-								const resourceMap = templateToResourceMap.get(next.template.template);
-								if (resourceMap) {
-									const resource = resourceMap.get(id);
-									if (resource) {
-										resource.init(nextInitOptions);
-										invalidator();
-									}
+const factory = create({ diffProperty, invalidator, destroy });
+
+const resourceMiddlewareFactory = factory(
+	({ id: middlewareId, middleware: { diffProperty, invalidator, destroy } }): ResourceMiddleware => {
+		const optionsMap = new Map<string, Options<any>>();
+		destroy(() => {
+			const resources = idToResourceMap.get(middlewareId);
+			if (resources) {
+				resources.forEach((resource) => {
+					if (resource.type === 'subscribed') {
+						resource.resource.unsubscribe(invalidator);
+					} else {
+						resource.resource.destroy(middlewareId);
+					}
+				});
+			}
+			idToResourceMap.delete(middlewareId);
+		});
+		diffProperty(
+			'resource',
+			(): ResourceMiddlewareProperties<any> => {
+				return {} as any;
+			},
+			({ resource: current }, { resource: next }) => {
+				if (current && next) {
+					const id = next.template.id || 'global';
+					const {
+						template: { initOptions: currentInitOptions }
+					} = current;
+					const {
+						template: { initOptions: nextInitOptions }
+					} = next;
+					if (nextInitOptions) {
+						const changed = diffInitOptions(currentInitOptions || {}, nextInitOptions);
+						if (changed) {
+							const resourceMap = templateToResourceMap.get(next.template.template);
+							if (resourceMap) {
+								const resource = resourceMap.get(id);
+								if (resource) {
+									resource.init(nextInitOptions);
+									invalidator();
 								}
 							}
 						}
-						const nextOptions = next.options;
-						const currOptions = current.options;
-						if (currOptions && currOptions !== nextOptions) {
-							const invalidatorSet = optionInvalidatorMap.get(currOptions.options);
-							if (invalidatorSet) {
-								invalidatorSet.delete(invalidator);
-								invalidator();
-							}
-						}
 					}
-					if (next) {
-						const nextOptions = next.options;
-						const currOptions = current && current.options;
-						if (nextOptions) {
-							const options: any = (options?: Partial<ResourceOptions<any>>) => {
-								const invalidatorSet = optionInvalidatorMap.get(nextOptions.options) || new Set();
-								invalidatorSet.add(invalidator);
-								optionInvalidatorMap.set(nextOptions.options, invalidatorSet);
-								return nextOptions.options(options);
-							};
-							options.options = nextOptions.options;
-							if (!currOptions || currOptions.options !== nextOptions.options) {
-								invalidator();
-							}
-							return {
-								options,
-								template: next.template
-							} as any;
+					const nextOptions = next.options;
+					const currOptions = current.options;
+					if (currOptions && currOptions !== nextOptions) {
+						const invalidatorSet = optionInvalidatorMap.get(currOptions.options);
+						if (invalidatorSet) {
+							invalidatorSet.delete(invalidator);
+							invalidator();
 						}
 					}
 				}
-			);
-
-			const middleware = function(resource: any) {
-				if (isTemplate(resource.template)) {
-					let { template, transform, initOptions, ...rest } = resource;
-					return {
-						template: {
-							template,
-							transform,
-							id: initOptions ? `${middlewareId}/${initOptions.id}` : 'global',
-							initOptions
-						},
-						...rest
-					};
-				}
-				return resource;
-			};
-			middleware.createOptions = (key: string): Options<any> => {
-				const options = optionsMap.get(key);
-				if (options) {
-					return options;
-				}
-				const optionsWrapper = createOptionsWrapper();
-				function setOptions(options?: Partial<ResourceOptions<any>>) {
-					const invalidatorSet = optionInvalidatorMap.get(optionsWrapper.options) || new Set();
-					invalidatorSet.add(invalidator);
-					optionInvalidatorMap.set(optionsWrapper.options, invalidatorSet);
-					return optionsWrapper(options);
-				}
-				setOptions.options = optionsWrapper.options;
-				optionsMap.set(key, setOptions);
-				return setOptions;
-			};
-			middleware.getOrRead = (template: any, options: any, init?: any) => {
-				const resource = getResource(template, middlewareId, init);
-				const transform = !isTemplate(template) && template.transform;
-				const resourceOptions = transformOptions(options, transform);
-				resource.subscribeRead(invalidator, options);
-				const data = resource.getOrRead(resourceOptions);
-				if (data && transform) {
-					return data.map((items: any) => {
-						if (items) {
-							return items.map((item: any) => transformData(item, transform));
+				if (next) {
+					const nextOptions = next.options;
+					const currOptions = current && current.options;
+					if (nextOptions) {
+						const options: any = (options?: Partial<ResourceOptions<any>>) => {
+							const invalidatorSet = optionInvalidatorMap.get(nextOptions.options) || new Set();
+							invalidatorSet.add(invalidator);
+							optionInvalidatorMap.set(nextOptions.options, invalidatorSet);
+							return nextOptions.options(options);
+						};
+						options.options = nextOptions.options;
+						if (!currOptions || currOptions.options !== nextOptions.options) {
+							invalidator();
 						}
-						return items;
-					});
+						return {
+							options,
+							template: next.template
+						} as any;
+					}
 				}
-				return data;
-			};
-			middleware.find = (template: any, options: any, init?: any) => {
-				const resource = getResource(template, middlewareId, init);
-				const transform = !isTemplate(template) && template.transform;
-				const findOptions = transformOptions(options, transform);
-				resource.subscribeFind(invalidator, findOptions);
-				const result = resource.find(findOptions);
-				if (result && result.item && transform) {
-					result.item = transformData(result.item, transform);
-				}
-				return result;
-			};
+			}
+		);
 
-			middleware.meta = (template: any, options: any, request = false, init?: any) => {
-				const resource = getResource(template, middlewareId, init);
-				const transform = !isTemplate(template) && template.transform;
-				const resourceOptions = transformOptions(options, transform);
-				resource.subscribeMeta(invalidator, resourceOptions);
-				if (request) {
-					resource.subscribeRead(invalidator, resourceOptions);
-				}
-				return resource.meta(resourceOptions, request);
-			};
-			middleware.isLoading = (template: any, options: any, init?: any) => {
-				const resource = getResource(template, middlewareId, init);
-				const transform = !isTemplate(template) && template.transform;
-				const resourceOptions = transformOptions(options, transform);
-				resource.subscribeLoading(invalidator, resourceOptions);
-				return resource.isLoading(resourceOptions);
-			};
-			middleware.isFailed = (template: any, options: any, init?: any) => {
-				const resource = getResource(template, middlewareId, init);
-				const transform = !isTemplate(template) && template.transform;
-				const resourceOptions = transformOptions(options, transform);
-				resource.subscribeFailed(invalidator, resourceOptions);
-				return resource.isFailed(resourceOptions);
-			};
-			return middleware;
-		}
-	);
+		const middleware = function(resource: any) {
+			if (isTemplate(resource.template)) {
+				let { template, transform, initOptions, ...rest } = resource;
+				return {
+					template: {
+						template,
+						transform,
+						id: initOptions ? `${middlewareId}/${initOptions.id}` : 'global',
+						initOptions
+					},
+					...rest
+				};
+			}
+			return resource;
+		};
+		middleware.createOptions = (key: string): Options<any> => {
+			const options = optionsMap.get(key);
+			if (options) {
+				return options;
+			}
+			const optionsWrapper = createOptionsWrapper();
+			function setOptions(options?: Partial<ResourceOptions<any>>) {
+				const invalidatorSet = optionInvalidatorMap.get(optionsWrapper.options) || new Set();
+				invalidatorSet.add(invalidator);
+				optionInvalidatorMap.set(optionsWrapper.options, invalidatorSet);
+				return optionsWrapper(options);
+			}
+			setOptions.options = optionsWrapper.options;
+			optionsMap.set(key, setOptions);
+			return setOptions;
+		};
+		middleware.getOrRead = (template: any, options: any, init?: any) => {
+			const resource = getResource(template, middlewareId, init);
+			const transform = !isTemplate(template) && template.transform;
+			const resourceOptions = transformOptions(options, transform);
+			resource.subscribeRead(invalidator, options);
+			const data = resource.getOrRead(resourceOptions);
+			if (data && transform) {
+				return data.map((items: any) => {
+					if (items) {
+						return items.map((item: any) => transformData(item, transform));
+					}
+					return items;
+				});
+			}
+			return data;
+		};
+		middleware.find = (template: any, options: any, init?: any) => {
+			const resource = getResource(template, middlewareId, init);
+			const transform = !isTemplate(template) && template.transform;
+			const findOptions = transformOptions(options, transform);
+			resource.subscribeFind(invalidator, findOptions);
+			const result = resource.find(findOptions);
+			if (result && result.item && transform) {
+				result.item = transformData(result.item, transform);
+			}
+			return result;
+		};
+
+		middleware.meta = (template: any, options: any, request = false, init?: any) => {
+			const resource = getResource(template, middlewareId, init);
+			const transform = !isTemplate(template) && template.transform;
+			const resourceOptions = transformOptions(options, transform);
+			resource.subscribeMeta(invalidator, resourceOptions);
+			if (request) {
+				resource.subscribeRead(invalidator, resourceOptions);
+			}
+			return resource.meta(resourceOptions, request);
+		};
+		middleware.isLoading = (template: any, options: any, init?: any) => {
+			const resource = getResource(template, middlewareId, init);
+			const transform = !isTemplate(template) && template.transform;
+			const resourceOptions = transformOptions(options, transform);
+			resource.subscribeLoading(invalidator, resourceOptions);
+			return resource.isLoading(resourceOptions);
+		};
+		middleware.isFailed = (template: any, options: any, init?: any) => {
+			const resource = getResource(template, middlewareId, init);
+			const transform = !isTemplate(template) && template.transform;
+			const resourceOptions = transformOptions(options, transform);
+			resource.subscribeFailed(invalidator, resourceOptions);
+			return resource.isFailed(resourceOptions);
+		};
+		return middleware;
+	}
+);
+
+export function createResourceMiddleware<MIDDLEWARE = void>() {
+	return resourceMiddlewareFactory.withType<
+		ResourceMiddleware<MIDDLEWARE>,
+		MIDDLEWARE extends void ? {} : ResourceMiddlewareProperties<MIDDLEWARE>
+	>();
 }
