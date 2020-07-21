@@ -980,8 +980,8 @@ const resourceMiddlewareFactory = factory(
 				return {} as any;
 			},
 			(
-				{ resource: currentProp }: { resource: ResourceProperty<MIDDLEWARE> | ResourceTemplateWrapper },
-				{ resource: nextProp }: { resource: ResourceProperty<MIDDLEWARE> | ResourceTemplateWrapper }
+				{ resource: currentProp }: { resource: ResourceProperty<any> | ResourceTemplateWrapper },
+				{ resource: nextProp }: { resource: ResourceProperty<any> | ResourceTemplateWrapper }
 			) => {
 				if (!nextProp || !nextProp.template) {
 					return middleware({
