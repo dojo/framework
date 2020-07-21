@@ -945,6 +945,21 @@ const factory = create({ diffProperty, invalidator, destroy });
 
 const resourceMiddlewareFactory = factory(
 	({ id: middlewareId, middleware: { diffProperty, invalidator, destroy } }): ResourceMiddleware => {
+		const middleware = function(resource: any) {
+			if (isTemplate(resource.template)) {
+				let { template, transform, initOptions, ...rest } = resource;
+				return {
+					template: {
+						template,
+						transform,
+						id: initOptions ? `${middlewareId}/${initOptions.id}` : 'global',
+						initOptions
+					},
+					...rest
+				};
+			}
+			return resource;
+		};
 		const optionsMap = new Map<string, Options<any>>();
 		destroy(() => {
 			const resources = idToResourceMap.get(middlewareId);
@@ -964,7 +979,20 @@ const resourceMiddlewareFactory = factory(
 			(): ResourceMiddlewareProperties<any> => {
 				return {} as any;
 			},
-			({ resource: current }, { resource: next }) => {
+			(
+				{ resource: currentProp }: { resource: ResourceProperty<any> | ResourceTemplateWrapper },
+				{ resource: nextProp }: { resource: ResourceProperty<any> | ResourceTemplateWrapper }
+			) => {
+				if (!nextProp || !nextProp.template) {
+					return middleware({
+						template: createMemoryResourceTemplate(),
+						initOptions: { data: [], id: '' },
+						...nextProp
+					});
+				}
+
+				const next = nextProp && middleware(nextProp);
+				const current = currentProp && middleware(currentProp);
 				if (current && next) {
 					const id = next.template.id || 'global';
 					const {
@@ -1016,24 +1044,11 @@ const resourceMiddlewareFactory = factory(
 						} as any;
 					}
 				}
+
+				return next;
 			}
 		);
 
-		const middleware = function(resource: any) {
-			if (isTemplate(resource.template)) {
-				let { template, transform, initOptions, ...rest } = resource;
-				return {
-					template: {
-						template,
-						transform,
-						id: initOptions ? `${middlewareId}/${initOptions.id}` : 'global',
-						initOptions
-					},
-					...rest
-				};
-			}
-			return resource;
-		};
 		middleware.createOptions = (key: string): Options<any> => {
 			const options = optionsMap.get(key);
 			if (options) {

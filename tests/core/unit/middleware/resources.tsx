@@ -2,6 +2,7 @@ const { it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { describe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { renderer, tsx, create } from '../../../../src/core/vdom';
+import testRenderer, { assertion } from '../../../../src/testing/renderer';
 import Map from '../../../../src/shim/Map';
 import '../../../../src/shim/Promise';
 import { createResolvers } from '../../support/util';
@@ -89,6 +90,37 @@ describe('Resources Middleware', () => {
 		set({ page: 2 });
 		resolvers.resolveRAF();
 		assert.strictEqual(root.innerHTML, `<div><div>${JSON.stringify([[{ hello: '2' }]])}</div><div>2</div></div>`);
+	});
+
+	it('should provide a default if no resource property is passed', () => {
+		const factory = create({ resource: createResourceMiddleware<{}>() });
+		const Widget = factory(({ id, properties }) => {
+			const { resource } = properties();
+			return resource && <div>contents</div>;
+		});
+
+		const r = testRenderer(() => <Widget resource={undefined as any} />);
+		r.expect(assertion(() => <div>contents</div>));
+	});
+
+	it('should convert resource options to a resource prop', () => {
+		const root = document.createElement('div');
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+
+		const Widget = factory(({ id, properties, middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			return <div>{JSON.stringify(getOrRead(template, options()))}</div>;
+		});
+
+		const template = createMemoryResourceTemplate<{ hello: string }>();
+		const r = renderer(() => (
+			<Widget resource={{ template, initOptions: { data: [{ hello: '1' }], id: 'id' } } as any} />
+		));
+		r.mount({ domNode: root });
+		assert.strictEqual(root.innerHTML, `<div>${JSON.stringify([[{ hello: '1' }]])}</div>`);
 	});
 
 	it('should be able to perform a read with a meta request', () => {
