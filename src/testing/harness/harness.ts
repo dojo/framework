@@ -8,7 +8,7 @@ import {
 	Callback,
 	RenderResult,
 	MiddlewareResultFactory,
-	MiddlewareResult
+	DefaultMiddlewareResult
 } from '../../core/interfaces';
 import { WidgetBase } from '../../core/WidgetBase';
 import { isWidgetFunction } from '../../core/Registry';
@@ -57,7 +57,7 @@ export interface HarnessAPI {
 
 interface HarnessOptions {
 	customComparator?: CustomComparator[];
-	middleware?: [MiddlewareResultFactory<any, any, any, any>, () => MiddlewareResult<any, any, any, any>][];
+	middleware?: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][];
 }
 
 const factory = create();
@@ -75,10 +75,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
-	let mockMiddleware: [
-		MiddlewareResultFactory<any, any, any, any>,
-		() => MiddlewareResult<any, any, any, any>
-	][] = [];
+	let mockMiddleware: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][] = [];
 	if (Array.isArray(options)) {
 		customComparator = options;
 	} else {
