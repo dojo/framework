@@ -7,7 +7,8 @@ import {
 	VNode,
 	Callback,
 	RenderResult,
-	MiddlewareResultFactory
+	MiddlewareResultFactory,
+	DefaultMiddlewareResult
 } from '../../core/interfaces';
 import { WidgetBase } from '../../core/WidgetBase';
 import { isWidgetFunction } from '../../core/Registry';
@@ -56,10 +57,7 @@ export interface HarnessAPI {
 
 interface HarnessOptions {
 	customComparator?: CustomComparator[];
-	middleware?: [
-		MiddlewareResultFactory<any, any, any, any>,
-		Exclude<keyof MiddlewareResultFactory<any, any, any, any>, 'withType'>
-	][];
+	middleware?: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][];
 }
 
 const factory = create();
@@ -77,10 +75,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
 	let customComparator: CustomComparator[] = [];
-	let mockMiddleware: [
-		MiddlewareResultFactory<any, any, any, any>,
-		MiddlewareResultFactory<any, any, any, any>
-	][] = [];
+	let mockMiddleware: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][] = [];
 	if (Array.isArray(options)) {
 		customComparator = options;
 	} else {
