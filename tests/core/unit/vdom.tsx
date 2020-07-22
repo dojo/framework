@@ -4848,6 +4848,74 @@ jsdomDescribe('vdom', () => {
 			results = document.querySelectorAll('.body-span');
 			assert.lengthOf(results, 0);
 		});
+
+		it('should support attaching body nodes in nested widgets', () => {
+			const factory = create({ icache }).properties<any>();
+
+			const Foo = factory(function Foo() {
+				return (
+					<div id="wrapper-2">
+						<body>
+							<div id="body-2" />
+						</body>
+					</div>
+				);
+			});
+
+			const Bar = factory(function Bar({ properties }) {
+				return (
+					<div id="wrapper-1">
+						<Foo close={() => properties().close()} />
+						<body>
+							<div id="body-1" />
+						</body>
+					</div>
+				);
+			});
+
+			const App = factory(function App({ middleware: { icache } }) {
+				const show = icache.getOrSet('show', false);
+				return (
+					<div>
+						<button
+							onclick={() => {
+								icache.set('show', (current) => !current);
+							}}
+						>
+							Open/Close
+						</button>
+						{show && (
+							<Bar
+								close={() => {
+									icache.set('show', false);
+								}}
+							/>
+						)}
+						<h2>Start editing to see some magic happen</h2>
+					</div>
+				);
+			});
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			(root.children[0].children[0] as any).click();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button>Open/Close</button><div id="wrapper-1"><div id="wrapper-2"></div></div><h2>Start editing to see some magic happen</h2></div>'
+			);
+			assert.lengthOf(document.querySelectorAll('#body-1'), 1);
+			assert.lengthOf(document.querySelectorAll('#body-2'), 1);
+			(root.children[0].children[0] as any).click();
+			resolvers.resolve();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button>Open/Close</button><h2>Start editing to see some magic happen</h2></div>'
+			);
+			assert.lengthOf(document.querySelectorAll('#body-1'), 0);
+			assert.lengthOf(document.querySelectorAll('#body-2'), 0);
+		});
 	});
 
 	describe('head node', () => {
@@ -5099,6 +5167,74 @@ jsdomDescribe('vdom', () => {
 			resolvers.resolveRAF();
 			results = document.querySelectorAll('.head-span');
 			assert.lengthOf(results, 0);
+		});
+
+		it('should support attaching head nodes in nested widgets', () => {
+			const factory = create({ icache }).properties<any>();
+
+			const Foo = factory(function Foo() {
+				return (
+					<div id="wrapper-2">
+						<head>
+							<div id="head-2" />
+						</head>
+					</div>
+				);
+			});
+
+			const Bar = factory(function Bar({ properties }) {
+				return (
+					<div id="wrapper-1">
+						<Foo close={() => properties().close()} />
+						<head>
+							<div id="head-1" />
+						</head>
+					</div>
+				);
+			});
+
+			const App = factory(function App({ middleware: { icache } }) {
+				const show = icache.getOrSet('show', false);
+				return (
+					<div>
+						<button
+							onclick={() => {
+								icache.set('show', (current) => !current);
+							}}
+						>
+							Open/Close
+						</button>
+						{show && (
+							<Bar
+								close={() => {
+									icache.set('show', false);
+								}}
+							/>
+						)}
+						<h2>Start editing to see some magic happen</h2>
+					</div>
+				);
+			});
+
+			const r = renderer(() => w(App, {}));
+			r.mount({ domNode: root });
+			(root.children[0].children[0] as any).click();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button>Open/Close</button><div id="wrapper-1"><div id="wrapper-2"></div></div><h2>Start editing to see some magic happen</h2></div>'
+			);
+			assert.lengthOf(document.querySelectorAll('#head-1'), 1);
+			assert.lengthOf(document.querySelectorAll('#head-2'), 1);
+			(root.children[0].children[0] as any).click();
+			resolvers.resolve();
+			resolvers.resolve();
+			assert.strictEqual(
+				root.innerHTML,
+				'<div><button>Open/Close</button><h2>Start editing to see some magic happen</h2></div>'
+			);
+			assert.lengthOf(document.querySelectorAll('#head-1'), 0);
+			assert.lengthOf(document.querySelectorAll('#head-2'), 0);
 		});
 	});
 
