@@ -34,18 +34,16 @@ import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
 
-declare global {
-	namespace JSX {
-		type Element = WNode;
-		interface ElementAttributesProperty {
-			__properties__: {};
-		}
-		interface IntrinsicElements {
-			[key: string]: VNodeProperties;
-		}
-		interface ElementChildrenAttribute {
-			__children__: {};
-		}
+export namespace tsx.JSX {
+	export type Element = WNode;
+	export interface ElementAttributesProperty {
+		__properties__: {};
+	}
+	export interface IntrinsicElements {
+		[key: string]: VNodeProperties;
+	}
+	export interface ElementChildrenAttribute {
+		__children__: {};
 	}
 }
 
