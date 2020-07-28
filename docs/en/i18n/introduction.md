@@ -79,6 +79,8 @@ export default {
 ## Adding a widget language localization bundle
 
 -   Supporting two locales - English as the default, together with a French translation that is activated for any users that have `fr` set as their primary language.
+-         Unless a locale is specifically set for you application, the appropriate `supportedLocale` will be used according to the browsers locale settings where available.
+-   To run the app build with i18n you will need to install `cldr-data` as a dependency into your application or the build will fail.
 
 > .dojorc
 
@@ -113,6 +115,8 @@ export default {
 	content: 'Ceci est un widget internationalisé'
 };
 ```
+
+Note that the fs language bundle simply returns the message bundle, not an object containing a message bundle like the default locale file.
 
 ## Specifying a root locale within an application
 

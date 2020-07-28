@@ -57,6 +57,17 @@ export default {
 };
 ```
 
+> .dojorc
+
+```ts
+{
+	"build-app": {
+		"locale": "en",
+		"supportedLocales": [ "fr", "ar", "ja" ]
+	}
+}
+```
+
 ## Importing and using bundles
 
 The default language module for a bundle is `import`ed like any other TypeScript module into each widget that requires use of the set of messages contained within the bundle.
@@ -400,6 +411,10 @@ export class MyWidget extends WidgetBase {
 			}),
 			w(WidgetB, {
 				i18nBundle: overrideMapForWidgetB
+			}),
+			// This example partially overrides the overrideKey value in the widgetB1 bundle
+			w(WidgetC, {
+				i18nBundle: { ...widgetB1, { overrideKey: 'abc' }}
 			})
 		];
 	}
