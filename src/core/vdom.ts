@@ -151,6 +151,7 @@ export interface BaseNodeWrapper {
 	hasAnimations?: boolean;
 	parentId: string;
 	childDomWrapperId?: string;
+	reparent?: string;
 }
 
 export interface WNodeWrapper extends BaseNodeWrapper {
@@ -234,6 +235,7 @@ interface ProcessMeta {
 	mergeNodes?: Node[];
 	oldIndex?: number;
 	newIndex?: number;
+	currentKeyMap?: Map<string, DNodeWrapper>;
 }
 
 interface InvalidationQueueItem {
@@ -1417,7 +1419,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				parentId: parent.id,
 				requiresInsertBefore: insertBefore,
 				hasParentWNode,
-				namespace: namespace
+				namespace: namespace,
+				reparent: hasParentWNode ? parent.reparent : undefined
 			} as DNodeWrapper;
 			if (isVNode(renderedItem)) {
 				if (renderedItem.deferredPropertiesCallback) {
@@ -1501,12 +1504,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 					if (nextSibling.childDomWrapperId) {
 						const childWrapper = _idToWrapperMap.get(nextSibling.childDomWrapperId);
-						if (childWrapper && !isBodyWrapper(childWrapper) && !isHeadWrapper(childWrapper)) {
+						if (
+							childWrapper &&
+							!childWrapper.reparent &&
+							!isBodyWrapper(childWrapper) &&
+							!isHeadWrapper(childWrapper)
+						) {
 							domNode = childWrapper.domNode;
 						}
 					}
 				}
-				if (domNode && domNode.parentNode) {
+				if (!nextSibling.reparent && domNode && domNode.parentNode) {
 					insertBefore = domNode;
 					break;
 				}
@@ -1900,6 +1908,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					}
 				}
 				item.next.inserted = true;
+				item.next.reparent = undefined;
 			} else if (item.type === 'update') {
 				const {
 					next,
@@ -1973,46 +1982,46 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		checkDistinguishable(childNodes, index, parentWNodeWrapper);
 	}
 
-	function createKeyMap(wrappers: DNodeWrapper[]): (string | number)[] | false {
-		const keys: (string | number)[] = [];
+	function createKeyMap(wrappers: DNodeWrapper[]): Map<string, DNodeWrapper> {
+		const keys = new Map();
 		for (let i = 0; i < wrappers.length; i++) {
 			const wrapper = wrappers[i];
 			if (wrapper.node.properties.key != null) {
-				keys.push(wrapper.node.properties.key);
-			} else {
-				return false;
+				keys.set(wrapper.node.properties.key, wrapper);
 			}
 		}
 		return keys;
 	}
 
 	function _process(current: DNodeWrapper[], next: DNodeWrapper[], meta: ProcessMeta = {}): void {
-		let { mergeNodes = [], oldIndex = 0, newIndex = 0 } = meta;
+		let { mergeNodes = [], oldIndex = 0, newIndex = 0, currentKeyMap } = meta;
 		const currentLength = current.length;
 		const nextLength = next.length;
 		const hasPreviousSiblings = currentLength > 1 || (currentLength > 0 && currentLength < nextLength);
 		let instructions: Instruction[] = [];
 		let replace = false;
-		if (oldIndex === 0 && newIndex === 0 && currentLength) {
-			const currentKeys = createKeyMap(current);
-			if (currentKeys) {
-				const nextKeys = createKeyMap(next);
-				if (nextKeys) {
-					for (let i = 0; i < currentKeys.length; i++) {
-						if (nextKeys.indexOf(currentKeys[i]) !== -1) {
+		if (!currentKeyMap) {
+			currentKeyMap = createKeyMap(current);
+			if (currentKeyMap.size === currentLength) {
+				const nextKeyMap = createKeyMap(next);
+				if (nextKeyMap.size === nextLength) {
+					const currentEntries = [...currentKeyMap.entries()];
+					for (let i = 0; i < currentEntries.length; i++) {
+						const [key, value] = currentEntries[i];
+						if (nextKeyMap.has(key)) {
 							instructions = [];
 							replace = false;
 							break;
 						}
 						replace = true;
-						instructions.push({ current: current[i], next: undefined });
+						instructions.push({ current: value, next: undefined });
 					}
 				}
 			}
 		}
 
 		if (replace || (currentLength === 0 && !_mountOptions.merge)) {
-			for (let i = 0; i < next.length; i++) {
+			for (let i = 0; i < nextLength; i++) {
 				instructions.push({ current: undefined, next: next[i] });
 			}
 		} else {
@@ -2020,18 +2029,31 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				let currentWrapper = oldIndex < currentLength ? current[oldIndex] : undefined;
 				const nextWrapper = next[newIndex];
 				nextWrapper.hasPreviousSiblings = hasPreviousSiblings;
-
 				_processMergeNodes(nextWrapper, mergeNodes);
-
 				if (currentWrapper && same(currentWrapper, nextWrapper)) {
 					oldIndex++;
 					newIndex++;
 					if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper)) {
 						nextWrapper.inserted = currentWrapper.inserted;
 					}
-					instructions.push({ current: currentWrapper, next: nextWrapper });
+					if (isVNodeWrapper(currentWrapper) && isVNodeWrapper(nextWrapper) && nextWrapper.reparent) {
+						nextWrapper.domNode = currentWrapper.domNode;
+						nextWrapper.reparent = currentWrapper.id;
+						currentWrapper.reparent = currentWrapper.id;
+						instructions.push({ current: currentWrapper, next: undefined });
+						instructions.push({ current: undefined, next: nextWrapper });
+					} else {
+						instructions.push({ current: currentWrapper, next: nextWrapper });
+					}
 				} else if (!currentWrapper || findIndexOfChild(current, nextWrapper, oldIndex + 1) === -1) {
-					has('dojo-debug') && current.length && distinguishableCheck(next, newIndex);
+					has('dojo-debug') && currentLength && distinguishableCheck(next, newIndex);
+					const foundWrapper = currentKeyMap.get(nextWrapper.node.properties.key);
+					if (foundWrapper && same(foundWrapper, nextWrapper)) {
+						const { domNode, id } = foundWrapper;
+						nextWrapper.domNode = domNode;
+						nextWrapper.reparent = id;
+						currentKeyMap.delete(nextWrapper.node.properties.key);
+					}
 					instructions.push({ current: undefined, next: nextWrapper });
 					newIndex++;
 				} else if (findIndexOfChild(next, currentWrapper, newIndex + 1) === -1) {
@@ -2041,6 +2063,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				} else {
 					has('dojo-debug') && distinguishableCheck(next, newIndex);
 					has('dojo-debug') && distinguishableCheck(current, oldIndex);
+					const foundWrapper = currentKeyMap.get(nextWrapper.node.properties.key);
+					if (foundWrapper && same(foundWrapper, nextWrapper)) {
+						const { domNode, id } = foundWrapper;
+						nextWrapper.domNode = domNode;
+						nextWrapper.reparent = id;
+						foundWrapper.reparent = id;
+						currentWrapper.reparent = id;
+						currentKeyMap.delete(nextWrapper.node.properties.key);
+						instructions.push({ current: foundWrapper, next: undefined });
+					}
 					instructions.push({ current: currentWrapper, next: undefined });
 					instructions.push({ current: undefined, next: nextWrapper });
 					oldIndex++;
@@ -2048,9 +2080,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				}
 			}
 			if (newIndex < nextLength) {
-				_processQueue.push({ current, next, meta: { mergeNodes, oldIndex, newIndex } });
+				_processQueue.push({
+					current,
+					next,
+					meta: { mergeNodes, oldIndex, newIndex, currentKeyMap }
+				});
 			}
 			if (currentLength > oldIndex && newIndex >= nextLength) {
+				currentKeyMap.clear();
 				for (let i = oldIndex; i < currentLength; i++) {
 					has('dojo-debug') && distinguishableCheck(current, i);
 					instructions.push({ current: current[i], next: undefined });
@@ -2252,9 +2289,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (!parentInvalidate && !(Constructor as any).isWNodeWrapper) {
 			parentInvalidate = invalidate;
 		}
+		let currentChildren: undefined | DNodeWrapper[] = undefined;
+		if (next.reparent) {
+			currentChildren = _idToChildrenWrappers.get(next.reparent);
+			_idToChildrenWrappers.delete(next.reparent);
+			next.reparent = undefined;
+		}
 
 		return {
 			item: {
+				current: currentChildren,
 				next: children,
 				meta: { mergeNodes: next.mergeNodes }
 			},
@@ -2357,14 +2401,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_idToWrapperMap.delete(current.id);
 		const meta = widgetMetaMap.get(current.id);
 		let currentChildren = _idToChildrenWrappers.get(current.id);
-		_idToChildrenWrappers.delete(current.id);
 		_wrapperSiblingMap.delete(current);
-		let processResult: ProcessResult = {
-			item: {
-				current: currentChildren,
-				meta: {}
-			}
-		};
+		let processResult: ProcessResult = {};
+		if (!current.reparent) {
+			_idToChildrenWrappers.delete(current.id);
+			processResult = {
+				item: {
+					current: currentChildren,
+					meta: {}
+				}
+			};
+		}
 		if (meta) {
 			meta.registryHandler && meta.registryHandler.destroy();
 			destroyHandles(meta);
@@ -2451,15 +2498,22 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					parentDomNode: parentDomNode,
 					type: 'create'
 			  };
-		if (children) {
+
+		let currentChildren: DNodeWrapper[] | undefined = undefined;
+		if (next.reparent) {
+			currentChildren = _idToChildrenWrappers.get(next.reparent);
+			_idToChildrenWrappers.delete(next.reparent);
+		}
+
+		if (children || currentChildren) {
 			return {
 				item: {
-					current: [],
+					current: currentChildren,
 					next: children,
 					meta: { mergeNodes }
 				},
 				dom,
-				widget: isVirtual ? { type: 'attach', id: (next as any).id, attached: false } : undefined
+				widget: isVirtual ? { type: 'attach', id: next.id, attached: false } : undefined
 			};
 		}
 		return { dom };
@@ -2491,6 +2545,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function _removeDom({ current }: RemoveDomInstruction): ProcessResult {
+		if (current.reparent) {
+			return {};
+		}
 		const isSpecial = isSpecialWrapper(current);
 		const children = _idToChildrenWrappers.get(current.id);
 		_idToChildrenWrappers.delete(current.id);

@@ -2,6 +2,7 @@ const { afterEach, beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import global from '../../../src/shim/global';
+import { from as arrayFrom } from '../../../src/shim/array';
 import { spy, stub, SinonSpy, SinonStub } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
@@ -2349,7 +2350,7 @@ jsdomDescribe('vdom', () => {
 				}
 
 				render() {
-					return [w(Qux, { key: '1' }), v('div', [w(Qux, { key: '2' })])];
+					return [w(Qux, { key: '1' }), v('div', { id: 'dovvy', key: 'divvy' }, [w(Qux, { key: '2' })])];
 				}
 			}
 
@@ -6312,10 +6313,10 @@ jsdomDescribe('vdom', () => {
 		it('can distinguish between falsy keys when replacing', () => {
 			const [Widget, meta] = getWidget(
 				v('div', [
-					v('span', { key: false as any }),
-					v('span', { key: null as any }),
-					v('span', { key: '' }),
-					v('span', {})
+					v('span', { id: 'false', key: false as any }),
+					v('span', { id: 'null', key: null as any }),
+					v('span', { id: 'empty', key: '' }),
+					v('span', { id: 'none' })
 				])
 			);
 			const r = renderer(() => w(Widget, {}));
@@ -6330,7 +6331,7 @@ jsdomDescribe('vdom', () => {
 			const thirdSpan = root.childNodes[2];
 			const fourthSpan = root.childNodes[3];
 
-			meta.setRenderResult(v('div', [v('span', { key: 0 })]));
+			meta.setRenderResult(v('div', [v('span', { id: 'zero', key: 0 })]));
 
 			assert.lengthOf(root.childNodes, 1);
 			const newSpan = root.childNodes[0];
@@ -6381,21 +6382,44 @@ jsdomDescribe('vdom', () => {
 		});
 
 		it('does not reorder nodes based on keys', () => {
-			const [Widget, meta] = getWidget(v('div', [v('span', { key: 'a' }), v('span', { key: 'b' })]));
+			const [Widget, meta] = getWidget(
+				v('div', [
+					v('span', { key: 'a', id: 'a' }),
+					v('span', { key: '1', id: '1' }),
+					v('span', { key: '2', id: '2' }),
+					v('span', { key: '3', id: '3' }),
+					v('span', { key: '4', id: '4' }),
+					v('span', { key: '5', id: '5' }),
+					v('span', { key: '6', id: '6' }),
+					v('span', { key: '7', id: '7' }),
+					v('span', { key: 'b', id: 'b' })
+				])
+			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
 			r.mount({ domNode: div, sync: true });
 			const root = div.childNodes[0] as HTMLElement;
 
-			assert.lengthOf(root.childNodes, 2);
-			const firstSpan = root.childNodes[0];
-			const lastSpan = root.childNodes[1];
+			assert.lengthOf(root.childNodes, 9);
+			const firstSpan = root.firstChild;
+			const lastSpan = root.lastChild;
 
-			meta.setRenderResult(v('div', [v('span', { key: 'b' }), v('span', { key: 'a' })]));
-
-			assert.lengthOf(root.childNodes, 2);
-			assert.notStrictEqual(root.childNodes[0], lastSpan);
-			assert.notStrictEqual(root.childNodes[1], firstSpan);
+			meta.setRenderResult(
+				v('div', [
+					v('span', { key: 'b', id: 'b' }),
+					v('span', { key: '1', id: '1' }),
+					v('span', { key: '2', id: '2' }),
+					v('span', { key: '3', id: '3' }),
+					v('span', { key: '4', id: '4' }),
+					v('span', { key: '5', id: '5' }),
+					v('span', { key: '6', id: '6' }),
+					v('span', { key: '7', id: '7' }),
+					v('span', { key: 'a', id: 'a' })
+				])
+			);
+			assert.lengthOf(root.childNodes, 9);
+			assert.strictEqual(root.firstChild, lastSpan);
+			assert.strictEqual(root.lastChild, firstSpan);
 		});
 
 		it('can insert text nodes', () => {
@@ -6417,7 +6441,17 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.childNodes[2], lastSpan);
 		});
 
-		it('Can update, insert and remove only affected nodes', () => {
+		it('Can update, insert and remove only affected vnodes', () => {
+			let onDetachStub = stub();
+			class Other extends WidgetBase {
+				onDetach() {
+					onDetachStub();
+				}
+				render() {
+					const { key } = this.properties;
+					return v('div', { key });
+				}
+			}
 			const [Widget, meta] = getWidget(
 				v('div', [
 					v('span', { key: '1', id: '1' }),
@@ -6427,7 +6461,7 @@ jsdomDescribe('vdom', () => {
 					v('span', { key: '5', id: '5' }),
 					v('span', { key: '6', id: '6' }),
 					v('span', { key: '7', id: '7' }),
-					v('span', { key: '8', id: '8' }),
+					v('span', { key: '8', id: '8' }, [w(Other, { key: 'widget-8' })]),
 					v('span', { key: '9', id: '9' }),
 					v('span', { key: '10', id: '10' }),
 					v('span', { key: '11', id: '11' }),
@@ -6473,32 +6507,37 @@ jsdomDescribe('vdom', () => {
 
 			assert.lengthOf(root.childNodes, 16);
 			assert.strictEqual(root.childNodes[0], childOne);
-			assert.notEqual(root.childNodes[1], childTwo);
-			assert.notEqual(root.childNodes[1], childEight);
-			assert.notEqual(root.childNodes[2], childThree);
-			assert.notEqual(root.childNodes[2], childNine);
-			assert.notEqual(root.childNodes[3], childFour);
-			assert.notEqual(root.childNodes[3], childTen);
-			assert.isNull(childFive.parentNode);
+			assert.strictEqual(root.childNodes[1], childEight);
+			assert.strictEqual(root.childNodes[2], childNine);
+			assert.strictEqual(root.childNodes[3], childTen);
 			assert.strictEqual(root.childNodes[4], childSix);
 			assert.strictEqual(root.childNodes[9], childSeven);
 			assert.strictEqual((root.childNodes[9] as HTMLElement).getAttribute('href'), 'href');
-			assert.notEqual(root.childNodes[10], childEight);
-			assert.notEqual(root.childNodes[10], childTwo);
-			assert.notEqual(root.childNodes[11], childNine);
-			assert.notEqual(root.childNodes[11], childThree);
-			assert.notEqual(root.childNodes[12], childTen);
-			assert.notEqual(root.childNodes[12], childFour);
+			assert.strictEqual(root.childNodes[10], childTwo);
+			assert.strictEqual(root.childNodes[11], childThree);
+			assert.strictEqual(root.childNodes[12], childFour);
+			assert.isNull(childFive.parentNode);
 			assert.strictEqual(root.childNodes[13], childEleven);
 			assert.strictEqual(root.childNodes[14], childTwelve);
+			assert.strictEqual(onDetachStub.callCount, 1);
 		});
 
 		it('Can update, insert and remove only affected nodes from widgets', () => {
-			class Foo extends WidgetBase<{ id?: string; href?: string }> {
+			class Other extends WidgetBase {
 				render() {
-					const { key, id, href } = this.properties;
+					const { key } = this.properties;
+					return v('div', { key });
+				}
+			}
+
+			class Foo extends WidgetBase<{ id?: string; href?: string; show?: boolean }> {
+				render() {
+					const { key, id, href, show = true } = this.properties;
+					if (!show) {
+						return null;
+					}
 					let properties = href ? { key, id, href } : { key, id };
-					return v('span', properties);
+					return v('span', properties, [v('span', { id: `child-${id}` }), w(Other, { key: `widget-${id}` })]);
 				}
 			}
 
@@ -6520,7 +6559,7 @@ jsdomDescribe('vdom', () => {
 			);
 			const r = renderer(() => w(Widget, {}));
 			const div = document.createElement('div');
-			r.mount({ domNode: div, sync: true });
+			r.mount({ domNode: div });
 			const root = div.childNodes[0] as HTMLElement;
 			const childOne = root.childNodes[0] as HTMLSpanElement;
 			const childTwo = root.childNodes[1] as HTMLSpanElement;
@@ -6555,27 +6594,43 @@ jsdomDescribe('vdom', () => {
 					w(Foo, { key: '13', id: '13' })
 				])
 			);
-
+			resolvers.resolve();
+			resolvers.resolve();
 			assert.lengthOf(root.childNodes, 16);
 			assert.strictEqual(root.childNodes[0], childOne);
-			assert.notEqual(root.childNodes[1], childTwo);
-			assert.notEqual(root.childNodes[1], childEight);
-			assert.notEqual(root.childNodes[2], childThree);
-			assert.notEqual(root.childNodes[2], childNine);
-			assert.notEqual(root.childNodes[3], childFour);
-			assert.notEqual(root.childNodes[3], childTen);
-			assert.isNull(childFive.parentNode);
+			assert.strictEqual(root.childNodes[0].childNodes[0], childOne.childNodes[0]);
+			assert.strictEqual(root.childNodes[0].childNodes[1], childOne.childNodes[1]);
+			assert.strictEqual(root.childNodes[1], childEight);
+			assert.strictEqual(root.childNodes[1].childNodes[0], childEight.childNodes[0]);
+			assert.strictEqual(root.childNodes[1].childNodes[1], childEight.childNodes[1]);
+			assert.strictEqual(root.childNodes[2], childNine);
+			assert.strictEqual(root.childNodes[2].childNodes[0], childNine.childNodes[0]);
+			assert.strictEqual(root.childNodes[2].childNodes[1], childNine.childNodes[1]);
+			assert.strictEqual(root.childNodes[3], childTen);
+			assert.strictEqual(root.childNodes[3].childNodes[0], childTen.childNodes[0]);
+			assert.strictEqual(root.childNodes[3].childNodes[1], childTen.childNodes[1]);
 			assert.strictEqual(root.childNodes[4], childSix);
+			assert.strictEqual(root.childNodes[4].childNodes[0], childSix.childNodes[0]);
+			assert.strictEqual(root.childNodes[4].childNodes[1], childSix.childNodes[1]);
 			assert.strictEqual(root.childNodes[9], childSeven);
-			assert.strictEqual((root.childNodes[9] as HTMLElement).getAttribute('href'), 'href');
-			assert.notEqual(root.childNodes[10], childEight);
-			assert.notEqual(root.childNodes[10], childTwo);
-			assert.notEqual(root.childNodes[11], childNine);
-			assert.notEqual(root.childNodes[11], childThree);
-			assert.notEqual(root.childNodes[12], childTen);
-			assert.notEqual(root.childNodes[12], childFour);
+			assert.strictEqual(root.childNodes[9].childNodes[0], childSeven.childNodes[0]);
+			assert.strictEqual(root.childNodes[9].childNodes[1], childSeven.childNodes[1]);
+			assert.strictEqual(root.childNodes[10], childTwo);
+			assert.strictEqual(root.childNodes[10].childNodes[0], childTwo.childNodes[0]);
+			assert.strictEqual(root.childNodes[10].childNodes[1], childTwo.childNodes[1]);
+			assert.strictEqual(root.childNodes[11], childThree);
+			assert.strictEqual(root.childNodes[11].childNodes[0], childThree.childNodes[0]);
+			assert.strictEqual(root.childNodes[11].childNodes[1], childThree.childNodes[1]);
+			assert.strictEqual(root.childNodes[12], childFour);
+			assert.strictEqual(root.childNodes[12].childNodes[0], childFour.childNodes[0]);
+			assert.strictEqual(root.childNodes[12].childNodes[1], childFour.childNodes[1]);
 			assert.strictEqual(root.childNodes[13], childEleven);
+			assert.strictEqual(root.childNodes[13].childNodes[0], childEleven.childNodes[0]);
+			assert.strictEqual(root.childNodes[13].childNodes[1], childEleven.childNodes[1]);
 			assert.strictEqual(root.childNodes[14], childTwelve);
+			assert.strictEqual(root.childNodes[14].childNodes[0], childTwelve.childNodes[0]);
+			assert.strictEqual(root.childNodes[14].childNodes[1], childTwelve.childNodes[1]);
+			assert.notDeepInclude(arrayFrom(root.children), childFive);
 		});
 
 		it('Can insert new nodes in a widget that returns an array from render', () => {
