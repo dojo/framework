@@ -45,8 +45,8 @@ export const Route = factory(function Route({
 	if (router) {
 		const routeContext = router.getRoute(id);
 		if (routeContext) {
-			const { queryParams, params, type, isError, isExact } = routeContext;
-			const result = renderer({ queryParams, params, type, isError, isExact, router });
+			const { queryParams, params, type, isError, isExact, wildcardSegments } = routeContext;
+			const result = renderer({ queryParams, params, type, isError, isExact, router, wildcardSegments });
 			if (result) {
 				return result;
 			}

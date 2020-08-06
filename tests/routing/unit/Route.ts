@@ -1,6 +1,7 @@
 const { beforeEach, describe, it } = intern.getInterface('bdd');
 const { assert } = intern.getPlugin('chai');
 
+import { MatchDetails } from '../../../src/routing/interfaces';
 import { WidgetBase } from '../../../src/core/WidgetBase';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
 import { Route } from '../../../src/routing/Route';
@@ -18,6 +19,11 @@ class Widget extends WidgetBase {
 let registry: Registry;
 
 const routeConfig = [
+	{
+		path: '*',
+		id: 'catch-all',
+		outlet: 'catch-all'
+	},
 	{
 		path: '/foo',
 		outlet: 'foo',
@@ -50,6 +56,21 @@ describe('Route', () => {
 		registry = new Registry();
 	});
 
+	it('returns null if rendered without an available router', () => {
+		const r = renderer(
+			() =>
+				w(Route, {
+					id: 'foo',
+					renderer() {
+						return w(Widget, {});
+					},
+					routerKey: 'Does not exist'
+				}),
+			{ middleware: [[getRegistry, mockGetRegistry]] }
+		);
+		r.expect(assertion(() => null));
+	});
+
 	it('Should render the result of the renderer when the Route matches', () => {
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 
@@ -67,7 +88,7 @@ describe('Route', () => {
 		r.expect(assertion(() => w(Widget, {}, [])));
 	});
 
-	it('Should set the type as index for exact matches', () => {
+	it('Should set the type as index for exact matches and capture wildcard segments', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
 		router.setPath('/foo');
@@ -75,7 +96,7 @@ describe('Route', () => {
 			() =>
 				w(Route, {
 					id: 'foo',
-					renderer(details: any) {
+					renderer(details: MatchDetails) {
 						matchType = details.type;
 						return null;
 					}
@@ -86,6 +107,28 @@ describe('Route', () => {
 		assert.strictEqual(matchType, 'index');
 	});
 
+	it('Should set the type as wildcard for wildcard matches', () => {
+		let matchType: string | undefined;
+		let wildcardSegments: string[] | undefined;
+		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
+		router.setPath('/match/me/if/you/can');
+		const r = renderer(
+			() =>
+				w(Route, {
+					id: 'catch-all',
+					renderer(details: MatchDetails) {
+						matchType = details.type;
+						wildcardSegments = details.wildcardSegments;
+						return null;
+					}
+				}),
+			{ middleware: [[getRegistry, mockGetRegistry]] }
+		);
+		r.expect(assertion(() => null));
+		assert.strictEqual(matchType, 'wildcard');
+		assert.deepEqual(wildcardSegments, ['match', 'me', 'if', 'you', 'can']);
+	});
+
 	it('Should set the type as error for error matches', () => {
 		let matchType: string | undefined;
 		const router = registerRouterInjector(routeConfig, registry, { HistoryManager });
@@ -94,7 +137,7 @@ describe('Route', () => {
 			() =>
 				w(Route, {
 					id: 'foo',
-					renderer(details: any) {
+					renderer(details: MatchDetails) {
 						matchType = details.type;
 						return null;
 					}
@@ -120,7 +163,7 @@ describe('Route', () => {
 			() =>
 				w(Route, {
 					id: 'foo',
-					renderer(details: any) {
+					renderer(details: MatchDetails) {
 						if (details.type === 'index') {
 							return w(Widget, {});
 						}
