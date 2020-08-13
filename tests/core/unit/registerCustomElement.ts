@@ -112,7 +112,7 @@ function createTestWidget(options: any) {
 			]);
 		}
 	}
-	return Bar;
+	return () => Promise.resolve(Bar);
 }
 
 @customElement({ tag: 'themed-element' })
@@ -361,7 +361,9 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with global theme', () => {
-		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, () =>
+			Promise.resolve(ThemedWidget)
+		);
 		customElements.define('themed-element', CustomElement);
 		element = document.createElement('themed-element');
 		document.body.appendChild(element);
@@ -383,7 +385,9 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with global theme and default variant', () => {
-		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, () =>
+			Promise.resolve(ThemedWidget)
+		);
 		customElements.define('themed-element-default-variant', CustomElement);
 		element = document.createElement('themed-element-default-variant');
 		document.body.appendChild(element);
@@ -415,7 +419,9 @@ describe('registerCustomElement', () => {
 	});
 
 	it('custom element with global theme and custom variant', () => {
-		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, ThemedWidget);
+		const CustomElement = create((ThemedWidget as any).__customElementDescriptor, () =>
+			Promise.resolve(ThemedWidget)
+		);
 		customElements.define('themed-element-custom-variant', CustomElement);
 		element = document.createElement('themed-element-custom-variant');
 		document.body.appendChild(element);
@@ -476,7 +482,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
+		const CustomElement = create((Bar as any).__customElementDescriptor, () => Promise.resolve(Bar));
 		customElements.define('registry-element', CustomElement);
 		element = document.createElement('registry-element');
 		element.id = 'registry-element';
@@ -608,8 +614,8 @@ describe('registerCustomElement', () => {
 				return v('div', {}, this.properties.focus);
 			}
 		}
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
-		const ChildCustomElement = create((WidgetB as any).__customElementDescriptor, WidgetB);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
+		const ChildCustomElement = create((WidgetB as any).__customElementDescriptor, () => Promise.resolve(WidgetB));
 
 		element = document.createElement('ce-test-focus');
 		customElements.define('ce-test-focus', CustomElement);
@@ -665,8 +671,8 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
-		const CustomElementB = create((WidgetB as any).__customElementDescriptor, WidgetB);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
+		const CustomElementB = create((WidgetB as any).__customElementDescriptor, () => Promise.resolve(WidgetB));
 
 		customElements.define('parent-element', CustomElement);
 		customElements.define('slot-b-element', CustomElementB);
@@ -707,7 +713,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('render-func-element', CustomElement);
 
@@ -742,7 +748,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('slot-array-element', CustomElement);
 
@@ -782,7 +788,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('ignore-slot-element', CustomElement);
 
@@ -823,7 +829,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('dispatch-element', CustomElement);
 
@@ -882,8 +888,8 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
-		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, WidgetB);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
+		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, () => Promise.resolve(WidgetB));
 
 		customElements.define('dispatch-node-element', CustomElement);
 		customElements.define('dispatch-element-child', CustomElementChild);
@@ -922,7 +928,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElement = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElement = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('dom-slots-element', CustomElement);
 
@@ -975,8 +981,8 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
-		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, WidgetB);
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
+		const CustomElementChild = create((WidgetB as any).__customElementDescriptor, () => Promise.resolve(WidgetB));
 
 		customElements.define('late-hydrate-parent-slots-element', CustomElementParent);
 
@@ -1017,7 +1023,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('attribute-properties-initial', CustomElementParent);
 
@@ -1048,7 +1054,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('attribute-properties-observed', CustomElementParent);
 
@@ -1079,7 +1085,7 @@ describe('registerCustomElement', () => {
 			}
 		}
 
-		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, WidgetA);
+		const CustomElementParent = create((WidgetA as any).__customElementDescriptor, () => Promise.resolve(WidgetA));
 
 		customElements.define('attribute-properties-invalid', CustomElementParent);
 
