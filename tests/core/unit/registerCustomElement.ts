@@ -166,6 +166,19 @@ describe('registerCustomElement', () => {
 		assert.equal(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
 	});
 
+	it('custom element with descriptor', () => {
+		register(Foo, (Foo as any).__customElementDescriptor);
+		element = document.createElement('foo-element');
+		document.body.appendChild(element);
+		assert.equal(element.outerHTML, '<foo-element style="display: block;"><div>hello world</div></foo-element>');
+	});
+
+	it('throws with no descriptor', () => {
+		assert.throws(() => {
+			register(Foo, false);
+		});
+	});
+
 	it('custom element with property', () => {
 		const Bar = createTestWidget({ properties: ['myProp'], childType: CustomElementChildType.DOJO });
 		const CustomElement = create((Bar as any).__customElementDescriptor, Bar);
