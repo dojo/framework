@@ -1,0 +1,3 @@
+{
+	"extends": "./node_modules/@dojo/scripts/eslint/base.json"
+}
