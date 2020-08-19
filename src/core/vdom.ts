@@ -557,7 +557,7 @@ export function v(
  * Create a VNode for an existing DOM Node.
  */
 export function dom(
-	{ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach }: DomOptions,
+	{ node, attrs = {}, props = {}, on = {}, diffType = 'none', onAttach, onDetach, onUpdate }: DomOptions,
 	children?: DNode[]
 ): DomVNode {
 	return {
@@ -570,7 +570,9 @@ export function dom(
 		domNode: node,
 		text: isElementNode(node) ? undefined : node.data,
 		diffType,
-		onAttach
+		onAttach,
+		onUpdate,
+		onDetach
 	};
 }
 
@@ -1923,6 +1925,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					processProperties(next, previousProperties);
 					runDeferredProperties(next);
 				}
+				if (isDomVNode(next.node) && next.node.onUpdate) {
+					next.node.onUpdate();
+				}
 			} else if (item.type === 'delete') {
 				const { current } = item;
 				const { exitAnimation, exitAnimationActive } = current.node.properties;
@@ -1930,6 +1935,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					_mountOptions.transition.exit(current.domNode as HTMLElement, exitAnimation, exitAnimationActive);
 				} else {
 					current.domNode!.parentNode!.removeChild(current.domNode!);
+				}
+				if (isDomVNode(current.node) && current.node.onDetach) {
+					current.node.onDetach();
 				}
 			} else if (item.type === 'attach') {
 				const { instance, attached } = item;
@@ -2603,6 +2611,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						} else if (wrapper.domNode && wrapper.domNode.parentNode) {
 							wrapper.domNode.parentNode.removeChild(wrapper.domNode);
 						}
+					} else if (isDomVNode(wrapper.node) && wrapper.node.onDetach) {
+						wrapper.node.onDetach();
 					}
 					_idToChildrenWrappers.delete(wrapper.id);
 					_idToWrapperMap.delete(wrapper.id);

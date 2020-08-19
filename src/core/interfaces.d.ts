@@ -171,6 +171,8 @@ export interface DomOptions {
 	on?: On;
 	diffType?: DiffType;
 	onAttach?: () => void;
+	onUpdate?: () => void;
+	onDetach?: () => void;
 }
 
 export interface VDomOptions {
@@ -1217,6 +1219,8 @@ export interface VNode {
 export interface DomVNode extends VNode {
 	domNode: Text | Element;
 	onAttach?: () => void;
+	onUpdate?: () => void;
+	onDetach?: () => void;
 }
 
 export interface ESMDefaultWidgetBase<T extends WidgetBaseTypes> {
