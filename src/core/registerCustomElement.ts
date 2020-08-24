@@ -106,7 +106,7 @@ function registerThemeInjector(theme: any, themeRegistry: Registry): ThemeInject
 	return themeInjector;
 }
 
-export function create(descriptor: any, widgetFactory: () => Promise<any>): any {
+export function create(descriptor: any, widgetFactory: () => any | Promise<any>): any {
 	const { attributes = [], properties = [], registryFactory = () => new Registry() } = descriptor;
 	const attributeMap: any = {};
 

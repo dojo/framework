@@ -112,7 +112,7 @@ function createTestWidget(options: any) {
 			]);
 		}
 	}
-	return () => Promise.resolve(Bar);
+	return () => Bar;
 }
 
 @customElement({ tag: 'themed-element' })
