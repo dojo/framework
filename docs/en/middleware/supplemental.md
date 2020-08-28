@@ -183,7 +183,7 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   Returns `true` or `false` based in whether the key is set in the cache.
 -   `icache.delete(key: any, invalidate: boolean = true): void`
     -   Remove the item from the cache.
--   `clear(invalidate: boolean = true)`
+-   `icache.clear(invalidate: boolean = true)`
     -   Clears all values currently stored in the widget's local cache.
 
 The current cache value is passed when a function is passed to `icache.set`, the example below demonstrates using the current value to for an incrementing number.
@@ -286,7 +286,7 @@ import i18n from '@dojo/framework/core/middleware/i18n';
 -   `i18n.set(localeData?: LocaleData)`
     -   Allows applications to set a specific locale.
 -   `i18n.get()`
-    -   Returns the currently-set locale, or `undefined` if no theme has been set. Typically used within an application's root widget.
+    -   Returns the currently-set locale, or `undefined` if no locale has been set. Typically used within an application's root widget.
 
 ## `dimensions`
 
