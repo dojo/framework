@@ -18,7 +18,7 @@ export interface DragResults {
 	isDragging: boolean;
 
 	/**
-	 * A matrix of posistions that represent the start position for the current drag interaction
+	 * A matrix of positions that represent the start position for the current drag interaction
 	 */
 	start?: PositionMatrix;
 }
