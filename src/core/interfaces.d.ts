@@ -464,7 +464,7 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	readonly focus?: boolean | NodeOperationPredicate;
 
 	/**
-	 * determines is the element needs to be clicked
+	 * determines if the element needs to be clicked
 	 */
 	readonly click?: boolean | NodeOperationPredicate;
 
