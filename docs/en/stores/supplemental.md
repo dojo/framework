@@ -47,6 +47,48 @@ A `Process` has an execution lifecycle that defines the flow of the behavior bei
 1.  If an exception is thrown during commands, no more commands get executed and the current set of operations are not applied
 1.  `after` middleware get executed synchronously in order
 
+### Transformers
+
+By using a transformer, you can modify a payload before it is used by a processes commands. This is a way to
+create additional process executors that accept different payloads.
+
+```ts
+interface PricePayload {
+	price: number;
+}
+
+const createCommand = createCommandFactory<any, PricePayload>();
+
+// `payload` is typed to `PricePayload`
+const setNumericPriceCommand = createCommand(({ get, path, payload }) => {});
+const setNumericPrice = createProcess('set-price', [setNumericPriceCommand]);
+```
+
+First, create a transformer to convert another type of input into `PricePayload`:
+
+```ts
+interface TransformerPayload {
+	price: string;
+}
+
+// The transformer return type must match the original `PricePayload`
+const transformer = (payload: TransformerPayload): PricePayload => {
+	return {
+		price: parseInt(payload.price, 10)
+	};
+};
+```
+
+Now simply create the process with this transformer.
+
+```ts
+const processExecutor = setNumericPrice(store);
+const transformedProcessExecutor = setNumericPrice(store, transformer);
+
+processExecutor({ price: 12.5 });
+transformedProcessExecutor({ price: '12.50' });
+```
+
 ### Process middleware
 
 Middleware gets applied around processes using optional `before` and `after` methods. This allows for generic, sharable actions to occur around the behavior defined by processes.
