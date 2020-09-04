@@ -39,6 +39,10 @@ export interface MouseEventHandler {
 	(event?: MouseEvent): EventHandlerResult;
 }
 
+export interface UIEventHandler {
+	(ev: UIEvent): boolean | void;
+}
+
 /**
  * Cannot extend the global due to TS error: `All declarations of 'target' must have identical modifiers.`
  */
@@ -152,6 +156,16 @@ export interface Classes {
 	[widgetKey: string]: {
 		[classKey: string]: SupportedClassName[];
 	};
+}
+
+export interface EventOptions {
+	passive?: boolean;
+	capture?: boolean;
+	once?: boolean;
+}
+
+interface EventWithOptions extends EventOptions {
+	handler: UIEventHandler;
 }
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
@@ -432,7 +446,7 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	onmouseover?(ev: MouseEvent<T>): boolean | void;
 	onmouseup?(ev: MouseEvent<T>): boolean | void;
 	onmousewheel?(ev: WheelEvent<T>): boolean | void;
-	onscroll?(ev: UIEvent<T>): boolean | void;
+	onscroll?: UIEventHandler | EventWithOptions;
 	onsubmit?(ev: DojoEvent<T>): boolean | void;
 	readonly spellcheck?: boolean;
 	readonly tabIndex?: number;

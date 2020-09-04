@@ -72,7 +72,9 @@ import {
 	ThAttributes,
 	TimeAttributes,
 	TrackAttributes,
-	VideoAttributes
+	VideoAttributes,
+	EventOptions,
+	EventWithOptions
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -1279,8 +1281,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function updateEvent(
 		domNode: Node,
 		eventName: string,
-		currentValue: (event: Event) => void,
-		previousValue?: Function
+		currentValue: any,
+		previousValue?: Function,
+		options?: EventOptions
 	) {
 		if (previousValue) {
 			const previousEvent = _eventMap.get(previousValue);
@@ -1296,7 +1299,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			};
 		}
 
-		domNode.addEventListener(eventName, callback);
+		domNode.addEventListener(eventName, callback, options);
 		_eventMap.set(currentValue, callback);
 	}
 
@@ -1545,6 +1548,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
+	function isInstanceOfEventWithOptions(value: any): value is EventWithOptions {
+		return value;
+	}
+
 	function setProperties(
 		domNode: HTMLElement,
 		currentProperties: VNodeProperties = {},
@@ -1609,6 +1616,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					setValue(domNode, propValue, previousValue);
 				} else if (propName !== 'key' && propValue !== previousValue) {
 					const type = typeof propValue;
+					if (isInstanceOfEventWithOptions(propValue)) {
+						const { handler, ...eventOptions } = propValue;
+						updateEvent(domNode, propName.substr(2), handler, previousValue, eventOptions);
+					}
 					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
 						updateEvent(domNode, propName.substr(2), propValue, previousValue);
 					} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {

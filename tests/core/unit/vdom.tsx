@@ -5601,6 +5601,23 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 
+		it('will allow event options', () => {
+			const onscroll = stub();
+			const handleScroll = {
+				passive: true,
+				handler: onscroll
+			};
+			const renderFunction = () => v('div', { onscroll: handleScroll });
+			const [Widget] = getWidget(renderFunction());
+			const r = renderer(() => w(Widget, {}));
+			const div = document.createElement('div');
+			r.mount({ domNode: div, sync: true });
+			const root = div.childNodes[0] as HTMLInputElement;
+
+			sendEvent(root, 'onscroll');
+			assert.isTrue(onscroll.calledWith(onscroll, { passive: true }));
+		});
+
 		it('updates the value property', () => {
 			let typedKeys = '';
 			const handleInput = (evt: Event) => {
