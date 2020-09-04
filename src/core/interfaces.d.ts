@@ -1147,7 +1147,7 @@ export interface InjectorItem<T = any> {
  */
 export interface WidgetProperties {
 	/**
-	 * The key for a widget. Used to differentiate uniquely identify child widgets for
+	 * The key for a widget. Used to uniquely identify child widgets for
 	 * rendering and instance management
 	 */
 	key?: string | number;
@@ -1158,7 +1158,7 @@ export interface WidgetProperties {
  */
 export interface KeyedWidgetProperties extends WidgetProperties {
 	/**
-	 * The key for a widget. Used to differentiate uniquely identify child widgets for
+	 * The key for a widget. Used to uniquely identify child widgets for
 	 * rendering and instance management
 	 */
 	key: string | number;
