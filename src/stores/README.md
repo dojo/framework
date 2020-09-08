@@ -541,7 +541,7 @@ const addTodoProcess = createProcess('add-todo', [
 
 -   `addTodoCommand`: Adds the new todo into the application state
 -   `calculateCountsCommand`: Recalculates the count of completed and active todo items
--   `postTodoCommand`: posts the todo item to a remote service and using the process after middlware we can make changes if there is a failure
+-   `postTodoCommand`: posts the todo item to a remote service and using the process after middleware we can make changes if there is a failure
     -   on failure: the previous two commands are reverted and the `failed` state field is set to `true`
     -   on success: Returns operations that update the todo item `id` field with the value received from the remote service
 -   `calculateCountsCommand`: Runs again after the success of `postTodoCommand`
