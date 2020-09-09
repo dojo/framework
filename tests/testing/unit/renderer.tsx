@@ -239,15 +239,15 @@ describe('test renderer', () => {
 			);
 		});
 
-		it('trigger property when there are undefined children in actual render', () => {
+		it('triggers property when there are undefined children in actual render', () => {
 			const WrappedRoot = wrap('div');
 			const WrappedChild = wrap('div');
 			const WrappedConditional = wrap('div');
-			const baseTemplate = assertion(() => w(WrappedRoot, {}, [w(WrappedChild, { onclick: noop })]));
+			const baseTemplate = assertion(() => v(WrappedRoot.tag, {}, [v(WrappedChild.tag, { onclick: noop })]));
 			const r = renderer(() => w(ConditionalRender, {}));
 			r.expect(baseTemplate);
 			r.property(WrappedChild, 'onclick');
-			r.expect(baseTemplate.prepend(WrappedRoot, () => [w(WrappedConditional, { onclick: noop })]));
+			r.expect(baseTemplate.prepend(WrappedRoot, () => [v(WrappedConditional.tag, { onclick: noop })]));
 			r.property(WrappedConditional, 'onclick');
 			r.expect(baseTemplate);
 		});
