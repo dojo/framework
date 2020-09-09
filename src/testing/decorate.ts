@@ -66,7 +66,9 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 
 	let node = nodes.shift();
 	while (node) {
-		const [actualNodes, expectedNodes] = node;
+		const [actualNodes, expectedNodes] = node.map((nodes) =>
+			nodes.filter((node) => node != null && node !== true && node !== false)
+		);
 		let childNodes: DecorateTuple[] = [];
 		while (expectedNodes.length > 0) {
 			let actualNode: DNode | { [index: string]: any } = actualNodes.shift();
