@@ -106,7 +106,7 @@ function registerThemeInjector(theme: any, themeRegistry: Registry): ThemeInject
 	return themeInjector;
 }
 
-export function create(descriptor: any, WidgetConstructor: any): any {
+export function create(descriptor: any, widgetFactory: () => any | Promise<any>): any {
 	const { attributes = [], properties = [], registryFactory = () => new Registry() } = descriptor;
 	const attributeMap: any = {};
 
@@ -165,9 +165,11 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 			}
 		}
 
-		private _readyCallback() {
+		private async _readyCallback() {
 			const domProperties: any = {};
 			const { properties = [], events = [] } = descriptor;
+
+			const WidgetConstructor = await widgetFactory();
 
 			this._properties = {
 				...this._propertiesWithAttributes(properties),
@@ -448,9 +450,7 @@ export function create(descriptor: any, WidgetConstructor: any): any {
 	};
 }
 
-export function register(WidgetConstructor: any): void {
-	const descriptor = WidgetConstructor.__customElementDescriptor;
-
+export function register(WidgetConstructor: any, descriptor = WidgetConstructor.__customElementDescriptor): void {
 	if (!descriptor) {
 		throw new Error(
 			'Cannot get descriptor for Custom Element, have you added the @customElement decorator to your Widget?'
