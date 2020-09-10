@@ -559,7 +559,7 @@ There are a number of mock middleware available to support testing widgets that 
 
 ### Mock `breakpoint` middleware
 
-Using `createBreakpointMock` from `@dojo/framework/testing/mocks/middlware/breakpoint` offers tests manual control over resizing events to trigger breakpoint tests.
+Using `createBreakpointMock` from `@dojo/framework/testing/mocks/middleware/breakpoint` offers tests manual control over resizing events to trigger breakpoint tests.
 
 Consider the following widget which displays an additional `h2` when the `LG` breakpoint is activated:
 
@@ -1054,7 +1054,7 @@ export function createMockMiddleware() {
 	const sharedData = new Map<string, any>();
 
 	const mockFactory = factory(() => {
-		// actual middlware implementation; uses `sharedData` to bridge the gap
+		// actual middleware implementation; uses `sharedData` to bridge the gap
 		return {
 			get(id: string): any {},
 			set(id: string, value: any): void {}
@@ -1075,7 +1075,7 @@ export function createMockMiddleware() {
 }
 ```
 
-There are plenty of full mock examples in [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
+There are plenty of full mock examples in [`framework/src/testing/mocks/middleware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) which can be used for reference.
 
 # Functional tests
 

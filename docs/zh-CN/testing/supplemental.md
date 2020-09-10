@@ -568,7 +568,7 @@ describe('Action', () => {
 
 ### Mock `breakpoint` 中间件
 
-使用 `@dojo/framework/testing/mocks/middlware/breakpoint` 中的 `createBreakpointMock` 可手动控制 resize 事件来触发断点测试。
+使用 `@dojo/framework/testing/mocks/middleware/breakpoint` 中的 `createBreakpointMock` 可手动控制 resize 事件来触发断点测试。
 
 考虑下面的部件，当激活 `LG` 断点时，它会显示附加 `h2`：
 
@@ -1083,7 +1083,7 @@ export function createMockMiddleware() {
 }
 ```
 
-在 [`framework/src/testing/mocks/middlware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) 中有很多完整的模拟示例可供参考。
+在 [`framework/src/testing/mocks/middleware`](https://github.com/dojo/framework/tree/master/src/testing/mocks/middleware) 中有很多完整的模拟示例可供参考。
 
 # 功能测试
 
