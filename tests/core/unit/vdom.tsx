@@ -5601,21 +5601,41 @@ jsdomDescribe('vdom', () => {
 			});
 		});
 
-		it('will allow event options', () => {
-			const onscroll = stub();
-			const handleScroll = {
-				passive: true,
-				handler: onscroll
-			};
-			const renderFunction = () => v('div', { onscroll: handleScroll });
-			const [Widget] = getWidget(renderFunction());
-			const r = renderer(() => w(Widget, {}));
-			const div = document.createElement('div');
-			r.mount({ domNode: div, sync: true });
-			const root = div.childNodes[0] as HTMLInputElement;
+		describe('Event options', () => {
+			let createElementStub: any;
 
-			sendEvent(root, 'onscroll');
-			assert.isTrue(onscroll.calledWith(onscroll, { passive: true }));
+			afterEach(() => {
+				if (createElementStub) {
+					createElementStub.restore();
+				}
+			});
+
+			it('should allow event options to be passed', () => {
+				let addEventListenerSpy: SinonSpy;
+
+				const scrollEventHandler = (event: any) => {};
+				const handleScroll = {
+					passive: true,
+					handler: scrollEventHandler
+				};
+				const scrollElementDiv = v('div', { onscroll: handleScroll });
+				const sectionDiv = document.createElement('section');
+				const renderFunction = () => scrollElementDiv;
+				const [Widget] = getWidget(renderFunction());
+				const r = renderer(() => w(Widget, {}));
+
+				const originalCreateElement = document.createElement.bind(document);
+				createElementStub = stub(document, 'createElement');
+				createElementStub.callsFake((name: string) => {
+					const element = originalCreateElement(name);
+					addEventListenerSpy = spy(element, 'addEventListener');
+					return element;
+				});
+
+				r.mount({ domNode: sectionDiv });
+
+				assert.isTrue(addEventListenerSpy!.calledWith('scroll', scrollEventHandler, { passive: true }));
+			});
 		});
 
 		it('updates the value property', () => {

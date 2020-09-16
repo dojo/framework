@@ -73,8 +73,7 @@ import {
 	TimeAttributes,
 	TrackAttributes,
 	VideoAttributes,
-	EventOptions,
-	EventWithOptions
+	EventOptions
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -1548,10 +1547,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function isInstanceOfEventWithOptions(value: any): value is EventWithOptions {
-		return value;
-	}
-
 	function setProperties(
 		domNode: HTMLElement,
 		currentProperties: VNodeProperties = {},
@@ -1616,11 +1611,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					setValue(domNode, propValue, previousValue);
 				} else if (propName !== 'key' && propValue !== previousValue) {
 					const type = typeof propValue;
-					if (isInstanceOfEventWithOptions(propValue)) {
+					if (type === 'object' && propValue && 'handler' in propValue) {
 						const { handler, ...eventOptions } = propValue;
 						updateEvent(domNode, propName.substr(2), handler, previousValue, eventOptions);
-					}
-					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
+					} else if (
+						type === 'function' &&
+						propName.lastIndexOf('on', 0) === 0 &&
+						includesEventsAndAttributes
+					) {
 						updateEvent(domNode, propName.substr(2), propValue, previousValue);
 					} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
 						updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
