@@ -14,6 +14,23 @@ const noop: any = () => {};
 
 class ChildWidget extends WidgetBase<{ id: string; func?: () => void }> {}
 
+const ConditionalRender = create({ icache })(({ middleware: { icache } }) => {
+	return v('div', {}, [
+		icache.get('render')
+			? v('div', {
+					onclick: () => {
+						icache.set('render', false);
+					}
+			  })
+			: null,
+		v('div', {
+			onclick: () => {
+				icache.set('render', true);
+			}
+		})
+	]);
+});
+
 class MyWidget extends WidgetBase {
 	_count = 0;
 	_result = 'result';
@@ -220,6 +237,19 @@ describe('test renderer', () => {
 					])
 				)
 			);
+		});
+
+		it('triggers property when there are undefined children in actual render', () => {
+			const WrappedRoot = wrap('div');
+			const WrappedChild = wrap('div');
+			const WrappedConditional = wrap('div');
+			const baseTemplate = assertion(() => v(WrappedRoot.tag, {}, [v(WrappedChild.tag, { onclick: noop })]));
+			const r = renderer(() => w(ConditionalRender, {}));
+			r.expect(baseTemplate);
+			r.property(WrappedChild, 'onclick');
+			r.expect(baseTemplate.prepend(WrappedRoot, () => [v(WrappedConditional.tag, { onclick: noop })]));
+			r.property(WrappedConditional, 'onclick');
+			r.expect(baseTemplate);
 		});
 
 		it('should call properties in the correct order', () => {
@@ -727,6 +757,20 @@ describe('test renderer', () => {
 					</div>
 				))
 			);
+		});
+
+		it('Should wrap single children in an array when calling setChildren', () => {
+			const factory = create().children<string>();
+			const TestWidget = factory(() => 'foo');
+			const App = create()(() => {
+				return <TestWidget>bar</TestWidget>;
+			});
+			const WrappedTestWudget = wrap(TestWidget);
+
+			const testAssertion = assertion(() => <WrappedTestWudget>bar</WrappedTestWudget>);
+			const r = renderer(() => <App />);
+
+			r.expect(testAssertion.setChildren(WrappedTestWudget, () => 'bar'));
 		});
 	});
 });

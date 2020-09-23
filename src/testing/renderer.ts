@@ -11,7 +11,8 @@ import {
 	OptionalWNodeFactory,
 	WidgetBaseInterface,
 	DefaultChildrenWNodeFactory,
-	VNode
+	VNode,
+	DefaultMiddlewareResult
 } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
@@ -82,7 +83,7 @@ export interface Property {
 }
 
 interface RendererOptions {
-	middleware?: [MiddlewareResultFactory<any, any, any, any>, MiddlewareResultFactory<any, any, any, any>][];
+	middleware?: [MiddlewareResultFactory<any, any, any, any>, () => DefaultMiddlewareResult][];
 }
 
 export type PropertiesComparatorFunction<T = any> = (actualProperties: T) => T;
@@ -100,7 +101,7 @@ function isWrappedNode(value: any): value is (WNode & { id: string }) | (WNode &
 
 function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T): VNode | WNode {
 	renderResult = decorateNodes(renderResult).nodes;
-	let nodes = Array.isArray(renderResult) ? [...renderResult] : [renderResult];
+	let nodes: any[] = Array.isArray(renderResult) ? [...renderResult] : [renderResult];
 	while (nodes.length) {
 		let node = nodes.pop();
 		if (isWrappedNode(node)) {
@@ -111,8 +112,24 @@ function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T
 		if (isVNode(node) || isWNode(node)) {
 			const children = node.children || [];
 			nodes = [...children, ...nodes];
+		} else if (node && typeof node === 'object') {
+			nodes = [
+				...Object.keys(node).reduce(
+					(newNodes, key) => {
+						if (typeof node[key] === 'function') {
+							const result = node[key]();
+							node[key] = result;
+							return Array.isArray(result) ? [...result, ...newNodes] : [result, ...newNodes];
+						}
+						return newNodes;
+					},
+					[] as any[]
+				),
+				...nodes
+			];
 		}
 	}
+
 	throw new Error('Unable to find node');
 }
 
@@ -263,6 +280,9 @@ export function assertion(renderFunc: () => DNode | DNode[]) {
 			const node = findNode(render, wrapped);
 			node.children = node.children || [];
 			let childrenResult = children();
+			if (!Array.isArray(childrenResult)) {
+				childrenResult = [childrenResult];
+			}
 			switch (type) {
 				case 'prepend':
 					node.children = [...childrenResult, ...node.children];
