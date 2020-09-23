@@ -5999,6 +5999,71 @@ jsdomDescribe('vdom', () => {
 			meta.setRenderResult(vnode);
 			assert.strictEqual(onAttachCallCount, 2);
 		});
+		it('Should run onUpdate after the dom node has been updated in the dom', () => {
+			let onUpdateCallCount = 0;
+			const myDomNode = document.createElement('div');
+			const div = document.createElement('div');
+			let vnode = d({
+				node: myDomNode,
+				onUpdate: () => {
+					onUpdateCallCount++;
+				}
+			});
+			const [Widget, meta] = getWidget(vnode);
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(onUpdateCallCount, 0);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onUpdateCallCount, 1);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onUpdateCallCount, 2);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onUpdateCallCount, 3);
+		});
+		it('Should run onDetach after the dom node has been removed from the dom', () => {
+			let onDetachCallCount = 0;
+			const myDomNode = document.createElement('div');
+			const div = document.createElement('div');
+			let vnode = d({
+				node: myDomNode,
+				onDetach: () => {
+					onDetachCallCount++;
+				}
+			});
+			const [Widget, meta] = getWidget(vnode);
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(onDetachCallCount, 0);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onDetachCallCount, 0);
+			meta.setRenderResult(null);
+			assert.strictEqual(onDetachCallCount, 1);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onDetachCallCount, 1);
+		});
+		it('Should run onDetach after the dom node has been removed from the dom in nested dom node', () => {
+			let onDetachCallCount = 0;
+			const myDomNode = document.createElement('div');
+			const div = document.createElement('div');
+			let vnode = v('div', [
+				d({
+					node: myDomNode,
+					onDetach: () => {
+						onDetachCallCount++;
+					}
+				})
+			]);
+			const [Widget, meta] = getWidget(vnode);
+			const r = renderer(() => w(Widget, {}));
+			r.mount({ domNode: div, sync: true });
+			assert.strictEqual(onDetachCallCount, 0);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onDetachCallCount, 0);
+			meta.setRenderResult(null);
+			assert.strictEqual(onDetachCallCount, 1);
+			meta.setRenderResult(vnode);
+			assert.strictEqual(onDetachCallCount, 1);
+		});
 	});
 
 	describe('deferred properties', () => {
