@@ -758,5 +758,19 @@ describe('test renderer', () => {
 				))
 			);
 		});
+
+		it('Should wrap single children in an array when calling setChildren', () => {
+			const factory = create().children<string>();
+			const TestWidget = factory(() => 'foo');
+			const App = create()(() => {
+				return <TestWidget>bar</TestWidget>;
+			});
+			const WrappedTestWudget = wrap(TestWidget);
+
+			const testAssertion = assertion(() => <WrappedTestWudget>bar</WrappedTestWudget>);
+			const r = renderer(() => <App />);
+
+			r.expect(testAssertion.setChildren(WrappedTestWudget, () => 'bar'));
+		});
 	});
 });
