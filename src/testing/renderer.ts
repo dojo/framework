@@ -280,6 +280,9 @@ export function assertion(renderFunc: () => DNode | DNode[]) {
 			const node = findNode(render, wrapped);
 			node.children = node.children || [];
 			let childrenResult = children();
+			if (!Array.isArray(childrenResult)) {
+				childrenResult = [childrenResult];
+			}
 			switch (type) {
 				case 'prepend':
 					node.children = [...childrenResult, ...node.children];
