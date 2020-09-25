@@ -229,10 +229,6 @@ export interface EventOptions {
 	once?: boolean;
 }
 
-interface EventWithOptions extends EventOptions {
-	handler: EventHandler;
-}
-
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
 
 export type NodeOperationPredicate = () => boolean;
