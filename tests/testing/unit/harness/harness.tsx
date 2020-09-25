@@ -301,7 +301,11 @@ describe('harness', () => {
 			const h = harness(() => w(MyWidget, {}));
 			h.trigger('*[key="span"]', (node: WNode | VNode) => {
 				if (isVNode(node)) {
-					return node.properties.onclick;
+					const onclick = node.properties.onclick;
+					if (onclick && typeof onclick !== 'function') {
+						return onclick.handler;
+					}
+					return onclick;
 				}
 			});
 			h.expect(() =>

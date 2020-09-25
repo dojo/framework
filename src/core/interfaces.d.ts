@@ -21,30 +21,30 @@ export interface TypedTargetEvent<T extends EventTarget, Y extends EventType = E
 /**
  * Cannot extend the global due to TS error: `All declarations of 'target' must have identical modifiers.`
  */
-export interface DojoEvent<T extends EventTarget = EventTarget> extends Event {
+export interface DojoEvent<T extends EventTarget | null = EventTarget | null> extends Event {
 	target: T;
 }
 
 declare global {
-	interface MouseEvent<T extends EventTarget = EventTarget> {
+	interface MouseEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface PointerEvent<T extends EventTarget = EventTarget> {
+	interface PointerEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface TouchEvent<T extends EventTarget = EventTarget> {
+	interface TouchEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface KeyboardEvent<T extends EventTarget = EventTarget> {
+	interface KeyboardEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface FocusEvent<T extends EventTarget = EventTarget> {
+	interface FocusEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface UIEvent<T extends EventTarget = EventTarget> {
+	interface UIEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
-	interface WheelEvent<T extends EventTarget = EventTarget> {
+	interface WheelEvent<T extends EventTarget | null = EventTarget | null> {
 		target: T;
 	}
 }
@@ -52,63 +52,112 @@ declare global {
 /*
  These are the event handlers.
  */
-export type EventHandlerResult = boolean | void;
-
 export interface EventHandler {
-	(event: Event): EventHandlerResult;
+	(event: Event): void | boolean;
 }
 
-export interface DojoEventHandler {
-	(event: DojoEvent): EventHandlerResult;
+interface PointerEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: PointerEvent<E>): void | boolean;
 }
 
-export interface FocusEventHandler {
-	(event: FocusEvent): EventHandlerResult;
+interface MouseEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: MouseEvent<E>): void | boolean;
 }
 
-export interface KeyboardEventHandler {
-	(event: KeyboardEvent): EventHandlerResult;
+interface DojoEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: DojoEvent<E>): void | boolean;
 }
 
-export interface MouseEventHandler<T extends EventTarget> {
-	(ev: MouseEvent<T>): boolean | void;
+interface KeyboardEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: KeyboardEvent<E>): void | boolean;
 }
 
-export interface PointerEventHandler {
-	(event: PointerEvent): EventHandlerResult;
+interface UIEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: UIEvent<E>): void | boolean;
 }
 
-export interface TouchEventHandler {
-	(event: TouchEvent): EventHandlerResult;
+interface FocusEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: FocusEvent<E>): void | boolean;
 }
 
-export interface WheelEventHandler {
-	(event: WheelEvent): EventHandlerResult;
+interface WheelEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: WheelEvent<E>): void | boolean;
 }
 
-export interface UIEventHandler {
-	(ev: UIEvent): boolean | void;
+interface TouchEventHandler<E extends EventTarget | null = EventTarget | null> {
+	(event: TouchEvent<E>): void | boolean;
 }
 
-export type BlurEventHandler = FocusEventHandler;
-export type ChangeEventHandler = EventHandler;
-export type ClickEventHandler = MouseEventHandler<EventTarget>;
-export type DoubleClickEventHandler = MouseEventHandler<EventTarget>;
-export type InputEventHandler = EventHandler;
-export type KeyDownEventHandler = KeyboardEventHandler;
-export type KeyPressEventHandler = KeyboardEventHandler;
-export type KeyUpEventHandler = KeyboardEventHandler;
-export type LoadEventHandler = EventHandler;
-export type MouseDownEventHandler = MouseEventHandler<EventTarget>;
-export type MouseEnterEventHandler = MouseEventHandler<EventTarget>;
-export type MouseLeaveEventHandler = MouseEventHandler<EventTarget>;
-export type MouseMoveEventHandler = MouseEventHandler<EventTarget>;
-export type MouseOutEventHandler = MouseEventHandler<EventTarget>;
-export type MouseOverEventHandler = MouseEventHandler<EventTarget>;
-export type MouseUpEventHandler = MouseEventHandler<EventTarget>;
-export type MouseWheelEventHandler = (event?: MouseWheelEvent | WheelEvent) => EventHandlerResult;
-export type ScrollEventHandler = (event?: UIEvent) => EventHandlerResult;
-export type SubmitEventHandler = EventHandler;
+interface TouchEventHandlerWithOptions<E extends EventTarget | null = EventTarget | null> {
+	handler: TouchEventHandler<E>;
+}
+
+interface DojoEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: DojoEventHandler<T>;
+}
+
+interface FocusEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: FocusEventHandler<T>;
+}
+
+interface KeyboardEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: KeyboardEventHandler<T>;
+}
+
+interface MouseEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: MouseEventHandler<T>;
+}
+
+interface PointerEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: PointerEventHandler<T>;
+}
+
+interface TouchEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: TouchEventHandler<T>;
+}
+
+interface UIEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: UIEventHandler<T>;
+}
+
+interface WheelEventWithOptions<T extends EventTarget | null> extends EventOptions {
+	handler: WheelEventHandler<T>;
+}
+
+export type VNodePropertiesWheelEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| WheelEventWithOptions<E>
+	| WheelEventHandler<E>;
+export type VNodePropertiesMouseEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| MouseEventWithOptions<E>
+	| MouseEventHandler<E>;
+export type VNodePropertiesFocusEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| FocusEventWithOptions<E>
+	| FocusEventHandler<E>;
+export type VNodePropertiesUIEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| UIEventWithOptions<E>
+	| UIEventHandler<E>;
+export type VNodePropertiesKeyboardEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| KeyboardEventWithOptions<E>
+	| KeyboardEventHandler<E>;
+export type VNodePropertiesEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| DojoEventWithOptions<E>
+	| DojoEventHandler<E>;
+export type VNodePropertiesPointerEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| PointerEventWithOptions<E>
+	| PointerEventHandler<E>;
+export type VNodePropertiesTouchEventHandler<E extends EventTarget | null = EventTarget | null> =
+	| TouchEventHandlerWithOptions<E>
+	| TouchEventHandler<E>;
+
+export type VNodeHandlers =
+	| VNodePropertiesMouseEventHandler
+	| VNodePropertiesWheelEventHandler
+	| VNodePropertiesTouchEventHandler
+	| VNodePropertiesPointerEventHandler
+	| VNodePropertiesEventHandler
+	| VNodePropertiesKeyboardEventHandler
+	| VNodePropertiesUIEventHandler
+	| VNodePropertiesFocusEventHandler;
 
 export interface TransitionStrategy {
 	enter(element: Element, enterAnimation: string, enterAnimationActive?: SupportedClassName): void;
@@ -182,38 +231,6 @@ export interface EventOptions {
 
 interface EventWithOptions extends EventOptions {
 	handler: EventHandler;
-}
-
-interface DojoEventWithOptions extends EventOptions {
-	handler: DojoEventHandler;
-}
-
-interface FocusEventWithOptions extends EventOptions {
-	handler: FocusEventHandler;
-}
-
-interface KeyboardEventWithOptions extends EventOptions {
-	handler: KeyboardEventHandler;
-}
-
-interface MouseEventWithOptions<T extends EventTarget> extends EventOptions {
-	handler: MouseEventHandler<T>;
-}
-
-interface PointerEventWithOptions extends EventOptions {
-	handler: PointerEventHandler;
-}
-
-interface TouchEventWithOptions extends EventOptions {
-	handler: TouchEventHandler;
-}
-
-interface UIEventWithOptions extends EventOptions {
-	handler: UIEventHandler;
-}
-
-interface WheelEventWithOptions extends EventOptions {
-	handler: WheelEventHandler;
 }
 
 export type DeferredVirtualProperties = (inserted: boolean) => VNodeProperties;
@@ -428,13 +445,47 @@ export interface AriaAttributes {
 	'aria-valuetext'?: string;
 }
 
-export interface VNodeProperties<T extends EventTarget = EventTarget> extends AriaAttributes {
+export interface VNodeEvents<T extends EventTarget | null = EventTarget | null> {
+	onpointermove?: VNodePropertiesPointerEventHandler<T>;
+	onpointerdown?: VNodePropertiesPointerEventHandler<T>;
+	onpointerup?: VNodePropertiesPointerEventHandler<T>;
+	onpointerover?: VNodePropertiesPointerEventHandler<T>;
+	onpointerout?: VNodePropertiesPointerEventHandler<T>;
+	onpointerenter?: VNodePropertiesPointerEventHandler<T>;
+	onpointerleave?: VNodePropertiesPointerEventHandler<T>;
+	onpointercancel?: VNodePropertiesPointerEventHandler<T>;
+	onblur?: VNodePropertiesFocusEventHandler<T>;
+	onchange?: VNodePropertiesEventHandler<T>;
+	onclick?: VNodePropertiesMouseEventHandler<T>;
+	ondblclick?: VNodePropertiesMouseEventHandler<T>;
+	onfocus?: VNodePropertiesFocusEventHandler<T>;
+	oninput?: VNodePropertiesEventHandler<T>;
+	onkeydown?: VNodePropertiesKeyboardEventHandler<T>;
+	onkeypress?: VNodePropertiesKeyboardEventHandler<T>;
+	onkeyup?: VNodePropertiesKeyboardEventHandler<T>;
+	onload?: VNodePropertiesEventHandler<T>;
+	onmousedown?: VNodePropertiesMouseEventHandler<T>;
+	onmouseenter?: VNodePropertiesMouseEventHandler<T>;
+	onmouseleave?: VNodePropertiesMouseEventHandler<T>;
+	onmousemove?: VNodePropertiesMouseEventHandler<T>;
+	onmouseout?: VNodePropertiesMouseEventHandler<T>;
+	onmouseover?: VNodePropertiesMouseEventHandler<T>;
+	onmouseup?: VNodePropertiesMouseEventHandler<T>;
+	onmousewheel?: VNodePropertiesWheelEventHandler<T>;
+	onscroll?: VNodePropertiesUIEventHandler<T>;
+	onsubmit?: VNodePropertiesEventHandler<T>;
+	ontouchcancel?: VNodePropertiesTouchEventHandler<T>;
+	ontouchend?: VNodePropertiesTouchEventHandler<T>;
+	ontouchmove?: VNodePropertiesTouchEventHandler<T>;
+	ontouchstart?: VNodePropertiesTouchEventHandler<T>;
+}
+
+export interface VNodeProperties<T extends EventTarget | null = EventTarget | null>
+	extends VNodeEvents<T>,
+		AriaAttributes {
 	enterAnimation?: SupportedClassName;
-
 	exitAnimation?: SupportedClassName;
-
 	enterAnimationActive?: SupportedClassName;
-
 	exitAnimationActive?: SupportedClassName;
 
 	/**
@@ -451,23 +502,9 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	 * An object literal like `{height:'100px'}` which allows styles to be changed dynamically. All values must be strings.
 	 */
 	readonly styles?: Partial<CSSStyleDeclaration>;
-
-	// Pointer Events
-	onpointermove?: PointerEventHandler | PointerEventWithOptions;
-	onpointerdown?: PointerEventHandler | PointerEventWithOptions;
-	onpointerup?: PointerEventHandler | PointerEventWithOptions;
-	onpointerover?: PointerEventHandler | PointerEventWithOptions;
-	onpointerout?: PointerEventHandler | PointerEventWithOptions;
-	onpointerenter?: PointerEventHandler | PointerEventWithOptions;
-	onpointerleave?: PointerEventHandler | PointerEventWithOptions;
-	onpointercancel?: PointerEventHandler | PointerEventWithOptions;
 	// For Pointer Event Polyfill see: https://github.com/jquery/PEP
 	readonly 'touch-action'?: string;
 	// From Element
-	ontouchcancel?: PointerEventHandler | PointerEventWithOptions;
-	ontouchend?: TouchEventHandler | TouchEventWithOptions;
-	ontouchmove?: TouchEventHandler | TouchEventWithOptions;
-	ontouchstart?: TouchEventHandler | TouchEventWithOptions;
 	// From HTMLFormElement
 	readonly action?: string;
 	readonly encoding?: string;
@@ -476,26 +513,6 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	readonly name?: string;
 	readonly target?: string;
 	// From HTMLElement
-	onblur?: FocusEventHandler | FocusEventWithOptions;
-	onchange?: DojoEventHandler | DojoEventWithOptions;
-	onclick?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	ondblclick?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onfocus?: FocusEventHandler | FocusEventWithOptions;
-	oninput?: DojoEventHandler | DojoEventWithOptions;
-	onkeydown?: KeyboardEventHandler | KeyboardEventWithOptions;
-	onkeypress?: KeyboardEventHandler | KeyboardEventWithOptions;
-	onkeyup?: KeyboardEventHandler | KeyboardEventWithOptions;
-	onload?: DojoEventHandler | DojoEventWithOptions;
-	onmousedown?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmouseenter?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmouseleave?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmousemove?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmouseout?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmouseover?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmouseup?: MouseEventHandler<T> | MouseEventWithOptions<T>;
-	onmousewheel?: WheelEventHandler | WheelEventWithOptions;
-	onscroll?: UIEventHandler | UIEventWithOptions;
-	onsubmit?: DojoEventHandler | DojoEventWithOptions;
 	readonly spellcheck?: boolean;
 	readonly tabIndex?: number;
 	readonly disabled?: boolean;
@@ -526,7 +543,7 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	readonly focus?: boolean | NodeOperationPredicate;
 
 	/**
-	 * determines is the element needs to be clicked
+	 * determines if the element needs to be clicked
 	 */
 	readonly click?: boolean | NodeOperationPredicate;
 

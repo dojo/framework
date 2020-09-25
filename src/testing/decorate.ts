@@ -102,12 +102,13 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 								(actualNode as any).children[0] = newActualChildren;
 							}
 						}
-					} else if (
-						instruction.type === 'property' &&
-						isNode(actualNode) &&
-						typeof actualNode.properties[instruction.key] === 'function'
-					) {
-						actualNode.properties[instruction.key](...instruction.params);
+					} else if (instruction.type === 'property' && isNode(actualNode)) {
+						const prop = actualNode.properties[instruction.key];
+						if (typeof prop === 'function') {
+							prop(...instruction.params);
+						} else if (prop && typeof prop.handler === 'function') {
+							prop.handler(...instruction.params);
+						}
 					}
 				}
 				wrappedNodeIds.push(expectedNode.id);

@@ -12,7 +12,8 @@ import {
 	WidgetBaseInterface,
 	DefaultChildrenWNodeFactory,
 	VNode,
-	DefaultMiddlewareResult
+	DefaultMiddlewareResult,
+	VNodeHandlers
 } from '../core/interfaces';
 import { WidgetBase } from '../core/WidgetBase';
 import { isWidgetFunction } from '../core/Registry';
@@ -57,7 +58,7 @@ export type KnownKeys<T> = { [K in keyof T]: string extends K ? never : number e
 	? U
 	: never;
 export type FunctionPropertyNames<T> = {
-	[K in keyof T]: T[K] extends ((...args: any[]) => any | undefined) ? K : never
+	[K in keyof T]: T[K] extends ((...args: any[]) => any) ? K : T[K] extends VNodeHandlers ? K : never
 }[keyof T];
 export type RequiredVNodeProperties = Required<Pick<VNodeProperties, KnownKeys<VNodeProperties>>>;
 

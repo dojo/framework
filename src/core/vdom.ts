@@ -131,7 +131,44 @@ export namespace tsx.JSX {
 		time: TimeAttributes;
 		track: TrackAttributes;
 		video: VideoAttributes;
-		[key: string]: VNodeProperties;
+		[key: string]:
+			| VNodeProperties
+			| CanvasAttributes
+			| ColAttributes
+			| DetailsAttributes
+			| DialogAttributes
+			| EmbedAttributes
+			| FieldsetAttributes
+			| FormAttributes
+			| IFrameAttributes
+			| ImgAttributes
+			| ButtonAttributes
+			| InputAttributes
+			| LabelAttributes
+			| LinkAttributes
+			| MapAttributes
+			| MenuAttributes
+			| MeterAttributes
+			| MetaAttributes
+			| AnchorAttributes
+			| ObjectAttributes
+			| OlAttributes
+			| OptionAttributes
+			| OutputAttributes
+			| ParamAttributes
+			| ProgressAttributes
+			| QuoteAttributes
+			| SlotAttributes
+			| SelectAttributes
+			| SourceAttributes
+			| StyleAttributes
+			| TableAttributes
+			| TextareaAttributes
+			| ThAttributes
+			| TimeAttributes
+			| SVGAttributes
+			| VideoAttributes
+			| TrackAttributes;
 	}
 	export interface ElementChildrenAttribute {
 		__children__: {};
