@@ -111,6 +111,11 @@ function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T
 		}
 		if (isVNode(node) || isWNode(node)) {
 			const children = node.children || [];
+			for (let i = 0; i < children.length; i++) {
+				if (typeof children[i] === 'function') {
+					children[i] = (children[i] as any)();
+				}
+			}
 			nodes = [...children, ...nodes];
 		} else if (node && typeof node === 'object') {
 			nodes = [
