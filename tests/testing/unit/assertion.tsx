@@ -219,6 +219,25 @@ describe('new/assertion', () => {
 	});
 
 	it('can set a child of a functional child widget', () => {
+		const AWidget = create().children<{ (): RenderResult }>()(({ children }) => <div>{children()[0]()}</div>);
+		const ParentWidget = create()(() => (
+			<div>
+				<AWidget>{() => <div>bar</div>}</AWidget>
+			</div>
+		));
+		const WrappedWidget = wrap(AWidget);
+		const r = renderer(() => <ParentWidget />);
+		r.child(WrappedWidget, { foo: [] });
+		const WrappedDiv = wrap('div');
+		const testAssertion = assertion(() => (
+			<div>
+				<WrappedWidget>{() => <WrappedDiv>foo</WrappedDiv>}</WrappedWidget>
+			</div>
+		));
+		r.expect(testAssertion.setChildren(WrappedDiv, () => ['bar']));
+	});
+
+	it('can set a child of a functional child widget that is a property on an object', () => {
 		const AWidget = create().children<{ bar: RenderResult; foo(): RenderResult }>()(({ children }) => (
 			<div>
 				{children()[0].foo()}
