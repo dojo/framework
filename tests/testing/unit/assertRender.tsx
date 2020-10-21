@@ -46,8 +46,8 @@ class WidgetWithMap extends WidgetBase {
 }
 
 function getExpectedError() {
-	const mockWidgetName = (MockWidget as any).name || 'Widget-5';
-	const widgetWithChildrenName = (MockWidget as any).name ? 'WidgetWithNamedChildren' : 'Widget-6';
+	const mockWidgetName = (MockWidget as any).name || 'Widget-6';
+	const widgetWithChildrenName = (MockWidget as any).name ? 'WidgetWithNamedChildren' : 'Widget-7';
 	return `
 <div
 (A)	classes={["one","two","three"]}
