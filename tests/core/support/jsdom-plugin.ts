@@ -33,7 +33,7 @@ intern.registerPlugin('jsdom', async () => {
 	 * requestAnimationFrame and create a fake document.activeElement getter */
 	const initialize = () => {
 		/* Create a basic document */
-		const doc = jsdom.jsdom(`
+		const doc = new jsdom.JSDOM(`
 			<!DOCTYPE html>
 			<html>
 			<head></head>
@@ -42,10 +42,10 @@ intern.registerPlugin('jsdom', async () => {
 		`);
 
 		/* Assign it to the global namespace */
-		global.document = doc;
+		global.document = doc.window.document;
 
 		/* Assign a global window as well */
-		global.window = doc.defaultView;
+		global.window = doc.window;
 
 		/* Needed for Pointer Event Polyfill's incorrect Element detection */
 		global.Element = function() {};
@@ -57,6 +57,8 @@ intern.registerPlugin('jsdom', async () => {
 			return true;
 		};
 
+		global.cancelAnimationFrame = () => {};
+
 		global.MutationObserver = function MutationObserver() {
 			return {
 				observe: function() {
@@ -67,8 +69,6 @@ intern.registerPlugin('jsdom', async () => {
 				}
 			};
 		};
-
-		global.cancelAnimationFrame = () => {};
 		global.IntersectionObserver = () => {};
 
 		if (!global.navigator) {
@@ -78,7 +78,7 @@ intern.registerPlugin('jsdom', async () => {
 		}
 
 		global.fakeActiveElement = () => {};
-		Object.defineProperty(doc, 'activeElement', {
+		Object.defineProperty(global.document, 'activeElement', {
 			get: () => {
 				return global.fakeActiveElement();
 			}

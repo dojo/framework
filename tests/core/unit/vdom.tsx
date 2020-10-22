@@ -8244,4 +8244,40 @@ jsdomDescribe('vdom', () => {
 		assert.strictEqual(root.children[0].getAttribute('dir'), 'rtl');
 		assert.strictEqual(root.children[0].innerHTML, 'hello dojo');
 	});
+
+	it('should support oneventoptions', () => {
+		let addEventListenerSpy: SinonStub;
+		const createElement = document.createElement.bind(document);
+		const createElementStub = stub(document, 'createElement');
+		createElementStub.callsFake((name: string) => {
+			const element = createElement(name);
+			addEventListenerSpy = stub(element, 'addEventListener');
+			return element;
+		});
+
+		let invalidate: () => void;
+		let passive = false;
+		let onscroll;
+
+		const MyWidget = create({ invalidator })(({ middleware: { invalidator } }) => {
+			invalidate = invalidator;
+			onscroll = () => {};
+			return (
+				<div onscroll={onscroll} oneventoptions={{ passive: passive ? ['onscroll'] : [] }}>
+					Hello
+				</div>
+			);
+		});
+
+		const root: HTMLElement = document.createElement('div');
+		const r = renderer(() => <MyWidget />);
+		r.mount({ domNode: root, sync: true });
+		assert.isTrue(addEventListenerSpy!.calledWith('scroll', onscroll, { passive: false }));
+
+		addEventListenerSpy!.resetHistory();
+
+		passive = true;
+		invalidate!();
+		assert.isTrue(addEventListenerSpy!.calledWith('scroll', onscroll, { passive: true }));
+	});
 });
