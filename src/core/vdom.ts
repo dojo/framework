@@ -79,6 +79,18 @@ import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
 
+let supportsPassive = false;
+try {
+	let opts = Object.defineProperty({}, 'passive', {
+		get() {
+			supportsPassive = true;
+		}
+	});
+	const f = () => {};
+	window.addEventListener('testPassive', f, opts);
+	window.removeEventListener('testPassive', f, opts);
+} catch (e) {}
+
 export namespace tsx.JSX {
 	export type Element = WNode;
 	export interface ElementAttributesProperty {
@@ -1282,7 +1294,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		domNode: Node,
 		eventName: string,
 		currentValue: (event: Event) => void,
-		previousValue?: Function
+		previousValue?: Function,
+		eventOptions?: { passive: string[] }
 	) {
 		if (previousValue) {
 			const previousEvent = _eventMap.get(previousValue);
@@ -1298,7 +1311,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			};
 		}
 
-		domNode.addEventListener(eventName, callback);
+		const { passive = [] } = eventOptions || {};
+		const isPassive = passive.indexOf(`on${eventName}`) !== -1;
+		supportsPassive
+			? domNode.addEventListener(eventName, callback, { passive: isPassive })
+			: domNode.addEventListener(eventName, callback);
 		_eventMap.set(currentValue, callback);
 	}
 
@@ -1612,7 +1629,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				} else if (propName !== 'key' && propValue !== previousValue) {
 					const type = typeof propValue;
 					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
-						updateEvent(domNode, propName.substr(2), propValue, previousValue);
+						updateEvent(domNode, propName.substr(2), propValue, previousValue, properties.oneventoptions);
+					} else if (propName === 'oneventoptions') {
 					} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
 						updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
 					} else if (propName === 'scrollLeft' || propName === 'scrollTop') {

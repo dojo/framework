@@ -368,7 +368,7 @@ export interface AriaAttributes {
 	'aria-valuetext'?: string;
 }
 
-export interface VNodeProperties<T extends EventTarget = EventTarget> extends AriaAttributes {
+export interface VNodePropertiesWithoutIndex<T extends EventTarget = EventTarget> extends AriaAttributes {
 	enterAnimation?: SupportedClassName;
 
 	exitAnimation?: SupportedClassName;
@@ -391,7 +391,6 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	 * An object literal like `{height:'100px'}` which allows styles to be changed dynamically. All values must be strings.
 	 */
 	readonly styles?: Partial<CSSStyleDeclaration>;
-
 	// Pointer Events
 	onpointermove?(ev: PointerEvent<T>): boolean | void;
 	onpointerdown?(ev: PointerEvent<T>): boolean | void;
@@ -479,7 +478,14 @@ export interface VNodeProperties<T extends EventTarget = EventTarget> extends Ar
 	 * determines if the node should be blurred
 	 */
 	readonly blur?: boolean | NodeOperationPredicate;
+}
 
+type NonUndefined<A> = A extends undefined ? never : A;
+
+type FunctionKeys<T extends object> = { [K in keyof T]-?: NonUndefined<T[K]> extends Function ? K : never }[keyof T];
+
+export interface VNodeProperties<T extends EventTarget = EventTarget> extends VNodePropertiesWithoutIndex<T> {
+	oneventoptions?: { passive: FunctionKeys<VNodePropertiesWithoutIndex>[] };
 	/**
 	 * Everything that is not explicitly listed (properties and attributes that are either uncommon or custom).
 	 */
