@@ -494,6 +494,34 @@ describe('test renderer', () => {
 			);
 		});
 
+		it('Should be able to set a property on a named child that is a render result', () => {
+			const Bar = create().children<{ bar: RenderResult }>()(({ children }) => <div>{children()[0].bar}</div>);
+			const Foo = create()(function Foo() {
+				return (
+					<div>
+						<Bar>
+							{{
+								bar: <div disabled={true}>foo</div>
+							}}
+						</Bar>
+					</div>
+				);
+			});
+			const r = renderer(() => <Foo />);
+			const WrappedBar = wrap(Bar);
+			const WrappedDiv = wrap('div');
+			const testAssertion = assertion(() => (
+				<div>
+					<WrappedBar>
+						{{
+							bar: <WrappedDiv>foo</WrappedDiv>
+						}}
+					</WrappedBar>
+				</div>
+			));
+			r.expect(testAssertion.setProperty(WrappedDiv, 'disabled', true));
+		});
+
 		it('Should use custom comparator for the template assertion', () => {
 			const factory = create();
 			const WrappedSpan = wrap('span');

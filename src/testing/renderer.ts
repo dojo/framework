@@ -125,6 +125,9 @@ function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T
 							const result = node[key]();
 							node[key] = result;
 							return Array.isArray(result) ? [...result, ...newNodes] : [result, ...newNodes];
+						} else if (typeof node[key] === 'object') {
+							const result = node[key];
+							return Array.isArray(result) ? [...result, ...newNodes] : [result, ...newNodes];
 						}
 						return newNodes;
 					},
