@@ -184,9 +184,6 @@ if (!has('es6-weakmap')) {
 			if (!key || (typeof key !== 'object' && typeof key !== 'function')) {
 				throw new TypeError('Invalid value used as weak map key');
 			}
-			if (key instanceof HTMLElement) {
-				(key as any).__weakMapWorkaround = 1;
-			}
 			let entry: Entry<K, V> = key[this._name];
 			if (!entry || entry.key !== key) {
 				entry = Object.create(null, {
