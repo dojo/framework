@@ -79,18 +79,6 @@ import { auto } from './diff';
 import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
 
-let supportsPassive = false;
-try {
-	let opts = Object.defineProperty({}, 'passive', {
-		get() {
-			supportsPassive = true;
-		}
-	});
-	const f = () => {};
-	window.addEventListener('testPassive', f, opts);
-	window.removeEventListener('testPassive', f, opts);
-} catch (e) {}
-
 export namespace tsx.JSX {
 	export type Element = WNode;
 	export interface ElementAttributesProperty {
@@ -1248,6 +1236,8 @@ function wrapFunctionProperties(id: string, properties: any) {
 	return props;
 }
 
+type EventMapValue = { proxy: EventListener; callback: Function; options: any } | undefined;
+
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
 		sync: false,
@@ -1260,7 +1250,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _deferredProcessQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _applicationQueue: ApplicationInstruction[] = [];
-	let _eventMap = new WeakMap<Function, EventListener>();
+	let _eventMap = new WeakMap<Node, { [index: string]: EventMapValue }>();
 	let _idToWrapperMap = new Map<string, DNodeWrapper>();
 	let _wrapperSiblingMap = new WeakMap<DNodeWrapper, DNodeWrapper>();
 	let _idToChildrenWrappers = new Map<string, DNodeWrapper[]>();
@@ -1290,17 +1280,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function updateEvent(
+	function setEvent(
 		domNode: Node,
 		eventName: string,
 		currentValue: (event: Event) => void,
 		previousValue?: Function,
 		eventOptions?: { passive: string[] }
 	) {
-		if (previousValue) {
-			const previousEvent = _eventMap.get(previousValue);
-			previousEvent && domNode.removeEventListener(eventName, previousEvent);
-		}
+		const proxyEvents = _eventMap.get(domNode) || {};
+		let proxyEvent = proxyEvents[eventName];
 
 		let callback = currentValue;
 
@@ -1311,12 +1299,33 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			};
 		}
 
-		const { passive = [] } = eventOptions || {};
-		const isPassive = passive.indexOf(`on${eventName}`) !== -1;
-		supportsPassive
-			? domNode.addEventListener(eventName, callback, { passive: isPassive })
-			: domNode.addEventListener(eventName, callback);
-		_eventMap.set(currentValue, callback);
+		const { passive: currentPassive = [] } = eventOptions || {};
+
+		const isPassive = currentPassive.indexOf(`on${eventName}`) !== -1;
+
+		const options = { passive: isPassive };
+
+		if (proxyEvent && proxyEvent.options.passive !== isPassive) {
+			domNode.removeEventListener(eventName, proxyEvent.proxy);
+			proxyEvent = undefined;
+		}
+
+		if (proxyEvent) {
+			proxyEvents[eventName] = { ...proxyEvent, callback };
+			_eventMap.set(domNode, proxyEvents);
+		} else {
+			const proxy = (...args: any[]) => {
+				const proxyEvents = _eventMap.get(domNode) || {};
+				const proxyEvent = proxyEvents[eventName];
+				proxyEvent && proxyEvent.callback(...args);
+			};
+			proxyEvents[eventName] = { callback, proxy, options };
+			has('dom-passive-event')
+				? domNode.addEventListener(eventName, proxy, options)
+				: domNode.addEventListener(eventName, proxy);
+
+			_eventMap.set(domNode, proxyEvents);
+		}
 	}
 
 	function removeOrphanedEvents(
@@ -1329,9 +1338,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const isEvent = propName.substr(0, 2) === 'on' || onlyEvents;
 			const eventName = onlyEvents ? propName : propName.substr(2);
 			if (isEvent && !properties[propName]) {
-				const eventCallback = _eventMap.get(previousProperties[propName]);
-				if (eventCallback) {
-					domNode.removeEventListener(eventName, eventCallback);
+				const proxyEvents = _eventMap.get(domNode) || {};
+				let proxyEvent: { proxy: EventListener; callback: Function; options: any } | undefined =
+					proxyEvents[eventName];
+				if (proxyEvent) {
+					domNode.removeEventListener(eventName, proxyEvent.proxy);
+					delete proxyEvents[eventName];
+					_eventMap.set(domNode, proxyEvents);
 				}
 			}
 		});
@@ -1626,19 +1639,21 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						(domNode as any)['select-value'] = propValue;
 					}
 					setValue(domNode, propValue, previousValue);
-				} else if (propName !== 'key' && propValue !== previousValue) {
+				} else if (propName !== 'key') {
 					const type = typeof propValue;
 					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
-						updateEvent(domNode, propName.substr(2), propValue, previousValue, properties.oneventoptions);
+						setEvent(domNode, propName.substr(2), propValue, previousValue, properties.oneventoptions);
 					} else if (propName === 'oneventoptions') {
-					} else if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
-						updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
-					} else if (propName === 'scrollLeft' || propName === 'scrollTop') {
-						if ((domNode as any)[propName] !== propValue) {
+					} else if (propValue !== previousValue) {
+						if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
+							updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
+						} else if (propName === 'scrollLeft' || propName === 'scrollTop') {
+							if ((domNode as any)[propName] !== propValue) {
+								(domNode as any)[propName] = propValue;
+							}
+						} else {
 							(domNode as any)[propName] = propValue;
 						}
-					} else {
-						(domNode as any)[propName] = propValue;
 					}
 				}
 			}
@@ -1695,7 +1710,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			previousProperties.events = previousProperties.events || {};
 			Object.keys(events).forEach((event) => {
-				updateEvent(next.domNode as HTMLElement, event, events[event], previousProperties.events[event]);
+				setEvent(next.domNode as HTMLElement, event, events[event], previousProperties.events[event]);
 			});
 		} else {
 			setProperties(next.domNode as HTMLElement, previousProperties.properties, next);

@@ -57,8 +57,6 @@ intern.registerPlugin('jsdom', async () => {
 			return true;
 		};
 
-		global.cancelAnimationFrame = () => {};
-
 		global.MutationObserver = function MutationObserver() {
 			return {
 				observe: function() {
@@ -69,6 +67,7 @@ intern.registerPlugin('jsdom', async () => {
 				}
 			};
 		};
+		global.cancelAnimationFrame = () => {};
 		global.IntersectionObserver = () => {};
 
 		if (!global.navigator) {

@@ -8257,11 +8257,10 @@ jsdomDescribe('vdom', () => {
 
 		let invalidate: () => void;
 		let passive = false;
-		let onscroll;
+		const onscroll = () => {};
 
 		const MyWidget = create({ invalidator })(({ middleware: { invalidator } }) => {
 			invalidate = invalidator;
-			onscroll = () => {};
 			return (
 				<div onscroll={onscroll} oneventoptions={{ passive: passive ? ['onscroll'] : [] }}>
 					Hello
@@ -8272,12 +8271,13 @@ jsdomDescribe('vdom', () => {
 		const root: HTMLElement = document.createElement('div');
 		const r = renderer(() => <MyWidget />);
 		r.mount({ domNode: root, sync: true });
-		assert.isTrue(addEventListenerSpy!.calledWith('scroll', onscroll, { passive: false }));
-
-		addEventListenerSpy!.resetHistory();
+		let [, , eventOptions] = addEventListenerSpy!.firstCall.args;
+		assert.deepEqual(eventOptions, { passive: false });
 
 		passive = true;
 		invalidate!();
-		assert.isTrue(addEventListenerSpy!.calledWith('scroll', onscroll, { passive: true }));
+
+		[, , eventOptions] = addEventListenerSpy!.secondCall.args;
+		assert.deepEqual(eventOptions, { passive: true });
 	});
 });
