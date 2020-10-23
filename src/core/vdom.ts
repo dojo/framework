@@ -1641,7 +1641,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					setValue(domNode, propValue, previousValue);
 				} else if (propName !== 'key') {
 					const type = typeof propValue;
-					if (type === 'function' && propName.lastIndexOf('on', 0) === 0 && includesEventsAndAttributes) {
+					if (
+						type === 'function' &&
+						propName.lastIndexOf('on', 0) === 0 &&
+						includesEventsAndAttributes &&
+						(propValue !== previousValue || properties.oneventoptions)
+					) {
 						setEvent(domNode, propName.substr(2), propValue, previousValue, properties.oneventoptions);
 					} else if (propName === 'oneventoptions') {
 					} else if (propValue !== previousValue) {
