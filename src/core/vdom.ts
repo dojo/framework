@@ -1280,11 +1280,10 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 	}
 
-	function setEvent(
+	function updateEvent(
 		domNode: Node,
 		eventName: string,
 		currentValue: (event: Event) => void,
-		previousValue?: Function,
 		eventOptions?: { passive: string[] }
 	) {
 		const proxyEvents = _eventMap.get(domNode) || {};
@@ -1647,7 +1646,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						includesEventsAndAttributes &&
 						(propValue !== previousValue || properties.oneventoptions)
 					) {
-						setEvent(domNode, propName.substr(2), propValue, previousValue, properties.oneventoptions);
+						updateEvent(domNode, propName.substr(2), propValue, properties.oneventoptions);
 					} else if (propName === 'oneventoptions') {
 					} else if (propValue !== previousValue) {
 						if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
@@ -1715,7 +1714,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 			previousProperties.events = previousProperties.events || {};
 			Object.keys(events).forEach((event) => {
-				setEvent(next.domNode as HTMLElement, event, events[event], previousProperties.events[event]);
+				updateEvent(next.domNode as HTMLElement, event, events[event]);
 			});
 		} else {
 			setProperties(next.domNode as HTMLElement, previousProperties.properties, next);
