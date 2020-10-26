@@ -43,7 +43,7 @@
   "dependencies": {
     "@types/cldrjs": "0.4.20",
     "@types/globalize": "0.0.34",
-    "@webcomponents/webcomponentsjs": "1.1.0",
+    "@webcomponents/webcomponentsjs": "2.5.0",
     "cldr-core": "36.0.0",
     "cldrjs": "^0.5.0",
     "cross-fetch": "3.0.2",
