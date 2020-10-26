@@ -6339,10 +6339,11 @@ jsdomDescribe('vdom', () => {
 
 			const root: HTMLElement = document.createElement('div');
 			const r = renderer(() => <MyWidget />);
-			r.mount({ domNode: root, sync: true });
 
 			// force support of passive events
 			add('dom-passive-event', true, true);
+			r.mount({ domNode: root, sync: true });
+
 			let [, , eventOptions] = addEventListenerSpy!.firstCall.args;
 			assert.deepEqual(eventOptions, { passive: true });
 			passive = false;
