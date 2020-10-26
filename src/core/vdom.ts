@@ -1236,7 +1236,7 @@ function wrapFunctionProperties(id: string, properties: any) {
 	return props;
 }
 
-type EventMapValue = { proxy: EventListener; callback: Function; options: any } | undefined;
+type EventMapValue = { proxy: EventListener; callback: Function; options: { passive: boolean } } | undefined;
 
 export function renderer(renderer: () => RenderResult): Renderer {
 	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
@@ -1338,8 +1338,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const eventName = onlyEvents ? propName : propName.substr(2);
 			if (isEvent && !properties[propName]) {
 				const proxyEvents = _eventMap.get(domNode) || {};
-				let proxyEvent: { proxy: EventListener; callback: Function; options: any } | undefined =
-					proxyEvents[eventName];
+				let proxyEvent = proxyEvents[eventName];
 				if (proxyEvent) {
 					domNode.removeEventListener(eventName, proxyEvent.proxy);
 					delete proxyEvents[eventName];
