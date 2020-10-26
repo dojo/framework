@@ -494,6 +494,27 @@ add(
 
 add('dom-inert', () => has('host-browser') && Element.prototype.hasOwnProperty('inert'), true);
 
+add(
+	'dom-passive-event',
+	() => {
+		let supportsPassive = false;
+		if ('host-browser') {
+			try {
+				const opts = Object.defineProperty({}, 'passive', {
+					get() {
+						supportsPassive = true;
+					}
+				});
+				const f = () => {};
+				window.addEventListener('testPassive', f, opts);
+				window.removeEventListener('testPassive', f, opts);
+			} catch (e) {}
+		}
+		return supportsPassive;
+	},
+	true
+);
+
 add('build-elide', false);
 
 add('test', false);

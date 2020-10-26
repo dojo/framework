@@ -3,7 +3,7 @@ const { assert } = intern.getPlugin('chai');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 import global from '../../../src/shim/global';
 import { from as arrayFrom } from '../../../src/shim/array';
-import { spy, stub, SinonSpy, SinonStub } from 'sinon';
+import { spy, stub, createSandbox, SinonSpy, SinonStub, SinonSandbox } from 'sinon';
 import { add } from '../../../src/core/has';
 import { createResolvers } from './../support/util';
 import sendEvent from '../support/sendEvent';
@@ -6186,6 +6186,13 @@ jsdomDescribe('vdom', () => {
 	});
 
 	describe('events', () => {
+		let sandbox: SinonSandbox;
+		beforeEach(() => {
+			sandbox = createSandbox();
+		});
+		afterEach(() => {
+			sandbox.restore();
+		});
 		it('should add an event listener', () => {
 			const onclick = stub();
 			const renderFunction = () => {
@@ -6305,6 +6312,75 @@ jsdomDescribe('vdom', () => {
 			sendEvent(root, 'input');
 			assert.strictEqual(typedKeys, 'ab');
 			meta.setRenderResult(renderFunction());
+		});
+
+		it('should support passive oneventoptions', () => {
+			let addEventListenerSpy: SinonStub;
+			const createElement = document.createElement.bind(document);
+			const createElementStub = sandbox.stub(document, 'createElement');
+			createElementStub.callsFake((name: string) => {
+				const element = createElement(name);
+				addEventListenerSpy = stub(element, 'addEventListener');
+				return element;
+			});
+
+			let invalidate: () => void;
+			let passive = true;
+			const onscroll = () => {};
+
+			const MyWidget = create({ invalidator })(({ middleware: { invalidator } }) => {
+				invalidate = invalidator;
+				return (
+					<div onscroll={onscroll} oneventoptions={{ passive: passive ? ['onscroll'] : [] }}>
+						Hello
+					</div>
+				);
+			});
+
+			const root: HTMLElement = document.createElement('div');
+			const r = renderer(() => <MyWidget />);
+
+			// force support of passive events
+			add('dom-passive-event', true, true);
+			r.mount({ domNode: root, sync: true });
+
+			let [, , eventOptions] = addEventListenerSpy!.firstCall.args;
+			assert.deepEqual(eventOptions, { passive: true });
+			passive = false;
+			invalidate!();
+			[, , eventOptions] = addEventListenerSpy!.secondCall.args;
+			assert.deepEqual(eventOptions, { passive: false });
+
+			// force non-support of passive events
+			add('dom-passive-event', false, true);
+			passive = true;
+			invalidate!();
+			[, , eventOptions] = addEventListenerSpy!.thirdCall.args;
+			assert.deepEqual(eventOptions, undefined);
+		});
+
+		it('should not re-attach event listeners for the same type if the callback changes', () => {
+			let addEventListenerSpy: SinonStub;
+			const createElement = document.createElement.bind(document);
+			const createElementStub = sandbox.stub(document, 'createElement');
+			createElementStub.callsFake((name: string) => {
+				const element = createElement(name);
+				addEventListenerSpy = stub(element, 'addEventListener');
+				return element;
+			});
+
+			let invalidate: () => void;
+			const MyWidget = create({ invalidator })(({ middleware: { invalidator } }) => {
+				invalidate = invalidator;
+				return <div onclick={() => {}}>Hello</div>;
+			});
+
+			const root: HTMLElement = document.createElement('div');
+			const r = renderer(() => <MyWidget />);
+			r.mount({ domNode: root, sync: true });
+			assert.equal(addEventListenerSpy!.callCount, 1);
+			invalidate!();
+			assert.equal(addEventListenerSpy!.callCount, 1);
 		});
 	});
 
