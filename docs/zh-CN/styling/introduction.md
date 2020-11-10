@@ -17,7 +17,7 @@ Dojo 鼓励将结构样式封装在各部件中，以便最大限度复用；同
 | **CSS 属性**                 | CSS 模块能使用 [CSS 自定义属性和 `var()`](https://www.w3.org/TR/css-variables/) 来设置主题变体的属性和颜色。                                                                                                                                                                 |
 | **简化定义第三方部件的主题** | 应用程序可以轻松扩展主题以覆盖第三方部件，如 Dojo 内置[部件库](https://github.com/dojo/widgets)中的部件，Dojo 也提供了[开箱即用的主题](https://github.com/dojo/themes)，应用程序可直接使用。[CLI 工具](https://github.com/dojo/cli-create-theme)极大简化了主题的创建和组合。 |
 
-# 基本用法
+## 基本用法
 
 > **注意：** 以下示例是按顺序在前一个示例的基础上构建的。每个示例都尽量简短，只突出显示跟上一个示例相比发生变化的部分。
 
@@ -33,7 +33,7 @@ Dojo 鼓励将结构样式封装在各部件中，以便最大限度复用；同
 
 应用程序名与[部件主题的 key](/learn/styling/working-with-themes#widget-theme-keys) 有关。
 
-## 为单个部件设置样式
+### 为单个部件设置样式
 
 -   为每个部件单独定义一个 [CSS 模块](/learn/styling/styling-and-theming-in-dojo#structural-widget-styling)
 -   在部件的 TypeScript 代码中使用相应的类型化的样式类
@@ -60,7 +60,7 @@ export default factory(function MyWidget() {
 });
 ```
 
-## 让部件支持主题
+### 让部件支持主题
 
 -   注入 `theme` 中间件
 -   使用 `theme.classes` 返回主题化的 css 类名，这样[部件的默认样式就会被主题覆盖](/learn/styling/theming-a-dojo-application#making-themeable-widgets)
@@ -81,7 +81,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
-## 在部件中应用主题变体
+### 在部件中应用主题变体
 
 -   在部件的 `root` 上设置 `theme.variant` 样式。
 -   将 css 属性应用到正确的 DOM 层级上，并且不能暴露出部件的 DOM。
@@ -103,7 +103,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
-## 创建主题
+### 创建主题
 
 -   使用自定义的主题样式属性重写部件默认的 CSS 类
 -   通过合适的[部件主题 key](/learn/styling/working-with-themes#widget-theme-keys) 将一个或多个重写后的样式链接到[主题结构中](/learn/styling/working-with-themes)
@@ -127,7 +127,7 @@ export default {
 };
 ```
 
-## 创建主题的变体
+### 创建主题的变体
 
 -   将主题变量作为 [CSS 自定义属性](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)存放在 `variant` 模块中
 -   通过 `var()` 引用自定义属性
@@ -168,7 +168,7 @@ export default {
 };
 ```
 
-## 指定默认的应用程序主题
+### 指定默认的应用程序主题
 
 `theme` 中间件可用于设置应用程序主题。要设置“默认的”或初始化主题，则使用 `theme.set` 函数，同时用 `theme.get` 函数确定是否需要设置主题。应该在应用程序的顶级部件中设置默认主题。
 
@@ -195,7 +195,7 @@ export default factory(function App({ middleware: { theme }}) {
 
 **注意：** 当同时使用基于函数的部件和基于类的部件时，应该使用应用程序注册器来注册主题。当使用基于类的部件时（如 `@dojo/widgets`） 也是如此。详情参考[基于类部件的主题]()。
 
-## 设置主题变体
+### 设置主题变体
 
 如果将主题与 `variants` 一起使用，则自动选用 `default` 变体。使用 `theme.set` 函数来设置不同的变体——传入的变体名必须是主题导出的 `variants` 的 key 值。
 
@@ -218,7 +218,7 @@ export default factory(function App({ middleware: { theme }}) {
 });
 ```
 
-## 更改应用程序主题
+### 更改应用程序主题
 
 -   使用 [`theme` 中间件](/learn/styling/theming-a-dojo-application#changing-the-currently-active-theme) 在可用的主题间切换
 

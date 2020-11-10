@@ -8,9 +8,9 @@ Dojo's Routing package provides a first class declarative routing solution for w
 | **Out-of-the-box Routing Widgets** | There are a selection of out the box routing widgets, such as `Link` and `ActiveLink`          |
 | **Automatic Code Splitting**       | Combined with `@dojo/cli-build-app`, top level routes are automatically code split             |
 
-# Basic usage
+## Basic usage
 
-## Adding routing to an application
+### Adding routing to an application
 
 -   Add an initial route configuration that defines a single url path that maps to a route identifier and an `outlet` name.
 
@@ -103,7 +103,7 @@ export default factory(function App() {
 -   The URL of the route is determined by the `path` element of the route configuration. In this case, `home` was specified so the route can be accessed via the URL path `/#home`.
     -   By default the router uses the [HashHistory](/learn/routing/history-managers#hashhistory) history manager which requires the use of the `#` before the route path. Other [history managers](/learn/routing/history-managers) are available to support other history management mechanisms.
 
-## Path and query parameters
+### Path and query parameters
 
 Path parameters are placeholders in the routing configuration that will match any value for the segment. The parameters are defined using curly braces, for example: `{param}`.
 
@@ -177,7 +177,7 @@ export default factory(function App() {
 
 If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query parameters are injected into the matching `Route`'s `renderer` method as an object of type `MatchDetails` and accessed via that object's `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
 
-## Default route and parameters
+### Default route and parameters
 
 -   Specify a default route by updating the routing configuration to include `defaultRoute: true` for the preferred route. The default route is used to redirect the application on initial load if no route has been provided or the requested route has not been registered.
 
@@ -212,7 +212,7 @@ export default [
 ];
 ```
 
-## Wildcard Routes
+### Wildcard Routes
 
 The `*` character can be used to indicate a wildcard route. The route will be matched normally up until the `*` and will match
 any path at that point. A wildcard route will never be preferred over another matching route without a wildcard. The `*` implicitly indicates the end of the
@@ -259,7 +259,7 @@ export default factory(function App() {
 });
 ```
 
-## Using link widgets
+### Using link widgets
 
 The `Link` widget is a wrapper around an anchor tag that enables consumers to specify a route `id` to create a link to. If the generated link requires specific path or query parameters that are not in the route, they can be passed via the `params` property.
 
@@ -313,7 +313,7 @@ export default factory(function App() {
 });
 ```
 
-## Code splitting by route
+### Code splitting by route
 
 When using `@dojo/cli-build-app`, Dojo supports automatic code splitting by default for all top level routes. This means that all widgets referenced within the `Route`s `renderer` will include a specific bundle for the route that will be loaded lazily when a user accesses the route.
 

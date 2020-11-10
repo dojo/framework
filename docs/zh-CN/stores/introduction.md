@@ -19,13 +19,13 @@ Dojo store 包提供了一个集中式存储，为应用程序提供真正的单
 | **操作中间件**         | 在操作前和操作后进行错误处理和数据转换。           |
 | **简单的部件集成**     | 提供与 Dojo 部件轻松集成的工具和模式。             |
 
-# 基本用法
+## 基本用法
 
 Dojo 提供了一种响应式架构，能够持续修改和渲染应用程序的当前状态。在简单系统中，这通常发生在部件内部，并且部件可以修改自己的状态。然而，随着系统变得越来越复杂，就需要更好的划分和封装数据，并随着快速增长创建一个清晰的隔离。
 
 Store 提供了一个清晰的接口，通过单向数据流对全局对象进行存储、修改和检索。Store 中包含对共享模式的支持，如异步数据获取、中间件和撤销。Store 及其模式允许部件聚焦于它们的主要角色，即对信息的可视化展示和监听用户交互。
 
-## store 对象
+### store 对象
 
 store 对象存储整个应用程序全局的、原子的状态。应该在创建应用程序时创建 store 对象，并使用一个注入器将其定义到 `Registry` 中。
 
@@ -63,7 +63,7 @@ export interface State {
 
 上面是一个简单的示例，定义了 store 的结构，会在本指南的其余示例中使用。
 
-## 更新 store
+### 更新 store
 
 使用 Dojo store 时需注意三个核心概念。
 
@@ -71,11 +71,11 @@ export interface State {
 -   **Command** - 执行业务逻辑并返回 operation 的简单函数
 -   **Process** - 执行一组 command 和表示应用程序的行为
 
-### Command 和 operation
+#### Command 和 operation
 
 要修改 store 中的值，则在执行 process 时，会调用一个 command 函数。command 函数返回要应用到 store 上的一系列 operation。每个 command 都要传入一个 `CommandRequest` 参数，它提供了 `path` 和 `at` 函数，会以类型安全的方式生成 `Path`，也提供了 `get` 函数来访问 store 中的状态，以及提供 `payload` 对象来为被调用的 process 执行器传入参数。
 
-#### Command 工厂
+##### Command 工厂
 
 Store 中有一个简单的封装函数，用于创建 command，是一个类型安全的工厂函数。
 
@@ -95,7 +95,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 `createCommand` ensures that the wrapped command has the correct typing and the passed `CommandRequest` functions get typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands, the examples in this guide use `createCommand`.
 `createCommand` 确保封装的 command 具有正确的类型，而传入的 `CommandRequest` 函数能获得通过 `createCommandFactory` 提供的 `State` 接口的类型。虽然可以手动为 command 设置类型，但本指南中的示例使用 `createCommand`。
 
-#### `path`
+##### `path`
 
 path 是一个 `string`，用于描述应用 operation 的位置。`path` 函数是 `CommandRequest` 中的一部分，可以在 `Command` 中访问。
 
@@ -112,7 +112,7 @@ path('users', 'current', 'name');
 
 这个 path 引用的 `string` 值位于 `/users/current/name`。`path` 以类型安全的方式遍历层次结构，确保只能使用在 `State` 接口中定义的属性名。
 
-#### `at`
+##### `at`
 
 `at` 函数与 `path` 函数一起标识数组中的位置。本示例使用了 `at` 函数。
 
@@ -125,7 +125,7 @@ at(path('users', 'list'), 1);
 
 这个 path 引用的是位于 `/user/list` 中偏移量为 `1` 的 `User`。
 
-#### `add` operation
+##### `add` operation
 
 用于向对象中添加值或者向数组中插入值。
 
@@ -144,7 +144,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 会将 `user` 插入到用户列表的起始位置。
 
-#### `remove` operation
+##### `remove` operation
 
 从对象或数组中移除值。
 
@@ -169,7 +169,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 本示例先为 `users` 添加一个初始状态，然后移除 list 中的第一个 `user`。
 
-#### `replace` operation
+##### `replace` operation
 
 替换值。相当于先 `remove` 再 `add`。
 
@@ -195,7 +195,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 本示例使用 `newUser` 替换掉 `list` 中的第二个用户信息。
 
-#### `get`
+##### `get`
 
 `get` 函数会返回 store 在指定 path 位置的值，如果该位置不存在值，则返回 `undefined`。
 
@@ -220,7 +220,7 @@ const updateCurrentUser = createCommand(async ({ at, get, path }) => {
 
 本示例检查是否存在身份认证令牌，然后据此更新当前用户的信息。
 
-#### `payload`
+##### `payload`
 
 `payload` 是一个对象字面量，当 process 调用 command 时，会将其传给 command。也可以在构建命令时传入 `payload` 的类型。
 
@@ -238,15 +238,15 @@ const addUser = createCommand<User>(({ at, path, payload }) => {
 
 本示例将 `payload` 提供的用户信息添加到 `/users/list` 的起始位置。
 
-#### 异步 command
+##### 异步 command
 
 command 可以同步执行，也可以异步执行。异步 command 应该返回一个 `Promise`，以便指出何时完成。每个 command 成功完成后，将自动收集和应用 operation。
 
-### Process
+#### Process
 
 `Process` 在 `store` 上按顺序执行 command，以修改应用程序的状态。使用 `createProcess` 工厂函数创建 process，该函数可传入一系列 command，以及选择性的传入一系列中间件。
 
-#### 创建 process
+##### 创建 process
 
 首先，创建两个 command，负责获取用户令牌，并使用该令牌加载 `User`。然后创建一个 process 来使用这两个 command。每一个 process 都应该使用 ID 唯一标识。此 ID 在 store 内部使用。
 
@@ -276,7 +276,7 @@ const loadUserData = createCommand(async ({ path }) => {
 export const login = createProcess('login', [ fetchUser, loadUserData ]);
 ```
 
-#### `payload` 类型
+##### `payload` 类型
 
 process 执行器(process executor)的 `payload` 是从 command 的 `payload` 类型推断出来的。如果命令间的 payload 类型不同，则需要显式定义 process 执行器的 `payload` 类型。
 
@@ -296,13 +296,13 @@ const process = createProcess<State, { one: string; two: string }>('example', [c
 process(store)({ one: 'one', two: 'two' });
 ```
 
-## 关联部件和 store
+### 关联部件和 store
 
 有两个状态容器可用于部件：`StoreContainer` 和 `StoreProvider`。这些容器将应用程序的 store 与部件关联起来。当使用函数部件时，也可以创建类型化的 store 中间件。
 
 注意，本节旨在介绍部件和状态（通过 store 提供的）是如何关联起来的。有关部件状态管理的更多信息，请参阅[创建部件参考指南](/learn/creating-widgets/状态管理)。
 
-### Store 中间件
+#### Store 中间件
 
 当使用基于函数的部件时，`createStoreModdleware` 帮助函数用于创建类型化的 store 中间件，让部件能访问 store。
 
@@ -357,7 +357,7 @@ export const User = factory(function User({ middleware: { store } }) {
 });
 ```
 
-### StoreProvider
+#### StoreProvider
 
 `StoreProvider` 是一个 Dojo 部件，它拥有 `renderer`，并与 store 关联。它总是封装在另一个部件内，因为它无法定义自己的属性。
 
@@ -386,7 +386,7 @@ export const User = factory(function User() {
 
 `StoreProvider` 是 `User` 渲染内容的一部分，并且跟其它 Dojo 部件一样，提供了自己的 `renderer`。
 
-### Container
+#### Container
 
 `Container` 是一个部件，它完全封装另一个部件。它使用 `getProperties` 函数将 store 关联到部件上。
 
@@ -427,7 +427,7 @@ const UserContainer = StoreContainer(User, 'state', {
 
 `StoreContainer` 属性与其封装部件的属性是 1:1 映射的。部件的属性成为 `StoreContainer` 的属性，但这些属性都是可选的。
 
-### 执行 process
+#### 执行 process
 
 process 只是为一组数据定义了一个执行流。要执行 process，就需要让 process 基于 store 创建一个执行器。`StoreContainer` 和 `StoreProvider` 部件都支持访问 store。
 

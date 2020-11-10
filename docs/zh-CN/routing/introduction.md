@@ -13,9 +13,9 @@ Dojo 的路由包为 web 应用程序提供了一流的声明式路由解决方�
 | **现成的路由部件**     | 有几个现成的路由部件，如 `Link` 和 `ActiveLink`                 |
 | **自动化代码拆分**     | 与 `@dojo/cli-build-app` 结合使用，会自动按顶级路由进行代码拆分 |
 
-# 基本用法
+## 基本用法
 
-## 为应用程序添加路由
+### 为应用程序添加路由
 
 -   添加一个初始的路由配置，该配置定义一个 url 路径，然后映射到一个路由标识符和 `outlet` 上。
 
@@ -108,7 +108,7 @@ export default factory(function App() {
 -   路由的 URL 是由路由配置中的 `path` 元素决定的。在本例中，`path` 的值为 `home`，所以使用 URL 路径 `/#home` 可以访问此路由。
     -   默认情况下，路由使用 [HashHistory](/learn/routing/history-managers#hashhistory) 作为历史管理器，该管理器要求在路由路径前加上 `#`。其他[历史管理器](/learn/routing/history-managers)可用于支持其他历史管理器的应用场景。
 
-## 路径和查询参数
+### 路径和查询参数
 
 路由参数是路由配置中的占位符，可为该段匹配任意值。参数是由大括号定义的，例如：`{param}`。
 
@@ -182,7 +182,7 @@ export default factory(function App() {
 
 如果浏览器指向的 URL 路径为 `/home/page?queryOne=modern&queryTwo=dojo`，那么查询字符串就会被注入到匹配的 `Route` 的 `renderer` 方法，该注入的对象属于 `MatchDetails` 类型，可通过此对象的 `queryParams` 属性访问。使用此 URL，页面将显示“Hello modern-dojo”。如果没有提供查询参数，那么它的值将被设置为 `undefined`。
 
-## 默认的路由和参数
+### 默认的路由和参数
 
 -   更新路由配置，为首选路由添加 `defaultRoute: true` 以指定为默认路由。如果没有提供路由或者请求的路由未注册，则应用程序初始化时会跳转到默认路由。
 
@@ -217,7 +217,7 @@ export default [
 ];
 ```
 
-## 使用 Link 部件
+### 使用 Link 部件
 
 `Link` 部件是对 anchor 标签的封装，让用户创建一个指向路由 `id` 的超链接。如果生成的超链接需要指定路径参数或查询参数，则可以通过 `params` 参数传入。
 
@@ -271,7 +271,7 @@ export default factory(function App() {
 });
 ```
 
-## 按路由拆分代码
+### 按路由拆分代码
 
 当使用 `@dojo/cli-build-app` 时，Dojo 默认支持为所有顶层路由进行自动化代码拆分。这意味着 `Route` 的 `renderer` 中引用的所有部件都会包含在该路由专有包中，当用户访问此路由时会延迟加载。
 

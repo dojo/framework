@@ -12,7 +12,7 @@ Dojo promotes encapsulated structural styling of individual widgets for maximum 
 | **CSS properties**                        | CSS modules can use [CSS custom properties and `var()`](https://www.w3.org/TR/css-variables/) to utilise theme variant properties and colours.                                                                                                                                                                                                                                                         |
 | **Simplified third-party widget theming** | Applications can easily extend their themes to cover third-party widgets, such as those from Dojo's native [widget library](https://github.com/dojo/widgets), and Dojo also provides [out-the-box themes](https://github.com/dojo/themes) which applications can base their own on. [CLI tooling is available](https://github.com/dojo/cli-create-theme) to streamline theme creation and composition. |
 
-# Basic usage
+## Basic usage
 
 > **Note:** The following examples build upon each other in a linear order. Individual examples are kept brief to only highlight relevant changes from any previous examples.
 
@@ -28,7 +28,7 @@ These examples assume an application with the following name:
 
 The application name becomes relevant when specifying [widget theme keys](/learn/styling/working-with-themes#widget-theme-keys).
 
-## Styling a widget
+### Styling a widget
 
 -   Defining a [CSS module](/learn/styling/styling-and-theming-in-dojo#structural-widget-styling) for a widget
 -   Using the corresponding typed style classes within the widget's TypeScript code
@@ -55,7 +55,7 @@ export default factory(function MyWidget() {
 });
 ```
 
-## Making a widget themeable
+### Making a widget themeable
 
 -   Inject the `theme` middleware
 -   Using `theme.classes` to return the themed css class name, which allows a [widget's default styles to be overridden by a theme](/learn/styling/theming-a-dojo-application#making-themeable-widgets)
@@ -76,7 +76,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
-## Using a theme variant within a widget
+### Using a theme variant within a widget
 
 -   Set the `theme.variant` class on the widget's `root`.
 -   css-properties get applied at the correct DOM level and do not leak out of the widget's DOM.
@@ -98,7 +98,7 @@ export default factory(function MyWidget({ middleware: { theme } }) {
 });
 ```
 
-## Creating a theme
+### Creating a theme
 
 -   Overriding a widget's default CSS class with custom theme style properties
 -   Linking one or more overrides via the appropriate [widget theme keys](/learn/styling/working-with-themes#widget-theme-keys) into a [theme structure](/learn/styling/working-with-themes)
@@ -122,7 +122,7 @@ export default {
 };
 ```
 
-## Creating theme variants
+### Creating theme variants
 
 -   Placing theme variables into a `variant` module as [CSS custom properties](/learn/styling/styling-and-theming-in-dojo#css-custom-properties)
 -   Referring to the custom properties via `var()`
@@ -163,7 +163,7 @@ export default {
 };
 ```
 
-## Specifying a default application theme
+### Specifying a default application theme
 
 The `theme` middleware can be used to set the application theme. To set a "default" or initial theme, the `theme.set` function can be used with the `theme.get` function to determine if the theme needs to be set. Setting the default theme should be done in the application's top level widget.
 
@@ -190,7 +190,7 @@ export default factory(function App({ middleware: { theme }}) {
 
 **Note:** When using both function-based and class-based widgets, the theme needs to be registered with the application registry. This is true when using any class-based widget dependencies such as `@dojo/widgets`. Please see the [class-based theming section]() for more details.
 
-## Setting the theme variant
+### Setting the theme variant
 
 If using a theme with `variants`, the `default` variant will be selected automatically. Use the `theme.set` function to set a different variant - the variant name passed must be a key of the theme's exported `variants`.
 
@@ -213,7 +213,7 @@ export default factory(function App({ middleware: { theme }}) {
 });
 ```
 
-## Changing the theme within an application
+### Changing the theme within an application
 
 -   Using the [`theme` middleware](/learn/styling/theming-a-dojo-application#changing-the-currently-active-theme) to allow users to choose between available themes
 
