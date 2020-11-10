@@ -786,7 +786,9 @@ export default factory(function MyDataAwareWidget({ id, properties, middleware: 
 
 # Composing behavior with resources
 
-Resources can be used in multiple widgets and the cached data will be shared. However, sharing the data is sometimes not sufficient when composing multiple "data-aware" widgets together. There are occasions that multiple widgets want to be able to share the current resource options. For example, one widget can set a filter and another widget can react and render the filtered data set. This is where creating a resource with shared options come in. A resource with shared options can be created by the `resources` middleware and passed into multiple widgets that will both share resource options, so that a pagination widget can set the `page` and another widget, which renders the items, will react to the page change and fetch the new results.
+Resources can be used in multiple widgets and the cached data will be shared. However, sharing the data is sometimes not sufficient when composing multiple "data-aware" widgets together. There are occasions that multiple widgets want to be able to share the current resource options, such that one widget can set a filter and another widget can react and render the filtered data set. This is where creating a resource with "shared options" come in. Sharing options across widgets is as simple as passing the same `options` to multiple widgets with along with the resource template.
+
+**Note:** The widget itself can choose to ignore options that are passed with the template, this should be documented with the widget.
 
 > MyComposedWidget.tsx
 
@@ -799,18 +801,18 @@ interface ResourceData {
 	label: string;
 }
 
-const resources = createResourceMiddleware<ResourceData>();
+const resource = createResourceMiddleware<ResourceData>();
 
-const factory = create({ resources });
+const factory = create({ resource });
 
-export default factory(function MyComposedWidget({ resources }) {
-	const { getResource } = resources();
-	const sharedResource = getResource({ sharedOptions: true });
+export default factory(function MyComposedWidget({ id, middleware: { resource } }) {
+	const { createOptions } = resource;
+	const options = createOptions(id);
 
 	return (
 		<div>
-			<Results resource={sharedResource} />
-			<Pagination resource={sharedResource} />
+			<Results resource={resource({ template, options })} />
+			<Pagination resource={resource({ template, options })} />
 		</div>
 	);
 });
