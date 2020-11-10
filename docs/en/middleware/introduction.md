@@ -11,9 +11,9 @@ Several core and optional middleware are provided by the framework, however, app
 | **A variety of framework-provided middleware** | Dojo provides optional middleware that allow widgets to implement a range of functionality such as responding to and controlling focus, simple value caching, responding to element intersection and resize events, CSS theming, internationalization and build-time rendering amongst others.                                 |
 | **Easy composition and re-use**                | The middleware design is closely aligned with function-based widgets, allowing consistent composition within a widget hierarchy as well as re-use when developing custom middleware.                                                                                                                                           |
 
-# Basic usage
+## Basic usage
 
-## Creating middleware
+### Creating middleware
 
 -   Defining middleware via the same `create()` primitive used for defining function-based widgets
 -   Optionally defining a properties interface that augments the properties interface of widgets that compose the middleware. Property values are given when creating instances of the composing widgets.
@@ -35,7 +35,7 @@ export const myMiddleware = factory(({ properties }) => {
 export default myMiddleware;
 ```
 
-## Composing middleware
+### Composing middleware
 
 -   Combining middleware and returning an object to expose a more complex API
 -   Using the core [`invalidator`](/learn/middleware/core-render-middleware#invalidator) middleware to flag the composing widget as requiring re-rendering
@@ -62,7 +62,7 @@ export const myComposingMiddleware = factory(({ middleware: { myMiddleware, inva
 export default myComposingMiddleware;
 ```
 
-## Using middleware within a widget
+### Using middleware within a widget
 
 -   Augmenting the widget's properties interface with additional properties from any middleware used
 -   Passing in middleware properties when using widgets that compose them

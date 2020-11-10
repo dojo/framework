@@ -12,9 +12,9 @@ Widgets describe their intended structural representation by returning virtual n
 | **Efficient rendering**  | Dojo's rendering system can detect state changes within specific subtrees of a widget hierarchy, allowing efficient re-rendering of only the affected portions of an application when an update occurs. |
 | **Enterprise-ready**     | Cross-cutting application requirements such as internationalization, localization and theming can easily be added to user-created widgets.                                                              |
 
-# Basic usage
+## Basic usage
 
-## Defining a widget
+### Defining a widget
 
 -   Using the [`create()` primitive](/learn/creating-widgets/widget-fundamentals#basic-widget-structure) to define a widget as a render function factory
 -   Returning [virtual DOM nodes](/learn/creating-widgets/rendering-widgets/#working-with-the-vdom) that define the widget's structural representation, declared as [TSX syntax](/learn/creating-widgets/rendering-widgets#tsx-support)
@@ -31,7 +31,7 @@ export default factory(function MyWidget() {
 });
 ```
 
-## Specifying widget properties
+### Specifying widget properties
 
 -   Making widgets more reusable by abstracting out [state](/learn/creating-widgets/managing-state), configuration and [event handling](/learn/creating-widgets/enabling-interactivity) via a [typed properties interface](/learn/creating-widgets/managing-state#intermediate-passing-widget-properties)
 -   Providing [middleware](/learn/middleware/introduction) to widgets via their `create` factory
@@ -77,7 +77,7 @@ export default factory(function Greeter({ middleware: { icache }, properties }) 
 });
 ```
 
-## Composing widgets
+### Composing widgets
 
 -   Defining a hierarchy of widgets that combine to implement more complex application requirements
 -   Providing state and event handler [properties](/learn/creating-widgets/configuring-widgets-through-properties) to child widgets
@@ -106,7 +106,7 @@ export default factory(function NameHandler({ middleware: { icache } }) {
 });
 ```
 
-## Rendering to the DOM
+### Rendering to the DOM
 
 -   Using the framework's `renderer` to mount a widget hierarchy into the DOM
 -   Optionally allowing [more control](/learn/creating-widgets/rendering-widgets#mountoptions-properties) over where Dojo applications appear in a page, for progressive adoption of smaller subcomponents or even to support multiple applications/frameworks within a single page

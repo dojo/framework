@@ -14,13 +14,13 @@ The Dojo stores package provides a centralized store designed to be the single s
 | **Operational middleware**         | Before and after operations, error handling, and data transformation.                     |
 | **Simple widget integration**      | Tools and patterns for easy integration with Dojo widgets.                                |
 
-# Basic usage
+## Basic usage
 
 Dojo provides a reactive architecture concerned with constantly modifying and rendering the current state of an application. In simple systems this can happen at a local level and widgets can maintain their own state. However, as a system becomes more complex the need to better compartmentalize and encapsulate data and create a clean separation of concerns quickly grows.
 
 Stores provide a clean interface for storing, modifying, and retrieving data from a global object through unidirectional data flow. Stores include support for common patterns such as asynchronous data retrieval, middleware, and undo. Stores and their patterns allow widgets to focus on their primary role of providing a visual representation of information and listening for user interactions.
 
-## The store
+### The store
 
 The store holds the global, atomic state for the entire application. The store should be created when the application gets created and defined in the `Registry` with an injector.
 
@@ -58,7 +58,7 @@ export interface State {
 
 The above is a simple example that defines the structure for the store used in the rest of the examples in this guide.
 
-## Updating stores
+### Updating stores
 
 There are three core concepts when working with Dojo stores.
 
@@ -66,11 +66,11 @@ There are three core concepts when working with Dojo stores.
 -   **Commands** - simple functions that perform business logic and return operations
 -   **Processes** - execute a group of commands and represent application behavior
 
-### Commands and operations
+#### Commands and operations
 
 To modify a store, when executing a process, a command function gets invoked. The command function returns a list of operations to apply to the store.. Each command is passed a `CommandRequest` which provides `path` and `at` functions to generate `Path`s in a type-safe way, a `get` function for access to the store's state, a `payload` object for the argument that the process executor was called with.
 
-#### Command factory
+##### Command factory
 
 Stores have a simple wrapper function that acts as a type-safe factory for creating new commands.
 
@@ -89,7 +89,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 `createCommand` ensures that the wrapped command has the correct typing and the passed `CommandRequest` functions get typed to the `State` interface provided to `createCommandFactory`. While it is possible to manually type commands, the examples in this guide use `createCommand`.
 
-#### `path`
+##### `path`
 
 The path is a `string` that describes the location where an operation gets applied. The `path` function is part of the `CommandRequest` and is accessible inside of a `Command`.
 
@@ -106,7 +106,7 @@ path('users', 'current', 'name');
 
 This path refers to the `string` value located at `/users/current/name`. `path` gets used to transverse the hierarchy in a type-safe way, ensuring that only the property names defined in the `State` interface get used.
 
-#### `at`
+##### `at`
 
 The `at` function gets used in conjunction with `path` to identify a location in an array. This example leverages the `at` function.
 
@@ -119,7 +119,7 @@ at(path('users', 'list'), 1);
 
 This path refers to the `User` located at `/users/list` at offset `1`.
 
-#### `add` operation
+##### `add` operation
 
 Adds a value to an object or inserts it into an array.
 
@@ -138,7 +138,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 This adds `user` to the beginning of the user list.
 
-#### `remove` operation
+##### `remove` operation
 
 Removes a value from an object or an array.
 
@@ -163,7 +163,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 This example adds an initial state for `users` and removes the first `user` in the list.
 
-#### `replace` operation
+##### `replace` operation
 
 Replaces a value. Equivalent to a `remove` followed by an `add`.
 
@@ -189,7 +189,7 @@ const myCommand = createCommand(({ at, get, path, payload, state }) => {
 
 This example replaces the second user in the `list` with `newUser`.
 
-#### `get`
+##### `get`
 
 The `get` function returns a value from the store at a specified path or `undefined` if a value does not exist at that location.
 
@@ -214,7 +214,7 @@ const updateCurrentUser = createCommand(async ({ at, get, path }) => {
 
 This example checks for the presence of an authentication token and works to update the current user information.
 
-#### `payload`
+##### `payload`
 
 The `payload` is an object literal passed into a command when it is called from a process. The `payload`'s type may be defined when constructing the command.
 
@@ -232,15 +232,15 @@ const addUser = createCommand<User>(({ at, path, payload }) => {
 
 This example adds the user provided in the `payload` to the beginning of `/users/list`.
 
-#### Asynchronous commands
+##### Asynchronous commands
 
 Commands can be synchronous or asynchronous. Asynchronous commands should return a `Promise` to indicate when they finish. Operations are collected and applied atomically after each command completes successfully.
 
-### Processes
+#### Processes
 
 A `Process` is a construct used to sequentially execute commands against a `store` in order to makes changes to the application state. Processes are created using the `createProcess` factory function that accepts a list of commands and optionally a list of middleware.
 
-#### Creating a process
+##### Creating a process
 
 First, create a couple commands responsible for obtaining a user token and use that token to load a `User`. Then create a process that uses those commands. Every process must be identified by a unique process ID. This ID is used internally in the store.
 
@@ -270,7 +270,7 @@ const loadUserData = createCommand(async ({ path }) => {
 export const login = createProcess('login', [ fetchUser, loadUserData ]);
 ```
 
-#### `payload` type
+##### `payload` type
 
 The process executor's `payload` is inferred from the `payload` type of the commands. If the payloads differ then it is necessary to explicitly define the `payload` type.
 
@@ -290,13 +290,13 @@ const process = createProcess<State, { one: string; two: string }>('example', [c
 process(store)({ one: 'one', two: 'two' });
 ```
 
-## Connecting widgets and stores
+### Connecting widgets and stores
 
 There are two state containers available for widgets: `StoreContainer` and `StoreProvider`. These containers connect the application store with a widget. When using functional widgets, a typed store middleware can also be created.
 
 Note that the documentation in this section is intended to show how widgets and state (provided by a store) are connected. For more information on widget state management in general, see the [Creating Widgets reference guide](/learn/creating-widgets/managing-state).
 
-### Store middleware
+#### Store middleware
 
 When using function-based widgets, the `createStoreMiddleware` helper can be used to create a typed store middleware that provides a widget access to the store.
 
@@ -351,7 +351,7 @@ export const User = factory(function User({ middleware: { store } }) {
 });
 ```
 
-### StoreProvider
+#### StoreProvider
 
 A `StoreProvider` is a Dojo widget that has its own `renderer` and connects to the store. It is always encapsulated in another widget because it does not define its own properties.
 
@@ -380,7 +380,7 @@ export const User = factory(function User() {
 
 The `StoreProvider` occurs as part of `User`'s render and provides its own `renderer` like any other Dojo widget.
 
-### Container
+#### Container
 
 A `Container` is a widget that fully encapsulates another widget. It connects the store to the widget with a `getProperties` function.
 
@@ -421,7 +421,7 @@ In this example `UserContainer` wraps `User` to display the current user's name.
 
 A `StoreContainer`'s properties are a 1:1 mapping to the widget it wraps. The widget's properties become the properties of the `StoreContainer`, but they are all optional.
 
-### Executing a process
+#### Executing a process
 
 A process simply defines an execution flow for a set of data. To execute a process, the process needs access to the store to create an executor. Both the `StoreContainer` and `StoreProvider` widgets provide access to the store.
 

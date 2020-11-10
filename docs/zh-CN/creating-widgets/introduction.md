@@ -17,9 +17,9 @@ Dojo 鼓励编写简单的、模块化组件，并称之为**部件**，它仅�
 | **高效渲染**   | Dojo 的渲染系统可以检测出部件层次结构中特定子节点的状态变化，这样当更新发生时，只需要高效的重新渲染应用程序中受影响的部分。 |
 | **企业级**     | 跨领域的应用程序需求，如国际化、本地化和样式主题，可以轻松地添加到用户创建的部件中。                                        |
 
-# 基本用法
+## 基本用法
 
-## 定义部件
+### 定义部件
 
 -   使用 [内置的 `create()`](/learn/creating-widgets/部件的基本原理#基本的部件结构) 将部件定义为一个渲染函数 factory
 -   返回定义了部件结构的 [虚拟 DOM 节点](/learn/creating-widgets/渲染部件/#使用-vdom)，这里使用 [TSX 语法](/learn/creating-widgets/渲染部件#支持-tsx)
@@ -36,7 +36,7 @@ export default factory(function MyWidget() {
 });
 ```
 
-## 设置部件属性
+### 设置部件属性
 
 -   为了使部件能更好的复用，需要使用[类型化的属性接口](/learn/creating-widgets/状态管理#中级传入部件属性)来抽象出 [state](/learn/creating-widgets/状态管理), 配置和[事件处理函数](/learn/creating-widgets/支持交互)
 -   使用 `create` 工厂为部件提供[中间件](/learn/middleware/introduction)
@@ -82,7 +82,7 @@ export default factory(function Greeter({ middleware: { icache }, properties }) 
 });
 ```
 
-## 组合部件
+### 组合部件
 
 -   通过将部件组合在一起形成多层结构，以满足更复杂的应用程序需求
 -   为子部件提供 state 和事件处理函数等[属性(properties)](/learn/creating-widgets/通过属性配置部件)
@@ -111,7 +111,7 @@ export default factory(function NameHandler({ middleware: { icache } }) {
 });
 ```
 
-## 渲染到 DOM 中
+### 渲染到 DOM 中
 
 -   使用框架中的 `renderer` 函数将部件挂载到 DOM 中
 -   也可以对 Dojo 应用程序在页面中呈现的位置[做更多控制](/learn/creating-widgets/渲染部件#mountoptions-属性)，以便稳步地采用较小的子组件，甚至支持一个页面中存在多个应用程序或框架

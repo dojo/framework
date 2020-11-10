@@ -1,6 +1,6 @@
-# Basic Usage
+## Basic Usage
 
-## Using feature X
+### Using feature X
 
 One line description of what this sample accomplishes, likely also [linking to more in-depth documentation for the corresponding feature](./supplemental.md#feature-xx).
 
@@ -24,6 +24,6 @@ export default class MyWidget extends WidgetBase {
 // more sample file code content, likely referring to other files in the same feature example ...
 ```
 
-## Using feature Y
+### Using feature Y
 
 ... as many other brief feature examples as needed to illustrate the most common ways of working with the capability

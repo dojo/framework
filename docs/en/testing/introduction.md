@@ -9,9 +9,9 @@ Dojo provides a robust testing framework using `@dojo/cli-test-intern`. It allow
 | **Functional tests** | Functional tests are run using Selenium in the browser and test the overall functionality of the software as a user would interact with it. |
 | **Assertions**       | Assertions allow you to build expected render functions to validate the output of your widgets.                                             |
 
-# Basic usage
+## Basic usage
 
-## Testing Dojo applications
+### Testing Dojo applications
 
 -   Run a project's test suite
 
@@ -21,7 +21,7 @@ dojo test
 
 Dojo uses `@dojo/cli-test-intern` for running unit and functional tests in your `tests` folder.
 
-## Running specific test suites
+### Running specific test suites
 
 Dojo supports two types of testing approaches, unit and functional. Unit tests are tests run via node and the local
 [Selenium] tunnel and test isolated blocks of code. Functional tests are run using Selenium in the browser and test
@@ -39,7 +39,7 @@ dojo test --unit --config local
 dojo test --functional --config local
 ```
 
-## Writing unit tests
+### Writing unit tests
 
 -   Using Dojo's [test `renderer` API](/learn/testing/test-renderer) for unit testing widgets.
 
@@ -83,7 +83,7 @@ The `renderer` API allows you to verify that the output of a rendered widget is 
 -   Does it render as expected?
 -   Do event handlers work as expected?
 
-## Writing functional tests
+### Writing functional tests
 
 Functional tests allow a UI page to be loaded and its code executed in a real browser to better test widget behavior.
 
@@ -117,7 +117,7 @@ describe('routing', () => {
 });
 ```
 
-## Using assertions
+### Using assertions
 
 Assertions provide a way to create a base assertion that allow parts of the expected output to vary between tests.
 

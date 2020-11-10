@@ -12,9 +12,9 @@ While a large subset of its functionality can be used as a standalone module, it
 | **Reactive locale change response**                      | Similar to other reactive state changes within a Dojo application, messages can be automatically reloaded and affected widgets re-rendered when changing locales.<br>If using `i18n` as a standalone module, locale change events can be acted on via listener callbacks.                                                                                           |
 | **Fallback locale detection**                            | Ensures a default locale is available if a root override has not been explicitly set.<br>The system locale (or the process/host locale when running server-side) is matched against the list of locales defined in the `.dojorc`. If the system locale is supported, then it is set as the default. Otherwise, the default locale defined in the `.dojorc` is used. |
 
-# Basic usage
+## Basic usage
 
-## Internationalizing a widget
+### Internationalizing a widget
 
 -   Starting off with a single default language (English).
 
@@ -76,7 +76,7 @@ export default {
 };
 ```
 
-## Adding a widget language localization bundle
+### Adding a widget language localization bundle
 
 -   Supporting two locales - English as the default, together with a French translation that is activated for any users that have `fr` set as their primary language.
 -   Unless a locale is specifically set for you application, the appropriate `supportedLocale` will be used according to the browsers locale settings where available.
@@ -118,7 +118,7 @@ export default {
 
 Note that the fs language bundle simply returns the message bundle, not an object containing a message bundle like the default locale file.
 
-## Specifying a root locale within an application
+### Specifying a root locale within an application
 
 Using function-based widgets and `i18n` middleware exclusively within an application means there is no requirement to add bootstrapping code to the application's `main.ts`/`main.tsx` entry point. The default application locale can instead be set in a top-level `App` widget, using the `i18n` middleware from `@dojo/framework/core/middleware/i18n`. A default locale can be set when a locale has not already been defined.
 
@@ -155,7 +155,7 @@ const r = renderer(() => <App />);
 r.mount({ registry });
 ```
 
-## Changing the locale within an application
+### Changing the locale within an application
 
 -   Using the [i18n middleware](/learn/middleware/available-middleware#i18n) to allow users to to choose between supported locales, and enact a locale change via the middleware's `.set` API.
 

@@ -18,11 +18,11 @@ Dojo 提供了一套强大的命令行工具，让构建现代应用程序更加
 | **PWA 支持**       | 渐进式 Web 应用程序通过缓存内容甚至脱机工作，创建更快、更可靠的用户体验。通过配置文件或者在代码中定义，dojo 很容易创建一个 service work，并将其构建为应用程序的一部分。                              |
 | **构建时渲染**     | 在构建时渲染路由以生成初始的 HTML 和 CSS。在构建时渲染，Dojo 可以节省出初始渲染的成本，创建出一个响应性更高的应用程序，且不会引入额外的复杂性。                                                      |
 
-# 基本用法
+## 基本用法
 
 Dojo 提供了一组 CLI 命令，辅助创建和构建应用程序。本指南假设已全局安装 `@dojo/cli`，且在项目中安装了 [@dojo/cli-build-app](https://github.com/dojo/cli-build-app) 和 [@dojo/cli-test-intern](https://github.com/dojo/cli-test-intern)。如果项目是使用 [@dojo/cli-create-app](https://github.com/dojo/cli-create-app) 初始化的，那么这些依赖应该已经存在。
 
-## 构建
+### 构建
 
 Dojo 的 CLI 工具支持多种构建目标或 `mode`。在 `dojo create app` 为 `package.json` 生成的几个脚本（scripts）中可看到所有模式。
 
@@ -34,7 +34,7 @@ Dojo 的 CLI 工具支持多种构建目标或 `mode`。在 `dojo create app` �
 
 此次构建使用 `dist` 模式创建应用程序包，并将结果输出到 `output/dist` 目录中。
 
-## 运行服务和监听变化
+### 运行服务和监听变化
 
 当在 `dev` 或 `dist` 模式下运行时，可以使用 `--serve` 标记启动一个 web 服务器。应用程序默认运行在 9999 端口上。可以使用 `--port` 标记修改端口。使用 `--watch` 标记，Dojo 的构建工具也可以监听应用程序的变化并自动重新构建。
 
@@ -46,7 +46,7 @@ Dojo 的 CLI 工具支持多种构建目标或 `mode`。在 `dojo create app` �
 
 应用程序也会提供 source map。这样调试器就可以将构建的 JavaScript 代码映射回位于 `src/` 文件夹下原本的 TypeScript 代码上。
 
-## 测试
+### 测试
 
 Dojo 使用 [Intern](https://theintern.io/) 运行单元和功能测试。
 
@@ -61,11 +61,11 @@ npm run test:unit
 npm run test:functional
 ```
 
-## 支持的浏览器
+### 支持的浏览器
 
 Dojo 是一个持续演变的框架。默认情况下，发布的 dojo 版本会支持最新浏览器的最近两个版本。Dojo 要跨浏览器实现标准功能，其所需的 polyfill 都是通过 `@dojo/framework/shim` 按需提供的。要支持 IE11，需要打开 `--legacy` 标记。
 
-# Dojo 配置
+## Dojo 配置
 
 可在 `.dojorc` 中添加其它配置选项。这些选项通常通过命令行扩展可用的设置，并支持更高级的功能，如国际化、代码拆分、PWA 清单和忽略代码等。
 
