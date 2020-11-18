@@ -800,5 +800,18 @@ describe('test renderer', () => {
 
 			r.expect(testAssertion.setChildren(WrappedTestWudget, () => 'bar'));
 		});
+
+		it('should return a consistent middleware id', () => {
+			const something = create()(({ id }) => {
+				return { id };
+			});
+			const factory = create({ something });
+			const Widget = factory(({ middleware: { something } }) => {
+				return something.id;
+			});
+
+			const r = renderer(() => <Widget />);
+			r.expect(assertion(() => 'something'));
+		});
 	});
 });

@@ -468,7 +468,6 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		const resolveMiddleware = (middlewares: any, mocks: any[]) => {
 			const keys = Object.keys(middlewares);
 			const results: any = {};
-			const uniqueId = uuid();
 			const mockMiddlewareMap = new Map(mocks);
 
 			for (let i = 0; i < keys.length; i++) {
@@ -479,7 +478,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 					isMock = true;
 				}
 				const payload: any = {
-					id: uniqueId,
+					id: keys[i],
 					properties: () => {
 						return { ...properties };
 					},
