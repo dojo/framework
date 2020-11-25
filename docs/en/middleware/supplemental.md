@@ -185,6 +185,8 @@ import icache from '@dojo/framework/core/middleware/icache';
     -   Remove the item from the cache.
 -   `icache.clear(invalidate: boolean = true)`
     -   Clears all values currently stored in the widget's local cache.
+-   `icache.pending(key: string)`
+    -   Returns the status of async setters for the key
 
 The current cache value is passed when a function is passed to `icache.set`, the example below demonstrates using the current value to for an incrementing number.
 
