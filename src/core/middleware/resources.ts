@@ -1023,6 +1023,18 @@ const resourceMiddlewareFactory = factory(
 							invalidator();
 						}
 					}
+				} else if (next) {
+					const id = next.template.id || 'global';
+					const resourceMap = templateToResourceMap.get(next.template.template);
+					const {
+						template: { initOptions }
+					} = next;
+					if (resourceMap && initOptions) {
+						const resource = resourceMap.get(id);
+						if (resource) {
+							resource.init(initOptions);
+						}
+					}
 				}
 				if (next) {
 					const nextOptions = next.options;
