@@ -126,11 +126,13 @@ describe('icache middleware', () => {
 		});
 		icache.set('test', () => promiseOne);
 		assert.isUndefined(icache.get('test'));
+		assert.isTrue(icache.pending('test'));
 		assert.isTrue(invalidatorStub.notCalled);
 		resolverOne('value');
 		await promiseOne;
 
 		assert.isTrue(invalidatorStub.calledOnce);
+		assert.isFalse(icache.pending('test'));
 		assert.strictEqual(icache.get('test'), 'value');
 	});
 

@@ -50,6 +50,7 @@ export interface ICacheResult<S = void> {
 	has<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
 	delete<T extends void extends S ? any : keyof S>(key: void extends S ? any : T, invalidate?: boolean): void;
 	clear(invalidate?: boolean): void;
+	pending<T extends void extends S ? any : keyof S>(key: void extends S ? any : T): boolean;
 }
 
 const icacheFactory = factory(
@@ -119,6 +120,10 @@ const icacheFactory = factory(
 				return undefined;
 			}
 			return cachedValue.value;
+		};
+		api.pending = (key: any): boolean => {
+			let cachedValue = cacheMap.get(key);
+			return Boolean(cachedValue && cachedValue.status === 'pending');
 		};
 		return api;
 	}
