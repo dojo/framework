@@ -688,6 +688,65 @@ describe('Resources Middleware', () => {
 		);
 	});
 
+	it('should update the data in existing resources', () => {
+		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
+		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
+			memoryTemplate
+		);
+
+		const WidgetOne = factory(({ id, properties, middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: { template, options = createOptions(id) }
+			} = properties();
+			const items = getOrRead(template, options({ size: 2 }));
+			return <div>{JSON.stringify(items)}</div>;
+		});
+
+		const App = create({ icache, resource: createResourceMiddleware() })(
+			({ id, middleware: { resource, icache } }) => {
+				const data = icache.getOrSet('data', [{ hello: 'world' }, { hello: 'moon' }]);
+				const show = icache.getOrSet('show', true);
+				return (
+					<div>
+						<button
+							onclick={() => {
+								icache.set('data', [{ hello: 'mars' }, { hello: 'venus' }]);
+							}}
+						/>
+						<button
+							onclick={() => {
+								icache.set('show', (show) => !show);
+							}}
+						/>
+						{show && <WidgetOne resource={resource({ template, initOptions: { id, data } })} />}
+					</div>
+				);
+			}
+		);
+
+		const r = renderer(() => <App />);
+		const root = document.createElement('div');
+		r.mount({ domNode: root });
+		assert.strictEqual(
+			root.innerHTML,
+			`<div><button></button><button></button><div>${JSON.stringify([
+				[{ hello: 'world' }, { hello: 'moon' }]
+			])}</div></div>`
+		);
+		(root.children[0].children[1] as any).click();
+		resolvers.resolveRAF();
+		(root.children[0].children[1] as any).click();
+		(root.children[0].children[0] as any).click();
+		resolvers.resolveRAF();
+		assert.strictEqual(
+			root.innerHTML,
+			`<div><button></button><button></button><div>${JSON.stringify([
+				[{ hello: 'mars' }, { hello: 'venus' }]
+			])}</div></div>`
+		);
+	});
+
 	it('should be able to change the options for a resource', () => {
 		const factory = create({ resource: createResourceMiddleware<{ hello: string }>() });
 		const template = createResourceTemplateWithInit<{ hello: string }, { data: { hello: string }[] }>(
