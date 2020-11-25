@@ -1,4 +1,5 @@
 import { create, tsx, diffProperty, invalidator } from '../core/vdom';
+import Map from '../shim/Map';
 import injector from '../core/middleware/injector';
 import icache from '../core/middleware/icache';
 import { RenderResult } from '../core/interfaces';
