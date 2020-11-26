@@ -1,5 +1,6 @@
 /* tslint:disable:interface-name */
 import Map from '../../shim/Map';
+import Set from '../../shim/Set';
 import { create, invalidator, destroy } from '../vdom';
 
 const factory = create({ invalidator, destroy });
@@ -56,6 +57,7 @@ export interface ICacheResult<S = void> {
 const icacheFactory = factory(
 	({ middleware: { invalidator, destroy } }): ICacheResult<any> => {
 		const cacheMap = new Map<string, CacheWrapper>();
+		const pendingKeys = new Set<string>();
 		destroy(() => {
 			cacheMap.clear();
 		});
@@ -75,10 +77,14 @@ const icacheFactory = factory(
 			if (typeof value === 'function') {
 				value = value(current);
 				if (value && typeof value.then === 'function') {
+					const currentStatus = cacheMap.get(key);
 					cacheMap.set(key, {
 						status: 'pending',
 						value
 					});
+					if (pendingKeys.has(key) && (!currentStatus || currentStatus.status !== 'pending')) {
+						invalidate && invalidator();
+					}
 					value.then((result: any) => {
 						const cachedValue = cacheMap.get(key);
 						if (cachedValue && cachedValue.value === value) {
@@ -104,10 +110,12 @@ const icacheFactory = factory(
 		};
 		api.delete = (key: any, invalidate: boolean = true) => {
 			cacheMap.delete(key);
+			pendingKeys.delete(key);
 			invalidate && invalidator();
 		};
 		api.clear = (invalidate: boolean = true): void => {
 			cacheMap.clear();
+			pendingKeys.clear();
 			invalidate && invalidator();
 		};
 		api.getOrSet = (key: any, value: any, invalidate: boolean = true): any | undefined => {
@@ -122,6 +130,7 @@ const icacheFactory = factory(
 			return cachedValue.value;
 		};
 		api.pending = (key: any): boolean => {
+			pendingKeys.add(key);
 			let cachedValue = cacheMap.get(key);
 			return Boolean(cachedValue && cachedValue.status === 'pending');
 		};
