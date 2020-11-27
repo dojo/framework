@@ -301,23 +301,19 @@ interface ResourceMiddleware<MIDDLEWARE = {}> {
 	): boolean;
 }
 
-export function createResourceTemplate<RESOURCE = void>(
-	template: ResourceTemplate<RESOURCE>
-): ResourceTemplate<RESOURCE> & { type: 'standard' } {
-	return template as ResourceTemplate<RESOURCE> & { type: 'standard' };
-}
-
-export function createResourceTemplateWithInit<RESOURCE = void, INIT = never>(
-	template: ResourceTemplateWithInit<RESOURCE, INIT>
-): ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' } {
-	return template as ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' };
-}
-
-export function createMemoryResourceTemplate<RESOURCE = void>(): ResourceTemplateWithInit<
-	RESOURCE,
-	{ data: RESOURCE[] }
-> & { type: 'init' } {
-	return { ...memoryTemplate } as ResourceTemplateWithInit<RESOURCE, { data: RESOURCE[] }> & { type: 'init' };
+export function createResourceTemplate<RESOURCE = void>(): ResourceTemplateWithInit<RESOURCE, { data: RESOURCE[] }> & {
+	type: 'init';
+};
+export function createResourceTemplate<RESOURCE = void, INIT = void>(
+	template: INIT extends void ? ResourceTemplate<RESOURCE> : ResourceTemplateWithInit<RESOURCE, INIT>
+): INIT extends void
+	? ResourceTemplate<RESOURCE> & { type: 'standard' }
+	: ResourceTemplateWithInit<RESOURCE, INIT> & { type: 'init' };
+export function createResourceTemplate(template?: any): any {
+	if (template) {
+		return template;
+	}
+	return { ...memoryTemplate };
 }
 
 export function defaultFilter(query: ResourceQuery<any>, item: any, type: string = 'contains') {
@@ -985,7 +981,7 @@ const resourceMiddlewareFactory = factory(
 			) => {
 				if (!nextProp || !nextProp.template) {
 					return middleware({
-						template: createMemoryResourceTemplate(),
+						template: createResourceTemplate(),
 						initOptions: { data: [], id: '' },
 						...nextProp
 					});
