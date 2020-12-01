@@ -232,14 +232,14 @@ The `type` describes how to use the query to find the item in the resource, ther
 
 ## `init()`
 
-The `init` function is used to deal with options passed with the `template` using the `resource` middleware. These options are defined when creating the template using `createResourceTemplateWithInit` as the second generic parameter.
+The `init` function is used to deal with options passed with the `template` using the `resource` middleware. These options are defined when creating the template and passing an interface for the required options, `createResourceTemplate<RESOURCE, INIT>` as the second generic parameter.
 
 ```tsx
-import { createResourceTemplateWithInit } from '@dojo/framework/core/middleware/resources';
+import { createResourceTemplate } from '@dojo/framework/core/middleware/resources';
 
 
 // only showing the init api
-const template = createResourceTemplateWithInit<{ foo: string }, { data: { foo: string; }[]; extra: number; }>({
+const template = createResourceTemplate<{ foo: string }, { data: { foo: string; }[]; extra: number; }>({
 	init: (options, controls) {
 		// the options matches the type passed as the second generic
 		const { data, extra } = options;
@@ -260,15 +260,15 @@ export interface ResourceInit<S, I> {
 
 The init options are injected into the function along with the standard `ResourceControls` to be used to add the initialize the resource store.
 
-## Memory Resource Templates
+## Default Resource Templates
 
-Dojo resources offers a pre-configured memory resource template that implements the complete resource template API. The memory template is designed to work with [data passed to a widget when using the template](/learn/resources/using-resource-templates) that initializes the resource store for the template. The memory template is created using the `createMemoryResourceTemplate` factory from `@dojo/framework/core/middleware/resources`, with the type of the resource data being passed to the factory.
+Dojo resources offers a pre-configured default resource template that implements the complete resource template API. The default template is designed to work with [data passed to a widget when using the template](/learn/resources/using-resource-templates) that initializes the resource store for the template. The memory template is created using the `createResourceTemplate` factory from `@dojo/framework/core/middleware/resources` passing no arguments.
 
 > MyWidget.tsx
 
 ```tsx
 import { create, tsx } from '@dojo/framework/core/vdom';
-import { createMemoryResourceTemplate, createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
+import { createResourceTemplate, createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
 
 interface ResourceItem {
 	value: string;
@@ -281,7 +281,7 @@ interface MyWidgetProperties {
 const resource = createResourceMiddleware();
 const factory = create({ resource }).properties<MyWidgetProperties>();
 
-const template = createMemoryResourceTemplate<ResourceItem>();
+const template = createResourceTemplate<ResourceItem>();
 
 export default factory(function MyWidget({ id, properties, middleware: { resource } }) {
 	const { items } = properties();
@@ -328,10 +328,10 @@ export default createResourceTemplate<MyResource>({
 
 ### Create a Resource Template with initialization options
 
-If the resource template needs to support custom initialization the `createResourceTemplateWithInit` can be used. This requires the template to have an `init` API that will be called when a backing resource is created. The initialize options required are typed using the second generic on the factory function.
+If the resource template needs to support custom initialization the `createResourceTemplate` can be used. This requires the template to have an `init` API that will be called when a backing resource is created. The initialize options required are typed using the second generic on the factory function.
 
 ```tsx
-import { createResourceTemplateWithInit } from '@dojo/framework/core/middleware/resources';
+import { createResourceTemplate } from '@dojo/framework/core/middleware/resources';
 
 interface MyResource {
 	id: string;
@@ -339,7 +339,7 @@ interface MyResource {
 	email: string;
 }
 
-export default createResourceTemplateWithInit<MyResource, { data: MyResource[] }>({
+export default createResourceTemplate<MyResource, { data: MyResource[] }>({
 	init: (request: { id: string } & { data: MyResource[] }, controls: ResourceControls) => {
 		const { data } = request;
 		// adds any data passed with the template to resource store
@@ -422,7 +422,7 @@ export factory(function MyWidget({ middleware: { resource }}) {
 
 ## Passing Initialization Options
 
-Initialization options can be passed with any template created using the `createResourceTemplateWithInit` factory and are passed to the template's `init` function to initialize the resource. The `initOptions` includes an `id` used to identify the backing resource and optional `data` that can be added to the resource on creation.
+Initialization options can be passed with any template created using the `createResourceTemplate` factory and are passed to the template's `init` function to initialize the resource. The `initOptions` includes an `id` used to identify the backing resource and optional `data` that can be added to the resource on creation.
 
 > MyWidget.ts
 
