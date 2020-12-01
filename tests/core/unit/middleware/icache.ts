@@ -124,14 +124,15 @@ describe('icache middleware', () => {
 		const promiseOne = new Promise<string>((resolve) => {
 			resolverOne = resolve;
 		});
+		assert.isFalse(icache.pending('test'));
 		icache.set('test', () => promiseOne);
 		assert.isUndefined(icache.get('test'));
 		assert.isTrue(icache.pending('test'));
-		assert.isTrue(invalidatorStub.notCalled);
+		assert.isTrue(invalidatorStub.calledOnce);
 		resolverOne('value');
 		await promiseOne;
 
-		assert.isTrue(invalidatorStub.calledOnce);
+		assert.isTrue(invalidatorStub.calledTwice);
 		assert.isFalse(icache.pending('test'));
 		assert.strictEqual(icache.get('test'), 'value');
 	});
