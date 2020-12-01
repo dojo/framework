@@ -10,6 +10,8 @@ import {
 	createResourceMiddleware,
 	memoryTemplate,
 	createResourceTemplate,
+	createMemoryResourceTemplate,
+	createResourceTemplateWithInit,
 	defaultFind
 } from '../../../../src/core/middleware/resources';
 import icache from '../../../../src/core/middleware/icache';
@@ -90,7 +92,7 @@ describe('Resources Middleware', () => {
 
 	it('should provide a default if no resource property is passed', () => {
 		const factory = create({ resource: createResourceMiddleware<{}>() });
-		const Widget = factory(({ id, properties }) => {
+		const Widget = factory(({ properties }) => {
 			const { resource } = properties();
 			return resource && <div>contents</div>;
 		});
@@ -111,7 +113,7 @@ describe('Resources Middleware', () => {
 			return <div>{JSON.stringify(getOrRead(template, options()))}</div>;
 		});
 
-		const template = createResourceTemplate<{ hello: string }>();
+		const template = createMemoryResourceTemplate<{ hello: string }>();
 		const r = renderer(() => (
 			<Widget resource={{ template, initOptions: { data: [{ hello: '1' }], id: 'id' } } as any} />
 		));
@@ -169,7 +171,9 @@ describe('Resources Middleware', () => {
 			);
 		});
 
-		const template = createResourceTemplate<{ wrong: string }, { data: { wrong: string }[] }>(memoryTemplate);
+		const template = createResourceTemplateWithInit<{ wrong: string }, { data: { wrong: string }[] }>({
+			...memoryTemplate
+		});
 
 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
 			return (

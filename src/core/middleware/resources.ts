@@ -316,6 +316,22 @@ export function createResourceTemplate(template?: any): any {
 	return { ...memoryTemplate };
 }
 
+/**
+ * @deprecated Please use `createResourceTemplate` instead
+ */
+export function createResourceTemplateWithInit<RESOURCE = void, INIT = {}>(
+	template: ResourceTemplateWithInit<RESOURCE, INIT>
+) {
+	return createResourceTemplate<RESOURCE, INIT>(template as any);
+}
+
+/**
+ * @deprecated Please use `createResourceTemplate` instead
+ */
+export function createMemoryResourceTemplate<RESOURCE = void>() {
+	return createResourceTemplate<RESOURCE>();
+}
+
 export function defaultFilter(query: ResourceQuery<any>, item: any, type: string = 'contains') {
 	const queryKeys = Object.keys(query);
 	for (let i = 0; i < queryKeys.length; i++) {
