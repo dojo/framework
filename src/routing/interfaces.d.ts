@@ -19,6 +19,7 @@ export interface Route {
 	params: string[];
 	segments: string[];
 	children: Route[];
+	redirect?: string;
 	fullPath: string;
 	fullParams: string[];
 	fullQueryParams: string[];
@@ -34,6 +35,7 @@ export interface RouteConfig {
 	path: string;
 	outlet: string;
 	children?: RouteConfig[];
+	redirect?: string;
 	defaultParams?: Params;
 	defaultRoute?: boolean;
 	title?: string;
