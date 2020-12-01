@@ -9,6 +9,7 @@ The routing configuration API is constructed with the following properties:
 -   `outlet: string`: The `outlet` name for the route. This is used by the `Outlet` widget to determine what needs to be rendered.
 -   `defaultRoute: boolean` (optional): Marks the outlet as default, the application will redirect to this route automatically if no route or an unknown route is found on application load.
 -   `defaultParams: { [index: string]: string }` (optional): Associated default parameters (`path` and `query`), required if the default route has required params.
+-   `redirect: string` (optional): A path to redirect to when matched exactly, params can be referenced from the matched route by the using the `{}` syntax
 -   `children: RouteConfig[]` (optional): Nested child routing configuration.
 
 > src/routes.ts
@@ -25,6 +26,7 @@ export default [
 		id: 'about',
 		path: 'about',
 		outlet: 'about-overview',
+		redirect: 'about/company'
 		children: [
 			{
 				id: 'about-services',
