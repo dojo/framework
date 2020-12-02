@@ -207,6 +207,9 @@ export interface HistoryConstructor {
  * History interface
  */
 export interface History {
+	/**
+	 * Start the history manager
+	 */
 	start(): void;
 
 	/**
