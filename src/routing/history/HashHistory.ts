@@ -9,10 +9,10 @@ export class HashHistory implements History {
 	constructor({ window = global.window, onChange }: HistoryOptions) {
 		this._onChangeFunction = onChange;
 		this._window = window;
-		this._window.addEventListener('hashchange', this._onChange, false);
 	}
 
 	start() {
+		this._window.addEventListener('hashchange', this._onChange, false);
 		this._current = this.normalizePath(this._window.location.hash);
 		this._onChangeFunction(this._current);
 	}
