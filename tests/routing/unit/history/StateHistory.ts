@@ -33,16 +33,21 @@ describe('StateHistory', () => {
 
 	it('initializes current path to current location', () => {
 		sandbox.contentWindow!.history.pushState({}, '', '/foo?bar');
-		assert.equal(new StateHistory({ onChange, window: sandbox.contentWindow! }).current, 'foo?bar');
+		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
+		assert.equal(history.current, 'foo?bar');
 	});
 
 	it('location defers to the global object', () => {
 		let location = window.location.pathname.slice(1);
-		assert.equal(new StateHistory({ onChange }).current, location + window.location.search);
+		const history = new StateHistory({ onChange });
+		history.start();
+		assert.equal(history.current, location + window.location.search);
 	});
 
 	it('prefixes sanatizes path removing / and # characters', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		assert.equal(history.prefix('#/foo'), 'foo');
 		assert.equal(history.prefix('#foo'), 'foo');
 		assert.equal(history.prefix('/foo'), 'foo');
@@ -50,6 +55,7 @@ describe('StateHistory', () => {
 
 	it('update path', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		history.set('/foo');
 		assert.equal(history.current, 'foo');
 		assert.equal(sandbox.contentWindow!.location.pathname, '/foo');
@@ -57,6 +63,7 @@ describe('StateHistory', () => {
 
 	it('update path, does not update path if path is set to the current value', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		const beforeLength = sandbox.contentWindow!.history.length;
 		history.set('bar');
 		history.set('bar');
@@ -66,6 +73,7 @@ describe('StateHistory', () => {
 
 	it('update path, adds leading slash if necessary', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		history.set('foo');
 		assert.equal(history.current, 'foo');
 		assert.equal(sandbox.contentWindow!.location.pathname, '/foo');
@@ -73,6 +81,7 @@ describe('StateHistory', () => {
 
 	it('emits change when path is updated', () => {
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		assert.deepEqual(onChange.firstCall.args, [
 			sandbox.contentWindow!.location.pathname.slice(1) + sandbox.contentWindow!.location.search
 		]);
@@ -83,6 +92,7 @@ describe('StateHistory', () => {
 	it('does not emit change if path is set to the current value', () => {
 		sandbox.contentWindow!.history.pushState({}, '', '/foo');
 		const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+		history.start();
 		history.set('/foo');
 		assert.isTrue(onChange.calledOnce);
 	});
@@ -113,18 +123,23 @@ describe('StateHistory', () => {
 		it('initializes current path, taking out the base, with trailing slash', () => {
 			add('app-base', '/foo/', true);
 			sandbox.contentWindow!.history.pushState({}, '', '/foo/bar?baz');
-			assert.equal(new StateHistory({ onChange, window: sandbox.contentWindow! }).current, 'bar?baz');
+			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
+			assert.equal(history.current, 'bar?baz');
 		});
 
 		it('initializes current path, taking out the base, without trailing slash', () => {
 			add('app-base', '/foo/', true);
 			sandbox.contentWindow!.history.pushState({}, '', '/foo/bar?baz');
-			assert.equal(new StateHistory({ onChange, window: sandbox.contentWindow! }).current, 'bar?baz');
+			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
+			assert.equal(history.current, 'bar?baz');
 		});
 
 		it('#set expands the path with the base when pushing state, with trailing slash', () => {
 			add('app-base', '/foo/', true);
 			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
 			history.set('/foo/bar');
 			assert.equal(history.current, 'bar');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/bar');
@@ -137,6 +152,7 @@ describe('StateHistory', () => {
 		it('#set expands the path with the base when pushing state, without trailing slash', () => {
 			add('app-base', '/foo/', true);
 			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
 			history.set('bar');
 			assert.equal(history.current, 'bar');
 			assert.equal(sandbox.contentWindow!.location.pathname, '/foo/bar');
@@ -150,6 +166,7 @@ describe('StateHistory', () => {
 			add('app-base', '/foo/bar/', true);
 			sandbox.contentWindow!.history.pushState({}, '', '/');
 			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
 			history.set('baz');
 			assert.strictEqual(sandbox.contentWindow!.location.pathname, '/foo/bar/baz');
 			assert.equal(history.current, 'baz');
@@ -159,6 +176,7 @@ describe('StateHistory', () => {
 			sandbox.contentWindow!.history.pushState({}, '', '/foo/bar/');
 			add('app-base', 'foo/bar', true);
 			const history = new StateHistory({ onChange, window: sandbox.contentWindow! });
+			history.start();
 			assert.strictEqual(sandbox.contentWindow!.location.pathname, '/foo/bar/');
 			history.set('baz');
 			assert.strictEqual(sandbox.contentWindow!.location.pathname, '/foo/bar/baz');
@@ -167,12 +185,14 @@ describe('StateHistory', () => {
 
 		it('Warns in debug mode if the base option has been set on history options', () => {
 			add('dojo-debug', true, true);
-			new StateHistory({ onChange, base: '/foo/', window: sandbox.contentWindow! });
+			const history = new StateHistory({ onChange, base: '/foo/', window: sandbox.contentWindow! });
+			history.start();
 			assert.isTrue(consoleWarnStub.calledOnce);
 		});
 
 		it('Does not warn when not in debug mode if the base option has been set on history options', () => {
-			new StateHistory({ onChange, base: '/foo/', window: sandbox.contentWindow! });
+			const history = new StateHistory({ onChange, base: '/foo/', window: sandbox.contentWindow! });
+			history.start();
 			assert.isTrue(consoleWarnStub.notCalled);
 		});
 	});

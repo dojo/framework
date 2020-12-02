@@ -678,21 +678,20 @@ describe('Router', () => {
 
 	describe('redirect', () => {
 		it('should redirect from a default route', () => {
+			debugger;
 			const router = new Router(
 				[
 					{
 						path: '/',
 						id: 'foo',
 						outlet: 'main',
-						redirect: 'foo/bar',
-						defaultRoute: true,
-						children: [
-							{
-								path: 'foo/bar',
-								id: 'bar',
-								outlet: 'bar'
-							}
-						]
+						redirect: '/foo/bar',
+						defaultRoute: true
+					},
+					{
+						path: 'foo/bar',
+						id: 'bar',
+						outlet: 'bar'
 					}
 				],
 				{ HistoryManager }

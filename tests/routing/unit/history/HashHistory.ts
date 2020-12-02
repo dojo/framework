@@ -48,6 +48,7 @@ describe('HashHistory', () => {
 	it('Calls onChange for current hash', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.isTrue(onChange.calledWith('current'));
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, 'current');
@@ -56,6 +57,7 @@ describe('HashHistory', () => {
 	it('Calls onChange on hash change', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.isTrue(onChange.calledWith('current'));
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, 'current');
@@ -68,6 +70,7 @@ describe('HashHistory', () => {
 	it('Calls onChange on set', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.isTrue(onChange.calledWith('current'));
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, 'current');
@@ -80,18 +83,21 @@ describe('HashHistory', () => {
 	it('should add hash prefix', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.strictEqual(history.prefix('hash'), '#hash');
 	});
 
 	it('should not add hash prefix if it already exists', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.strictEqual(history.prefix('#hash'), '#hash');
 	});
 
 	it('destroying removes the hashchange event listener', () => {
 		const onChange = stub();
 		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
 		assert.isTrue(mockWindow.removeEventListener.notCalled);
 		history.destroy();
 		assert.isTrue(mockWindow.removeEventListener.calledOnce);

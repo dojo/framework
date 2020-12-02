@@ -8,6 +8,7 @@ describe('MemoryHistory', () => {
 	it('Calls onChange on set', () => {
 		const onChange = stub();
 		const history = new MemoryHistory({ onChange });
+		history.start();
 		assert.isTrue(onChange.calledWith('/'));
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, '/');
@@ -20,6 +21,7 @@ describe('MemoryHistory', () => {
 	it('Does not call onChange on set if paths match', () => {
 		const onChange = stub();
 		const history = new MemoryHistory({ onChange });
+		history.start();
 		assert.isTrue(onChange.calledWith('/'));
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, '/');
@@ -30,6 +32,7 @@ describe('MemoryHistory', () => {
 	it('should not add any prefix', () => {
 		const onChange = stub();
 		const history = new MemoryHistory({ onChange });
+		history.start();
 		assert.strictEqual(history.prefix('hash'), 'hash');
 	});
 });

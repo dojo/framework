@@ -48,6 +48,9 @@ export class StateHistory implements HistoryInterface {
 			this._base = `/${this._base}`;
 		}
 		this._window.addEventListener('popstate', this._onChange, false);
+	}
+
+	start() {
 		this._onChange();
 	}
 

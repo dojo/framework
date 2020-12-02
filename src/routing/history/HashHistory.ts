@@ -3,13 +3,16 @@ import { History, HistoryOptions, OnChangeFunction } from './../interfaces';
 
 export class HashHistory implements History {
 	private _onChangeFunction: OnChangeFunction;
-	private _current: string;
+	private _current = '/';
 	private _window: Window;
 
 	constructor({ window = global.window, onChange }: HistoryOptions) {
 		this._onChangeFunction = onChange;
 		this._window = window;
 		this._window.addEventListener('hashchange', this._onChange, false);
+	}
+
+	start() {
 		this._current = this.normalizePath(this._window.location.hash);
 		this._onChangeFunction(this._current);
 	}
