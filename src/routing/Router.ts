@@ -93,6 +93,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 	public start() {
 		const { HistoryManager = HashHistory, base, window } = this._options;
 		this._history = new HistoryManager({ onChange: this._onChange, base, window });
+		this._history.start();
 		if (this._matchedRoutes.errorRoute && this._defaultRoute) {
 			const path = this.link(this._defaultRoute);
 			if (path) {

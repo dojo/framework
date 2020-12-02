@@ -677,6 +677,30 @@ describe('Router', () => {
 	});
 
 	describe('redirect', () => {
+		it('should redirect from a default route', () => {
+			debugger;
+			const router = new Router(
+				[
+					{
+						path: '/',
+						id: 'foo',
+						outlet: 'main',
+						redirect: '/foo/bar',
+						defaultRoute: true
+					},
+					{
+						path: 'foo/bar',
+						id: 'bar',
+						outlet: 'bar'
+					}
+				],
+				{ HistoryManager }
+			);
+			const contextMap = router.getOutlet('bar');
+			assert.isOk(contextMap);
+			assert.strictEqual(contextMap!.size, 1);
+		});
+
 		it('should redirect to path on matched route', () => {
 			const router = new Router(
 				[

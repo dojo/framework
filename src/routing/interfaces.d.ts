@@ -208,6 +208,11 @@ export interface HistoryConstructor {
  */
 export interface History {
 	/**
+	 * Start the history manager
+	 */
+	start(): void;
+
+	/**
 	 * Sets the path on the history manager
 	 */
 	set(path: string): void;
