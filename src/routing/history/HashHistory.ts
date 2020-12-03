@@ -11,7 +11,7 @@ export class HashHistory implements History {
 		this._window = window;
 	}
 
-	start() {
+	public start() {
 		this._window.addEventListener('hashchange', this._onChange, false);
 		this._current = this.normalizePath(this._window.location.hash);
 		this._onChangeFunction(this._current);
@@ -30,6 +30,12 @@ export class HashHistory implements History {
 
 	public set(path: string) {
 		this._window.location.hash = this.prefix(path);
+		this._onChange();
+	}
+
+	public replace(path: string) {
+		const { pathname, search } = this._window.location;
+		this._window.location.replace(pathname + search + this.prefix(path));
 		this._onChange();
 	}
 

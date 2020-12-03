@@ -90,6 +90,15 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 		this._history.set(path);
 	}
 
+	/**
+	 * Replaces the path against the registered history manager
+	 *
+	 * @param path The path to set on the history manager
+	 */
+	public replacePath(path: string): void {
+		this._history.replace(path);
+	}
+
 	public start() {
 		const { HistoryManager = HashHistory, base, window } = this._options;
 		this._history = new HistoryManager({ onChange: this._onChange, base, window });
