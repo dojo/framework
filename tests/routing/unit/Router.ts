@@ -678,7 +678,6 @@ describe('Router', () => {
 
 	describe('redirect', () => {
 		it('should redirect from a default route', () => {
-			debugger;
 			const router = new Router(
 				[
 					{

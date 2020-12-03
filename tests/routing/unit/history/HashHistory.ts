@@ -23,6 +23,23 @@ class MockLocation {
 	get hash() {
 		return this._hash;
 	}
+
+	get pathname() {
+		return 'pathname';
+	}
+
+	get search() {
+		return '';
+	}
+
+	replace(value: string) {
+		const [, hash] = value.split('#');
+		const newHash = hash[0] !== '#' ? `#${hash}` : hash;
+		if (newHash !== this._hash) {
+			this._hash = newHash;
+			this._change();
+		}
+	}
 }
 
 class MockWindow {
@@ -75,6 +92,19 @@ describe('HashHistory', () => {
 		assert.isTrue(onChange.calledOnce);
 		assert.strictEqual(history.current, 'current');
 		history.set('new');
+		assert.isTrue(onChange.calledTwice);
+		assert.isTrue(onChange.secondCall.calledWith('new'));
+		assert.strictEqual(history.current, 'new');
+	});
+
+	it('Calls onChange on replace', () => {
+		const onChange = stub();
+		const history = new HashHistory({ onChange, window: mockWindow });
+		history.start();
+		assert.isTrue(onChange.calledWith('current'));
+		assert.isTrue(onChange.calledOnce);
+		assert.strictEqual(history.current, 'current');
+		history.replace('new');
 		assert.isTrue(onChange.calledTwice);
 		assert.isTrue(onChange.secondCall.calledWith('new'));
 		assert.strictEqual(history.current, 'new');

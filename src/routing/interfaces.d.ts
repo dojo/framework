@@ -113,6 +113,11 @@ export interface RouterInterface {
 	setPath(path: string): void;
 
 	/**
+	 * Replaces the path on the underlying history manager
+	 */
+	replacePath(path: string): void;
+
+	/**
 	 * Returns the outlet context if matched
 	 */
 	getRoute(outletId: string): RouteContext | undefined;
@@ -216,6 +221,11 @@ export interface History {
 	 * Sets the path on the history manager
 	 */
 	set(path: string): void;
+
+	/**
+	 * Replaces the path on the history manager
+	 */
+	replace(path: string): void;
 
 	/**
 	 * Adds a prefix to the path if the history manager requires
