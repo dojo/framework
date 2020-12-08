@@ -227,7 +227,7 @@ describe('new/assertion', () => {
 		));
 		const WrappedWidget = wrap(AWidget);
 		const r = renderer(() => <ParentWidget />);
-		r.child(WrappedWidget, { foo: [] });
+		r.child(WrappedWidget, []);
 		const WrappedDiv = wrap('div');
 		const testAssertion = assertion(() => (
 			<div>
