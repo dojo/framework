@@ -39,15 +39,29 @@ export interface PropertyInstruction {
 export type Instruction = ChildInstruction | PropertyInstruction;
 
 export interface Child {
+	<T extends OptionalWNodeFactory<{ properties: any; children: any }>>(
+		wrapped: Wrapped<T>,
+		params: T['children'] extends (...args: any[]) => RenderResult
+			? Parameters<T['children']>
+			: T['children'] extends { [index: string]: any }
+				? {
+						[P in keyof T['children']]?: Parameters<T['children'][P]> extends never
+							? []
+							: Parameters<T['children'][P]>
+				  }
+				: never
+	): void;
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
 		wrapped: Wrapped<T>,
-		params: T['children'] extends { [index: string]: any }
-			? {
-					[P in keyof T['children']]?: Parameters<T['children'][P]> extends never
-						? []
-						: Parameters<T['children'][P]>
-			  }
-			: T['children'] extends (...args: any[]) => RenderResult ? Parameters<T['children']> : never
+		params: T['children'] extends (...args: any[]) => RenderResult
+			? Parameters<T['children']>
+			: T['children'] extends { [index: string]: any }
+				? {
+						[P in keyof T['children']]?: Parameters<T['children'][P]> extends never
+							? []
+							: Parameters<T['children'][P]>
+				  }
+				: never
 	): void;
 }
 

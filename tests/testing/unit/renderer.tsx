@@ -322,10 +322,13 @@ describe('test renderer', () => {
 				return '';
 			});
 
-			const childObjectFactory = create().children<{
-				top: (value: string) => RenderResult;
-				bottom: (value: string) => RenderResult;
-			}>();
+			const childObjectFactory = create().children<
+				| {
+						top: (value: string) => RenderResult;
+						bottom: (value: string) => RenderResult;
+				  }
+				| undefined
+			>();
 
 			const ChildObjectFactory = childObjectFactory(function ChildObjectFactory() {
 				return '';
@@ -369,6 +372,8 @@ describe('test renderer', () => {
 
 			r.child(WrappedChildObjectFactory, { top: ['top'], bottom: ['bottom'] });
 			r.child(WrappedChildFunctionWidget, ['func']);
+			// This errors
+			// r.child(WrappedChildFunctionWidget, [1]);
 			r.child(WrappedParentChildObjectFactory, { top: ['parent-top'], bottom: ['parent-bottom'] });
 			r.child(WrappedNestedChildObjectFactory, { top: ['nested-top'], bottom: ['nested-bottom'] });
 			r.child(WrappedNestedChildFunctionWidget, ['nested-function']);
