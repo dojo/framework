@@ -2,6 +2,14 @@ import { create, invalidator, diffProperty, destroy } from '../vdom';
 import { auto } from '../diff';
 import { RawCache } from './resourceCache';
 
+// meta i.e. total DONE
+// loading DONE
+// transforms EASY
+//--------------------------
+// get API
+// custom functions
+// setting/getting single items
+
 interface ReadQuery {
 	[index: string]: string;
 }
@@ -37,12 +45,14 @@ interface TemplateFactory<DATA, OPTIONS> {
 	(options: TemplateOptions<OPTIONS>): Template<DATA>;
 }
 
+interface Foo {
+	template: (options?: any) => Template<any>;
+	templateOptions: any;
+}
+
 // Fix any for template
 interface TemplateWithOptions<DATA> {
-	template: {
-		template: any;
-		templateOptions: any;
-	};
+	template: Foo;
 	options: undefined;
 }
 
@@ -53,7 +63,7 @@ interface TemplateWithOptionsFactory<DATA, OPTIONS> {
 type TemplateOptions<OPTIONS> = { id: string } & OPTIONS;
 
 interface OptionSetter {
-	(current: ReadOptionsData, next: Partial<ReadOptionsData>): ReadOptionsData;
+	(current: Partial<ReadOptionsData>, next: Partial<ReadOptionsData>): Partial<ReadOptionsData>;
 }
 
 interface ReadOptions {
@@ -168,6 +178,16 @@ type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
 	| undefined
 	| void;
 
+interface ResourceWithMeta<MIDDLEWARE_DATA> {
+	data: {
+		value: MIDDLEWARE_DATA;
+		loading: boolean;
+	}[];
+	meta: {
+		loading: boolean;
+	};
+}
+
 interface Resource<MIDDLEWARE_DATA> {
 	<RESOURCE_DATA, MIDDLEWARE_DATA>(
 		options: { template: Template<RESOURCE_DATA>; options?: ReadOptions }
@@ -183,9 +203,14 @@ interface Resource<MIDDLEWARE_DATA> {
 		options: { template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>; options?: ReadOptions }
 	): ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>;
 	getOrRead<RESOURCE_DATA>(
-		template: ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: Foo | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData
 	): MIDDLEWARE_DATA[] | undefined;
+	getOrRead<RESOURCE_DATA>(
+		template: Foo | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		options: ReadOptionsData,
+		meta: boolean
+	): ResourceWithMeta<MIDDLEWARE_DATA>;
 	createOptions(setter: OptionSetter, id?: string): ReadOptions;
 }
 
@@ -204,7 +229,7 @@ const templateCacheMap = new Map<
 
 // The options cache, holds the actual options, subscribers, and the options setter function
 interface OptionsCacheData {
-	options: ReadOptionsData;
+	options: Partial<ReadOptionsData>;
 	subscribers: Set<() => void>;
 	setter: ReadOptions;
 }
@@ -213,20 +238,30 @@ const optionsCacheMap = new Map<string, OptionsCacheData>();
 // The reverse look up for the owning id, this is so that widgets passed a resource options can add their invalidator to subscribers
 const optionsSetterToOwnerIdMap = new Map<any, any>();
 
-function getOrCreateResourceStuff(template: ResourceTemplate<any, any>) {
+function isNestedTemplate(value: any): value is ResourceTemplate<any, any> {
+	return Boolean(value && value.template && typeof value.template !== 'function');
+}
+
+function getOrCreateResourceStuff(template: Foo | ResourceTemplate<any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
 	}
 
-	const templateCache = templateCacheMap.get(template.template.template) || new Map();
-	templateCacheMap.set(template.template.template, templateCache);
-	const cacheKey = JSON.stringify(template.template.templateOptions);
+	if (isNestedTemplate(template)) {
+		template = template.template;
+	}
+
+	const templateCache =
+		templateCacheMap.get(template.template) ||
+		new Map<string, { instance: Template<any>; raw: RawCache; inprogress: Map<any, any> }>();
+	templateCacheMap.set(template.template, templateCache);
+	const cacheKey = JSON.stringify(template.templateOptions);
 	let caches = templateCache.get(cacheKey);
 	if (!caches) {
 		caches = {
 			raw: new RawCache(),
 			inprogress: new Map(),
-			instance: template.template.template(template.template.templateOptions)
+			instance: template.template(template.templateOptions)
 		};
 		templateCache.set(cacheKey, caches);
 	}
@@ -276,7 +311,11 @@ const middleware = factory(
 			}
 			return { ...options, options: options.options };
 		};
-		resource.getOrRead = (template, options) => {
+		function getOrRead<RESOURCE_DATA>(
+			template: Foo | ResourceTemplate<RESOURCE_DATA, any>,
+			options: ReadOptionsData,
+			meta?: false
+		): ResourceWithMeta<any> | any[] | undefined {
 			const caches = getOrCreateResourceStuff(template);
 			const { raw: cache, inprogress, instance } = caches;
 			const { size, page, query } = options;
@@ -291,45 +330,39 @@ const middleware = factory(
 
 			const stringifiedRequest = JSON.stringify(request);
 			const requestInFlight = inprogress.get(stringifiedRequest);
-			if (requestInFlight) {
+			if (requestInFlight && !meta) {
 				return undefined;
 			}
 			const syntheticIds: string[] = [];
-			for (let i = 0; i < end - start; i++) {
-				syntheticIds[i] = `${JSON.stringify(query)}/${start + i}`;
-			}
-			const incompletes: string[] = [];
+			const incompleteIds: string[] = [];
+			let items: any[] = [];
 			let shouldRead = false;
-			const items: any[] = [];
-			syntheticIds.forEach((syntheticId, idx) => {
+			for (let i = 0; i < end - start; i++) {
+				const syntheticId = `${JSON.stringify(query)}/${start + i}`;
 				const item = cache.get(syntheticId);
-				if (item) {
-					if (item.pending) {
-						incompletes.push(syntheticId);
-					} else if (item.mtime - Date.now() + ttl < 0) {
-						incompletes.push(syntheticId);
-						shouldRead = true;
-						items[idx] = item.value;
-					} else {
-						items[idx] = item.value;
-					}
-				} else {
-					incompletes.push(syntheticId);
+				syntheticIds.push(syntheticId);
+				if (!item) {
+					incompleteIds.push(syntheticId);
+					cache.addSyntheticId(syntheticId);
+					items.push(undefined);
 					shouldRead = true;
+				} else if (item.pending) {
+					incompleteIds.push(syntheticId);
+					items.push(undefined);
+				} else if (item.mtime - Date.now() + ttl < 0) {
+					incompleteIds.push(syntheticId);
+					items.push(item);
+					shouldRead = true;
+				} else {
+					items.push(item);
 				}
-			});
-			if (incompletes.length) {
-				cache.subscribe(incompletes, () => {
+			}
+			if (incompleteIds.length) {
+				cache.subscribe(incompleteIds, () => {
 					invalidator();
 				});
-			} else {
-				return items;
 			}
 			if (shouldRead) {
-				syntheticIds.forEach((syntheticId, idx) => {
-					cache.addSyntheticId(syntheticId);
-				});
-
 				const put = (response: ReadResponse<any>, _request: ReadRequest) => {
 					const { data } = response;
 					data.forEach((item, idx) => {
@@ -345,33 +378,59 @@ const middleware = factory(
 					});
 					inprogress.set(stringifiedRequest, false);
 				};
-				// const get = (request: ReadRequest) => {};
 				inprogress.set(stringifiedRequest, true);
 				instance.read(request, { put });
-				let items: any[] = [];
-				for (let i = 0; i < syntheticIds.length; i++) {
-					const syntheticId = syntheticIds[i];
-					const item = cache.get(syntheticId);
-					if (item && !item.pending) {
-						items[i] = item.value;
-					} else {
-						return undefined;
+				if (!inprogress.get(stringifiedRequest)) {
+					items = [];
+					for (let i = 0; i < syntheticIds.length; i++) {
+						const syntheticId = syntheticIds[i];
+						const item = cache.get(syntheticId);
+						if (!item) {
+							incompleteIds.push(syntheticId);
+							cache.addSyntheticId(syntheticId);
+							items.push(undefined);
+							shouldRead = true;
+						} else if (item.pending) {
+							incompleteIds.push(syntheticId);
+							items.push(undefined);
+						} else if (item.mtime - Date.now() + ttl < 0) {
+							incompleteIds.push(syntheticId);
+							items.push(item);
+							shouldRead = true;
+						} else {
+							items.push(item);
+						}
 					}
 				}
-				return items;
 			}
-		};
+			if (meta) {
+				let loading = false;
+				const data = items.map((item) => {
+					if (item) {
+						return {
+							value: item.value,
+							loading: false
+						};
+					}
+					loading = true;
+					return {
+						value: undefined,
+						loading: true
+					};
+				});
+				return { data, meta: { loading } };
+			}
+			const filteredItems = items.filter((item) => !!item);
+			return items.length === filteredItems.length ? items : undefined;
+		}
+		resource.getOrRead = getOrRead as any;
 		resource.createOptions = (setter: OptionSetter, optionsId = id) => {
 			const existingOptions = optionsCacheMap.get(optionsId);
 			if (existingOptions) {
 				return existingOptions.setter;
 			}
 			const optionsWrapper: OptionsCacheData = {
-				options: {
-					page: 1,
-					size: 1,
-					query: {}
-				},
+				options: {},
 				subscribers: new Set(),
 				setter: (options) => {
 					return options as any;
@@ -381,7 +440,11 @@ const middleware = factory(
 			function setOptions(newOptions?: Partial<ReadOptionsData>): ReadOptionsData {
 				if (!newOptions) {
 					optionsWrapper.subscribers.add(invalidator);
-					return { ...optionsWrapper.options };
+					return {
+						page: optionsWrapper.options.page || 1,
+						size: optionsWrapper.options.size || 30,
+						query: optionsWrapper.options.query || {}
+					};
 				}
 				const updatedOptions = setter(optionsWrapper.options, newOptions);
 				if (auto(updatedOptions, optionsWrapper.options, 5)) {
@@ -390,8 +453,13 @@ const middleware = factory(
 						i();
 					});
 				}
-				return optionsWrapper.options;
+				return {
+					page: optionsWrapper.options.page || 1,
+					size: optionsWrapper.options.size || 30,
+					query: optionsWrapper.options.query || {}
+				};
 			}
+			setOptions({});
 			destroyFuncs.push(() => {
 				optionsCacheMap.delete(id);
 			});

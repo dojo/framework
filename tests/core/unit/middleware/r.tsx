@@ -54,6 +54,8 @@ describe('r', () => {
 			const options = createOptions((curr, next) => {
 				return { ...curr, ...next };
 			});
+			const a = template({ id: '', data });
+			a;
 			options({ size: 10 });
 			return (
 				<div>
@@ -64,7 +66,9 @@ describe('r', () => {
 						}}
 					/>
 					<Foo resource={resource({ template: template({ id: '', data }), options })} />
-					<Foo resource={resource({ template: template({ id: '', data }) })} />
+					<Foo resource={resource({ template: template({ id: '', data: [{ id: '' }] }) })} />
+					<Foo resource={template({ id: '', data })} />
+					<Foo resource={{ id: '', data }} />
 				</div>
 			);
 		});
@@ -104,8 +108,8 @@ describe('r', () => {
 		const App = factory(() => {
 			return (
 				<div>
-					<Foo resource={{ id: '', data }} />
-					<Foo resource={{ id: '', data }} />
+					<Foo resource={{ id: '1', data }} />
+					<Foo resource={{ id: '', data: [...data].reverse() }} />
 				</div>
 			);
 		});
@@ -115,16 +119,12 @@ describe('r', () => {
 		debugger;
 	});
 
-	it('normal', () => {
+	it('template factory', () => {
+		debugger;
 		const root = document.createElement('div');
 		const resource = createResourceMiddleware();
 		const factory = create({ resource });
-
-		const template = createResourceTemplate<{ id: string }>({
-			read: async (request, { put }) => {
-				put({ data: data.slice(request.offset, request.offset + request.size), total: data.length }, request);
-			}
-		});
+		const template = createResourceTemplate<{ id: string }>();
 		const Foo = create({ resource: createResourceMiddleware<{ data: { id: string } }>() })(
 			({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
@@ -144,23 +144,15 @@ describe('r', () => {
 				);
 			}
 		);
+		console.log(Foo);
 
 		const App = factory(({ middleware: { resource } }) => {
-			const { getOrRead, createOptions } = resource;
-			const options = createOptions((curr, next) => {
-				return { ...curr, ...next };
-			});
-			options({ size: 10 });
+			const options = resource.createOptions((curr, next) => ({ ...curr, ...next }));
 			return (
 				<div>
-					<div>{JSON.stringify(getOrRead(template, options()))}</div>
-					<button
-						onclick={() => {
-							options({ page: 2 });
-						}}
-					/>
-					<Foo resource={resource({ template, options })} />
-					<Foo resource={resource({ template })} />
+					<div>{JSON.stringify(resource.getOrRead(template({ id: '', data: [] }), options()))}</div>
+					<Foo resource={template({ id: '', data: [] })} />
+					<Foo resource={resource({ template: template({ id: '', data: [] }) })} />
 				</div>
 			);
 		});
@@ -168,9 +160,135 @@ describe('r', () => {
 		r.mount({ domNode: root });
 		console.log(root.innerHTML);
 		debugger;
-		(root as any).children[0].children[1].click();
+	});
+
+	it('Using a  sync template', () => {
+		const root = document.createElement('div');
+		const resource = createResourceMiddleware();
+		const factory = create({ resource });
+		const template = createResourceTemplate<{ id: string }>({
+			read: (request, { put }) => {
+				debugger;
+				put({ data: data.slice(request.offset, request.offset + request.size), total: data.length }, request);
+			}
+		});
+
+		const App = factory(({ middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const options = createOptions(({ page = 1, size = 5 }, next) => {
+				return { page, size, ...next };
+			});
+			const otherOptions = createOptions(({ page = 2, size = 5 }, next) => {
+				return { page, size, ...next };
+			}, 'other');
+			const anotherOptions = createOptions(({ page = 2, size = 4 }, next) => {
+				return { page, size, ...next };
+			}, 'another');
+			const { data, meta } = getOrRead(template, options(), true);
+			const { data: data10, meta: meta10 } = getOrRead(template, otherOptions(), true);
+			const { data: data5, meta: meta5 } = getOrRead(template, anotherOptions(), true);
+			debugger;
+			return (
+				<div>
+					<div>{JSON.stringify(data)}</div>
+					<div>{JSON.stringify(meta)}</div>
+					<button
+						onclick={() => {
+							debugger;
+							options({ size: 10 });
+						}}
+					/>
+					<div>{JSON.stringify(data10)}</div>
+					<div>{JSON.stringify(meta10)}</div>
+					<div>{JSON.stringify(data5)}</div>
+					<div>{JSON.stringify(meta5)}</div>
+				</div>
+			);
+		});
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		console.log(root.innerHTML);
 		resolvers.resolve();
 		console.log(root.innerHTML);
+		(root as any).children[0].children[2].click();
+		resolvers.resolve();
+		console.log(root.innerHTML);
+		resolvers.resolve();
+		console.log(root.innerHTML);
+		debugger;
+	});
+
+	it('async', async () => {
+		const root = document.createElement('div');
+		const resource = createResourceMiddleware();
+		const factory = create({ resource });
+		let res: any;
+		let prom: any;
+
+		const template = createResourceTemplate<{ id: string }>({
+			read: async (request, { put }) => {
+				prom = new Promise((_res) => (res = _res));
+				await prom;
+				put({ data: data.slice(request.offset, request.offset + request.size), total: data.length }, request);
+			}
+		});
+		// const Foo = create({ resource: createResourceMiddleware<{ data: { id: string } }>() })(
+		// 	({ properties, middleware: { resource } }) => {
+		// 		const { getOrRead, createOptions } = resource;
+		// 		let {
+		// 			resource: { template, options }
+		// 		} = properties();
+		// 		if (!options) {
+		// 			options = createOptions((curr, next) => ({ ...curr, ...next }));
+		// 			options({ size: 5 });
+		// 		}
+		// 		return (
+		// 			<div>
+		// 				<div>foo start</div>
+		// 				<div>{JSON.stringify(getOrRead(template, options()))}</div>
+		// 				<div>foo end</div>
+		// 			</div>
+		// 		);
+		// 	}
+		// );
+
+		const App = factory(({ middleware: { resource } }) => {
+			const { getOrRead, createOptions } = resource;
+			const options = createOptions((curr, next) => {
+				return { ...curr, ...next };
+			});
+			const { size = 1 } = options();
+			options({ size });
+			const { data, meta } = getOrRead(template, options(), true);
+			return (
+				<div>
+					<div>{JSON.stringify(data)}</div>
+					<div>{JSON.stringify(meta)}</div>
+					<button
+						onclick={() => {
+							options({ size: 2 });
+						}}
+					/>
+					{/* <Foo resource={resource({ template, options })} />
+					<Foo resource={resource({ template })} /> */}
+				</div>
+			);
+		});
+		const r = renderer(() => <App />);
+		r.mount({ domNode: root });
+		console.log(root.innerHTML);
+		res();
+		await prom;
+		resolvers.resolve();
+		console.log(root.innerHTML);
+		(root as any).children[0].children[2].click();
+		resolvers.resolve();
+		console.log(root.innerHTML);
+		res();
+		await prom;
+		resolvers.resolve();
+		console.log(root.innerHTML);
+		debugger;
 	});
 
 	// it('types', () => {
