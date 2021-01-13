@@ -10,6 +10,8 @@ import { RawCache } from './resourceCache';
 // custom functions
 // setting/getting single items
 
+// what happens for items that are set to pending but are not returned because end of data? set the pending records to something? remove them?
+
 interface ReadQuery {
 	[index: string]: string;
 }
@@ -41,18 +43,18 @@ interface Template<DATA> {
 	read: TemplateRead<DATA>;
 }
 
-interface TemplateFactory<DATA, OPTIONS> {
-	(options: TemplateOptions<OPTIONS>): Template<DATA>;
+interface TemplateFactory<RESOURCE_DATA, OPTIONS> {
+	(options: TemplateOptions<OPTIONS>): Template<RESOURCE_DATA>;
 }
 
-interface Foo {
-	template: (options?: any) => Template<any>;
+interface TemplateWrapper<RESOURCE_DATA> {
+	template: (options?: any) => Template<RESOURCE_DATA>;
 	templateOptions: any;
 }
 
 // Fix any for template
-interface TemplateWithOptions<DATA> {
-	template: Foo;
+interface TemplateWithOptions<RESOURCE_DATA> {
+	template: TemplateWrapper<RESOURCE_DATA>;
 	options: undefined;
 }
 
@@ -203,11 +205,11 @@ interface Resource<MIDDLEWARE_DATA> {
 		options: { template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>; options?: ReadOptions }
 	): ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>;
 	getOrRead<RESOURCE_DATA>(
-		template: Foo | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData
 	): MIDDLEWARE_DATA[] | undefined;
 	getOrRead<RESOURCE_DATA>(
-		template: Foo | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData,
 		meta: boolean
 	): ResourceWithMeta<MIDDLEWARE_DATA>;
@@ -242,7 +244,7 @@ function isNestedTemplate(value: any): value is ResourceTemplate<any, any> {
 	return Boolean(value && value.template && typeof value.template !== 'function');
 }
 
-function getOrCreateResourceStuff(template: Foo | ResourceTemplate<any, any>) {
+function getOrCreateResourceStuff(template: TemplateWrapper<any> | ResourceTemplate<any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
 	}
@@ -297,7 +299,7 @@ const middleware = factory(
 			}
 			if (!nextResource.template) {
 				const { template: _template, options, ...rest } = nextResource;
-				nextResource.template = template(rest as any);
+				nextResource.template = template(rest as any).template;
 			}
 			return nextResource;
 		});
@@ -312,7 +314,7 @@ const middleware = factory(
 			return { ...options, options: options.options };
 		};
 		function getOrRead<RESOURCE_DATA>(
-			template: Foo | ResourceTemplate<RESOURCE_DATA, any>,
+			template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, any>,
 			options: ReadOptionsData,
 			meta?: false
 		): ResourceWithMeta<any> | any[] | undefined {
