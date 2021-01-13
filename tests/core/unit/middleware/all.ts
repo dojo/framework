@@ -11,6 +11,7 @@ import './injector';
 import './intersection';
 import './resize';
 import './resources';
+import './r';
 import './store';
 import './theme';
 import './validity';

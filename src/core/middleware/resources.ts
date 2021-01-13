@@ -4,6 +4,7 @@ import { create, diffProperty, invalidator, destroy } from '../vdom';
 import { Invalidator } from '../interfaces';
 import { isThenable } from '../../shim/Promise';
 import { auto } from '../diff';
+import cache from './resourceCache';
 
 // Resource General
 
@@ -953,10 +954,10 @@ function getResource(
 	return resource;
 }
 
-const factory = create({ diffProperty, invalidator, destroy });
+const factory = create({ diffProperty, invalidator, destroy, cache });
 
 const resourceMiddlewareFactory = factory(
-	({ id: middlewareId, middleware: { diffProperty, invalidator, destroy } }): ResourceMiddleware => {
+	({ id: middlewareId, middleware: { diffProperty, invalidator, destroy, cache } }): ResourceMiddleware => {
 		const middleware = function(resource: any) {
 			if (isTemplate(resource.template)) {
 				let { template, transform, initOptions, ...rest } = resource;
@@ -1089,21 +1090,29 @@ const resourceMiddlewareFactory = factory(
 			optionsMap.set(key, setOptions);
 			return setOptions;
 		};
-		middleware.getOrRead = (template: any, options: any, init?: any) => {
-			const resource = getResource(template, middlewareId, init);
+		middleware.getOrRead = (template: any, options: ResourceOptions<any>, init?: any): any => {
 			const transform = !isTemplate(template) && template.transform;
 			const resourceOptions = transformOptions(options, transform);
-			resource.subscribeRead(invalidator, options);
-			const data = resource.getOrRead(resourceOptions);
-			if (data && transform) {
-				return data.map((items: any) => {
-					if (items) {
-						return items.map((item: any) => transformData(item, transform));
-					}
-					return items;
-				});
-			}
-			return data;
+			const { page, size } = resourceOptions as any;
+			const start = page * size - size;
+			const end = page * size - 1;
+			debugger;
+			const result = cache.get({ start, end, query: '' }, template.template.read);
+			console.log(result);
+			// const resource = getResource(template, middlewareId, init);
+			// const transform = !isTemplate(template) && template.transform;
+			// const resourceOptions = transformOptions(options, transform);
+			// resource.subscribeRead(invalidator, options);
+			// const data = resource.getOrRead(resourceOptions);
+			// if (data && transform) {
+			// 	return data.map((items: any) => {
+			// 		if (items) {
+			// 			return items.map((item: any) => transformData(item, transform));
+			// 		}
+			// 		return items;
+			// 	});
+			// }
+			// return data;
 		};
 		middleware.find = (template: any, options: any, init?: any) => {
 			const resource = getResource(template, middlewareId, init);
