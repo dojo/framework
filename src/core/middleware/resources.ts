@@ -8,68 +8,63 @@ import { auto } from '../diff';
 // setting/getting single items
 // to/from transform
 
-// implement strag for when requests are underfullfilled
-// read/reading/unread over loading and other states
-// get
-
-interface ReadQuery {
+export interface ReadQuery {
 	[index: string]: any;
 }
 
-interface ReadRequest {
+export interface ReadRequest {
 	offset: number;
 	size: number;
 	query: ReadQuery;
 }
 
-interface ReadResponse<DATA> {
+export interface ReadResponse<DATA> {
 	data: DATA[];
 	total?: number;
 }
 
-interface Put<DATA> {
+export interface Put<DATA> {
 	(response: ReadResponse<DATA>, request: ReadRequest): void;
 }
 
-interface TemplateControls<DATA> {
+export interface TemplateControls<DATA> {
 	put: Put<DATA>;
 }
 
-interface TemplateRead<DATA> {
+export interface TemplateRead<DATA> {
 	(request: ReadRequest, controls: TemplateControls<DATA>): Promise<void> | void;
 }
 
-interface Template<DATA> {
+export interface Template<DATA> {
 	idKey: keyof DATA;
 	read: TemplateRead<DATA>;
 }
 
-interface TemplateFactory<RESOURCE_DATA, OPTIONS> {
+export interface TemplateFactory<RESOURCE_DATA, OPTIONS> {
 	(options: TemplateOptions<OPTIONS>): Template<RESOURCE_DATA>;
 }
 
-interface TemplateWrapper<RESOURCE_DATA> {
+export interface TemplateWrapper<RESOURCE_DATA> {
 	template: (options?: any) => Template<RESOURCE_DATA>;
 	templateOptions?: any;
 }
 
-// Fix any for template
-interface TemplateWithOptions<RESOURCE_DATA> {
+export interface TemplateWithOptions<RESOURCE_DATA> {
 	template: TemplateWrapper<RESOURCE_DATA>;
 	options: undefined;
 }
 
-interface TemplateWithOptionsFactory<DATA, OPTIONS> {
+export interface TemplateWithOptionsFactory<DATA, OPTIONS> {
 	(options: TemplateOptions<OPTIONS>): TemplateWithOptions<DATA>;
 }
 
-type TemplateOptions<OPTIONS> = { id: string } & OPTIONS;
+export type TemplateOptions<OPTIONS> = { id: string } & OPTIONS;
 
-interface OptionSetter {
+export interface OptionSetter {
 	(current: Partial<ReadOptionsData>, next: Partial<ReadOptionsData>): Partial<ReadOptionsData>;
 }
 
-interface ReadOptions {
+export interface ReadOptions {
 	(options?: Partial<ReadOptionsData>): ReadOptionsData;
 }
 
@@ -223,54 +218,52 @@ export function createResourceTemplate<RESOURCE_DATA>(template?: any): any {
 	};
 }
 
-type TransformConfig<T, S = void> = { [P in keyof T]: S extends void ? string : keyof S };
+export type TransformConfig<T, S = void> = { [P in keyof T]: S extends void ? string : keyof S };
 
-// resource stuff
-
-interface ReadOptionsData {
+export interface ReadOptionsData {
 	page: number;
 	size: number;
 	query: ReadQuery;
 }
 
-interface ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA> {
+export interface ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA> {
 	template: TemplateWrapper<RESOURCE_DATA>;
 	transform?: TransformConfig<MIDDLEWARE_DATA, any>;
 	options?: ReadOptions;
 }
 
-interface ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA> {
+export interface ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA> {
 	template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>;
 	options?: ReadOptions;
 }
 
-type ResourceDetails<MIDDLEWARE_DATA> = MIDDLEWARE_DATA extends infer RESOURCE_DATA
+export type ResourceDetails<MIDDLEWARE_DATA> = MIDDLEWARE_DATA extends infer RESOURCE_DATA
 	? ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>
 	: void;
 
-type DefaultTemplateProperty<MIDDLEWARE_DATA> = TemplateOptions<{ data: MIDDLEWARE_DATA[] }> & {
+export type DefaultTemplateProperty<MIDDLEWARE_DATA> = TemplateOptions<{ data: MIDDLEWARE_DATA[] }> & {
 	template?: void;
 	options?: void;
 	idKey: keyof MIDDLEWARE_DATA;
 };
 
-interface ResourceProperties<MIDDLEWARE_DATA> {
+export interface ResourceProperties<MIDDLEWARE_DATA> {
 	resource:
 		| TemplateWithOptions<MIDDLEWARE_DATA>
 		| ResourceDetails<MIDDLEWARE_DATA>
 		| DefaultTemplateProperty<MIDDLEWARE_DATA>;
 }
 
-type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
+export type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
 	| TemplateWrapper<RESOURCE_DATA>
 	| TemplateWithOptions<RESOURCE_DATA>
 	| ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>
 	| undefined
 	| void;
 
-type ReadStatus = 'read' | 'unread' | 'reading';
+export type ReadStatus = 'read' | 'unread' | 'reading';
 
-interface ResourceWithMeta<MIDDLEWARE_DATA> {
+export interface ResourceWithMeta<MIDDLEWARE_DATA> {
 	data: {
 		value: MIDDLEWARE_DATA;
 		status: ReadStatus;
@@ -280,7 +273,7 @@ interface ResourceWithMeta<MIDDLEWARE_DATA> {
 	};
 }
 
-interface Resource<MIDDLEWARE_DATA = {}> {
+export interface Resource<MIDDLEWARE_DATA = {}> {
 	<RESOURCE_DATA>(
 		options: {
 			template: void | TemplateWrapper<MIDDLEWARE_DATA> | ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
