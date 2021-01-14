@@ -1,3 +1,5 @@
+import Set from '../../shim/Set';
+import Map from '../../shim/Map';
 import { create, invalidator, diffProperty, destroy } from '../vdom';
 import { auto } from '../diff';
 
