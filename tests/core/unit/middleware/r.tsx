@@ -144,7 +144,7 @@ describe('r', () => {
 					<div>
 						<div>foo start</div>
 						<div>{JSON.stringify(getOrRead(template, options()))}</div>
-						<Foo resource={resource({ template })} />
+						{/* <Foo resource={resource({ template })} /> */}
 						<div>foo end</div>
 					</div>
 				);

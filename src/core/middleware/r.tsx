@@ -166,8 +166,16 @@ type ResourceDetails<MIDDLEWARE_DATA> = MIDDLEWARE_DATA extends infer RESOURCE_D
 	? ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>
 	: void;
 
+type DefaultTemplateProperty<MIDDLEWARE_DATA> = TemplateOptions<{ data: MIDDLEWARE_DATA[] }> & {
+	template?: void;
+	options?: void;
+};
+
 interface ResourceProperties<MIDDLEWARE_DATA> {
-	resource: TemplateWithOptions<MIDDLEWARE_DATA> | ResourceDetails<MIDDLEWARE_DATA>;
+	resource:
+		| TemplateWithOptions<MIDDLEWARE_DATA>
+		| ResourceDetails<MIDDLEWARE_DATA>
+		| DefaultTemplateProperty<MIDDLEWARE_DATA>;
 }
 
 type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
@@ -190,7 +198,7 @@ interface ResourceWithMeta<MIDDLEWARE_DATA> {
 interface Resource<MIDDLEWARE_DATA = {}> {
 	<RESOURCE_DATA>(
 		options: {
-			template: TemplateWrapper<MIDDLEWARE_DATA> | ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
+			template: void | TemplateWrapper<MIDDLEWARE_DATA> | ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
 			options?: ReadOptions;
 		}
 	): {
@@ -281,6 +289,10 @@ function isTemplateWrapper(value: any): value is TemplateWrapper<any> {
 	return Boolean(value && value.template && typeof value.template === 'function');
 }
 
+function isResourceWrapper(value: any): value is ResourceWrapper<any, any> {
+	return Boolean(value && value.template && typeof value.template.template === 'function');
+}
+
 function getOrCreateResourceStuff(template: ResourceTemplate<any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
@@ -344,11 +356,38 @@ const middleware = factory(
 			destroyFuncs.forEach((des) => des());
 		});
 
-		const resource: Resource<any> = (options: any) => {
-			if (typeof options.template === 'function' || typeof options.template.read === 'function') {
-				return { ...options };
+		const resource = (
+			options:
+				| void
+				| TemplateWrapper<any>
+				| ResourceWrapper<any, any>
+				| ({
+						template: {
+							template: {
+								template: () => Template<any>;
+								templateOptions?: any;
+							};
+						};
+						options?: ReadOptions;
+						transform?: TransformConfig<any, any>;
+				  })
+		): {
+			template: {
+				template: { template: () => Template<any>; templateOptions?: {} };
+				transform?: TransformConfig<any, any>;
+			};
+			options?: ReadOptions;
+		} => {
+			if (!options) {
+				throw new Error('Resource cannot be undefined');
 			}
-			return { ...options, options: options.options };
+			if (isTemplateWrapper(options)) {
+				return { template: { template: { ...options } } };
+			}
+			if (isResourceWrapper(options)) {
+				return { template: { ...options } };
+			}
+			return { template: { ...options.template, transform: options.transform }, options: options.options };
 		};
 		function getOrRead<RESOURCE_DATA>(
 			template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, any>,
@@ -425,17 +464,11 @@ const middleware = factory(
 						const syntheticId = syntheticIds[i];
 						const item = cache.get(syntheticId);
 						if (!item) {
-							incompleteIds.push(syntheticId);
-							cache.addSyntheticId(syntheticId);
 							items.push(undefined);
-							shouldRead = true;
 						} else if (item.pending) {
-							incompleteIds.push(syntheticId);
 							items.push(undefined);
 						} else if (item.mtime - Date.now() + ttl < 0) {
-							incompleteIds.push(syntheticId);
 							items.push(item);
-							shouldRead = true;
 						} else {
 							items.push(item);
 						}
@@ -508,7 +541,7 @@ const middleware = factory(
 			destroyFuncs.push(() => optionsSetterToOwnerIdMap.delete(setOptions));
 			return setOptions;
 		};
-		return resource;
+		return resource as any;
 	}
 );
 
