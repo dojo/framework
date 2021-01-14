@@ -221,10 +221,10 @@ interface Resource<MIDDLEWARE_DATA = {}> {
 	): {
 		template: {
 			template: {
-				template: () => Template<any>;
+				template: () => Template<RESOURCE_DATA>;
 				templateOptions?: {};
 			};
-			transform: any;
+			transform?: TransformConfig<RESOURCE_DATA, RESOURCE_DATA>;
 		};
 		options?: ReadOptions;
 	};
@@ -269,10 +269,18 @@ const ttl = 1800000;
 // The template cache, this holds the RawCache instance and request inprogress flags
 // const templateCacheMap = new Map<Template<any>, { raw: RawCache; inprogress: Map<any, any> }>();
 
-const templateCacheMap = new Map<
-	(options: any) => Template<any>,
-	Map<string, { instance: Template<any>; raw: RawCache; inprogress: Map<any, any> }>
->();
+interface RequestCacheData {
+	inflight: boolean;
+	total?: number;
+}
+
+interface TemplateCacheData {
+	instance: Template<any>;
+	raw: RawCache;
+	requestCache: Map<string, RequestCacheData>;
+}
+
+const templateCacheMap = new Map<(...args: any[]) => Template<any>, Map<string, TemplateCacheData>>();
 
 // The options cache, holds the actual options, subscribers, and the options setter function
 interface OptionsCacheData {
@@ -293,6 +301,16 @@ function isResourceWrapper(value: any): value is ResourceWrapper<any, any> {
 	return Boolean(value && value.template && typeof value.template.template === 'function');
 }
 
+function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>) {
+	const queryKeys = Object.keys(query);
+	let transformedQuery: ReadQuery = {};
+	for (let i = 0; i < queryKeys.length; i++) {
+		const queryKey = queryKeys[i];
+		transformedQuery[transformConfig[queryKey] || queryKey] = query[queryKey];
+	}
+	return transformedQuery;
+}
+
 function getOrCreateResourceStuff(template: ResourceTemplate<any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
@@ -304,14 +322,14 @@ function getOrCreateResourceStuff(template: ResourceTemplate<any, any>) {
 
 	const templateCache =
 		templateCacheMap.get(template.template) ||
-		new Map<string, { instance: Template<any>; raw: RawCache; inprogress: Map<any, any> }>();
+		new Map<string, { instance: Template<any>; raw: RawCache; requestCache: Map<string, RequestCacheData> }>();
 	templateCacheMap.set(template.template, templateCache);
 	const cacheKey = JSON.stringify(template.templateOptions);
 	let caches = templateCache.get(cacheKey);
 	if (!caches) {
 		caches = {
 			raw: new RawCache(),
-			inprogress: new Map(),
+			requestCache: new Map(),
 			instance: template.template(template.templateOptions)
 		};
 		templateCache.set(cacheKey, caches);
@@ -390,13 +408,16 @@ const middleware = factory(
 			return { template: { ...options.template, transform: options.transform }, options: options.options };
 		};
 		function getOrRead<RESOURCE_DATA>(
-			template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, any>,
+			template: ResourceTemplate<RESOURCE_DATA, any>,
 			options: ReadOptionsData,
-			meta?: false
+			meta?: true
 		): ResourceWithMeta<any> | any[] | undefined {
 			const caches = getOrCreateResourceStuff(template);
-			const { raw: cache, inprogress, instance } = caches;
-			const { size, page, query } = options;
+			const { raw: cache, requestCache, instance } = caches;
+			let { size, page, query } = options;
+			if (isResourceWrapper(template) && template.transform) {
+				query = transformQuery(query, template.transform);
+			}
 			const offset = (page - 1) * size;
 			const start = page * size - size;
 			const end = page * size;
@@ -407,8 +428,8 @@ const middleware = factory(
 			};
 
 			const stringifiedRequest = JSON.stringify(request);
-			const requestInFlight = inprogress.get(stringifiedRequest);
-			if (requestInFlight && !meta) {
+			let requestCacheData = requestCache.get(stringifiedRequest) || { inflight: false, total: undefined };
+			if (!meta && requestCacheData.inflight) {
 				return undefined;
 			}
 			const syntheticIds: string[] = [];
@@ -442,7 +463,7 @@ const middleware = factory(
 			}
 			if (shouldRead) {
 				const put = (response: ReadResponse<any>, _request: ReadRequest) => {
-					const { data } = response;
+					const { data, total } = response;
 					data.forEach((item, idx) => {
 						const syntheticId = syntheticIds[idx]
 							? syntheticIds[idx]
@@ -454,11 +475,12 @@ const middleware = factory(
 							mtime: Date.now()
 						});
 					});
-					inprogress.set(stringifiedRequest, false);
+					requestCache.set(stringifiedRequest, { total, inflight: false });
 				};
-				inprogress.set(stringifiedRequest, true);
+				requestCache.set(stringifiedRequest, { ...requestCacheData, inflight: true });
 				instance.read(request, { put });
-				if (!inprogress.get(stringifiedRequest)) {
+				requestCacheData = requestCache.get(stringifiedRequest) || { inflight: false };
+				if (!requestCacheData.inflight) {
 					items = [];
 					for (let i = 0; i < syntheticIds.length; i++) {
 						const syntheticId = syntheticIds[i];
@@ -490,12 +512,12 @@ const middleware = factory(
 						loading: true
 					};
 				});
-				return { data, meta: { loading } };
+				return { data, meta: { loading, total: requestCacheData.total } };
 			}
-			const filteredItems = items.filter((item) => !!item);
-			return items.length === filteredItems.length ? items : undefined;
+			const filteredItems = items.filter((item) => !!item).map((item) => item.value);
+			return items.length === filteredItems.length ? filteredItems : undefined;
 		}
-		resource.getOrRead = getOrRead as any;
+		resource.getOrRead = getOrRead;
 		resource.createOptions = (setter: OptionSetter, optionsId = id) => {
 			const existingOptions = optionsCacheMap.get(optionsId);
 			if (existingOptions) {

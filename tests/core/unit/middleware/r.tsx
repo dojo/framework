@@ -29,7 +29,11 @@ describe('r', () => {
 		const resource = createResourceMiddleware();
 		const factory = create({ resource });
 		const template = createResourceTemplate<{ id: string }>();
-		const second = createResourceTemplate<{ idd: string }>({ read: () => {} });
+		const second = createResourceTemplate<{ idd: string }>({
+			read: (req) => {
+				debugger;
+			}
+		});
 		const Foo = create({ resource: createResourceMiddleware<{ data: { id: string } }>() })(
 			({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
@@ -43,7 +47,7 @@ describe('r', () => {
 				return (
 					<div>
 						<div>foo start</div>
-						<div>{JSON.stringify(getOrRead(template, options()))}</div>
+						<div>{JSON.stringify(getOrRead(template, options({ query: { id: '5' } })))}</div>
 						<div>foo end</div>
 					</div>
 				);
@@ -346,4 +350,148 @@ describe('r', () => {
 	// 	//<Widget resource={defaultTemplate({ data: [{ label: '' }] })} />; // missing id
 	// 	<Widget resource={{ id: 'sss', data: [{ label: '' }] }} />;
 	// });
+
+	it('kitchen sink', async () => {
+		// data setup for standard template
+		const values: { value: string }[] = [];
+		for (let i = 0; i < 300; i++) {
+			values.push({ value: `${i}` });
+		}
+
+		// default template
+		const defaultTemplate = createResourceTemplate<{ value: string }>();
+		// template with options
+		const templateWithOptions = createResourceTemplate<{ value: string }, { url: string }>(({ url }) => {
+			return {
+				read: (req, controls) => {
+					const data: { value: string }[] = [];
+					for (let i = 0; i < req.size; i++) {
+						data.push({ value: `${url}-${i + req.offset}` });
+					}
+					controls.put({ data, total: 100 }, req);
+				}
+			};
+		});
+		// a standard template
+		const standardTemplate = createResourceTemplate<{ value: string }>({
+			read: async (req, controls) => {
+				const { size, offset, query } = req;
+				let filteredData = [...data];
+				if (Object.keys(query).length) {
+					// do a filter
+				}
+				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+			}
+		});
+
+		// resource middleware that matches the templates interfaces
+		const resourceWithMatchingDataStructure = createResourceMiddleware<{ data: { value: string } }>();
+		// resource middleware that matches the templates interfaces
+		const resourceRequiresTransform = createResourceMiddleware<{ data: { id: string } }>();
+		// resource middleware that does not add the property
+		const resourceNoProperty = createResourceMiddleware();
+
+		const matchingFactory = create({ resource: resourceWithMatchingDataStructure });
+
+		const Matching = matchingFactory(function Matching({ properties, middleware: { resource } }) {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: {
+					template,
+					options = createOptions((curr, next) => ({
+						...curr,
+						...next
+					}))
+				}
+			} = properties();
+
+			const resourceData = getOrRead(template, options());
+			const resourceDataWithMeta = getOrRead(template, options(), true);
+			return (
+				<div>
+					<div>
+						<pre>{JSON.stringify(resourceData, null, 4)}</pre>
+					</div>
+					<div>
+						<pre>{JSON.stringify(resourceDataWithMeta, null, 4)}</pre>
+					</div>
+				</div>
+			);
+		});
+
+		const transformFactory = create({ resource: resourceRequiresTransform });
+
+		const Transform = transformFactory(function Transform({ id, properties, middleware: { resource } }) {
+			const { getOrRead, createOptions } = resource;
+			const {
+				resource: {
+					template,
+					options = createOptions((curr, next) => ({
+						...curr,
+						...next
+					}))
+				}
+			} = properties();
+
+			const resourceData = getOrRead(template, options());
+			const resourceDataWithMeta = getOrRead(template, options(), true);
+			return (
+				<div>
+					<div>
+						<pre>{JSON.stringify(resourceData, null, 4)}</pre>
+					</div>
+					<div>
+						<pre>{JSON.stringify(resourceDataWithMeta, null, 4)}</pre>
+					</div>
+				</div>
+			);
+		});
+
+		const factory = create({ resource: resourceNoProperty });
+
+		const App = factory(function App({ id, middleware: { resource } }) {
+			return (
+				<div>
+					<button>test</button>
+					<Transform
+						key="transform-default template"
+						resource={resource({
+							transform: { id: 'value' },
+							template: defaultTemplate({ id: 'transform', data: [...values] })
+						})}
+					/>
+					<Transform
+						key="transform-with-options"
+						resource={resource({
+							transform: { id: 'value' },
+							template: templateWithOptions({ id, url: 'transform' })
+						})}
+					/>
+					<Transform
+						key="transform-standard"
+						resource={resource({ transform: { id: 'value' }, template: standardTemplate })}
+					/>
+					<Matching
+						key="matching-default template"
+						resource={resource({ template: defaultTemplate({ id: 'matching', data: [...values] }) })}
+					/>
+					<Matching
+						key="matching-with-options"
+						resource={resource({ template: templateWithOptions({ id, url: 'transform' }) })}
+					/>
+					<Matching key="matching-standard" resource={resource({ template: standardTemplate })} />
+					<Matching
+						key="matching-factory-shorthand"
+						resource={defaultTemplate({ id: 'matching', data: [...values] })}
+					/>
+					{/* should fail as can only match
+					<Transform key="transform-factory-shorthand" resource={defaultTemplate({ id: 'matching', data: [...values] }) } /> */}
+				</div>
+			);
+		});
+		const r = renderer(() => <App />);
+		r.mount();
+		debugger;
+		return new Promise(() => {});
+	});
 });
