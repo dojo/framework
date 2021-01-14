@@ -29,6 +29,7 @@ describe('r', () => {
 		const resource = createResourceMiddleware();
 		const factory = create({ resource });
 		const template = createResourceTemplate<{ id: string }>();
+		const second = createResourceTemplate<{ idd: string }>({ read: () => {} });
 		const Foo = create({ resource: createResourceMiddleware<{ data: { id: string } }>() })(
 			({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
@@ -57,6 +58,8 @@ describe('r', () => {
 			const a = template({ id: '', data });
 			a;
 			options({ size: 10 });
+			second.template.template;
+			const s = resource({ template: second, transform: { id: 'idd' } });
 			return (
 				<div>
 					<div>{JSON.stringify(getOrRead(template({ id: '', data }), options()))}</div>
@@ -65,10 +68,12 @@ describe('r', () => {
 							options({ page: 2 });
 						}}
 					/>
-					<Foo resource={resource({ template: template({ id: '', data }), options })} />
-					<Foo resource={resource({ template: template({ id: '', data: [{ id: '' }] }) })} />
+					<Foo resource={resource({ template: template({ id: '', data }) })} />
+					<Foo resource={resource({ template: second, transform: { id: 'idd' } })} />
+					<Foo resource={s} />
+					{/* <Foo resource={resource({ template: template({ id: '', data: [{ idd: '' }] }) })} />
 					<Foo resource={template({ id: '', data })} />
-					<Foo resource={{ id: '', data }} />
+					<Foo resource={{ id: '', data }} /> */}
 				</div>
 			);
 		});
@@ -139,6 +144,7 @@ describe('r', () => {
 					<div>
 						<div>foo start</div>
 						<div>{JSON.stringify(getOrRead(template, options()))}</div>
+						<Foo resource={resource({ template })} />
 						<div>foo end</div>
 					</div>
 				);

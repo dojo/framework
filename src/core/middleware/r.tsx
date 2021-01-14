@@ -49,7 +49,7 @@ interface TemplateFactory<RESOURCE_DATA, OPTIONS> {
 
 interface TemplateWrapper<RESOURCE_DATA> {
 	template: (options?: any) => Template<RESOURCE_DATA>;
-	templateOptions: any;
+	templateOptions?: any;
 }
 
 // Fix any for template
@@ -153,8 +153,8 @@ interface ReadOptionsData {
 }
 
 interface ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA> {
-	template: { template: () => Template<RESOURCE_DATA>; templateOptions: {} };
-	transform?: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
+	template: TemplateWrapper<RESOURCE_DATA>;
+	transform?: TransformConfig<MIDDLEWARE_DATA, any>;
 }
 
 interface ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA> {
@@ -167,15 +167,12 @@ type ResourceDetails<MIDDLEWARE_DATA> = MIDDLEWARE_DATA extends infer RESOURCE_D
 	: void;
 
 interface ResourceProperties<MIDDLEWARE_DATA> {
-	resource:
-		| TemplateWithOptions<MIDDLEWARE_DATA>
-		| { template?: void; options?: void } & TemplateOptions<{ data: MIDDLEWARE_DATA[] }>
-		| ResourceDetails<MIDDLEWARE_DATA>;
+	resource: TemplateWithOptions<MIDDLEWARE_DATA> | ResourceDetails<MIDDLEWARE_DATA>;
 }
 
 type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
+	| TemplateWrapper<RESOURCE_DATA>
 	| TemplateWithOptions<RESOURCE_DATA>
-	| { template: { template: () => Template<RESOURCE_DATA>; templateOptions: {} } }
 	| ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>
 	| undefined
 	| void;
@@ -190,20 +187,60 @@ interface ResourceWithMeta<MIDDLEWARE_DATA> {
 	};
 }
 
-interface Resource<MIDDLEWARE_DATA> {
-	<RESOURCE_DATA, MIDDLEWARE_DATA>(
-		options: { template: Template<RESOURCE_DATA>; options?: ReadOptions }
-	): ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>;
+interface Resource<MIDDLEWARE_DATA = {}> {
 	<RESOURCE_DATA>(
 		options: {
-			template: Template<RESOURCE_DATA>;
+			template: TemplateWrapper<MIDDLEWARE_DATA> | ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
+			options?: ReadOptions;
+		}
+	): {
+		template: {
+			template: { template: () => Template<RESOURCE_DATA>; templateOptions: {} };
+			transform?: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
+		};
+		options?: ReadOptions;
+	};
+	<RESOURCE_DATA>(
+		options: {
+			template: {
+				template: {
+					template: () => Template<RESOURCE_DATA>;
+					templateOptions?: any;
+				};
+			};
+			options?: ReadOptions;
+		}
+	): {
+		template: {
+			template: {
+				template: () => Template<any>;
+				templateOptions?: {};
+			};
+			transform: any;
+		};
+		options?: ReadOptions;
+	};
+	<RESOURCE_DATA, MIDDLEWARE_DATA>(
+		options: {
+			template: {
+				template: {
+					template: () => Template<RESOURCE_DATA>;
+					templateOptions?: any;
+				};
+			};
 			options?: ReadOptions;
 			transform: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
 		}
-	): ResourceWrapperWithOptions<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
-	<RESOURCE_DATA, MIDDLEWARE_DATA>(
-		options: { template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>; options?: ReadOptions }
-	): ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>;
+	): {
+		template: {
+			template: {
+				template: () => Template<any>;
+				templateOptions?: {};
+			};
+			transform: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
+		};
+		options?: ReadOptions;
+	};
 	getOrRead<RESOURCE_DATA>(
 		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData
@@ -240,16 +277,16 @@ const optionsCacheMap = new Map<string, OptionsCacheData>();
 // The reverse look up for the owning id, this is so that widgets passed a resource options can add their invalidator to subscribers
 const optionsSetterToOwnerIdMap = new Map<any, any>();
 
-function isNestedTemplate(value: any): value is ResourceTemplate<any, any> {
-	return Boolean(value && value.template && typeof value.template !== 'function');
+function isTemplateWrapper(value: any): value is TemplateWrapper<any> {
+	return Boolean(value && value.template && typeof value.template === 'function');
 }
 
-function getOrCreateResourceStuff(template: TemplateWrapper<any> | ResourceTemplate<any, any>) {
+function getOrCreateResourceStuff(template: ResourceTemplate<any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
 	}
 
-	if (isNestedTemplate(template)) {
+	if (!isTemplateWrapper(template)) {
 		template = template.template;
 	}
 
@@ -477,7 +514,7 @@ const middleware = factory(
 
 export function createResourceMiddleware<MIDDLEWARE extends { data: any } = { data: void }>() {
 	return middleware.withType<
-		Resource<MIDDLEWARE['data']>,
+		Resource<MIDDLEWARE['data'] extends void ? {} : MIDDLEWARE['data']>,
 		MIDDLEWARE['data'] extends void ? {} : ResourceProperties<MIDDLEWARE['data']>
 	>();
 }
