@@ -489,7 +489,7 @@ const middleware = factory(
 
 		const resource = (
 			options:
-				| void
+				| { template: undefined }
 				| TemplateWrapper<any>
 				| ResourceWrapper<any, any>
 				| ({
@@ -509,7 +509,7 @@ const middleware = factory(
 			};
 			options?: ReadOptions;
 		} => {
-			if (!options) {
+			if (!options.template) {
 				throw new Error('Resource cannot be undefined');
 			}
 			if (isTemplateWrapper(options)) {
