@@ -204,11 +204,10 @@ export function createResourceTemplate<RESOURCE_DATA>(template?: any): any {
 		return createResourceTemplate<RESOURCE_DATA, { data: RESOURCE_DATA[] }>(({ data }) => ({
 			idKey: template as any,
 			read: (request, { put }) => {
-				const { offset, size } = request;
 				const filteredData = Object.keys(request.query).length
 					? data.filter((item) => item && defaultFilter(request.query, item, 'contains'))
 					: data;
-				put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, request);
+				put({ data: filteredData, total: filteredData.length }, request);
 			}
 		}));
 	}
