@@ -1537,5 +1537,202 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(domNode.innerHTML, '<div>true</div>');
 		});
+		it('Should transform data using the transform configuration using `get`', () => {
+			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const { get, getOrRead, createOptions } = resource;
+				const options = createOptions(testOptionsSetter);
+				getOrRead(template, options());
+				const data = get(template, options());
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"id":"0"},{"id":"1"},{"id":"2"},{"id":"3"},{"id":"4"}]</div>'
+			);
+		});
+		it('Should transform data using the transform configuration with meta `get`', () => {
+			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const { get, getOrRead, createOptions } = resource;
+				const options = createOptions(testOptionsSetter);
+				getOrRead(template, options(), true);
+				const data = get(template, options(), true);
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"id":"0"},"status":"read"},{"value":{"id":"1"},"status":"read"},{"value":{"id":"2"},"status":"read"},{"value":{"id":"3"},"status":"read"},{"value":{"id":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should transform queries using the transform configuration using `get`', () => {
+			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>('value');
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const { get, getOrRead, createOptions } = resource;
+				const options = createOptions(testOptionsSetter);
+				getOrRead(template, options({ query: { id: '1' } }));
+				const data = get(template, options({ query: { id: '1' } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return (
+					<Widget
+						resource={resource({
+							template: testTemplate({ id, data: testData }),
+							transform: { id: 'value' }
+						})}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"id":"1"},{"id":"10"},{"id":"11"},{"id":"12"},{"id":"13"}]</div>'
+			);
+		});
+		it('Should transform queries using the transform configuration with meta `get`', () => {
+			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>('value');
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const { get, getOrRead, createOptions } = resource;
+				const options = createOptions(testOptionsSetter);
+				getOrRead(template, options({ query: { id: '1' } }), true);
+				const data = get(template, options({ query: { id: '1' } }), true);
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return (
+					<Widget
+						resource={resource({
+							template: testTemplate({ id, data: testData }),
+							transform: { id: 'value' }
+						})}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"id":"1"},"status":"read"},{"value":{"id":"10"},"status":"read"},{"value":{"id":"11"},"status":"read"},{"value":{"id":"12"},"status":"read"},{"value":{"id":"13"},"status":"read"}],"meta":{"status":"read","total":119}}</div>'
+			);
+		});
+		it('Should by able to filter with transformed data and not transform properties with `get`', () => {
+			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
+			const Widget = factory(({ properties, middleware: { resource } }) => {
+				const { get, getOrRead, createOptions } = resource;
+				const {
+					resource: { template, options = createOptions(testOptionsSetter) }
+				} = properties();
+				getOrRead(template, options({ query: { value: '2', foo: '1' } }));
+				const data = get(template, options({ query: { value: '2', foo: '1' } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const template = createResourceTemplate<{ id: string; foo: string }>('foo');
+
+			const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
+				return (
+					<Widget
+						resource={resource({
+							transform: { value: 'id' },
+							template: template({
+								id,
+								data: [{ id: '1', foo: '1' }, { id: '2', foo: '1' }, { id: '3', foo: '2' }]
+							})
+						})}
+					/>
+				);
+			});
+
+			const r = renderer(() => <App />);
+			const domNode = document.createElement('div');
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<div>[{"value":"2","foo":"1"},null,null,null,null]</div>');
+		});
+		it('Should by able to filter non string values by reference with `get`', () => {
+			const root = document.createElement('div');
+			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
+			const Widget = factory(({ properties, middleware: { resource } }) => {
+				const { get, getOrRead, createOptions } = resource;
+				const {
+					resource: { template, options = createOptions((curr, next) => ({ ...curr, ...next })) }
+				} = properties();
+				getOrRead(template, options({ query: { value: 10 } }));
+				const data = get(template, options({ query: { value: 10 } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const template = createResourceTemplate<{ value: number }>('value');
+
+			const App = create({ resource: createResourceMiddleware() })(({ id }) => {
+				return <Widget resource={template({ id, data: [{ value: 10 }, { value: 100 }, { value: 99 }] })} />;
+			});
+
+			const r = renderer(() => <App />);
+			r.mount({ domNode: root });
+			assert.strictEqual(
+				root.innerHTML,
+				'<div>[{"value":10},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]</div>'
+			);
+		});
 	});
 });

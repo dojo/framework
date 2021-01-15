@@ -397,7 +397,10 @@ function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>)
 	return transformedQuery;
 }
 
-function transformData(item: any, transformConfig: TransformConfig<any>) {
+function transformData(item: any, transformConfig?: TransformConfig<any>) {
+	if (!transformConfig) {
+		return item;
+	}
 	let transformedItem: any = {};
 	let sourceKeys: string[] = [];
 	Object.keys(transformConfig).forEach((key: string) => {
@@ -647,7 +650,7 @@ const middleware = factory(
 						requestStatus = 'reading';
 					}
 					return {
-						value: transform ? transformData(item.value, transform) : item.value,
+						value: transformData(item.value, transform),
 						status
 					};
 				});
@@ -655,7 +658,7 @@ const middleware = factory(
 			}
 			const filteredItems = items
 				.filter((item) => item.status !== 'pending')
-				.map((item) => (transform ? transformData(item.value, transform) : item.value));
+				.map((item) => transformData(item.value, transform));
 			return items.length === filteredItems.length ? filteredItems : undefined;
 		}
 		resource.getOrRead = getOrRead;
@@ -667,8 +670,10 @@ const middleware = factory(
 			const caches = getOrCreateResourceStuff(template);
 			const { raw: cache, requestCache } = caches;
 			let { size, page, query } = options;
+			let transform: TransformConfig<any> | undefined;
 			if (isResourceWrapper(template) && template.transform) {
-				query = transformQuery(query, template.transform);
+				transform = template.transform;
+				query = transformQuery(query, transform);
 			}
 			const offset = (page - 1) * size;
 			const start = page * size - size;
@@ -693,14 +698,14 @@ const middleware = factory(
 						if (requestStatus === 'read' && status === 'reading') {
 							requestStatus = 'reading';
 						}
-						items.push({ value: item.value, status });
+						items.push({ value: transformData(item.value, transform), status });
 					} else {
 						requestStatus = 'unread';
 						items.push({ value: undefined, status: 'unread' });
 					}
 				} else {
 					if (item && item.status === 'resolved') {
-						items.push(item.value);
+						items.push(transformData(item.value, transform));
 					} else {
 						items.push(undefined);
 					}
