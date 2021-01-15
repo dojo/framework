@@ -271,6 +271,7 @@ export interface ResourceWithMeta<MIDDLEWARE_DATA> {
 		status: ReadStatus;
 	}[];
 	meta: {
+		total?: number;
 		status: ReadStatus;
 	};
 }
