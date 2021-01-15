@@ -336,7 +336,7 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	getOrRead<RESOURCE_DATA>(
 		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData,
-		meta: boolean
+		meta: true
 	): ResourceWithMeta<MIDDLEWARE_DATA>;
 	get<RESOURCE_DATA>(
 		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
@@ -345,7 +345,7 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	get<RESOURCE_DATA>(
 		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
 		options: ReadOptionsData,
-		meta: boolean
+		meta: true
 	): ResourceWithMeta<MIDDLEWARE_DATA>;
 	createOptions(setter: OptionSetter, id?: string): ReadOptions;
 }
@@ -474,8 +474,12 @@ const middleware = factory(
 				const { template: _template, options, idKey, ...rest } = nextResource as any;
 				const template = createResourceTemplate(idKey as string);
 				nextResource.template = template(rest as any).template;
-			} else {
-				// need to find out what happens here
+			} else if (currResource && !nextResource.template) {
+				const { template: _template, options, idKey, ...rest } = nextResource as any;
+				nextResource.template = {
+					template: (currResource.template as any).template,
+					templateOptions: rest
+				};
 			}
 			return nextResource;
 		});
@@ -556,6 +560,10 @@ const middleware = factory(
 				syntheticIds.push(syntheticId);
 				if (item) {
 					if (item.status === 'resolved') {
+						if (orphanedIds.length) {
+							resetOrphans = true;
+							shouldRead = true;
+						}
 						items.push(item);
 					} else if (item.status === 'pending') {
 						incompleteIds.push(syntheticId);
@@ -629,17 +637,21 @@ const middleware = factory(
 				items = items.filter((item) => item.status !== 'orphaned');
 			}
 			if (meta) {
+				let requestStatus: ReadStatus = 'read';
 				const data = items.map((item) => {
 					let status: ReadStatus = 'read' as const;
 					if (item.status !== 'resolved') {
 						status = 'reading' as const;
+					}
+					if (requestStatus === 'read' && status === 'reading') {
+						requestStatus = 'reading';
 					}
 					return {
 						value: transform ? transformData(item.value, transform) : item.value,
 						status
 					};
 				});
-				return { data, meta: { status: 'reading', total: requestCacheData.total } };
+				return { data, meta: { status: requestStatus, total: requestCacheData.total } };
 			}
 			const filteredItems = items
 				.filter((item) => item.status !== 'pending')
