@@ -43,7 +43,7 @@ jsdomDescribe('Resources Middleware', () => {
 		resolvers.restore();
 	});
 
-	describe('AAAAAAAAAAAAAAAAAAAAAAAAAAAAA', () => {
+	describe('getOrRead', () => {
 		it('Should support using a template directly with `getOrRead`', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
