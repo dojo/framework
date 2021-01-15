@@ -172,7 +172,12 @@ export interface AssertionResult {
 	): AssertionResult;
 	insertAfter<T extends WidgetFactory>(target: Wrapped<T>, children: TemplateChildren): AssertionResult;
 	insertSiblings<T extends WidgetBaseInterface>(
-		target: T,
+		target: Wrapped<Constructor<T>>,
+		children: TemplateChildren,
+		type?: 'before' | 'after'
+	): AssertionResult;
+	insertSiblings<T extends WidgetFactory>(
+		target: Wrapped<T>,
 		children: TemplateChildren,
 		type?: 'before' | 'after'
 	): AssertionResult;
