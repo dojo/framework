@@ -234,7 +234,7 @@ jsdomDescribe('Resources Middleware', () => {
 			resolvers.resolveRAF();
 			assert.strictEqual(domNode.innerHTML, '<div><div>[{"value":"2"}]</div><button></button></div>');
 		});
-		it('should be able to change the options used for a resource', () => {
+		it('Should be able to change the options used for a resource', () => {
 			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
 			const template = createResourceTemplate<TestData>('value');
 
@@ -414,7 +414,7 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>{"data":[{"value":{"id":"1"},"status":"read"},{"value":{"id":"10"},"status":"read"},{"value":{"id":"11"},"status":"read"},{"value":{"id":"12"},"status":"read"},{"value":{"id":"13"},"status":"read"}],"meta":{"status":"read","total":119}}</div>'
 			);
 		});
-		it('should by able to filter with transformed data and not transform properties', () => {
+		it('Should by able to filter with transformed data and not transform properties', () => {
 			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
@@ -445,7 +445,7 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(domNode.innerHTML, `<div>${JSON.stringify([{ value: '2', foo: '1' }])}</div>`);
 		});
-		it('should by able to filter non string values by reference with getOrRead', () => {
+		it('Should by able to filter non string values by reference with getOrRead', () => {
 			const root = document.createElement('div');
 			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
@@ -548,7 +548,7 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
 			);
 		});
-		it('should return meta status for inflight requests', async () => {
+		it('Should return meta status for inflight requests', async () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const template = createResourceTemplate<TestData>({
