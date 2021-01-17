@@ -1,6 +1,7 @@
 import Set from '../../shim/Set';
 import Map from '../../shim/Map';
 import { create, invalidator, diffProperty, destroy } from '../vdom';
+import icache from './icache';
 import { auto } from '../diff';
 
 //--------------------------
@@ -352,7 +353,7 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	createOptions(setter: OptionSetter, id?: string): ReadOptions;
 }
 
-const factory = create({ invalidator, destroy, diffProperty }).properties<ResourceProperties<any>>();
+const factory = create({ invalidator, destroy, diffProperty, icache }).properties<ResourceProperties<any>>();
 
 // The template cache, this holds the RawCache instance and request inprogress flags
 // const templateCacheMap = new Map<Template<any>, { raw: RawCache; inprogress: Map<any, any> }>();
@@ -380,6 +381,8 @@ const optionsCacheMap = new Map<string, OptionsCacheData>();
 
 // The reverse look up for the owning id, this is so that widgets passed a resource options can add their invalidator to subscribers
 const optionsSetterToOwnerIdMap = new Map<any, any>();
+
+let optionsId = 0;
 
 function isTemplateWrapper(value: any): value is TemplateWrapper<any> {
 	return Boolean(value && value.template && typeof value.template === 'function');
@@ -451,7 +454,8 @@ function getOrCreateResourceCaches(template: ResourceTemplate<any, any>) {
 }
 
 const middleware = factory(
-	({ id, properties, middleware: { invalidator, destroy, diffProperty } }): Resource<any> => {
+	({ id, properties, middleware: { invalidator, destroy, diffProperty, icache } }): Resource<any> => {
+		const uuid = icache.getOrSet('uuid', `${++optionsId}`);
 		const destroyFuncs: Function[] = [];
 		diffProperty('resource', properties, ({ resource: currResource }, { resource: nextResource }) => {
 			if (!nextResource) {
@@ -744,7 +748,7 @@ const middleware = factory(
 		}
 		resource.get = get;
 
-		resource.createOptions = (setter: OptionSetter, optionsId = id) => {
+		function createOptions(setter: OptionSetter, optionsId = uuid) {
 			const existingOptions = optionsCacheMap.get(optionsId);
 			if (existingOptions) {
 				return existingOptions.setter;
@@ -788,7 +792,8 @@ const middleware = factory(
 			optionsSetterToOwnerIdMap.set(setOptions, optionsId);
 			destroyFuncs.push(() => optionsSetterToOwnerIdMap.delete(setOptions));
 			return setOptions;
-		};
+		}
+		resource.createOptions = createOptions;
 		return resource as any;
 	}
 );
