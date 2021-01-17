@@ -1318,7 +1318,7 @@ jsdomDescribe('Resources Middleware', () => {
 			const domNode = document.createElement('div');
 			const r = renderer(() => <App />);
 			r.mount({ domNode });
-			assert.strictEqual(domNode.innerHTML, '<div></div>');
+			assert.strictEqual(domNode.innerHTML, '<div>[null,null,null,null,null]</div>');
 			const [prom, res] = promiseArray.pop()!;
 			res();
 			await prom;
@@ -1455,7 +1455,7 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading"}}</div>'
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading","total":200}}</div>'
 			);
 			const [prom, res] = promiseArray.pop()!;
 			res();
@@ -1463,7 +1463,7 @@ jsdomDescribe('Resources Middleware', () => {
 			resolvers.resolveRAF();
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"value":{"value":"5"},"status":"read"},{"value":{"value":"6"},"status":"read"},{"value":{"value":"7"},"status":"read"},{"value":{"value":"8"},"status":"read"},{"value":{"value":"9"},"status":"read"}],"meta":{"status":"read"}}</div>'
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"value":{"value":"5"},"status":"read"},{"value":{"value":"6"},"status":"read"},{"value":{"value":"7"},"status":"read"},{"value":{"value":"8"},"status":"read"},{"value":{"value":"9"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
 			);
 		});
 		it('Should return partial data using `get` when the request has not been fulfilled', () => {
@@ -1515,7 +1515,7 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"}],"meta":{"status":"unread"}}</div>'
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"}],"meta":{"status":"unread","total":200}}</div>'
 			);
 		});
 		it('Should throw error if undefined is passed to `get`', () => {
