@@ -4,13 +4,6 @@ import { create, invalidator, diffProperty, destroy } from '../vdom';
 import icache from './icache';
 import { auto } from '../diff';
 
-//--------------------------
-// get API
-//--------------------------
-// custom functions
-// setting/getting single items
-// to/from transform
-
 export interface ReadQuery {
 	[index: string]: any;
 }
@@ -355,9 +348,6 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 
 const factory = create({ invalidator, destroy, diffProperty, icache }).properties<ResourceProperties<any>>();
 
-// The template cache, this holds the RawCache instance and request inprogress flags
-// const templateCacheMap = new Map<Template<any>, { raw: RawCache; inprogress: Map<any, any> }>();
-
 interface RequestCacheData {
 	inflightMap: Map<string, boolean>;
 	total?: number;
@@ -369,6 +359,7 @@ interface TemplateCacheData {
 	requestCache: Map<string, RequestCacheData>;
 }
 
+// The template cache, this holds the RawCache instance and request inprogress flags
 const templateCacheMap = new Map<(...args: any[]) => Template<any>, Map<string, TemplateCacheData>>();
 
 // The options cache, holds the actual options, subscribers, and the options setter function
