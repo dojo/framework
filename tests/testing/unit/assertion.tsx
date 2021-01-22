@@ -317,9 +317,14 @@ describe('new/assertion', () => {
 		r.expect(baseAssertion.append(WrappedHeader, () => ['append']));
 	});
 
-	it('can set children after with insert', () => {
+	it('can set children after with insert after', () => {
 		const r = renderer(() => w(MyWidget, { after: true }));
 		r.expect(baseAssertion.insertAfter(WrappedList, () => [v('span', ['after'])]));
+	});
+
+	it('can set children after with insert sibling', () => {
+		const r = renderer(() => w(MyWidget, { after: true }));
+		r.expect(baseAssertion.insertSiblings(WrappedList, () => [v('span', ['after'])], 'after'));
 	});
 
 	it('can insert after a node in the root', () => {
@@ -328,9 +333,14 @@ describe('new/assertion', () => {
 		r.expect(insertionAssertion);
 	});
 
-	it('can set children before with insert', () => {
+	it('can set children before with insert before', () => {
 		const r = renderer(() => w(MyWidget, { before: true }));
 		r.expect(baseAssertion.insertBefore(WrappedList, () => [v('span', ['before'])]));
+	});
+
+	it('can set children before with insert sibling ', () => {
+		const r = renderer(() => w(MyWidget, { before: true }));
+		r.expect(baseAssertion.insertSiblings(WrappedList, () => [v('span', ['before'])], 'before'));
 	});
 
 	it('can be used with tsx', () => {
