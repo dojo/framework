@@ -113,7 +113,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template to a widget with the `resource` middleware', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -145,7 +145,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template to a widget using the template factory', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -173,7 +173,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template to a widget using the short hand', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
@@ -197,7 +197,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('should update data when options changed', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
 				const {
@@ -235,7 +235,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(domNode.innerHTML, '<div><div>[{"value":"2"}]</div><button></button></div>');
 		});
 		it('Should be able to change the options used for a resource', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
@@ -281,7 +281,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"0"}]</div></div>');
 		});
 		it('Should transform data using the transform configuration', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -313,7 +313,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform data using the transform configuration with meta getOrRead', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -345,7 +345,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -380,7 +380,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration with meta getOrRead', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -415,7 +415,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should by able to filter with transformed data and not transform properties', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
 				const {
@@ -447,7 +447,7 @@ jsdomDescribe('Resources Middleware', () => {
 		});
 		it('Should by able to filter non string values by reference with getOrRead', () => {
 			const root = document.createElement('div');
-			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
+			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
 				const {
@@ -467,7 +467,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div>[{"value":10}]</div>');
 		});
 		it('Should not call read if the request has been satisfied by one or more request', () => {
-			const resource = createResourceMiddleware<{ data: { value: string } }>();
+			const resource = createResourceMiddleware<{ value: string }>();
 			const factory = create({ resource });
 			const rawTemplate = {
 				idKey: 'value' as const,
@@ -825,7 +825,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a template factory with resource middleware', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
@@ -872,7 +872,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a template factory', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
@@ -913,7 +913,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a shorthand', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
 				const { getOrRead, createOptions } = resource;
 				const {
@@ -954,10 +954,10 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to share resource options across between widgets', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
-			const WidgetOne = factory(({ properties, id, middleware: { resource } }) => {
+			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
 				const { createOptions } = resource;
 				const {
 					resource: { options = createOptions(testOptionsSetter) }
@@ -1013,7 +1013,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"1"}]</div></div>');
 		});
 		it('Should be able to share search query across widgets', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
@@ -1130,7 +1130,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(domNode.innerHTML, '<div>true</div>');
 		});
 		it('Should support passing a template through multiple widgets with the `resource` middleware', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1170,7 +1170,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template through multiple widgets using the template factory', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -1206,9 +1206,9 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template through multiple widgets using the short hand', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
-			const Widget = factory(function App({ properties, middleware: { resource } }) {
+			const Widget = factory(function Widget({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
@@ -1218,7 +1218,7 @@ jsdomDescribe('Resources Middleware', () => {
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
-			const Wrapper = factory(function App({ properties, middleware: { resource } }) {
+			const Wrapper = factory(function Wrapper({ properties, middleware: { resource } }) {
 				const { createOptions } = resource;
 				const {
 					resource: { template, options = createOptions(testOptionsSetter) }
@@ -1538,7 +1538,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(domNode.innerHTML, '<div>true</div>');
 		});
 		it('Should transform data using the transform configuration using `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1571,7 +1571,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform data using the transform configuration with meta `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1604,7 +1604,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration using `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -1640,7 +1640,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration with meta `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
@@ -1676,7 +1676,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should by able to filter with transformed data and not transform properties with `get`', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { get, getOrRead, createOptions } = resource;
 				const {
@@ -1710,7 +1710,7 @@ jsdomDescribe('Resources Middleware', () => {
 		});
 		it('Should by able to filter non string values by reference with `get`', () => {
 			const root = document.createElement('div');
-			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
+			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
 				const { get, getOrRead, createOptions } = resource;
 				const {

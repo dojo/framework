@@ -21,6 +21,7 @@ export interface ReadResponse<DATA> {
 
 export interface Put<DATA> {
 	(response: ReadResponse<DATA>, request: ReadRequest): void;
+	(items: DATA[]): void;
 }
 
 export interface TemplateControls<DATA> {
@@ -40,10 +41,19 @@ export interface TemplateFactory<RESOURCE_DATA, OPTIONS> {
 	(options: TemplateOptions<OPTIONS>): Template<RESOURCE_DATA>;
 }
 
-export interface TemplateWrapper<RESOURCE_DATA> {
+export interface CustomTemplate {
+	[index: string]: (request?: any) => Promise<void> | void;
+}
+
+export type CustomTemplateApi<CUSTOM extends CustomTemplate, DATA> = {
+	[K in keyof CUSTOM]: (args: Parameters<CUSTOM[K]>[0], controls: TemplateControls<DATA>) => Promise<void> | void
+};
+
+export interface TemplateWrapper<RESOURCE_DATA, CUSTOM_API = undefined> {
 	template: (options?: any) => Template<RESOURCE_DATA>;
 	templateOptions?: any;
 	transform?: TransformConfig<any, any>;
+	api: CUSTOM_API extends CustomTemplate ? CUSTOM_API : undefined;
 }
 
 export interface TemplateWithOptions<RESOURCE_DATA> {
@@ -170,12 +180,22 @@ export function defaultFilter(query: ReadQuery, item: any, type: string = 'conta
 	return true;
 }
 
+export function createResourceTemplate<WRAPPER extends { data: any; template: CustomTemplate }>(
+	template: Template<WRAPPER['data']> & CustomTemplateApi<WRAPPER['template'], WRAPPER['data']>
+): {
+	template: {
+		template: () => Template<WRAPPER['data']>;
+		templateOptions: any;
+		api: WRAPPER['template'];
+	};
+};
 export function createResourceTemplate<RESOURCE_DATA = void>(
 	template: RESOURCE_DATA extends void ? void : Template<RESOURCE_DATA>
 ): {
 	template: {
 		template: () => Template<RESOURCE_DATA>;
 		templateOptions: any;
+		api: undefined;
 	};
 };
 export function createResourceTemplate<RESOURCE_DATA, OPTIONS>(
@@ -223,19 +243,19 @@ export interface ReadOptionsData {
 	query: ReadQuery;
 }
 
-export interface ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA> {
-	template: TemplateWrapper<RESOURCE_DATA>;
+export interface ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA, CUSTOM_API = undefined> {
+	template: TemplateWrapper<RESOURCE_DATA, CUSTOM_API>;
 	transform?: TransformConfig<MIDDLEWARE_DATA, any>;
 	options?: ReadOptions;
 }
 
-export interface ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA> {
-	template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>;
+export interface ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA, API> {
+	template: ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA, API>;
 	options?: ReadOptions;
 }
 
-export type ResourceDetails<MIDDLEWARE_DATA> = MIDDLEWARE_DATA extends infer RESOURCE_DATA
-	? ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA>
+export type ResourceDetails<MIDDLEWARE_DATA, API = undefined> = MIDDLEWARE_DATA extends infer RESOURCE_DATA
+	? ResourceWrapperWithOptions<MIDDLEWARE_DATA, RESOURCE_DATA, API>
 	: void;
 
 export type DefaultTemplateProperty<MIDDLEWARE_DATA> = TemplateOptions<{ data: MIDDLEWARE_DATA[] }> & {
@@ -244,17 +264,19 @@ export type DefaultTemplateProperty<MIDDLEWARE_DATA> = TemplateOptions<{ data: M
 	idKey: keyof MIDDLEWARE_DATA;
 };
 
-export interface ResourceProperties<MIDDLEWARE_DATA> {
-	resource:
-		| TemplateWithOptions<MIDDLEWARE_DATA>
-		| ResourceDetails<MIDDLEWARE_DATA>
-		| DefaultTemplateProperty<MIDDLEWARE_DATA>;
+export interface ResourceProperties<MIDDLEWARE_DATA, API = void> {
+	resource: API extends void
+		?
+				| TemplateWithOptions<MIDDLEWARE_DATA>
+				| ResourceDetails<MIDDLEWARE_DATA>
+				| DefaultTemplateProperty<MIDDLEWARE_DATA>
+		: ResourceDetails<MIDDLEWARE_DATA, API>;
 }
 
-export type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA> =
+export type ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA, API> =
 	| TemplateWrapper<RESOURCE_DATA>
-	| TemplateWithOptions<RESOURCE_DATA>
-	| ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA>
+	// | TemplateWithOptions<RESOURCE_DATA>
+	| ResourceWrapper<MIDDLEWARE_DATA, RESOURCE_DATA, API>
 	| undefined
 	| void;
 
@@ -272,24 +294,28 @@ export interface ResourceWithMeta<MIDDLEWARE_DATA> {
 }
 
 export interface Resource<MIDDLEWARE_DATA = {}> {
-	<RESOURCE_DATA>(
+	<RESOURCE_DATA, CUSTOM_API>(
 		options: {
-			template: void | TemplateWrapper<MIDDLEWARE_DATA> | ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA>;
+			template:
+				| void
+				| TemplateWrapper<MIDDLEWARE_DATA, CUSTOM_API>
+				| ResourceWrapper<MIDDLEWARE_DATA, MIDDLEWARE_DATA, CUSTOM_API>;
 			options?: ReadOptions;
 		}
 	): {
 		template: {
-			template: { template: () => Template<RESOURCE_DATA>; templateOptions: {} };
+			template: { template: () => Template<RESOURCE_DATA>; templateOptions: {}; api: CUSTOM_API };
 			transform?: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
 		};
 		options?: ReadOptions;
 	};
-	<RESOURCE_DATA>(
+	<RESOURCE_DATA, CUSTOM_API>(
 		options: {
 			template: {
 				template: {
 					template: () => Template<RESOURCE_DATA>;
 					templateOptions?: any;
+					api: CUSTOM_API;
 				};
 			};
 			options?: ReadOptions;
@@ -299,17 +325,19 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 			template: {
 				template: () => Template<RESOURCE_DATA>;
 				templateOptions?: {};
+				api: CUSTOM_API;
 			};
 			transform?: TransformConfig<RESOURCE_DATA, RESOURCE_DATA>;
 		};
 		options?: ReadOptions;
 	};
-	<RESOURCE_DATA, MIDDLEWARE_DATA>(
+	<RESOURCE_DATA, MIDDLEWARE_DATA, CUSTOM_API>(
 		options: {
 			template: {
 				template: {
 					template: () => Template<RESOURCE_DATA>;
 					templateOptions?: any;
+					api: CUSTOM_API;
 				};
 			};
 			options?: ReadOptions;
@@ -320,29 +348,31 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 			template: {
 				template: () => Template<any>;
 				templateOptions?: {};
+				api: CUSTOM_API;
 			};
 			transform: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
 		};
 		options?: ReadOptions;
 	};
 	getOrRead<RESOURCE_DATA>(
-		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA, any>,
 		options: ReadOptionsData
-	): MIDDLEWARE_DATA[] | undefined;
+	): RESOURCE_DATA[] | undefined;
 	getOrRead<RESOURCE_DATA>(
-		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA, any>,
 		options: ReadOptionsData,
 		meta: true
-	): ResourceWithMeta<MIDDLEWARE_DATA>;
+	): ResourceWithMeta<RESOURCE_DATA>;
 	get<RESOURCE_DATA>(
-		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA, any>,
 		options: ReadOptionsData
-	): (undefined | MIDDLEWARE_DATA)[];
+	): (undefined | RESOURCE_DATA)[];
 	get<RESOURCE_DATA>(
-		template: TemplateWrapper<RESOURCE_DATA> | ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA>,
+		template: ResourceTemplate<RESOURCE_DATA, MIDDLEWARE_DATA, any>,
 		options: ReadOptionsData,
 		meta: true
-	): ResourceWithMeta<MIDDLEWARE_DATA>;
+	): ResourceWithMeta<RESOURCE_DATA>;
+	api<TEMPLATE extends ResourceWrapper<any, any, any>>(template: TEMPLATE): TEMPLATE['template']['api'];
 	createOptions(setter: OptionSetter, id?: string): ReadOptions;
 }
 
@@ -418,7 +448,7 @@ function transformData(item: any, transformConfig?: TransformConfig<any>) {
 	return transformedItem;
 }
 
-function getOrCreateResourceCaches(template: ResourceTemplate<any, any>) {
+function getOrCreateResourceCaches(template: ResourceTemplate<any, any, any>) {
 	if (template === undefined) {
 		throw new Error('Resource template cannot be undefined.');
 	}
@@ -531,7 +561,7 @@ const middleware = factory(
 			};
 		};
 		function getOrRead<RESOURCE_DATA>(
-			template: ResourceTemplate<RESOURCE_DATA, any>,
+			template: ResourceTemplate<RESOURCE_DATA, any, any>,
 			options: ReadOptionsData,
 			meta?: true
 		): ResourceWithMeta<any> | any[] | undefined {
@@ -614,24 +644,28 @@ const middleware = factory(
 				});
 			}
 			if (shouldRead) {
-				const put = (response: ReadResponse<any>, _request: ReadRequest) => {
-					const { data, total } = response;
-					const syntheticIdsCopy = [...syntheticIds];
-					data.forEach((item, idx) => {
-						const syntheticId = syntheticIdsCopy.shift() || `${stringifiedQuery}/${start + idx}`;
-						cache.set(
-							syntheticId,
-							{
-								value: item,
-								status: 'resolved',
-								mtime: Date.now()
-							},
-							idKey
-						);
-					});
-					syntheticIdsCopy.forEach((id) => cache.orphan(id));
-					requestCacheData.total = total;
-					requestCache.set(stringifiedQuery, requestCacheData);
+				const put: any = (response: ReadResponse<any> | any[], _request: ReadRequest) => {
+					if (Array.isArray(response)) {
+						console.log('putty');
+					} else {
+						const { data, total } = response;
+						const syntheticIdsCopy = [...syntheticIds];
+						data.forEach((item, idx) => {
+							const syntheticId = syntheticIdsCopy.shift() || `${stringifiedQuery}/${start + idx}`;
+							cache.set(
+								syntheticId,
+								{
+									value: item,
+									status: 'resolved',
+									mtime: Date.now()
+								},
+								idKey
+							);
+						});
+						syntheticIdsCopy.forEach((id) => cache.orphan(id));
+						requestCacheData.total = total;
+						requestCache.set(stringifiedQuery, requestCacheData);
+					}
 				};
 
 				requestCacheData.inflightMap.set(stringifiedRequest, true);
@@ -679,7 +713,7 @@ const middleware = factory(
 		}
 		resource.getOrRead = getOrRead;
 		function get<RESOURCE_DATA>(
-			template: ResourceTemplate<RESOURCE_DATA, any>,
+			template: ResourceTemplate<RESOURCE_DATA, any, any>,
 			options: ReadOptionsData,
 			meta?: true
 		): ResourceWithMeta<any> | any[] | undefined {
@@ -785,13 +819,49 @@ const middleware = factory(
 			return setOptions;
 		}
 		resource.createOptions = createOptions;
+		function api(template: any) {
+			const { instance, raw: cache } = getOrCreateResourceCaches(template);
+			const apiKeys = Object.keys(instance).filter((key) => key !== 'idKey' && key !== 'read');
+			return apiKeys.reduce(
+				(api, key) => {
+					api[key] = (args: any) => {
+						const put = (response: ReadResponse<any> | any[], request: ReadRequest) => {
+							if (Array.isArray(response)) {
+								console.log('putty');
+							} else {
+								const { offset, query } = request;
+								const { data } = response;
+								data.forEach((item, idx) => {
+									const syntheticId = `${JSON.stringify(query)}/${offset + idx}`;
+									cache.addSyntheticId(syntheticId);
+									cache.set(
+										syntheticId,
+										{
+											value: item,
+											status: 'resolved',
+											mtime: Date.now()
+										},
+										instance.idKey as string
+									);
+								});
+							}
+						};
+
+						(instance as any)[key](args, { put });
+					};
+					return api;
+				},
+				{} as any
+			);
+		}
+		resource.api = api;
 		return resource as any;
 	}
 );
 
-export function createResourceMiddleware<MIDDLEWARE extends { data: any } = { data: void }>() {
+export function createResourceMiddleware<DATA = void, API = undefined>() {
 	return middleware.withType<
-		Resource<MIDDLEWARE['data'] extends void ? {} : MIDDLEWARE['data']>,
-		MIDDLEWARE['data'] extends void ? {} : ResourceProperties<MIDDLEWARE['data']>
+		Resource<DATA extends void ? {} : DATA>,
+		DATA extends void ? {} : ResourceProperties<DATA, API>
 	>();
 }
