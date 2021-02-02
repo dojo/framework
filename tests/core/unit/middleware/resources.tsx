@@ -1435,501 +1435,538 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 	});
-	// describe('get', () => {
-	// 	it('Should return the requested data using `get`', () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options());
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
-	// 		);
-	// 	});
-	// 	it('Should return the request data with meta using `get`', () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options(), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data using `get` when the request is pending', async () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				const prom = createPromise();
-	// 				prom.then(() => {
-	// 					let filteredData = [...testData];
-	// 					controls.put(
-	// 						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 						req
-	// 					);
-	// 				});
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options());
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(domNode.innerHTML, '<div>[null,null,null,null,null]</div>');
-	// 		const [prom, res] = promiseArray.pop()!;
-	// 		res();
-	// 		await prom;
-	// 		resolvers.resolveRAF();
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data with meta using `get` when the request is pending', async () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				const prom = createPromise();
-	// 				prom.then(() => {
-	// 					let filteredData = [...testData];
-	// 					controls.put(
-	// 						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 						req
-	// 					);
-	// 				});
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options(), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading"}}</div>'
-	// 		);
-	// 		const [prom, res] = promiseArray.pop()!;
-	// 		res();
-	// 		await prom;
-	// 		resolvers.resolveRAF();
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data using `get` when the request is partially pending', async () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				if (offset === 0) {
-	// 					let filteredData = [...testData];
-	// 					controls.put(
-	// 						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 						req
-	// 					);
-	// 				} else {
-	// 					const prom = createPromise();
-	// 					prom.then(() => {
-	// 						let filteredData = [...testData];
-	// 						controls.put(
-	// 							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 							req
-	// 						);
-	// 					});
-	// 				}
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			getOrRead(template, options({ page: 2 }));
-	// 			const data = get(template, options({ size: 10, page: 1 }));
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},null,null,null,null,null]</div>'
-	// 		);
-	// 		const [prom, res] = promiseArray.pop()!;
-	// 		res();
-	// 		await prom;
-	// 		resolvers.resolveRAF();
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},{"value":"5"},{"value":"6"},{"value":"7"},{"value":"8"},{"value":"9"}]</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data with meta using `get` when the request is partially pending', async () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				if (offset === 0) {
-	// 					let filteredData = [...testData];
-	// 					controls.put(
-	// 						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 						req
-	// 					);
-	// 				} else {
-	// 					const prom = createPromise();
-	// 					prom.then(() => {
-	// 						let filteredData = [...testData];
-	// 						controls.put(
-	// 							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
-	// 							req
-	// 						);
-	// 					});
-	// 				}
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			getOrRead(template, options({ page: 2 }));
-	// 			const data = get(template, options({ size: 10, page: 1 }), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading","total":200}}</div>'
-	// 		);
-	// 		const [prom, res] = promiseArray.pop()!;
-	// 		res();
-	// 		await prom;
-	// 		resolvers.resolveRAF();
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"value":{"value":"5"},"status":"read"},{"value":{"value":"6"},"status":"read"},{"value":{"value":"7"},"status":"read"},{"value":{"value":"8"},"status":"read"},{"value":{"value":"9"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data using `get` when the request has not been fulfilled', () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options({ size: 10 }));
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},null,null,null,null,null]</div>'
-	// 		);
-	// 	});
-	// 	it('Should return partial data with meta using `get` when the request has not been fulfilled', () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const template = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options({ size: 10 }), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"}],"meta":{"status":"unread","total":200}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should throw error if undefined is passed to `get`', () => {
-	// 		const resource = createResourceMiddleware();
-	// 		const factory = create({ resource });
-	// 		const App = factory(function App({ middleware: { resource } }) {
-	// 			const { get, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			let error = false;
-	// 			try {
-	// 				get(undefined, options());
-	// 			} catch {
-	// 				error = true;
-	// 			}
-	// 			return <div>{`${error}`}</div>;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(domNode.innerHTML, '<div>true</div>');
-	// 	});
-	// 	it('Should transform data using the transform configuration using `get`', () => {
-	// 		const resource = createResourceMiddleware<{ id: string }>();
-	// 		const factory = create({ resource });
-	// 		const testTemplate = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const Widget = factory(function App({ properties, middleware: { resource } }) {
-	// 			const {
-	// 				resource: { template }
-	// 			} = properties();
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }));
-	// 			const data = get(template, options());
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+	describe('get', () => {
+		it('Should return the requested data using `get`', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options());
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+		it('Should return the request data with meta using `get`', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options(), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should return partial data using `get` when the request is pending', async () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					const prom = createPromise();
+					prom.then(() => {
+						let filteredData = [...testData];
+						controls.put(
+							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+							req
+						);
+					});
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options());
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<div>[null,null,null,null,null]</div>');
+			const [prom, res] = promiseArray.pop()!;
+			res();
+			await prom;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+		it('Should return partial data with meta using `get` when the request is pending', async () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					const prom = createPromise();
+					prom.then(() => {
+						let filteredData = [...testData];
+						controls.put(
+							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+							req
+						);
+					});
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options(), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading"}}</div>'
+			);
+			const [prom, res] = promiseArray.pop()!;
+			res();
+			await prom;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should return partial data using `get` when the request is partially pending', async () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					if (offset === 0) {
+						let filteredData = [...testData];
+						controls.put(
+							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+							req
+						);
+					} else {
+						const prom = createPromise();
+						prom.then(() => {
+							let filteredData = [...testData];
+							controls.put(
+								{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+								req
+							);
+						});
+					}
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				get(options({ offset: 5 }), { read });
+				const data = get(options({ size: 10, offset: 0 }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},null,null,null,null,null]</div>'
+			);
+			const [prom, res] = promiseArray.pop()!;
+			res();
+			await prom;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},{"value":"5"},{"value":"6"},{"value":"7"},{"value":"8"},{"value":"9"}]</div>'
+			);
+		});
+		it('Should return partial data with meta using `get` when the request is partially pending', async () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					if (offset === 0) {
+						let filteredData = [...testData];
+						controls.put(
+							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+							req
+						);
+					} else {
+						const prom = createPromise();
+						prom.then(() => {
+							let filteredData = [...testData];
+							controls.put(
+								{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+								req
+							);
+						});
+					}
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				get(options({ offset: 5 }), { read });
+				const data = get(options({ size: 10, offset: 0 }), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"},{"status":"reading"}],"meta":{"status":"reading","total":200}}</div>'
+			);
+			const [prom, res] = promiseArray.pop()!;
+			res();
+			await prom;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"value":{"value":"5"},"status":"read"},{"value":{"value":"6"},"status":"read"},{"value":{"value":"7"},"status":"read"},{"value":{"value":"8"},"status":"read"},{"value":{"value":"9"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should return partial data using `get` when the request has not been fulfilled', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options({ size: 10 }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"},null,null,null,null,null]</div>'
+			);
+		});
+		it('Should return partial data with meta using `get` when the request has not been fulfilled', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options({ size: 10 }), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"}],"meta":{"status":"unread","total":200}}</div>'
+			);
+		});
+		it('Should transform data using the transform configuration using `get`', () => {
+			const resource = createResourceMiddleware<{ id: string }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read });
+				const data = get(options());
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
-	// 			return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"id":"0"},{"id":"1"},{"id":"2"},{"id":"3"},{"id":"4"}]</div>'
-	// 		);
-	// 	});
-	// 	it('Should transform data using the transform configuration with meta `get`', () => {
-	// 		const resource = createResourceMiddleware<{ id: string }>();
-	// 		const factory = create({ resource });
-	// 		const testTemplate = createResourceTemplate<{ data: TestData; template: { read: (req: any) => void } }>({
-	// 			idKey: 'value',
-	// 			read: (req, controls) => {
-	// 				const { size, offset } = req;
-	// 				let filteredData = [...testData];
-	// 				controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
-	// 			}
-	// 		});
-	// 		const Widget = factory(function App({ properties, middleware: { resource } }) {
-	// 			const {
-	// 				resource: { template }
-	// 			} = properties();
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			get(options(), { read }), true);
-	// 			const data = get(template, options(), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"id":"0"},{"id":"1"},{"id":"2"},{"id":"3"},{"id":"4"}]</div>'
+			);
+		});
+		it('Should transform data using the transform configuration with meta `get`', () => {
+			const resource = createResourceMiddleware<{ id: string }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options(), { read, meta: true });
+				const data = get(options(), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
-	// 			return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"id":"0"},"status":"read"},{"value":{"id":"1"},"status":"read"},{"value":{"id":"2"},"status":"read"},{"value":{"id":"3"},"status":"read"},{"value":{"id":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should transform queries using the transform configuration using `get`', () => {
-	// 		const resource = createResourceMiddleware<{ id: string }>();
-	// 		const factory = create({ resource });
-	// 		const testTemplate = createResourceTemplate<TestData>('value');
-	// 		const Widget = factory(function App({ properties, middleware: { resource } }) {
-	// 			const {
-	// 				resource: { template }
-	// 			} = properties();
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			getOrRead(template, options({ query: { id: '1' } }));
-	// 			const data = get(template, options({ query: { id: '1' } }));
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template: testTemplate, transform: { id: 'value' } })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"id":"0"},"status":"read"},{"value":{"id":"1"},"status":"read"},{"value":{"id":"2"},"status":"read"},{"value":{"id":"3"},"status":"read"},{"value":{"id":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should transform queries using the transform configuration using `get`', () => {
+			const resource = createResourceMiddleware<{ id: string }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>('value');
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options({ query: { id: '1' } }), { read });
+				const data = get(options({ query: { id: '1' } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const App = create({ resource: createResourceMiddleware() })(function App({
-	// 			id,
-	// 			middleware: { resource }
-	// 		}) {
-	// 			return (
-	// 				<Widget
-	// 					resource={resource({
-	// 						template: testTemplate({ id, data: testData }),
-	// 						transform: { id: 'value' }
-	// 					})}
-	// 				/>
-	// 			);
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>[{"id":"1"},{"id":"10"},{"id":"11"},{"id":"12"},{"id":"13"}]</div>'
-	// 		);
-	// 	});
-	// 	it('Should transform queries using the transform configuration with meta `get`', () => {
-	// 		const resource = createResourceMiddleware<{ id: string }>();
-	// 		const factory = create({ resource });
-	// 		const testTemplate = createResourceTemplate<TestData>('value');
-	// 		const Widget = factory(function App({ properties, middleware: { resource } }) {
-	// 			const {
-	// 				resource: { template }
-	// 			} = properties();
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const options = createOptions(testOptionsSetter);
-	// 			getOrRead(template, options({ query: { id: '1' } }), true);
-	// 			const data = get(template, options({ query: { id: '1' } }), true);
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return (
+					<Widget
+						resource={resource({
+							template: testTemplate({ id, data: testData }),
+							transform: { id: 'value' }
+						})}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"id":"1"},{"id":"10"},{"id":"11"},{"id":"12"},{"id":"13"}]</div>'
+			);
+		});
+		it('Should transform queries using the transform configuration with meta `get`', () => {
+			const resource = createResourceMiddleware<{ id: string }>();
+			const factory = create({ resource });
+			const testTemplate = createResourceTemplate<TestData>('value');
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				get(options({ query: { id: '1' } }), { meta: true, read });
+				const data = get(options({ query: { id: '1' } }), { meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const App = create({ resource: createResourceMiddleware() })(function App({
-	// 			id,
-	// 			middleware: { resource }
-	// 		}) {
-	// 			return (
-	// 				<Widget
-	// 					resource={resource({
-	// 						template: testTemplate({ id, data: testData }),
-	// 						transform: { id: 'value' }
-	// 					})}
-	// 				/>
-	// 			);
-	// 		});
-	// 		const domNode = document.createElement('div');
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(
-	// 			domNode.innerHTML,
-	// 			'<div>{"data":[{"value":{"id":"1"},"status":"read"},{"value":{"id":"10"},"status":"read"},{"value":{"id":"11"},"status":"read"},{"value":{"id":"12"},"status":"read"},{"value":{"id":"13"},"status":"read"}],"meta":{"status":"read","total":119}}</div>'
-	// 		);
-	// 	});
-	// 	it('Should by able to filter with transformed data and not transform properties with `get`', () => {
-	// 		const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
-	// 		const Widget = factory(({ properties, middleware: { resource } }) => {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const {
-	// 				resource: { template, options = createOptions(testOptionsSetter) }
-	// 			} = properties();
-	// 			getOrRead(template, options({ query: { value: '2', foo: '1' } }));
-	// 			const data = get(template, options({ query: { value: '2', foo: '1' } }));
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return (
+					<Widget
+						resource={resource({
+							template: testTemplate({ id, data: testData }),
+							transform: { id: 'value' }
+						})}
+					/>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"id":"1"},"status":"read"},{"value":{"id":"10"},"status":"read"},{"value":{"id":"11"},"status":"read"},{"value":{"id":"12"},"status":"read"},{"value":{"id":"13"},"status":"read"}],"meta":{"status":"read","total":119}}</div>'
+			);
+		});
+		it('Should by able to filter with transformed data and not transform properties with `get`', () => {
+			const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
+			const Widget = factory(({ properties, middleware: { resource } }) => {
+				const {
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
+				} = properties();
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
 
-	// 		const template = createResourceTemplate<{ id: string; foo: string }>('foo');
+				get(options({ query: { value: '2', foo: '1' } }), { read });
+				const data = get(options({ query: { value: '2', foo: '1' } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
-	// 			return (
-	// 				<Widget
-	// 					resource={resource({
-	// 						transform: { value: 'id' },
-	// 						template: template({
-	// 							id,
-	// 							data: [{ id: '1', foo: '1' }, { id: '2', foo: '1' }, { id: '3', foo: '2' }]
-	// 						})
-	// 					})}
-	// 				/>
-	// 			);
-	// 		});
+			const template = createResourceTemplate<{ id: string; foo: string }>('foo');
 
-	// 		const r = renderer(() => <App />);
-	// 		const domNode = document.createElement('div');
-	// 		r.mount({ domNode });
-	// 		assert.strictEqual(domNode.innerHTML, '<div>[{"value":"2","foo":"1"},null,null,null,null]</div>');
-	// 	});
-	// 	it('Should by able to filter non string values by reference with `get`', () => {
-	// 		const root = document.createElement('div');
-	// 		const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
-	// 		const Widget = factory(({ properties, middleware: { resource } }) => {
-	// 			const { get, getOrRead, createOptions } = resource;
-	// 			const {
-	// 				resource: { template, options = createOptions((curr, next) => ({ ...curr, ...next })) }
-	// 			} = properties();
-	// 			getOrRead(template, options({ query: { value: 10 } }));
-	// 			const data = get(template, options({ query: { value: 10 } }));
-	// 			return <div>{JSON.stringify(data)}</div>;
-	// 		});
+			const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
+				return (
+					<Widget
+						resource={resource({
+							transform: { value: 'id' },
+							template: template({
+								id,
+								data: [{ id: '1', foo: '1' }, { id: '2', foo: '1' }, { id: '3', foo: '2' }]
+							})
+						})}
+					/>
+				);
+			});
 
-	// 		const template = createResourceTemplate<{ value: number }>('value');
+			const r = renderer(() => <App />);
+			const domNode = document.createElement('div');
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<div>[{"value":"2","foo":"1"},null,null,null,null]</div>');
+		});
+		it('Should by able to filter non string values by reference with `get`', () => {
+			const root = document.createElement('div');
+			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
+			const Widget = factory(({ properties, middleware: { resource } }) => {
+				const {
+					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
+				} = properties();
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
 
-	// 		const App = create({ resource: createResourceMiddleware() })(({ id }) => {
-	// 			return <Widget resource={template({ id, data: [{ value: 10 }, { value: 100 }, { value: 99 }] })} />;
-	// 		});
+				get(options({ query: { value: 10 } }), { read });
+				const data = get(options({ query: { value: 10 } }));
+				return <div>{JSON.stringify(data)}</div>;
+			});
 
-	// 		const r = renderer(() => <App />);
-	// 		r.mount({ domNode: root });
-	// 		assert.strictEqual(
-	// 			root.innerHTML,
-	// 			'<div>[{"value":10},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]</div>'
-	// 		);
-	// 	});
-	// });
+			const template = createResourceTemplate<{ value: number }>('value');
+
+			const App = create({ resource: createResourceMiddleware() })(({ id }) => {
+				return <Widget resource={template({ id, data: [{ value: 10 }, { value: 100 }, { value: 99 }] })} />;
+			});
+
+			const r = renderer(() => <App />);
+			r.mount({ domNode: root });
+			assert.strictEqual(
+				root.innerHTML,
+				'<div>[{"value":10},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]</div>'
+			);
+		});
+	});
 });

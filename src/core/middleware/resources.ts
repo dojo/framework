@@ -749,7 +749,8 @@ const middleware = factory(
 			): ResourceWithMeta<any> | any[] | undefined {
 				const caches = getOrCreateResourceCaches(template);
 				const { raw: cache, requestCache, invalidators } = caches;
-				if (!invalidators.has(invalidator)) {
+				const { meta = false, read } = settings;
+				if (read && !invalidators.has(invalidator)) {
 					invalidators.add(invalidator);
 					destroyFuncs.push(() => {
 						invalidators.delete(invalidator);
@@ -776,9 +777,39 @@ const middleware = factory(
 				const syntheticIds: string[] = [];
 				const orphanedIds: string[] = [];
 				let incompleteIds: string[] = [];
-				let items: RawCacheItem[] = [];
 				let shouldRead = false;
 				let resetOrphans = false;
+				if (!read) {
+					let items: (undefined | any)[] = [];
+					let requestStatus: ReadStatus = 'read';
+					for (let i = 0; i < end - offset; i++) {
+						const item = cache.get(`${stringifiedQuery}/${offset + i}`);
+						if (meta) {
+							if (item) {
+								const status = item.status === 'resolved' ? 'read' : 'reading';
+								if (requestStatus === 'read' && status === 'reading') {
+									requestStatus = 'reading';
+								}
+								items.push({ value: transformData(item.value, transform), status });
+							} else {
+								requestStatus = 'unread';
+								items.push({ value: undefined, status: 'unread' });
+							}
+						} else {
+							if (item && item.status === 'resolved') {
+								items.push(transformData(item.value, transform));
+							} else {
+								items.push(undefined);
+							}
+						}
+					}
+					if (meta) {
+						return { data: items, meta: { status: requestStatus, total: requestCacheData.total } };
+					}
+					return items;
+				}
+				let items: RawCacheItem[] = [];
+
 				for (let i = 0; i < end - offset; i++) {
 					const syntheticId = `${stringifiedQuery}/${offset + i}`;
 					const item = cache.get(syntheticId);
