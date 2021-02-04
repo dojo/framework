@@ -184,7 +184,7 @@ class RawCache {
 		const id = item.value[idKey];
 		this._syntheticIdToIdMap.set(syntheticId, { id, status: 'resolved' });
 		const syntheticIds = this._idToSyntheticIdMap.get(id) || new Set<string>();
-		syntheticIds.add(id);
+		syntheticIds.add(syntheticId);
 		this._idToSyntheticIdMap.set(id, syntheticIds);
 		this._rawCache.set(id, { ...item, stale: false });
 		this.notify(syntheticId);
@@ -392,31 +392,34 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 		? {
 				template: TEMPLATE['template']['api'];
 				createOptions(setter: OptionSetter, id?: string): ReadOptions;
-				get(options: ReadOptionsData): RESOURCE_DATA[] | undefined;
+				get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
+				get(options: ReadOptionsData): (RESOURCE_DATA | undefined)[];
 				get<READ extends (options: ReadOptionsData) => void>(
 					options: Parameters<READ>[0],
 					settings: { read: READ }
 				): RESOURCE_DATA[] | undefined;
-				get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
+
 				get<READ extends (options: ReadOptionsData) => void>(
 					options: Parameters<READ>[0],
 					settings: { read: READ; meta: true }
 				): ResourceWithMeta<RESOURCE_DATA>;
+				get(ids: string[]): (RESOURCE_DATA | undefined)[];
 		  }
 		: TEMPLATE extends TemplateWrapper<infer RESOURCE_DATA, any>
 			? {
 					template: TEMPLATE['api'];
 					createOptions(setter: OptionSetter, id?: string): ReadOptions;
-					get(options: ReadOptionsData): RESOURCE_DATA[] | undefined;
+					get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
+					get(options: ReadOptionsData): (RESOURCE_DATA | undefined)[];
 					get<READ extends (options: ReadOptionsData) => void>(
 						options: Parameters<READ>[0],
 						settings: { read: READ }
 					): RESOURCE_DATA[] | undefined;
-					get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
 					get<READ extends (options: ReadOptionsData) => void>(
 						options: Parameters<READ>[0],
 						settings: { read: READ; meta: true }
 					): ResourceWithMeta<RESOURCE_DATA>;
+					get(ids: string[]): (RESOURCE_DATA | undefined)[];
 			  }
 			: void;
 	createOptions(setter: OptionSetter, id?: string): ReadOptions;
@@ -736,7 +739,7 @@ const middleware = factory(
 							});
 						};
 
-						(instance as any)[key](args, { put, del });
+						return (instance as any)[key](args, { put, del });
 					};
 					return api;
 				},
@@ -744,11 +747,20 @@ const middleware = factory(
 			);
 
 			function get(
-				request: ReadOptionsData,
+				request: ReadOptionsData | string[],
 				settings: { meta?: true; read?: any } = {}
 			): ResourceWithMeta<any> | any[] | undefined {
 				const caches = getOrCreateResourceCaches(template);
 				const { raw: cache, requestCache, invalidators } = caches;
+				if (Array.isArray(request)) {
+					return request.map((id) => {
+						const [synthId] = cache.getSyntheticIds(id);
+						const item = cache.get(synthId);
+						if (item) {
+							return item.value;
+						}
+					});
+				}
 				const { meta = false, read } = settings;
 				if (read && !invalidators.has(invalidator)) {
 					invalidators.add(invalidator);
