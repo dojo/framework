@@ -321,6 +321,8 @@ export interface ResourceWithMeta<MIDDLEWARE_DATA> {
 	};
 }
 
+export type ResourceApi<API extends CustomTemplate> = { [K in keyof API]: (...args: Parameters<API[K]>) => void };
+
 export interface Resource<MIDDLEWARE_DATA = {}> {
 	<RESOURCE_DATA, CUSTOM_API>(
 		options: {
@@ -388,9 +390,9 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	};
 	template<TEMPLATE extends ResourceWrapper<any, any, any> | TemplateWrapper<any, any>>(
 		template: TEMPLATE | undefined | void
-	): TEMPLATE extends ResourceWrapper<any, infer RESOURCE_DATA, any>
+	): TEMPLATE extends ResourceWrapper<any, infer RESOURCE_DATA, infer API>
 		? {
-				template: TEMPLATE['template']['api'];
+				template: API extends CustomTemplate ? ResourceApi<API> : undefined;
 				createOptions(setter: OptionSetter, id?: string): ReadOptions;
 				get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
 				get(options: ReadOptionsData): (RESOURCE_DATA | undefined)[];
@@ -405,9 +407,9 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 				): ResourceWithMeta<RESOURCE_DATA>;
 				get(ids: string[]): (RESOURCE_DATA | undefined)[];
 		  }
-		: TEMPLATE extends TemplateWrapper<infer RESOURCE_DATA, any>
+		: TEMPLATE extends TemplateWrapper<infer RESOURCE_DATA, infer API>
 			? {
-					template: TEMPLATE['api'];
+					template: API extends CustomTemplate ? ResourceApi<API> : undefined;
 					createOptions(setter: OptionSetter, id?: string): ReadOptions;
 					get(options: ReadOptionsData, settings: { meta: true }): ResourceWithMeta<RESOURCE_DATA>;
 					get(options: ReadOptionsData): (RESOURCE_DATA | undefined)[];
@@ -739,7 +741,7 @@ const middleware = factory(
 							});
 						};
 
-						return (instance as any)[key](args, { put, del });
+						(instance as any)[key](args, { put, del });
 					};
 					return api;
 				},

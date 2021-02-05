@@ -1221,13 +1221,7 @@ jsdomDescribe('Resources Middleware', () => {
 			const App = factory(function App({ middleware: { resource } }) {
 				let error = false;
 				try {
-					const {
-						get,
-						createOptions,
-						template: { read }
-					} = resource.template(undefined);
-					const options = createOptions(testOptionsSetter);
-					get(options(), { read });
+					resource.template(undefined);
 				} catch {
 					error = true;
 				}
