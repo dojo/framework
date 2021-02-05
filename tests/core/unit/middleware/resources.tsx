@@ -1,10 +1,16 @@
 const { describe, it, afterEach, beforeEach } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { renderer, tsx, create, invalidator } from '../../../../src/core/vdom';
+import { renderer, tsx, create } from '../../../../src/core/vdom';
+import { invalidator } from '../../../../src/core/vdom';
 import '../../../../src/shim/Promise';
 import { createResolvers } from '../../support/util';
-import { createResourceMiddleware, createResourceTemplate } from '../../../../src/core/middleware/resources';
+import {
+	createResourceMiddleware,
+	createResourceTemplate,
+	DefaultApi,
+	ReadOptionsData
+} from '../../../../src/core/middleware/resources';
 import icache from '../../../../src/core/middleware/icache';
 import { spy } from 'sinon';
 
@@ -19,8 +25,8 @@ for (let i = 0; i < 200; i++) {
 	testData.push({ value: `${i}` });
 }
 
-function testOptionsSetter({ size = 5, page, query }: any, next: any) {
-	return { page, size, query, ...next };
+function testOptionsSetter({ size = 5, offset, query }: any, next: any) {
+	return { offset, size, query, ...next };
 }
 
 jsdomDescribe('Resources Middleware', () => {
@@ -43,8 +49,8 @@ jsdomDescribe('Resources Middleware', () => {
 		resolvers.restore();
 	});
 
-	describe('getOrRead', () => {
-		it('Should support using a template directly with `getOrRead`', () => {
+	describe('Resource Reading', () => {
+		it('Should support using a template directly to read using default template', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const template = createResourceTemplate<TestData>({
@@ -56,9 +62,13 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -69,7 +79,7 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
 			);
 		});
-		it('Should support using a template directly with `getOrRead` with meta', () => {
+		it('Should support using a template directly reading with meta using default template', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const template = createResourceTemplate<TestData>({
@@ -81,9 +91,13 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options(), true);
+				const data = get(options(), { read, meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -94,14 +108,18 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
 			);
 		});
-		it('Should support using a template factory directly with `getOrRead', () => {
+		it('Should support using a template factory directly to read resource data using the default template', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const template = createResourceTemplate<TestData>('value');
 			const App = factory(function App({ id, middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template({ id, data: testData }));
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template({ id, data: testData }), options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -112,8 +130,9 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
 			);
 		});
+
 		it('Should support passing a template to a widget with the `resource` middleware', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -127,9 +146,13 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -145,16 +168,20 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template to a widget using the template factory', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -173,15 +200,19 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template to a widget using the short hand', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -197,20 +228,27 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('should update data when options changed', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template }
 				} = properties();
-
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const {
+					resource: { options = createOptions(testOptionsSetter) }
+				} = properties();
+				const data = get(options({ size: 1 }), { read });
 				return (
 					<div>
-						<div>{JSON.stringify(getOrRead(template, options({ size: 1 })))}</div>
+						<div>{JSON.stringify(data)}</div>
 						<button
 							onclick={() => {
-								const { page } = options();
-								options({ page: page + 1 });
+								const { offset, size } = options();
+								options({ offset: offset + size });
 							}}
 						/>
 					</div>
@@ -235,15 +273,22 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(domNode.innerHTML, '<div><div>[{"value":"2"}]</div><button></button></div>');
 		});
 		it('Should be able to change the options used for a resource', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template }
 				} = properties();
-				const items = getOrRead(template, options());
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const {
+					resource: { options = createOptions(testOptionsSetter) }
+				} = properties();
+				const items = get(options(), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -281,7 +326,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"0"}]</div></div>');
 		});
 		it('Should transform data using the transform configuration', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -295,9 +340,13 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -313,7 +362,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform data using the transform configuration with meta getOrRead', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -327,9 +376,13 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options(), true);
+				const data = get(options(), { read, meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -345,16 +398,20 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options({ query: { id: '1' } }));
+				const data = get(options({ query: { id: '1' } }), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -380,16 +437,20 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration with meta getOrRead', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options({ query: { id: '1' } }), true);
+				const data = get(options({ query: { id: '1' } }), { read, meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -415,13 +476,17 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should by able to filter with transformed data and not transform properties', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				return <div>{JSON.stringify(getOrRead(template, options({ query: { value: '2', foo: '1' } })))}</div>;
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const data = get(options({ query: { value: '2', foo: '1' } }), { read });
+				return <div>{JSON.stringify(data)}</div>;
 			});
 
 			const template = createResourceTemplate<{ id: string; foo: string }>('foo');
@@ -447,13 +512,17 @@ jsdomDescribe('Resources Middleware', () => {
 		});
 		it('Should by able to filter non string values by reference with getOrRead', () => {
 			const root = document.createElement('div');
-			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
+			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions((curr, next) => ({ ...curr, ...next })) }
+					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
 				} = properties();
-				return <div>{JSON.stringify(getOrRead(template, options({ query: { value: 10 } })))}</div>;
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const result = get(options({ query: { value: 10 } }), { read });
+				return <div>{JSON.stringify(result)}</div>;
 			});
 
 			const template = createResourceTemplate<{ value: number }>('value');
@@ -467,7 +536,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div>[{"value":10}]</div>');
 		});
 		it('Should not call read if the request has been satisfied by one or more request', () => {
-			const resource = createResourceMiddleware<{ data: { value: string } }>();
+			const resource = createResourceMiddleware<{ value: string }>();
 			const factory = create({ resource });
 			const rawTemplate = {
 				idKey: 'value' as const,
@@ -483,11 +552,15 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(({ size = 3 }, next) => ({ size, ...next }));
-				const req1 = getOrRead(template, options({ page: 1 }));
-				const req2 = getOrRead(template, options({ page: 2 }));
-				const req3 = getOrRead(template, options({ page: 2, size: 2 }));
+				const req1 = get(options({ offset: 0 }), { read });
+				const req2 = get(options({ offset: 3 }), { read });
+				const req3 = get(options({ offset: 2, size: 2 }), { read });
 				return (
 					<div>
 						{JSON.stringify(req1)}
@@ -530,9 +603,13 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -566,9 +643,13 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options(), true);
+				const data = get(options(), { read, meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -604,12 +685,16 @@ jsdomDescribe('Resources Middleware', () => {
 					});
 				}
 			});
-			const readSpy = spy(template.template.template(), 'read');
+			const readSpy = spy(template.template.template() as any, 'read');
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const page1 = getOrRead(template, options());
-				const page2 = getOrRead(template, options());
+				const page1 = get(options(), { read });
+				const page2 = get(options(), { read });
 				return (
 					<div>
 						{JSON.stringify(page1)}
@@ -649,13 +734,17 @@ jsdomDescribe('Resources Middleware', () => {
 					});
 				}
 			});
-			const readSpy = spy(template.template.template(), 'read');
+			const readSpy = spy(template.template.template() as any, 'read');
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const req1 = getOrRead(template, options({ page: 1 }));
-				const req2 = getOrRead(template, options({ page: 2 }));
-				const req3 = getOrRead(template, options({ page: 2, size: 2 }));
+				const req1 = get(options({ offset: 0 }), { read });
+				const req2 = get(options({ offset: 5 }), { read });
+				const req3 = get(options({ offset: 2, size: 2 }), { read });
 				return (
 					<div>
 						{JSON.stringify(req1)}
@@ -679,7 +768,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(readSpy.callCount, 2);
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div>[{"value":"0"},{"value":"1"}][{"value":"2"},{"value":"3"}][{"value":"2"},{"value":"3"}]</div>'
+				'<div>[{"value":"0"},{"value":"1"}][{"value":"5"},{"value":"6"}][{"value":"2"},{"value":"3"}]</div>'
 			);
 		});
 		it('Can optimistically put data into the resource', () => {
@@ -696,12 +785,16 @@ jsdomDescribe('Resources Middleware', () => {
 					);
 				}
 			});
-			const readSpy = spy(template.template.template(), 'read');
+			const readSpy = spy(template.template.template() as any, 'read');
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const page1 = getOrRead(template, options({ size: 2, page: 1 }));
-				const page2 = getOrRead(template, options({ size: 2, page: 2 }));
+				const page1 = get(options({ size: 2, offset: 0 }), { read });
+				const page2 = get(options({ size: 2, offset: 2 }), { read });
 				return (
 					<div>
 						{JSON.stringify(page1)}
@@ -733,13 +826,17 @@ jsdomDescribe('Resources Middleware', () => {
 					);
 				}
 			});
-			const readSpy = spy(template.template.template(), 'read');
+			const readSpy = spy(template.template.template() as any, 'read');
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const page1 = getOrRead(template, options({ size: 4, page: 1 }));
-				const page2 = getOrRead(template, options({ size: 3, page: 3 }));
-				const page3 = getOrRead(template, options({ size: 9, page: 1 }));
+				const page1 = get(options({ size: 4, offset: 0 }), { read });
+				const page2 = get(options({ size: 3, offset: 6 }), { read });
+				const page3 = get(options({ size: 9, offset: 0 }), { read });
 				return (
 					<div>
 						{JSON.stringify(page1)}
@@ -775,13 +872,17 @@ jsdomDescribe('Resources Middleware', () => {
 					});
 				}
 			});
-			const readSpy = spy(template.template.template(), 'read');
-			const testOptions = [{ size: 4, page: 1 }, { size: 3, page: 3 }, { size: 9, page: 1 }];
+			const readSpy = spy(template.template.template() as any, 'read');
+			const testOptions = [{ size: 4, offset: 0 }, { size: 3, offset: 6 }, { size: 9, offset: 0 }];
 			let option = testOptions.shift();
 			const App = factory(function App({ middleware: { resource, invalidator } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options(option));
+				const data = get(options(option), { read });
 				return (
 					<div>
 						<button
@@ -825,15 +926,18 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a template factory with resource middleware', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				const items = getOrRead(template, options());
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const items = get(options(), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -872,15 +976,18 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a template factory', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				const items = getOrRead(template, options());
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const items = get(options(), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -913,13 +1020,17 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to update the data in using a shorthand', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				const items = getOrRead(template, options());
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+
+				const items = get(options(), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -954,10 +1065,10 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should be able to share resource options across between widgets', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
-			const WidgetOne = factory(({ properties, id, middleware: { resource } }) => {
+			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
 				const { createOptions } = resource;
 				const {
 					resource: { options = createOptions(testOptionsSetter) }
@@ -965,18 +1076,21 @@ jsdomDescribe('Resources Middleware', () => {
 				return (
 					<button
 						onclick={() => {
-							options({ page: 2 });
+							options({ offset: 5 });
 						}}
 					/>
 				);
 			});
 
 			const WidgetTwo = factory(({ properties, middleware: { resource } }) => {
-				const { getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				const items = getOrRead(template, options({ size: 1 }));
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const items = get(options({ size: 1 }), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -1010,10 +1124,10 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"0"}]</div></div>');
 			(root.children[0].children[0] as any).click();
 			resolvers.resolveRAF();
-			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"1"}]</div></div>');
+			assert.strictEqual(root.innerHTML, '<div><button></button><div>[{"value":"5"}]</div></div>');
 		});
 		it('Should be able to share search query across widgets', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData>() });
 			const template = createResourceTemplate<TestData>('value');
 
 			const WidgetOne = factory(({ properties, middleware: { resource } }) => {
@@ -1030,12 +1144,16 @@ jsdomDescribe('Resources Middleware', () => {
 				);
 			});
 
-			const WidgetTwo = factory(({ id, properties, middleware: { resource } }) => {
-				const { createOptions, getOrRead } = resource;
+			const WidgetTwo = factory(({ properties, middleware: { resource } }) => {
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				const items = getOrRead(template, options({ size: 2 }));
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+
+				const items = get(options({ size: 2 }), { read });
 				return <div>{JSON.stringify(items)}</div>;
 			});
 
@@ -1080,9 +1198,13 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions((curr, next) => ({ ...curr, ...next }));
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1093,15 +1215,13 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
 			);
 		});
-		it('Should throw error if undefined is passed to `getOrRead`', () => {
+		it('Should throw error if undefined is passed to template', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const App = factory(function App({ middleware: { resource } }) {
-				const { getOrRead, createOptions } = resource;
-				const options = createOptions(testOptionsSetter);
 				let error = false;
 				try {
-					getOrRead(undefined, options());
+					resource.template(undefined);
 				} catch {
 					error = true;
 				}
@@ -1130,7 +1250,7 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(domNode.innerHTML, '<div>true</div>');
 		});
 		it('Should support passing a template through multiple widgets with the `resource` middleware', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1144,9 +1264,13 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1170,16 +1294,20 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template through multiple widgets using the template factory', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1206,19 +1334,23 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should support passing a template through multiple widgets using the short hand', () => {
-			const resource = createResourceMiddleware<{ data: TestData }>();
+			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
-			const Widget = factory(function App({ properties, middleware: { resource } }) {
+			const Widget = factory(function Widget({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = getOrRead(template, options());
+				const data = get(options(), { read });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
-			const Wrapper = factory(function App({ properties, middleware: { resource } }) {
+			const Wrapper = factory(function Wrapper({ properties, middleware: { resource } }) {
 				const { createOptions } = resource;
 				const {
 					resource: { template, options = createOptions(testOptionsSetter) }
@@ -1251,10 +1383,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options());
+				get(options(), { read });
+				const data = get(options());
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1277,10 +1413,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options(), true);
+				get(options(), { read });
+				const data = get(options(), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1309,10 +1449,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options());
+				get(options(), { read });
+				const data = get(options());
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1346,10 +1490,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options(), true);
+				get(options(), { read });
+				const data = get(options(), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1394,11 +1542,15 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				getOrRead(template, options({ page: 2 }));
-				const data = get(template, options({ size: 10, page: 1 }));
+				get(options(), { read });
+				get(options({ offset: 5 }), { read });
+				const data = get(options({ size: 10, offset: 0 }));
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1443,11 +1595,15 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				getOrRead(template, options({ page: 2 }));
-				const data = get(template, options({ size: 10, page: 1 }), true);
+				get(options(), { read });
+				get(options({ offset: 5 }), { read });
+				const data = get(options({ size: 10, offset: 0 }), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1478,10 +1634,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options({ size: 10 }));
+				get(options(), { read });
+				const data = get(options({ size: 10 }));
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1504,10 +1664,14 @@ jsdomDescribe('Resources Middleware', () => {
 				}
 			});
 			const App = factory(function App({ middleware: { resource } }) {
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options({ size: 10 }), true);
+				get(options(), { read });
+				const data = get(options({ size: 10 }), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 			const domNode = document.createElement('div');
@@ -1518,27 +1682,8 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"},{"status":"unread"}],"meta":{"status":"unread","total":200}}</div>'
 			);
 		});
-		it('Should throw error if undefined is passed to `get`', () => {
-			const resource = createResourceMiddleware();
-			const factory = create({ resource });
-			const App = factory(function App({ middleware: { resource } }) {
-				const { get, createOptions } = resource;
-				const options = createOptions(testOptionsSetter);
-				let error = false;
-				try {
-					get(undefined, options());
-				} catch {
-					error = true;
-				}
-				return <div>{`${error}`}</div>;
-			});
-			const domNode = document.createElement('div');
-			const r = renderer(() => <App />);
-			r.mount({ domNode });
-			assert.strictEqual(domNode.innerHTML, '<div>true</div>');
-		});
 		it('Should transform data using the transform configuration using `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1552,10 +1697,14 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options());
-				const data = get(template, options());
+				get(options(), { read });
+				const data = get(options());
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1571,7 +1720,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform data using the transform configuration with meta `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>({
 				idKey: 'value',
@@ -1585,10 +1734,14 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template }
 				} = properties();
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options(), true);
-				const data = get(template, options(), true);
+				get(options(), { read, meta: true });
+				const data = get(options(), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1604,17 +1757,21 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration using `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options({ query: { id: '1' } }));
-				const data = get(template, options({ query: { id: '1' } }));
+				get(options({ query: { id: '1' } }), { read });
+				const data = get(options({ query: { id: '1' } }));
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1640,17 +1797,21 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should transform queries using the transform configuration with meta `get`', () => {
-			const resource = createResourceMiddleware<{ data: { id: string } }>();
+			const resource = createResourceMiddleware<{ id: string }>();
 			const factory = create({ resource });
 			const testTemplate = createResourceTemplate<TestData>('value');
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }
 				} = properties();
-				const { get, getOrRead, createOptions } = resource;
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				getOrRead(template, options({ query: { id: '1' } }), true);
-				const data = get(template, options({ query: { id: '1' } }), true);
+				get(options({ query: { id: '1' } }), { meta: true, read });
+				const data = get(options({ query: { id: '1' } }), { meta: true });
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1676,14 +1837,18 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 		it('Should by able to filter with transformed data and not transform properties with `get`', () => {
-			const factory = create({ resource: createResourceMiddleware<{ data: TestData & { foo?: string } }>() });
+			const factory = create({ resource: createResourceMiddleware<TestData & { foo?: string }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
-				const { get, getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions(testOptionsSetter) }
+					resource: { template, options = resource.createOptions(testOptionsSetter) }
 				} = properties();
-				getOrRead(template, options({ query: { value: '2', foo: '1' } }));
-				const data = get(template, options({ query: { value: '2', foo: '1' } }));
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+
+				get(options({ query: { value: '2', foo: '1' } }), { read });
+				const data = get(options({ query: { value: '2', foo: '1' } }));
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1710,14 +1875,18 @@ jsdomDescribe('Resources Middleware', () => {
 		});
 		it('Should by able to filter non string values by reference with `get`', () => {
 			const root = document.createElement('div');
-			const factory = create({ resource: createResourceMiddleware<{ data: { value: number } }>() });
+			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });
 			const Widget = factory(({ properties, middleware: { resource } }) => {
-				const { get, getOrRead, createOptions } = resource;
 				const {
-					resource: { template, options = createOptions((curr, next) => ({ ...curr, ...next })) }
+					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
 				} = properties();
-				getOrRead(template, options({ query: { value: 10 } }));
-				const data = get(template, options({ query: { value: 10 } }));
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+
+				get(options({ query: { value: 10 } }), { read });
+				const data = get(options({ query: { value: 10 } }));
 				return <div>{JSON.stringify(data)}</div>;
 			});
 
@@ -1732,6 +1901,230 @@ jsdomDescribe('Resources Middleware', () => {
 			assert.strictEqual(
 				root.innerHTML,
 				'<div>[{"value":10},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]</div>'
+			);
+		});
+	});
+	describe('Custom Api', () => {
+		it('Should support using a template with a custom api', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData, { reader: (req: ReadOptionsData) => void }>({
+				idKey: 'value',
+				reader: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { reader }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: reader });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+		it('Should support using a template directly reading with meta using a custom template api', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData, { reader: (req: ReadOptionsData) => void }>({
+				idKey: 'value',
+				reader: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { reader }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: reader, meta: true });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
+			);
+		});
+		it('Should be able to define the required custom api for a widget', () => {
+			const resource = createResourceMiddleware<TestData, { scan: (request: ReadOptionsData) => void }>();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData, { scan: (req: ReadOptionsData) => void }>({
+				idKey: 'value',
+				scan: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const Widget = factory(function Widget({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { scan }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: scan });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+	});
+	describe('Saving Resources', () => {
+		it('should be able to use custom template apis to save resources', () => {
+			interface CustomTestData extends TestData {
+				label: string;
+			}
+			const customTestData: CustomTestData[] = [];
+			for (let i = 0; i < 200; i++) {
+				customTestData.push({ value: `${i}`, label: `Original Label ${i}` });
+			}
+
+			const template = createResourceTemplate<
+				CustomTestData,
+				{ save: (item: CustomTestData) => void } & DefaultApi
+			>({
+				idKey: 'value',
+				save: (request, controls) => {
+					controls.put([request]);
+				},
+				read: (request, controls) => {
+					const { size, offset } = request;
+					let filteredData = [...customTestData];
+					controls.put(
+						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+						request
+					);
+				}
+			});
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read, save }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read });
+				return (
+					<div>
+						<button
+							onclick={() => {
+								save({ value: '1', label: 'Updated Label 1' });
+							}}
+						/>
+						<div>{JSON.stringify(data)}</div>
+					</div>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Original Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"},{"value":"4","label":"Original Label 4"}]</div></div>'
+			);
+			(domNode.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Updated Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"},{"value":"4","label":"Original Label 4"}]</div></div>'
+			);
+		});
+	});
+	describe('Creating Resources', () => {
+		it('should be able to use custom template apis to create new resources', () => {
+			interface CustomTestData extends TestData {
+				label: string;
+			}
+			const customTestData: CustomTestData[] = [];
+			for (let i = 0; i < 4; i++) {
+				customTestData.push({ value: `${i}`, label: `Original Label ${i}` });
+			}
+
+			const template = createResourceTemplate<
+				CustomTestData,
+				{ save: (item: CustomTestData) => void } & DefaultApi
+			>({
+				idKey: 'value',
+				save: (request, controls) => {
+					customTestData.push(request);
+					controls.put([request]);
+				},
+				read: (request, controls) => {
+					const { size, offset } = request;
+					let filteredData = [...customTestData];
+					controls.put(
+						{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+						request
+					);
+				}
+			});
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read, save }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read });
+				return (
+					<div>
+						<button
+							onclick={() => {
+								save({ value: '4', label: 'New Label 4' });
+							}}
+						/>
+						<div>{JSON.stringify(data)}</div>
+					</div>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Original Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"}]</div></div>'
+			);
+			(domNode.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Original Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"},{"value":"4","label":"New Label 4"}]</div></div>'
 			);
 		});
 	});
