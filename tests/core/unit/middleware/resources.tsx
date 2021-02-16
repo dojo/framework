@@ -532,13 +532,7 @@ jsdomDescribe('Resources Middleware', () => {
 				const {
 					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
 				} = properties();
-				return (
-					<List
-						resource={
-							resource({ template, options, transform: { value: 'id', label: 'desc' } } as any) as any
-						}
-					/>
-				);
+				return <List resource={resource({ template, options, transform: { value: 'id', label: 'desc' } })} />;
 			});
 
 			const template = createResourceTemplate<{ uuid: string; description: string }>('uuid');

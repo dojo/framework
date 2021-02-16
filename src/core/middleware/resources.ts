@@ -367,13 +367,17 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	};
 	<RESOURCE_DATA, MIDDLEWARE_DATA, CUSTOM_API>(
 		options: {
-			template: {
-				template: {
-					template: () => Template<RESOURCE_DATA>;
-					templateOptions?: any;
-					api: CUSTOM_API;
-				};
-			};
+			template:
+				| {
+						template: {
+							template: () => Template<RESOURCE_DATA>;
+							templateOptions?: any;
+							api: CUSTOM_API;
+						};
+				  }
+				| void
+				| undefined
+				| TemplateWrapper<RESOURCE_DATA, CUSTOM_API>;
 			options?: ReadOptions;
 			transform: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
 		}
@@ -592,6 +596,8 @@ const middleware = factory(
 
 		const resource = (
 			options:
+				| undefined
+				| void
 				| { template: undefined }
 				| TemplateWrapper<any>
 				| ResourceWrapper<any, any>
@@ -614,7 +620,7 @@ const middleware = factory(
 			transform?: TransformConfig<any, any>;
 			options?: ReadOptions;
 		} => {
-			if (!options.template) {
+			if (!options || !options.template) {
 				throw new Error('Resource cannot be undefined');
 			}
 			if (isTemplateWrapper(options)) {
