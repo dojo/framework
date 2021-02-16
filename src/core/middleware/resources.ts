@@ -476,7 +476,7 @@ function isResourceWrapper(value: any): value is ResourceWrapper<any, any> {
 
 function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any> | TransformConfig<any>[]): ReadQuery {
 	if (Array.isArray(transformConfig)) {
-		return transformConfig.reduce(
+		return [...transformConfig].reverse().reduce(
 			(query, config) => {
 				return transformQuery(query, config);
 			},

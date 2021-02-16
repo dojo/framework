@@ -522,7 +522,7 @@ jsdomDescribe('Resources Middleware', () => {
 					get,
 					template: { read }
 				} = resource.template(template);
-				const items = get(options(), { read }) || [];
+				const items = get(options({ query: { value: 'id' } }), { read }) || [];
 				return <ul>{items.map((item) => <li>{item.label}</li>)}</ul>;
 			});
 
@@ -542,7 +542,10 @@ jsdomDescribe('Resources Middleware', () => {
 					<Widget
 						resource={resource({
 							transform: { id: 'uuid', desc: 'description' },
-							template: template({ data: [{ uuid: 'id', description: 'desc' }], id: '' })
+							template: template({
+								data: [{ uuid: 'id', description: 'desc' }, { uuid: '2', description: 'full' }],
+								id: ''
+							})
 						})}
 					/>
 				);
