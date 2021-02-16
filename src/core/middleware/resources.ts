@@ -367,13 +367,17 @@ export interface Resource<MIDDLEWARE_DATA = {}> {
 	};
 	<RESOURCE_DATA, MIDDLEWARE_DATA, CUSTOM_API>(
 		options: {
-			template: {
-				template: {
-					template: () => Template<RESOURCE_DATA>;
-					templateOptions?: any;
-					api: CUSTOM_API;
-				};
-			};
+			template:
+				| {
+						template: {
+							template: () => Template<RESOURCE_DATA>;
+							templateOptions?: any;
+							api: CUSTOM_API;
+						};
+				  }
+				| void
+				| undefined
+				| TemplateWrapper<RESOURCE_DATA, CUSTOM_API>;
 			options?: ReadOptions;
 			transform: TransformConfig<MIDDLEWARE_DATA, RESOURCE_DATA>;
 		}
@@ -470,7 +474,15 @@ function isResourceWrapper(value: any): value is ResourceWrapper<any, any> {
 	return Boolean(value && value.template && typeof value.template.template === 'function');
 }
 
-function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>) {
+function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any> | TransformConfig<any>[]): ReadQuery {
+	if (Array.isArray(transformConfig)) {
+		return [...transformConfig].reverse().reduce(
+			(query, config) => {
+				return transformQuery(query, config);
+			},
+			{ ...query }
+		);
+	}
 	const queryKeys = Object.keys(query);
 	let transformedQuery: ReadQuery = {};
 	for (let i = 0; i < queryKeys.length; i++) {
@@ -480,9 +492,17 @@ function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>)
 	return transformedQuery;
 }
 
-function transformData(item: any, transformConfig?: TransformConfig<any>) {
+function transformData(item: any, transformConfig?: TransformConfig<any> | TransformConfig<any>[]): any {
 	if (!transformConfig || !item) {
 		return item;
+	}
+	if (Array.isArray(transformConfig)) {
+		return transformConfig.reduce(
+			(transformedItem, config) => {
+				return transformData(transformedItem, config);
+			},
+			{ ...item }
+		);
 	}
 	let transformedItem: any = {};
 	let sourceKeys: string[] = [];
@@ -576,6 +596,8 @@ const middleware = factory(
 
 		const resource = (
 			options:
+				| undefined
+				| void
 				| { template: undefined }
 				| TemplateWrapper<any>
 				| ResourceWrapper<any, any>
@@ -598,7 +620,7 @@ const middleware = factory(
 			transform?: TransformConfig<any, any>;
 			options?: ReadOptions;
 		} => {
-			if (!options.template) {
+			if (!options || !options.template) {
 				throw new Error('Resource cannot be undefined');
 			}
 			if (isTemplateWrapper(options)) {
@@ -606,23 +628,35 @@ const middleware = factory(
 					template: { template: { ...options }, transform: options.transform }
 				};
 			}
+			let transform: any = options.transform;
+			let existingTransform = options.template.transform;
+			if (existingTransform) {
+				if (transform) {
+					existingTransform = Array.isArray(existingTransform) ? existingTransform : [existingTransform];
+					transform = [...existingTransform, transform];
+				} else {
+					transform = existingTransform;
+				}
+			}
+
 			if (isResourceWrapper(options)) {
 				return {
 					template: {
 						...options,
-						transform: options.transform || options.template.transform
+						transform
 					},
 					options: options.options,
-					transform: options.transform || options.template.transform
+					transform
 				};
 			}
+
 			return {
 				template: {
 					...options.template,
-					transform: options.transform || options.template.transform
+					transform
 				},
 				options: options.options,
-				transform: options.transform || options.template.transform
+				transform
 			};
 		};
 
