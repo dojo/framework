@@ -510,6 +510,56 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(domNode.innerHTML, `<div>${JSON.stringify([{ value: '2', foo: '1' }])}</div>`);
 		});
+
+		it('Can pass property template to child that nested transforms', () => {
+			const listFactory = create({ resource: createResourceMiddleware<{ value: string; label: string }>() });
+
+			const List = listFactory(function List({ properties, middleware: { resource } }) {
+				const {
+					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
+				} = properties();
+				const {
+					get,
+					template: { read }
+				} = resource.template(template);
+				const items = get(options(), { read }) || [];
+				return <ul>{items.map((item) => <li>{item.label}</li>)}</ul>;
+			});
+
+			const widgetFactory = create({ resource: createResourceMiddleware<{ id: string; desc: string }>() });
+
+			const Widget = widgetFactory(function Widget({ properties, middleware: { resource } }) {
+				const {
+					resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
+				} = properties();
+				return (
+					<List
+						resource={
+							resource({ template, options, transform: { value: 'id', label: 'desc' } } as any) as any
+						}
+					/>
+				);
+			});
+
+			const template = createResourceTemplate<{ uuid: string; description: string }>('uuid');
+
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return (
+					<Widget
+						resource={resource({
+							transform: { id: 'uuid', desc: 'description' },
+							template: template({ data: [{ uuid: 'id', description: 'desc' }], id: '' })
+						})}
+					/>
+				);
+			});
+
+			const r = renderer(() => <App />);
+			const domNode = document.createElement('div');
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<ul><li>desc</li></ul>');
+		});
+
 		it('Should by able to filter non string values by reference with getOrRead', () => {
 			const root = document.createElement('div');
 			const factory = create({ resource: createResourceMiddleware<{ value: number }>() });

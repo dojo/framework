@@ -470,7 +470,15 @@ function isResourceWrapper(value: any): value is ResourceWrapper<any, any> {
 	return Boolean(value && value.template && typeof value.template.template === 'function');
 }
 
-function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>) {
+function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any> | TransformConfig<any>[]): ReadQuery {
+	if (Array.isArray(transformConfig)) {
+		return transformConfig.reduce(
+			(query, config) => {
+				return transformQuery(query, config);
+			},
+			{ ...query }
+		);
+	}
 	const queryKeys = Object.keys(query);
 	let transformedQuery: ReadQuery = {};
 	for (let i = 0; i < queryKeys.length; i++) {
@@ -480,9 +488,17 @@ function transformQuery(query: ReadQuery, transformConfig: TransformConfig<any>)
 	return transformedQuery;
 }
 
-function transformData(item: any, transformConfig?: TransformConfig<any>) {
+function transformData(item: any, transformConfig?: TransformConfig<any> | TransformConfig<any>[]): any {
 	if (!transformConfig || !item) {
 		return item;
+	}
+	if (Array.isArray(transformConfig)) {
+		return transformConfig.reduce(
+			(transformedItem, config) => {
+				return transformData(transformedItem, config);
+			},
+			{ ...item }
+		);
 	}
 	let transformedItem: any = {};
 	let sourceKeys: string[] = [];
@@ -606,23 +622,35 @@ const middleware = factory(
 					template: { template: { ...options }, transform: options.transform }
 				};
 			}
+			let transform: any = options.transform;
+			let existingTransform = options.template.transform;
+			if (existingTransform) {
+				if (transform) {
+					existingTransform = Array.isArray(existingTransform) ? existingTransform : [existingTransform];
+					transform = [...existingTransform, transform];
+				} else {
+					transform = existingTransform;
+				}
+			}
+
 			if (isResourceWrapper(options)) {
 				return {
 					template: {
 						...options,
-						transform: options.transform || options.template.transform
+						transform
 					},
 					options: options.options,
-					transform: options.transform || options.template.transform
+					transform
 				};
 			}
+
 			return {
 				template: {
 					...options.template,
-					transform: options.transform || options.template.transform
+					transform
 				},
 				options: options.options,
-				transform: options.transform || options.template.transform
+				transform
 			};
 		};
 
