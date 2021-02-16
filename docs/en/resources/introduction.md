@@ -89,6 +89,7 @@ interface RemoteResourceData {
 }
 
 export default createResourceTemplate<RemoteResourceData>({
+	idKey: 'id',
 	read: async (request: ResourceReadRequest, controls: ResourceControls) => {
 		// The template is injected with read request, offset, size and query
 		const { offset, size } = request;
@@ -149,7 +150,7 @@ interface ResourceData {
 	value: string;
 }
 
-const resource = createResourceMiddleware<ResourceData>();
+const resource = createResourceMiddleware<ResourceData>('value');
 
 const factory = create({ resource });
 

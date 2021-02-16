@@ -1,18 +1,17 @@
 # Resource Concepts
 
-Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. There are 3 core concepts for Dojo Resources:
+Dojo resources is designed to provide a cohesive and consistent mechanism for working with data within a Dojo application. There are 2 core concepts for Dojo Resources:
 
 -   Resource Templates
--   Resource Store
 -   Resource Middleware
 
 ## Templates
 
-The resource template is a description that the resource uses to `read`, `find`, and `init` data in the store. Resource templates are flexible enough to enable connecting resources to multiple different providers, such as RESTful APIs or client data (using an in-memory template).
+The resource template is a description that the resource uses work with the resource data. Resource templates are flexible enough to enable connecting resources to multiple different providers, such as RESTful APIs or client data.
 
 Templates should be stateless so they can be re-used throughout an application by using the resource options to determine the data required and the resource controls to interact with the resource store, such as putting the data into the store.
 
-Create a template using `createResourceTemplate` from the `@dojo/framework/core/middleware/resources` module.
+Templates are created using the `createResourceTemplate` factory from the `@dojo/framework/core/middleware/resources` module. The API of a resource template is flexible and can be defined when creating the template, however by default the API requires a single `read` function that is intended to receive requests and store the resource data using the template `controls`.
 
 > userResourceTemplate.ts
 
@@ -28,50 +27,19 @@ interface User {
 
 // The type for the data is passed to the `createResourceTemplate` factory
 export default createResourceTemplate<User>({
-	read: (request: ResourceReadRequest, controls: ResourceControls) => {
+	idKey: 'email', // This indicates that email is the unique key of the resource
+	read: (request, controls) => {
 		// use the `request` to "fetch" the data from the data-source
-		// and use the controls to set the data into the store.
-	},
-	find: (request: ResourceFindRequest, controls: ResourceControls) => {
-		// use the controls with the request to set the found item based
-		// on the request
+		// and use the controls to set the data in the resource
 	}
 });
 ```
 
-The resource controls are injected to all the data template functions to enable working with the backing resource store. `get()` is used to return data from the store based on the `request` passed and `put()` is used to set data into the store for the `request`.
-
-See the [Resource Templates section](/learn/resources/resource-templates) for more details.
-
-## Store
-
-The resource store is where all the data is stored and is responsible for wiring widgets using the `resource` middleware with the `ResourceTemplate` passed to the widget. The store invalidates all widgets that have subscribed for events based on the type and details of the event as well as handling asynchronous results from the resource template. The resource store is automatically created for a template that is passed to a widget. A user never explicitly creates or works directly with the resource store.
-
-> MyWidget.tsx
-
-```tsx
-import { create, tsx } from '@dojo/framework/core/vdom';
-import { createResourceMiddleware } from '@dojo/framework/core/middleware/resources';
-
-import DataAwareWidget from './DataAwareWidget';
-import userResourceTemplate from './userResourceTemplate';
-
-const resource = createResourceMiddleware();
-const factory = create({ resource });
-
-export default factory(function MyWidget({ middleware: { resource }}) {
-	return (
-		<div>
-			{/* The resource store is created internally for the template passed to the widget */}
-			<DataAwareWidget resource={resource({ template: userResourceTemplate })}>
-		</div>
-	);
-});
-```
+The resource controls are injected to all the data template functions to enable working with the backing resource store. The controls contains a `put` function that is used to set data in the resource based on the request.
 
 ## Middleware
 
-The `resource` middleware is the interface required to work with resource templates and "resource-aware" widgets. The middleware exposes a complete API for working with resource templates.
+The `resource` middleware is the interface required to work with resource templates and "resource-aware" widgets. The middleware exposes a an API that can be used to work with templates within a widget in a consistent and predictable way.
 
 > MyResourceAwareWidget.tsx
 
@@ -95,57 +63,52 @@ const resource = createResourceMiddleware<ResourceItem>();
 const factory = create({ resource });
 
 export default factory(function MyResourceAwareWidget({ id, properties, middleware: { resource } }) {
-	// de-structure the required resource APIs, these can also be accessed
-	// directly from `resource`
-	const { getOrRead, isLoading, createOptions } = resource;
-	// get the `template` and `options` from the widgets properties
-	// the options are optional so need to be defaulted using the
+	// get the `template` and `options` from the widgets properties the options are optional so need to be defaulted using the
 	// createOptions function from `resource`
 	const {
-		resource: { template, options = createOptions(id) }
+		resource: { template, options = resource.createOptions((curr, next) => ({ ...curr, ...next })) }
 	} = properties();
-	// Call `getOrRead` to request the data based on the `template` and `options`
-	const [items = []] = getOrRead(template, options({ page: 1, size: 20 }));
+
+	// de-structure the required resource APIs, these can also be accessed
+	// directly from `resource`
+	const {
+		get,
+		template: { read }
+	} = resource.template(template);
+
+	// Call `get` with the `read` API to request the data based on the `options`
+	// passing the `meta: true` option to get meta information including the loading
+	// state.
+	const {
+		data,
+		meta: { status }
+	} = get(options({ page: 1, size: 20 }), { read, meta: true });
 	// Check if the resource is current loading
-	if (isLoading(template, options())) {
+	if (status === 'reading') {
 		// if the resource is loading return a fancy loading indicator
 		return <FancyLoadingIndicator />;
 	}
 	// If the items have been loaded return them in a list
-	return <div>{items.map((item) => <li>{item.label}</li>)}</div>;
+	return <div>{items.map(({ item }) => <li>{item.label}</li>)}</div>;
 });
 ```
-
-Please see the [`resource` middleware](/learn/resources/resource-middleware) for more information.
 
 # Resource Templates
 
 A resource template describes how Dojo resources interact with its data-source based on the options passed. Resource templates are statically defined and used throughout an application to power "resource aware" widgets. There are two types of `ResourceTemplate` that can be used: a standard template, and a template that accepts initialization options.
 
-A `ResourceTemplate` consists of two APIs:
-
--   `read()`
-    -   The function responsible for fetching the resource data based on the `ResourceReadRequest` and setting it in the store.
--   `find()`
-    -   The function responsible for `finding` an item in the resource data based on the `ResourceFindRequest` and setting it in the store.
-
-A `ResourceTemplateWithInit` adds an additional `init` API
-
--   `init()`
-    -   An initializer function designed to deal with data passed to widgets with the template.
+The resource API required is determined by the resource aware widget, by default the only API required is a `read` function designed to put all resource data based on the request options. Dojo resources provides a default template that is designed to work with data already available in the application, this data is passed into the template factory when it is used. To create the default template, use the `createResourceTemplate` without passing a template API, only passing the key of the unique id property of the template.
 
 ```tsx
-interface ResourceTemplate<S = {}, T = {}> {
-	read: ResourceRead<S>;
-	find: ResourceFind<S>;
+interface ResourceData {
+	id: string;
+	name: string;
 }
 
-interface ResourceTemplateWithInit<S = {}, T = {}> {
-	read: ResourceRead<S>;
-	find: ResourceFind<S>;
-	init: ResourceInit<S>;
-}
+const template = createResourceTemplate<ResourceData>('id');
 ```
+
+Templates can be created as a factory that is used to initialise a template with state such as a data set or other custom information. This created using the same factory,
 
 ## Resource Controls
 
