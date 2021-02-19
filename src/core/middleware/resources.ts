@@ -722,9 +722,7 @@ const middleware = factory(
 								response.forEach((item) => {
 									const id = item[instance.idKey as string];
 									const synthIds = cache.getSyntheticIds(id);
-									if (synthIds.length === 0) {
-										cache.invalidate();
-									}
+									cache.invalidate();
 									synthIds.forEach((id) => {
 										cache.set(
 											id,
