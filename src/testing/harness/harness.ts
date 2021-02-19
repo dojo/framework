@@ -224,7 +224,7 @@ export function harness(renderFunc: () => WNode, options: HarnessOptions | Custo
 			_runCompares(nodes);
 			renderStack.push(nodes);
 			if (hasDeferredProperties) {
-				const { nodes: afterDeferredPropertiesNodes } = decorateNodes(render);
+				const { nodes: afterDeferredPropertiesNodes } = decorateNodes(render, true);
 				_runCompares(afterDeferredPropertiesNodes);
 				renderStack.push(afterDeferredPropertiesNodes);
 			}

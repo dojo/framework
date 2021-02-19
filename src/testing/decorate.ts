@@ -34,10 +34,10 @@ function isSameType(expected: DNode | { [index: string]: any }, actual: DNode | 
 	return false;
 }
 
-export function decorateNodes(dNode: DNode[]): DecoratorResult<DNode[]>;
-export function decorateNodes(dNode: DNode): DecoratorResult<DNode>;
-export function decorateNodes(dNode: DNode | DNode[]): DecoratorResult<DNode | DNode[]>;
-export function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
+export function decorateNodes(dNode: DNode[], isDeferred?: boolean): DecoratorResult<DNode[]>;
+export function decorateNodes(dNode: DNode, isDeferred?: boolean): DecoratorResult<DNode>;
+export function decorateNodes(dNode: DNode | DNode[], isDeferred?: boolean): DecoratorResult<DNode | DNode[]>;
+export function decorateNodes(dNode: any, isDeferred = false): DecoratorResult<DNode | DNode[]> {
 	let hasDeferredProperties = false;
 	function addParent(parent: WNode | VNode): void {
 		(parent.children || []).forEach((child: any) => {
@@ -47,7 +47,7 @@ export function decorateNodes(dNode: any): DecoratorResult<DNode | DNode[]> {
 		});
 		if (isVNode(parent) && typeof parent.deferredPropertiesCallback === 'function') {
 			hasDeferredProperties = true;
-			parent.properties = { ...parent.properties, ...parent.deferredPropertiesCallback(false) };
+			parent.properties = { ...parent.properties, ...parent.deferredPropertiesCallback(isDeferred) };
 		}
 	}
 	const nodes = coreDecorate(
