@@ -109,7 +109,6 @@ type SyntheticId = { requestId: string; orderId: string };
 
 function generateSynthIdString({ requestId, orderId }: SyntheticId) {
 	return `${requestId}/${orderId}`;
-	// return `${JSON.stringify(requestId)}/${JSON.stringify(orderId)}`;
 }
 
 class RawCache {
