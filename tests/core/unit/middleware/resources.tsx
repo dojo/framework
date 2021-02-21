@@ -2289,6 +2289,7 @@ jsdomDescribe('Resources Middleware', () => {
 				domNode.innerHTML,
 				'<div><button></button><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"2","label":"New Label 2"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
 			);
+			assert.strictEqual(readCounter, 2);
 		});
 	});
 });
