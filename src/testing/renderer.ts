@@ -582,7 +582,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 		if (invalidated) {
 			let { hasDeferredProperties, nodes } = decorateNodes(render);
 			if (hasDeferredProperties) {
-				nodes = decorateNodes(render).nodes;
+				nodes = decorateNodes(render, true).nodes;
 			}
 			renderResult = nodes;
 			invalidated = false;

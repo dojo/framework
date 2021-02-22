@@ -404,6 +404,20 @@ describe('harness', () => {
 			);
 		});
 
+		it('should resolve deferred properties', () => {
+			const factory = create();
+			const Widget = factory(function Widget() {
+				return v('div', (inserted) => {
+					if (inserted) {
+						return { def: 'true' };
+					}
+					return {};
+				});
+			});
+			const h = harness(() => <Widget />);
+			h.expect(() => <div def="true" />);
+		});
+
 		it('custom compare for registry item WNode', () => {
 			const h = harness(() => w(MyWidget, {}), [
 				{

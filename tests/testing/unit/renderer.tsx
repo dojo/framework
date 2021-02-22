@@ -580,6 +580,20 @@ describe('test renderer', () => {
 			r.expect(assertion(() => w(Bar, { foo, bar })));
 		});
 
+		it('should resolve deferred properties', () => {
+			const factory = create();
+			const Widget = factory(function Widget() {
+				return v('div', (inserted) => {
+					if (inserted) {
+						return { def: 'true' };
+					}
+					return {};
+				});
+			});
+			const r = renderer(() => <Widget />);
+			r.expect(assertion(() => <div def="true" />));
+		});
+
 		it('should throw error if wrapped test node is used more than once', () => {
 			const factory = create();
 			const WrappedSpan = wrap('span');
