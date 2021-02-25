@@ -178,6 +178,7 @@ export interface WidgetMeta {
 	children?: DNode[];
 	rendering: boolean;
 	nodeMap?: Map<string | number, HTMLElement>;
+	nodeApi: MountOptions['nodeApi'];
 	destroyMap?: Map<string, () => void>;
 	deferRefs: number;
 	customDiffProperties?: Set<string>;
@@ -209,9 +210,124 @@ export interface MountOptions {
 	sync: boolean;
 	merge: boolean;
 	transition?: TransitionStrategy;
-	domNode: HTMLElement | null;
+	domNode?: HTMLElement | null;
 	registry: Registry;
+	nodeApi?: {
+		getDocument(): Node;
+		getBody(): Node;
+		getHead(): Node;
+		getTag(domNode: Node): string;
+		create(tag: string): Node;
+		createWithNamespace(tag: string, namespace: string): Node;
+		createText(text: string): Text;
+		getProperty(domNode: Node, key: string): any;
+		setProperty(domNode: Node, key: string, value: any): void;
+		callProperty(domNode: Node, key: string): any;
+		getAttribute(domNode: Node, key: string): string | null;
+		setAttribute(domNode: Node, key: string, value: string): void;
+		setAttributeWithNamespace(domNode: Node, namespace: string, key: string, value: string): void;
+		setStyle(domNode: Node, key: string, value: string): void;
+		removeAttribute(domNode: Node, key: string): void;
+		insertBefore(domNode: Node, newNode: Node, referenceNode: Node): void;
+		removeChild(domNode: Node, childNode: Node): void;
+		addEvent(domNode: Node, name: string, callback: EventListener, eventOptions: any): void;
+		removeEvent(domNode: Node, name: string, callback: EventListener): void;
+		getParent(domNode: Node): Node | null;
+		getChildren(domNode: Node): NodeList;
+		replaceChild(domNode: Node, newChild: Node, oldChild: Node): void;
+		contains(domNode: Node, child: Node): boolean;
+		requestAnimationFrame(callback: () => void): number;
+		cancelAnimationFrame(id: number): void;
+		isTextNode(domNode?: Node): domNode is Text;
+		equals(nodeA: Node, nodeB: Node): boolean;
+	};
 }
+
+const defaultNodeApi: MountOptions['nodeApi'] = {
+	getDocument() {
+		return global.document;
+	},
+	getBody() {
+		return global.document.body;
+	},
+	getHead() {
+		return global.document.head;
+	},
+	getTag(domNode = { tagName: '' } as any) {
+		return (domNode as any).tagName;
+	},
+	create(tag) {
+		return global.document.createElement(tag);
+	},
+	createText(text) {
+		return global.document.createTextNode(text);
+	},
+	createWithNamespace(tag, namespace) {
+		return global.document.createElementNS(tag, namespace);
+	},
+	getProperty(domNode, key) {
+		return (domNode as any)[key];
+	},
+	setProperty(domNode, key, value) {
+		(domNode as any)[key] = value;
+	},
+	getAttribute(domNode, key) {
+		return (domNode as Element).getAttribute(key);
+	},
+	setAttribute(domNode, key, value) {
+		(domNode as Element).setAttribute(key, value);
+	},
+	setAttributeWithNamespace(domNode, namespace, key, value) {
+		(domNode as Element).setAttributeNS(namespace, key, value);
+	},
+	removeAttribute(domNode, key) {
+		(domNode as Element).removeAttribute(key);
+	},
+	setStyle(domNode, key, value) {
+		(domNode as any).style[key] = value || '';
+	},
+	insertBefore(domNode, newNode, referenceNode) {
+		domNode.insertBefore(newNode, referenceNode);
+	},
+	removeChild(domNode, childNode) {
+		domNode.removeChild(childNode);
+	},
+	getChildren(domNode) {
+		return domNode.childNodes;
+	},
+	addEvent(domNode, name, callback, options) {
+		has('dom-passive-event')
+			? domNode.addEventListener(name, callback, options)
+			: domNode.addEventListener(name, callback);
+	},
+	removeEvent(domNode, name, callback) {
+		domNode.removeEventListener(name, callback);
+	},
+	getParent(domNode) {
+		return domNode.parentNode as Element;
+	},
+	replaceChild(domNode, newChild, oldChild) {
+		domNode.replaceChild(newChild, oldChild);
+	},
+	contains(domNode, child) {
+		return domNode.contains(child);
+	},
+	requestAnimationFrame(callback) {
+		return global.requestAnimationFrame(callback);
+	},
+	cancelAnimationFrame(number) {
+		return global.cancelAnimationFrame(number);
+	},
+	callProperty(domNode, property) {
+		typeof (domNode as any)[property] === 'function' && (domNode as any)[property]();
+	},
+	isTextNode(domNode): domNode is Text {
+		return !!(domNode && domNode.nodeType === 3);
+	},
+	equals(nodeA, nodeB) {
+		return nodeA === nodeB;
+	}
+};
 
 export interface Renderer {
 	invalidate(): void;
@@ -419,24 +535,6 @@ function toTextVNode(data: any): VNode {
 	};
 }
 
-function updateAttributes(
-	domNode: Element,
-	previousAttributes: { [index: string]: string | undefined },
-	attributes: { [index: string]: string | undefined },
-	namespace?: string
-) {
-	const attrNames = Object.keys(attributes);
-	const attrCount = attrNames.length;
-	for (let i = 0; i < attrCount; i++) {
-		const attrName = attrNames[i];
-		const attrValue = attributes[attrName];
-		const previousAttrValue = previousAttributes[attrName];
-		if (attrValue !== previousAttrValue) {
-			updateAttribute(domNode, attrName, attrValue, namespace);
-		}
-	}
-}
-
 /**
  * Wrapper function for calls to create a widget.
  */
@@ -625,134 +723,6 @@ export function propertiesDiff(current: any, next: any, invalidator: () => void,
 	}
 }
 
-function buildPreviousProperties(domNode: any, current: VNodeWrapper) {
-	const {
-		node: { diffType, properties, attributes }
-	} = current;
-	if (!diffType || diffType === 'vdom') {
-		return {
-			properties: current.deferredProperties
-				? { ...current.deferredProperties, ...current.node.properties }
-				: current.node.properties,
-			attributes: current.node.attributes,
-			events: current.node.events
-		};
-	} else if (diffType === 'none') {
-		return {
-			properties: {},
-			attributes: current.node.attributes ? {} : undefined,
-			events: current.node.events
-		};
-	}
-	let newProperties: any = {
-		properties: {}
-	};
-	if (attributes) {
-		newProperties.attributes = {};
-		newProperties.events = current.node.events;
-		Object.keys(properties).forEach((propName) => {
-			newProperties.properties[propName] = domNode[propName];
-		});
-		Object.keys(attributes).forEach((attrName) => {
-			newProperties.attributes[attrName] = domNode.getAttribute(attrName);
-		});
-		return newProperties;
-	}
-	newProperties.properties = Object.keys(properties).reduce(
-		(props, property) => {
-			props[property] = domNode.getAttribute(property) || domNode[property];
-			return props;
-		},
-		{} as any
-	);
-	return newProperties;
-}
-
-function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNodeWrapper?: WNodeWrapper) {
-	const wrapperToCheck = wrappers[index];
-	if (isVNodeWrapper(wrapperToCheck) && !wrapperToCheck.node.tag) {
-		return;
-	}
-	const { key } = wrapperToCheck.node.properties;
-	let parentName = 'unknown';
-	if (parentWNodeWrapper) {
-		const {
-			node: { widgetConstructor }
-		} = parentWNodeWrapper;
-		parentName = (widgetConstructor as any).name || 'unknown';
-	}
-
-	if (key === undefined || key === null) {
-		for (let i = 0; i < wrappers.length; i++) {
-			if (i !== index) {
-				const wrapper = wrappers[i];
-				if (same(wrapper, wrapperToCheck)) {
-					let nodeIdentifier: string;
-					if (isWNodeWrapper(wrapper)) {
-						nodeIdentifier = (wrapper.node.widgetConstructor as any).name || 'unknown';
-					} else {
-						nodeIdentifier = wrapper.node.tag;
-					}
-
-					console.warn(
-						`A widget (${parentName}) has had a child added or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${nodeIdentifier}) multiple times as siblings`
-					);
-					break;
-				}
-			}
-		}
-	}
-}
-
-function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
-	if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
-		if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
-			if (dnode1.node.domNode !== dnode2.node.domNode) {
-				return false;
-			}
-		}
-		if (dnode1.node.tag !== dnode2.node.tag) {
-			return false;
-		}
-		if (dnode1.node.properties.key !== dnode2.node.properties.key) {
-			return false;
-		}
-		return true;
-	} else if (isWNodeWrapper(dnode1) && isWNodeWrapper(dnode2)) {
-		const widgetConstructor1 = dnode1.registryItem || dnode1.node.widgetConstructor;
-		const widgetConstructor2 = dnode2.registryItem || dnode2.node.widgetConstructor;
-		const {
-			node: { properties: props1 }
-		} = dnode1;
-		const {
-			node: { properties: props2 }
-		} = dnode2;
-		if (dnode1.instance === undefined && typeof widgetConstructor2 === 'string') {
-			return false;
-		}
-		if (widgetConstructor1 !== widgetConstructor2) {
-			return false;
-		}
-		if (props1.key !== props2.key) {
-			return false;
-		}
-		if (!((widgetConstructor1 as any).keys || []).every((key: string) => props1[key] === props2[key])) {
-			return false;
-		}
-		return true;
-	}
-	return false;
-}
-
-function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start: number) {
-	for (let i = start; i < children.length; i++) {
-		if (same(children[i], sameAs)) {
-			return i;
-		}
-	}
-	return -1;
-}
-
 function createClassPropValue(classes: SupportedClassName | SupportedClassName[] = []) {
 	let classNames = '';
 	if (Array.isArray(classes)) {
@@ -768,16 +738,6 @@ function createClassPropValue(classes: SupportedClassName | SupportedClassName[]
 		classNames = classes;
 	}
 	return classNames;
-}
-
-function updateAttribute(domNode: Element, attrName: string, attrValue: string | undefined, namespace?: string) {
-	if (namespace === NAMESPACE_SVG && attrName === 'href' && attrValue) {
-		domNode.setAttributeNS(NAMESPACE_XLINK, attrName, attrValue);
-	} else if ((attrName === 'role' && attrValue === '') || attrValue === undefined) {
-		domNode.removeAttribute(attrName);
-	} else {
-		domNode.setAttribute(attrName, attrValue);
-	}
 }
 
 function arrayFrom(arr: any) {
@@ -1100,13 +1060,15 @@ export const node = factory(({ id }) => {
 			const [widgetId] = id.split('-');
 			const widgetMeta = widgetMetaMap.get(widgetId);
 			if (widgetMeta) {
+				const { nodeApi } = widgetMeta;
 				widgetMeta.nodeMap = widgetMeta.nodeMap || new Map();
 				const mountNode = widgetMeta.mountNode;
 				const node = widgetMeta.nodeMap.get(key);
 				if (
 					node &&
-					(mountNode.contains(node) ||
-						(global.document.body !== mountNode && global.document.body.contains(node)))
+					(nodeApi!.contains(mountNode, node) ||
+						(!nodeApi!.equals(nodeApi!.getBody(), mountNode) &&
+							nodeApi!.contains(nodeApi!.getBody(), node)))
 				) {
 					return node;
 				}
@@ -1239,13 +1201,12 @@ function wrapFunctionProperties(id: string, properties: any) {
 type EventMapValue = { proxy: EventListener; callback: Function; options: { passive: boolean } } | undefined;
 
 export function renderer(renderer: () => RenderResult): Renderer {
-	let _mountOptions: MountOptions & { domNode: HTMLElement } = {
+	let _mountOptions = ({
 		sync: false,
 		merge: true,
 		transition: undefined,
-		domNode: global.document.body,
 		registry: new Registry()
-	};
+	} as unknown) as Required<MountOptions> & { domNode: HTMLElement };
 	let _invalidationQueue: InvalidationQueueItem[] = [];
 	let _processQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
 	let _deferredProcessQueue: (ProcessItem | DetachApplication | AttachApplication)[] = [];
@@ -1275,13 +1236,171 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		}
 		if (result === true) {
 			_deferredRenderCallbacks.push(() => {
-				domNode[propName]();
+				_mountOptions.nodeApi.callProperty(domNode, propName);
 			});
 		}
 	}
 
+	function same(dnode1: DNodeWrapper, dnode2: DNodeWrapper): boolean {
+		if (isVNodeWrapper(dnode1) && isVNodeWrapper(dnode2)) {
+			if (isDomVNode(dnode1.node) && isDomVNode(dnode2.node)) {
+				if (!_mountOptions.nodeApi.equals(dnode1.node.domNode, dnode2.node.domNode)) {
+					return false;
+				}
+			}
+			if (dnode1.node.tag !== dnode2.node.tag) {
+				return false;
+			}
+			if (dnode1.node.properties.key !== dnode2.node.properties.key) {
+				return false;
+			}
+			return true;
+		} else if (isWNodeWrapper(dnode1) && isWNodeWrapper(dnode2)) {
+			const widgetConstructor1 = dnode1.registryItem || dnode1.node.widgetConstructor;
+			const widgetConstructor2 = dnode2.registryItem || dnode2.node.widgetConstructor;
+			const {
+				node: { properties: props1 }
+			} = dnode1;
+			const {
+				node: { properties: props2 }
+			} = dnode2;
+			if (dnode1.instance === undefined && typeof widgetConstructor2 === 'string') {
+				return false;
+			}
+			if (widgetConstructor1 !== widgetConstructor2) {
+				return false;
+			}
+			if (props1.key !== props2.key) {
+				return false;
+			}
+			if (!((widgetConstructor1 as any).keys || []).every((key: string) => props1[key] === props2[key])) {
+				return false;
+			}
+			return true;
+		}
+		return false;
+	}
+
+	function findIndexOfChild(children: DNodeWrapper[], sameAs: DNodeWrapper, start: number) {
+		for (let i = start; i < children.length; i++) {
+			if (same(children[i], sameAs)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	function checkDistinguishable(wrappers: DNodeWrapper[], index: number, parentWNodeWrapper?: WNodeWrapper) {
+		const wrapperToCheck = wrappers[index];
+		if (isVNodeWrapper(wrapperToCheck) && !wrapperToCheck.node.tag) {
+			return;
+		}
+		const { key } = wrapperToCheck.node.properties;
+		let parentName = 'unknown';
+		if (parentWNodeWrapper) {
+			const {
+				node: { widgetConstructor }
+			} = parentWNodeWrapper;
+			parentName = (widgetConstructor as any).name || 'unknown';
+		}
+
+		if (key === undefined || key === null) {
+			for (let i = 0; i < wrappers.length; i++) {
+				if (i !== index) {
+					const wrapper = wrappers[i];
+					if (same(wrapper, wrapperToCheck)) {
+						let nodeIdentifier: string;
+						if (isWNodeWrapper(wrapper)) {
+							nodeIdentifier = (wrapper.node.widgetConstructor as any).name || 'unknown';
+						} else {
+							nodeIdentifier = wrapper.node.tag;
+						}
+
+						console.warn(
+							`A widget (${parentName}) has had a child added or removed, but they were not able to uniquely identified. It is recommended to provide a unique 'key' property when using the same widget or element (${nodeIdentifier}) multiple times as siblings`
+						);
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	function updateAttribute(domNode: Node, attrName: string, attrValue: string | undefined, namespace?: string) {
+		if (namespace === NAMESPACE_SVG && attrName === 'href' && attrValue) {
+			_mountOptions.nodeApi.setAttributeWithNamespace(domNode, NAMESPACE_XLINK, attrName, attrValue);
+		} else if ((attrName === 'role' && attrValue === '') || attrValue === undefined) {
+			_mountOptions.nodeApi.removeAttribute(domNode, attrName);
+		} else {
+			_mountOptions.nodeApi.setAttribute(domNode, attrName, attrValue);
+		}
+	}
+
+	function updateAttributes(
+		domNode: Element,
+		previousAttributes: { [index: string]: string | undefined },
+		attributes: { [index: string]: string | undefined },
+		namespace?: string
+	) {
+		const attrNames = Object.keys(attributes);
+		const attrCount = attrNames.length;
+		for (let i = 0; i < attrCount; i++) {
+			const attrName = attrNames[i];
+			const attrValue = attributes[attrName];
+			const previousAttrValue = previousAttributes[attrName];
+			if (attrValue !== previousAttrValue) {
+				updateAttribute(domNode, attrName, attrValue, namespace);
+			}
+		}
+	}
+
+	function buildPreviousProperties(domNode: any, current: VNodeWrapper) {
+		const {
+			node: { diffType, properties, attributes }
+		} = current;
+		if (!diffType || diffType === 'vdom') {
+			return {
+				properties: current.deferredProperties
+					? { ...current.deferredProperties, ...current.node.properties }
+					: current.node.properties,
+				attributes: current.node.attributes,
+				events: current.node.events
+			};
+		} else if (diffType === 'none') {
+			return {
+				properties: {},
+				attributes: current.node.attributes ? {} : undefined,
+				events: current.node.events
+			};
+		}
+		let newProperties: any = {
+			properties: {}
+		};
+		if (attributes) {
+			newProperties.attributes = {};
+			newProperties.events = current.node.events;
+			Object.keys(properties).forEach((propName) => {
+				newProperties.properties[propName] = _mountOptions.nodeApi.getProperty(domNode, propName);
+			});
+			Object.keys(attributes).forEach((attrName) => {
+				newProperties.attributes[attrName] = _mountOptions.nodeApi.getAttribute(domNode, attrName);
+			});
+			return newProperties;
+		}
+		newProperties.properties = Object.keys(properties).reduce(
+			(props, property) => {
+				props[property] =
+					_mountOptions.nodeApi.getAttribute(domNode, property) ||
+					_mountOptions.nodeApi.getProperty(domNode, property);
+				return props;
+			},
+			{} as any
+		);
+		return newProperties;
+	}
+
 	function updateEvent(
-		domNode: Node,
+		domNode: HTMLElement,
 		eventName: string,
 		currentValue: (event: Event) => void,
 		eventOptions?: { passive: string[] }
@@ -1305,7 +1424,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const options = { passive: isPassive };
 
 		if (proxyEvent && proxyEvent.options.passive !== isPassive) {
-			domNode.removeEventListener(eventName, proxyEvent.proxy);
+			_mountOptions.nodeApi.removeEvent(domNode, eventName, proxyEvent.proxy);
 			proxyEvent = undefined;
 		}
 
@@ -1319,16 +1438,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				proxyEvent && proxyEvent.callback(...args);
 			};
 			proxyEvents[eventName] = { callback, proxy, options };
-			has('dom-passive-event')
-				? domNode.addEventListener(eventName, proxy, options)
-				: domNode.addEventListener(eventName, proxy);
-
+			_mountOptions.nodeApi.addEvent(domNode, eventName, proxy, options);
 			_eventMap.set(domNode, proxyEvents);
 		}
 	}
 
 	function removeOrphanedEvents(
-		domNode: Element,
+		domNode: HTMLElement,
 		previousProperties: VNodeProperties,
 		properties: VNodeProperties,
 		onlyEvents: boolean = false
@@ -1340,7 +1456,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				const proxyEvents = _eventMap.get(domNode) || {};
 				let proxyEvent = proxyEvents[eventName];
 				if (proxyEvent) {
-					domNode.removeEventListener(eventName, proxyEvent.proxy);
+					_mountOptions.nodeApi.removeEvent(domNode, eventName, proxyEvent.proxy);
 					delete proxyEvents[eventName];
 					_eventMap.set(domNode, proxyEvents);
 				}
@@ -1544,7 +1660,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						}
 					}
 				}
-				if (!nextSibling.reparent && domNode && domNode.parentNode) {
+				if (!nextSibling.reparent && domNode && _mountOptions.nodeApi.getParent(domNode)) {
 					insertBefore = domNode;
 					break;
 				}
@@ -1560,18 +1676,18 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	}
 
 	function setValue(domNode: any, propValue?: any, previousValue?: any) {
-		const domValue = domNode.value;
-		const onInputValue = domNode['oninput-value'];
-		const onSelectValue = domNode['select-value'];
+		const domValue = _mountOptions.nodeApi.getProperty(domNode, 'value');
+		const onInputValue = _mountOptions.nodeApi.getProperty(domNode, 'oninput-value');
+		const onSelectValue = _mountOptions.nodeApi.getProperty(domNode, 'select-value');
 
 		if (onSelectValue && domValue !== onSelectValue) {
-			domNode.value = onSelectValue;
-			if (domNode.value === onSelectValue) {
-				domNode['select-value'] = undefined;
+			_mountOptions.nodeApi.setProperty(domNode, 'value', onSelectValue);
+			if (domValue === onSelectValue) {
+				_mountOptions.nodeApi.setProperty(domNode, 'select-value', undefined);
 			}
 		} else if ((onInputValue && domValue === onInputValue) || propValue !== previousValue) {
-			domNode.value = propValue;
-			domNode['oninput-value'] = undefined;
+			_mountOptions.nodeApi.setProperty(domNode, 'value', propValue);
+			_mountOptions.nodeApi.setProperty(domNode, 'oninput-value', undefined);
 		}
 	}
 
@@ -1587,7 +1703,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const propNames = Object.keys(properties);
 		const propCount = propNames.length;
 		if (propNames.indexOf('classes') === -1 && currentProperties.classes) {
-			domNode.removeAttribute('class');
+			_mountOptions.nodeApi.removeAttribute(domNode, 'class');
 		}
 
 		includesEventsAndAttributes && removeOrphanedEvents(domNode, currentProperties, properties);
@@ -1602,16 +1718,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (previousClassString !== currentClassString) {
 					if (currentClassString) {
 						if (nextWrapper.merged) {
-							const domClasses = (domNode.getAttribute('class') || '').split(' ');
+							const domClasses = (_mountOptions.nodeApi.getAttribute(domNode, 'class') || '').split(' ');
 							for (let i = 0; i < domClasses.length; i++) {
 								if (currentClassString.indexOf(domClasses[i]) === -1) {
 									currentClassString = `${domClasses[i]} ${currentClassString}`;
 								}
 							}
 						}
-						domNode.setAttribute('class', currentClassString);
+						_mountOptions.nodeApi.setAttribute(domNode, 'class', currentClassString);
 					} else {
-						domNode.removeAttribute('class');
+						_mountOptions.nodeApi.removeAttribute(domNode, 'class');
 					}
 				}
 			} else if (nodeOperations.indexOf(propName) !== -1) {
@@ -1626,15 +1742,16 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					if (newStyleValue === oldStyleValue) {
 						continue;
 					}
-					(domNode.style as any)[styleName] = newStyleValue || '';
+					_mountOptions.nodeApi.setStyle(domNode, styleName, newStyleValue || '');
 				}
 			} else {
 				if (!propValue && typeof previousValue === 'string') {
 					propValue = '';
 				}
 				if (propName === 'value') {
-					if ((domNode as HTMLElement).tagName === 'SELECT') {
-						(domNode as any)['select-value'] = propValue;
+					const tagName = _mountOptions.nodeApi.getTag(domNode);
+					if (tagName === 'SELECT') {
+						_mountOptions.nodeApi.setProperty(domNode, 'select-value', propValue);
 					}
 					setValue(domNode, propValue, previousValue);
 				} else if (propName !== 'key') {
@@ -1651,11 +1768,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 						if (type === 'string' && propName !== 'innerHTML' && includesEventsAndAttributes) {
 							updateAttribute(domNode, propName, propValue, nextWrapper.namespace);
 						} else if (propName === 'scrollLeft' || propName === 'scrollTop') {
-							if ((domNode as any)[propName] !== propValue) {
-								(domNode as any)[propName] = propValue;
+							const currentValue = _mountOptions.nodeApi.getProperty(domNode, propName);
+							if (currentValue !== propValue) {
+								_mountOptions.nodeApi.setProperty(domNode, propName, propValue);
 							}
 						} else {
-							(domNode as any)[propName] = propValue;
+							_mountOptions.nodeApi.setProperty(domNode, propName, propValue);
 						}
 					}
 				}
@@ -1684,7 +1802,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				run();
 			} else {
 				let id: number;
-				id = global.requestAnimationFrame(() => {
+				id = _mountOptions.nodeApi.requestAnimationFrame(() => {
 					_deferredProcessIds.delete(id);
 					run();
 				});
@@ -1727,12 +1845,12 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			meta: {}
 		});
 		if (_renderScheduled) {
-			global.cancelAnimationFrame(_renderScheduled);
+			_mountOptions.nodeApi.cancelAnimationFrame(_renderScheduled);
 		}
 		_runProcessQueue();
 		_runDomInstructionQueue();
 		_deferredProcessIds.forEach((callback, id) => {
-			global.cancelAnimationFrame(id);
+			_mountOptions.nodeApi.cancelAnimationFrame(id);
 			callback();
 		});
 		const run = _createDeferredRenderCallback();
@@ -1753,13 +1871,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 	function mount(mountOptions: Partial<MountOptions> = {}) {
 		let domNode = mountOptions.domNode;
+		const nodeApi: any = mountOptions.nodeApi || defaultNodeApi;
 		if (!domNode) {
 			if (has('dojo-debug') && domNode === null) {
 				console.warn('Unable to find node to mount the application, defaulting to the document body.');
 			}
-			domNode = global.document.body as HTMLElement;
+			domNode = nodeApi.getBody() as HTMLElement;
 		}
-		_mountOptions = { ..._mountOptions, ...mountOptions, domNode };
+		_mountOptions = { ..._mountOptions, ...mountOptions, domNode, nodeApi };
 		const renderResult = wrapNodes(renderer)({}, []);
 		_appWrapperId = `${wrapperId++}`;
 		const nextWrapper = {
@@ -1784,7 +1903,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		_processQueue.push({
 			current: [],
 			next: [nextWrapper],
-			meta: { mergeNodes: arrayFrom(domNode.childNodes) }
+			meta: { mergeNodes: arrayFrom(_mountOptions.nodeApi.getChildren(domNode)) }
 		});
 		_runProcessQueue();
 		_runDomInstructionQueue();
@@ -1806,7 +1925,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			_runInvalidationQueue();
 		} else if (!_renderScheduled) {
 			setRendering(true);
-			_renderScheduled = global.requestAnimationFrame(() => {
+			_renderScheduled = _mountOptions.nodeApi.requestAnimationFrame(() => {
 				_runInvalidationQueue();
 			});
 		}
@@ -1886,7 +2005,8 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		if (_deferredProcessQueue.length === 0) {
 			let mergedNode: Node | undefined;
 			while ((mergedNode = _allMergedNodes.pop())) {
-				mergedNode.parentNode && mergedNode.parentNode.removeChild(mergedNode);
+				const parent = _mountOptions.nodeApi.getParent(mergedNode);
+				parent && _mountOptions.nodeApi.removeChild(parent, mergedNode);
 			}
 			_mountOptions.merge = false;
 		}
@@ -1924,13 +2044,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					} else if (_insertBeforeMap) {
 						insertBefore = _insertBeforeMap.get(next);
 					}
-					parentDomNode.insertBefore(domNode!, insertBefore);
+					_mountOptions.nodeApi.insertBefore(parentDomNode, domNode!, insertBefore);
 					if (isDomVNode(next.node) && next.node.onAttach) {
 						next.node.onAttach();
 					}
 				}
-				if ((domNode as HTMLElement).tagName === 'OPTION' && domNode!.parentElement) {
-					setValue(domNode!.parentElement);
+				const parentNode = _mountOptions.nodeApi.getParent(domNode!);
+				const tagName = _mountOptions.nodeApi.getTag(domNode!);
+				if (tagName === 'OPTION' && parentNode) {
+					setValue(parentNode);
 				}
 				const { enterAnimation, enterAnimationActive } = node.properties;
 				if (_mountOptions.transition && enterAnimation && enterAnimation !== true) {
@@ -1954,8 +2076,15 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					current,
 					current: { domNode: currentDomNode }
 				} = item;
-				if (isTextNode(domNode) && isTextNode(currentDomNode) && domNode !== currentDomNode) {
-					currentDomNode.parentNode && currentDomNode.parentNode.replaceChild(domNode, currentDomNode);
+				if (
+					_mountOptions.nodeApi.isTextNode(domNode) &&
+					_mountOptions.nodeApi.isTextNode(currentDomNode) &&
+					domNode !== currentDomNode
+				) {
+					const parent = _mountOptions.nodeApi.getParent(currentDomNode);
+					if (parent) {
+						_mountOptions.nodeApi.replaceChild(parent, domNode, currentDomNode);
+					}
 				} else {
 					const previousProperties = buildPreviousProperties(domNode, current);
 					processProperties(next, previousProperties);
@@ -1969,8 +2098,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				const { exitAnimation, exitAnimationActive } = current.node.properties;
 				if (_mountOptions.transition && exitAnimation && exitAnimation !== true) {
 					_mountOptions.transition.exit(current.domNode as HTMLElement, exitAnimation, exitAnimationActive);
-				} else {
-					current.domNode!.parentNode!.removeChild(current.domNode!);
+				} else if (current.domNode) {
+					const parent = _mountOptions.nodeApi.getParent(current.domNode);
+					_mountOptions.nodeApi.removeChild(parent!, current.domNode);
 				}
 				if (isDomVNode(current.node) && current.node.onDetach) {
 					current.node.onDetach();
@@ -2270,6 +2400,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 
 				widgetMeta = {
 					widgetName: Constructor.name || 'unknown',
+					nodeApi: _mountOptions.nodeApi,
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
@@ -2369,7 +2500,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		next.id = id;
 		next.properties = { ...next.node.properties };
 		_wrapperSiblingMap.delete(current);
-		if (domNode && domNode.parentNode) {
+		if (domNode && _mountOptions.nodeApi.getParent(domNode)) {
 			next.domNode = domNode;
 		}
 
@@ -2497,17 +2628,17 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					next.namespace = NAMESPACE_SVG;
 				}
 				if (isBody) {
-					next.domNode = global.document.body;
+					next.domNode = _mountOptions.nodeApi.getBody();
 				} else if (isHead) {
-					next.domNode = global.document.head;
+					next.domNode = _mountOptions.nodeApi.getHead();
 				} else if (next.node.tag && !isVirtual) {
 					if (next.namespace) {
-						next.domNode = global.document.createElementNS(next.namespace, next.node.tag);
+						next.domNode = _mountOptions.nodeApi.createWithNamespace(next.namespace, next.node.tag);
 					} else {
-						next.domNode = global.document.createElement(next.node.tag);
+						next.domNode = _mountOptions.nodeApi.create(next.node.tag);
 					}
 				} else if (next.node.text != null) {
-					next.domNode = global.document.createTextNode(next.node.text);
+					next.domNode = _mountOptions.nodeApi.createText(next.node.text);
 				}
 			}
 			if (_insertBeforeMap && _allMergedNodes.length) {
@@ -2517,14 +2648,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			}
 		} else if (_mountOptions.merge) {
 			next.merged = true;
-			if (isTextNode(next.domNode)) {
-				if (next.domNode.data !== next.node.text) {
+			if (_mountOptions.nodeApi.isTextNode(next.domNode)) {
+				if (_mountOptions.nodeApi.getProperty(next.domNode, 'data') !== next.node.text) {
 					_allMergedNodes = [next.domNode, ..._allMergedNodes];
 					next.domNode = global.document.createTextNode(next.node.text);
 					next.merged = false;
 				}
 			} else {
-				mergeNodes = arrayFrom(next.domNode.childNodes);
+				mergeNodes = arrayFrom(_mountOptions.nodeApi.getChildren(next.domNode));
 				_allMergedNodes = [..._allMergedNodes, ...mergeNodes];
 			}
 		}
@@ -2571,7 +2702,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		let children: DNodeWrapper[] | undefined;
 		let currentChildren = _idToChildrenWrappers.get(next.id);
 		if (next.node.text != null && next.node.text !== current.node.text) {
-			next.domNode = global.document.createTextNode(next.node.text);
+			next.domNode = _mountOptions.nodeApi.createText(next.node.text);
 		} else if (next.node.children) {
 			children = renderedToWrapper(next.node.children, next, current);
 			_idToChildrenWrappers.set(next.id, children);
@@ -2644,8 +2775,11 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					} else if (specialIds.indexOf(wrapper.parentId) !== -1) {
 						if (isWNodeWrapper(wrapper) || isVirtualWrapper(wrapper)) {
 							specialIds.push(wrapper.id);
-						} else if (wrapper.domNode && wrapper.domNode.parentNode) {
-							wrapper.domNode.parentNode.removeChild(wrapper.domNode);
+						} else if (wrapper.domNode && _mountOptions.nodeApi.getParent(wrapper.domNode)) {
+							const parent = _mountOptions.nodeApi.getParent(wrapper.domNode);
+							if (parent) {
+								_mountOptions.nodeApi.removeChild(parent, wrapper.domNode);
+							}
 						}
 					} else if (isDomVNode(wrapper.node) && wrapper.node.onDetach) {
 						wrapper.node.onDetach();
