@@ -13,6 +13,7 @@ import {
 } from '../../../../src/core/middleware/resources';
 import icache from '../../../../src/core/middleware/icache';
 import { spy } from 'sinon';
+import { findIndex } from '../../../../src/shim/array';
 
 const resolvers = createResolvers();
 
@@ -2062,6 +2063,10 @@ jsdomDescribe('Resources Middleware', () => {
 			>({
 				idKey: 'value',
 				save: (request, controls) => {
+					const index = findIndex(customTestData, (item) => request.value == item.value);
+					if (index !== -1) {
+						customTestData[index] = request;
+					}
 					controls.put([request]);
 				},
 				read: (request, controls) => {
@@ -2117,6 +2122,9 @@ jsdomDescribe('Resources Middleware', () => {
 			}
 			const customTestData: CustomTestData[] = [];
 			for (let i = 0; i < 4; i++) {
+				if (i === 2) {
+					continue;
+				}
 				customTestData.push({ value: `${i}`, label: `Original Label ${i}` });
 			}
 
@@ -2127,6 +2135,7 @@ jsdomDescribe('Resources Middleware', () => {
 				idKey: 'value',
 				save: (request, controls) => {
 					customTestData.push(request);
+					customTestData.sort((a, b) => parseInt(a.value) - parseInt(b.value));
 					controls.put([request]);
 				},
 				read: (request, controls) => {
@@ -2148,15 +2157,15 @@ jsdomDescribe('Resources Middleware', () => {
 					template: { read, save }
 				} = resource.template(template);
 				const options = createOptions(testOptionsSetter);
-				const data = get(options(), { read });
+				const data = get(options(), { read }) || [];
 				return (
 					<div>
 						<button
 							onclick={() => {
-								save({ value: '4', label: 'New Label 4' });
+								save({ value: '2', label: 'New Label 2' });
 							}}
 						/>
-						<div>{JSON.stringify(data)}</div>
+						<div>{data.map((item) => <div>{JSON.stringify([get([item.value])])}</div>)}</div>
 					</div>
 				);
 			});
@@ -2165,14 +2174,122 @@ jsdomDescribe('Resources Middleware', () => {
 			r.mount({ domNode });
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Original Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"}]</div></div>'
+				'<div><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
 			);
 			(domNode.children[0].children[0] as any).click();
 			resolvers.resolveRAF();
 			assert.strictEqual(
 				domNode.innerHTML,
-				'<div><button></button><div>[{"value":"0","label":"Original Label 0"},{"value":"1","label":"Original Label 1"},{"value":"2","label":"Original Label 2"},{"value":"3","label":"Original Label 3"},{"value":"4","label":"New Label 4"}]</div></div>'
+				'<div><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"2","label":"New Label 2"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
 			);
+		});
+
+		it('should be able to use custom template apis to create new resources with an async template', async () => {
+			interface CustomTestData extends TestData {
+				label: string;
+			}
+			const customTestData: CustomTestData[] = [];
+			for (let i = 0; i < 4; i++) {
+				if (i === 2) {
+					continue;
+				}
+				customTestData.push({ value: `${i}`, label: `Original Label ${i}` });
+			}
+
+			const promises: [Promise<any>, () => void][] = [];
+			let readCounter = 0;
+
+			const template = createResourceTemplate<
+				CustomTestData,
+				{ save: (item: CustomTestData) => void } & DefaultApi
+			>({
+				idKey: 'value',
+				save: async (request, controls) => {
+					customTestData.push(request);
+					customTestData.sort((a, b) => parseInt(a.value) - parseInt(b.value));
+					controls.put([request]);
+				},
+				read: (request, controls) => {
+					readCounter++;
+					let resolver: any;
+					const promise = new Promise((res) => {
+						resolver = res;
+					});
+					promises.push([promise, resolver]);
+					return promise.then(() => {
+						const { size, offset } = request;
+						let filteredData = [...customTestData];
+						controls.put(
+							{ data: filteredData.slice(offset, offset + size), total: filteredData.length },
+							request
+						);
+					});
+				}
+			});
+			const resource = createResourceMiddleware();
+			const factory = create({ resource, invalidator });
+
+			const App = factory(function App({ middleware: { resource, invalidator } }) {
+				const {
+					get,
+					createOptions,
+					template: { read, save }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read }) || [];
+				return (
+					<div>
+						<button
+							onclick={() => {
+								save({ value: '2', label: 'New Label 2' });
+							}}
+						/>
+						<button
+							onclick={() => {
+								invalidator();
+							}}
+						/>
+						<div>{data.map((item) => <div>{JSON.stringify([get([item.value])])}</div>)}</div>
+					</div>
+				);
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<div><button></button><button></button><div></div></div>');
+			assert.strictEqual(readCounter, 1);
+			let [promise, resolve] = promises.shift()!;
+			resolve();
+			await promise;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
+			);
+			assert.strictEqual(readCounter, 1);
+			(domNode.children[0].children[0] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
+			);
+			assert.strictEqual(readCounter, 2);
+			(domNode.children[0].children[1] as any).click();
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
+			);
+			assert.strictEqual(readCounter, 2);
+			[promise, resolve] = promises.shift()!;
+			resolve();
+			await promise;
+			resolvers.resolveRAF();
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div><button></button><button></button><div><div>[[{"value":"0","label":"Original Label 0"}]]</div><div>[[{"value":"1","label":"Original Label 1"}]]</div><div>[[{"value":"2","label":"New Label 2"}]]</div><div>[[{"value":"3","label":"Original Label 3"}]]</div></div></div>'
+			);
+			assert.strictEqual(readCounter, 2);
 		});
 	});
 });

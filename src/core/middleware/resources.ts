@@ -97,51 +97,66 @@ type RawCacheItem = {
 
 type IdMapData =
 	| { id: string; status: 'resolved'; stale?: boolean }
-	| { id: null; status: 'orphaned' | 'pending'; stale?: boolean };
+	| { id: string | null; status: 'orphaned' | 'pending'; stale?: boolean };
+
+interface CacheSubscriberItem {
+	refs: Set<string>;
+	invalidator: () => void;
+	syntheticIds: SyntheticId[];
+}
+
+type SyntheticId = { requestId: string; orderId: string };
+
+function generateSynthIdString({ requestId, orderId }: SyntheticId) {
+	return `${requestId}/${orderId}`;
+}
 
 class RawCache {
 	_subscriberCounter = 1;
 	_rawCache = new Map<string, RawCacheItem>();
 	_syntheticIdToIdMap = new Map<string, IdMapData>();
-	_idToSyntheticIdMap = new Map<string, Set<string>>();
+	_idToSyntheticIdMap = new Map<string, Map<string, SyntheticId>>();
 	_syntheticIdToSubscriberMap = new Map<string, Set<any>>();
-	_subscriberMap = new Map<string, any>();
-	subscribe(syntheticIds: string[], invalidator: any) {
+	_subscriberMap = new Map<string, CacheSubscriberItem>();
+	subscribe(syntheticIds: SyntheticId[], invalidator: any) {
 		const subscriberId = `${this._subscriberCounter++}`;
 		syntheticIds.forEach((syntheticId) => {
-			let subscribers = this._syntheticIdToSubscriberMap.get(syntheticId);
+			const synthId = generateSynthIdString(syntheticId);
+			let subscribers = this._syntheticIdToSubscriberMap.get(synthId);
 			if (!subscribers) {
 				subscribers = new Set();
 			}
 			subscribers.add(subscriberId);
-			this._syntheticIdToSubscriberMap.set(syntheticId, subscribers);
+			this._syntheticIdToSubscriberMap.set(synthId, subscribers);
 		});
 		this._subscriberMap.set(subscriberId, {
 			syntheticIds,
 			invalidator,
-			refs: new Set(syntheticIds)
+			refs: new Set(syntheticIds.map(generateSynthIdString))
 		});
 	}
-	notify(syntheticId: string) {
-		const subscriberIds = this._syntheticIdToSubscriberMap.get(syntheticId);
+	notify(syntheticId: SyntheticId) {
+		const synthId = generateSynthIdString(syntheticId);
+		const subscriberIds = this._syntheticIdToSubscriberMap.get(synthId);
 		if (subscriberIds) {
 			[...subscriberIds].forEach((subscriberId) => {
 				const subscriber = this._subscriberMap.get(subscriberId);
 				if (subscriber) {
-					subscriber.refs.delete(syntheticId);
+					subscriber.refs.delete(synthId);
 					if (subscriber.refs.size === 0) {
 						subscriber.invalidator();
 						this._subscriberMap.delete(subscriberId);
 					}
-					const subscribers = this._syntheticIdToSubscriberMap.get(syntheticId)!;
+					const subscribers = this._syntheticIdToSubscriberMap.get(synthId)!;
 					subscribers.delete(subscriber);
-					this._syntheticIdToSubscriberMap.set(syntheticId, subscribers);
+					this._syntheticIdToSubscriberMap.set(synthId, subscribers);
 				}
 			});
 		}
 	}
-	get(syntheticId: string): undefined | RawCacheItem {
-		const idDetails = this._syntheticIdToIdMap.get(syntheticId);
+	get(syntheticId: SyntheticId): undefined | RawCacheItem {
+		const synthId = generateSynthIdString(syntheticId);
+		const idDetails = this._syntheticIdToIdMap.get(synthId);
 		if (idDetails) {
 			if (idDetails.status === 'resolved') {
 				return this._rawCache.get(idDetails.id);
@@ -166,25 +181,27 @@ class RawCache {
 			this._syntheticIdToIdMap.set(key, { ...value, stale: true });
 		});
 	}
-	addSyntheticId(syntheticId: string) {
-		this._syntheticIdToIdMap.set(syntheticId, { id: null, status: 'pending' });
+	addSyntheticId(syntheticId: SyntheticId, status: 'orphaned' | 'pending' = 'pending') {
+		this._syntheticIdToIdMap.set(generateSynthIdString(syntheticId), { id: null, status });
 	}
 	getSyntheticIds(id: string) {
 		const ids = this._idToSyntheticIdMap.get(id);
 		if (ids) {
-			return [...ids];
+			return [...ids.values()];
 		}
 		return [];
 	}
-	orphan(syntheticId: string) {
+	orphan(syntheticId: SyntheticId) {
+		const synthId = generateSynthIdString(syntheticId);
 		this.notify(syntheticId);
-		this._syntheticIdToIdMap.set(syntheticId, { id: null, status: 'orphaned' });
+		this._syntheticIdToIdMap.set(synthId, { id: null, status: 'orphaned' });
 	}
-	set(syntheticId: string, item: RawCacheItem, idKey: string) {
+	set(syntheticId: SyntheticId, item: RawCacheItem, idKey: string) {
+		const synthId = generateSynthIdString(syntheticId);
 		const id = item.value[idKey];
-		this._syntheticIdToIdMap.set(syntheticId, { id, status: 'resolved' });
-		const syntheticIds = this._idToSyntheticIdMap.get(id) || new Set<string>();
-		syntheticIds.add(syntheticId);
+		this._syntheticIdToIdMap.set(synthId, { id, status: 'resolved' });
+		const syntheticIds = this._idToSyntheticIdMap.get(id) || new Map<string, SyntheticId>();
+		syntheticIds.set(syntheticId.requestId, syntheticId);
 		this._idToSyntheticIdMap.set(id, syntheticIds);
 		this._rawCache.set(id, { ...item, stale: false });
 		this.notify(syntheticId);
@@ -722,9 +739,7 @@ const middleware = factory(
 								response.forEach((item) => {
 									const id = item[instance.idKey as string];
 									const synthIds = cache.getSyntheticIds(id);
-									if (synthIds.length === 0) {
-										cache.invalidate();
-									}
+									cache.invalidate();
 									synthIds.forEach((id) => {
 										cache.set(
 											id,
@@ -741,13 +756,15 @@ const middleware = factory(
 							} else {
 								const { offset, query: requestQuery, size } = request;
 								const query = transform ? transformQuery(requestQuery, transform) : requestQuery;
-								const syntheticIds: string[] = [];
+								const syntheticIds: SyntheticId[] = [];
 								for (let i = 0; i < offset + size - offset; i++) {
-									syntheticIds.push(`${JSON.stringify(query)}/${offset + i}`);
+									syntheticIds.push({ requestId: JSON.stringify(query), orderId: `${offset + i}` });
 								}
 								response.data.forEach((item, idx) => {
-									const syntheticId =
-										syntheticIds.shift() || `${JSON.stringify(query)}/${offset + idx}`;
+									const syntheticId = syntheticIds.shift() || {
+										requestId: JSON.stringify(query),
+										orderId: `${offset + idx}`
+									};
 									cache.set(
 										syntheticId,
 										{
@@ -822,16 +839,16 @@ const middleware = factory(
 				if (!settings.meta && inflight) {
 					return undefined;
 				}
-				const syntheticIds: string[] = [];
-				const orphanedIds: string[] = [];
-				let incompleteIds: string[] = [];
+				const syntheticIds: SyntheticId[] = [];
+				const orphanedIds: SyntheticId[] = [];
+				let incompleteIds: SyntheticId[] = [];
 				let shouldRead = false;
 				let resetOrphans = false;
 				if (!read) {
 					let items: (undefined | any)[] = [];
 					let requestStatus: ReadStatus = 'read';
 					for (let i = 0; i < end - offset; i++) {
-						const item = cache.get(`${stringifiedQuery}/${offset + i}`);
+						const item = cache.get({ requestId: stringifiedQuery, orderId: `${offset + i}` });
 						if (meta) {
 							if (item) {
 								const status = item.status === 'resolved' ? 'read' : 'reading';
@@ -859,12 +876,17 @@ const middleware = factory(
 				let items: RawCacheItem[] = [];
 
 				for (let i = 0; i < end - offset; i++) {
-					const syntheticId = `${stringifiedQuery}/${offset + i}`;
+					const syntheticId = { requestId: stringifiedQuery, orderId: `${offset + i}` };
 					const item = cache.get(syntheticId);
 					syntheticIds.push(syntheticId);
 					if (item) {
 						if (item.stale) {
 							incompleteIds.push(syntheticId);
+							if (item.value && item.status === 'resolved') {
+								cache.set(syntheticId, { ...item, stale: false }, instance.idKey as string);
+							} else if (item.status === 'orphaned') {
+								cache.addSyntheticId(syntheticId, item.status);
+							}
 							shouldRead = true;
 							if (orphanedIds.length) {
 								resetOrphans = true;
