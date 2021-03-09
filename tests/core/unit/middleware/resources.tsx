@@ -1479,6 +1479,37 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
 			);
 		});
+		it('Should be able to `get` a resource by id', () => {
+			const resource = createResourceMiddleware();
+			const factory = create({ resource });
+			const template = createResourceTemplate<TestData>({
+				idKey: 'value',
+				read: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
+			});
+			const App = factory(function App({ middleware: { resource } }) {
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				let [item] = get(['3']);
+				if (!item) {
+					get(options(), { read });
+					[item] = get(['3']);
+				}
+
+				return <div>{JSON.stringify(item)}</div>;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(domNode.innerHTML, '<div>{"value":"3"}</div>');
+		});
 		it('Should return partial data using `get` when the request is pending', async () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });

@@ -808,9 +808,11 @@ const middleware = factory(
 				if (Array.isArray(request)) {
 					return request.map((id) => {
 						const [synthId] = cache.getSyntheticIds(id);
-						const item = cache.get(synthId);
-						if (item) {
-							return item.value;
+						if (synthId) {
+							const item = cache.get(synthId);
+							if (item) {
+								return item.value;
+							}
 						}
 					});
 				}
