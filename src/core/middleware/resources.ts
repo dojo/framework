@@ -28,9 +28,15 @@ export interface Delete<DATA> {
 	(items: DATA[]): void;
 }
 
+export interface Get<DATA> {
+	(request: ReadRequest): DATA[] | undefined;
+	(request: string[]): (undefined | DATA)[];
+}
+
 export interface TemplateControls<DATA> {
 	put: Put<DATA>;
 	del: Delete<DATA>;
+	get: Get<DATA>;
 }
 
 export interface TemplateRead<DATA> {
@@ -792,7 +798,34 @@ const middleware = factory(
 							});
 						};
 
-						(instance as any)[key](args, { put, del });
+						const get = (request: ReadOptionsData | string[]) => {
+							if (Array.isArray(request)) {
+								return request.map((id) => {
+									const [synthId] = cache.getSyntheticIds(id);
+									if (synthId) {
+										const item = cache.get(synthId);
+										if (item) {
+											return item.value;
+										}
+									}
+								});
+							}
+							let items: (undefined | any)[] = [];
+							const { offset, size, query } = request;
+							const end = offset + size;
+							for (let i = 0; i < end - offset; i++) {
+								const item = cache.get({ requestId: JSON.stringify(query), orderId: `${offset + i}` });
+								if (!item || item.status === 'pending') {
+									return;
+								}
+								if (item && item.status === 'resolved') {
+									items.push(transformData(item.value, transform));
+								}
+							}
+							return items;
+						};
+
+						(instance as any)[key](args, { put, del, get });
 					};
 					return api;
 				},

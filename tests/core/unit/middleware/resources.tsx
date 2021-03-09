@@ -1982,6 +1982,46 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":10},null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]</div>'
 			);
 		});
+
+		it('Should be able to use `get` passed to the template controls', () => {
+			const root = document.createElement('div');
+			const testTemplate = createResourceTemplate<
+				TestData & { label: string },
+				DefaultApi & { update: (id: string) => void }
+			>({
+				idKey: 'value',
+				read: (req, { get, put }) => {
+					const item = get(req);
+					if (item) {
+						put({ data: item, total: 1 }, req);
+					} else {
+						put({ data: [{ value: '1', label: 'Original' }], total: 1 }, req);
+					}
+				},
+				update: (id, { get, put }) => {
+					const [item] = get([id]);
+					if (item) {
+						put([{ ...item, label: 'Updated' }]);
+					}
+				}
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(({ id, middleware: { resource } }) => {
+				const {
+					get,
+					createOptions,
+					template: { update, read }
+				} = resource.template(testTemplate);
+				get(createOptions(() => ({}))(), { read });
+				update('1');
+				const item = get(createOptions(() => ({}))(), { read });
+				return <div>{JSON.stringify(item)}</div>;
+			});
+
+			const r = renderer(() => <App />);
+			r.mount({ domNode: root });
+			assert.strictEqual(root.innerHTML, '<div>[{"value":"1","label":"Updated"}]</div>');
+		});
 	});
 	describe('Custom Api', () => {
 		it('Should support using a template with a custom api', () => {
