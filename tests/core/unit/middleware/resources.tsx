@@ -1952,7 +1952,7 @@ jsdomDescribe('Resources Middleware', () => {
 			);
 		});
 
-		it('Should by able to use `get` passed to the template controls', () => {
+		it('Should be able to use `get` passed to the template controls', () => {
 			const root = document.createElement('div');
 			const testTemplate = createResourceTemplate<
 				TestData & { label: string },
