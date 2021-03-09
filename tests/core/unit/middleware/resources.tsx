@@ -1479,7 +1479,7 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>{"data":[{"value":{"value":"0"},"status":"read"},{"value":{"value":"1"},"status":"read"},{"value":{"value":"2"},"status":"read"},{"value":{"value":"3"},"status":"read"},{"value":{"value":"4"},"status":"read"}],"meta":{"status":"read","total":200}}</div>'
 			);
 		});
-		it('Should be able to get a single resource using get', () => {
+		it('Should be able to `get` a resource by id', () => {
 			const resource = createResourceMiddleware();
 			const factory = create({ resource });
 			const template = createResourceTemplate<TestData>({
