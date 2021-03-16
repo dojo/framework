@@ -1,21 +1,37 @@
 import global from '../../../../src/shim/global';
-const { it } = intern.getInterface('bdd');
+const { it, beforeEach } = intern.getInterface('bdd');
 const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
-import { sandbox } from 'sinon';
+import { stub } from 'sinon';
 
+import icacheMiddleware from '../../../../src/core/middleware/icache';
 import inertMiddleware from '../../../../src/core/middleware/inert';
 
-const sb = sandbox.create();
+let invalidatorStub = stub();
 
 jsdomDescribe('inert middleware', () => {
+	let icache = icacheMiddleware().callback({
+		properties: () => ({}),
+		children: () => [],
+		id: 'test-cache',
+		middleware: { invalidator: invalidatorStub, destroy: stub() }
+	});
+	beforeEach(() => {
+		icache = icacheMiddleware().callback({
+			properties: () => ({}),
+			children: () => [],
+			id: 'test-cache',
+			middleware: { invalidator: invalidatorStub, destroy: stub() }
+		});
+	});
 	it('should set node inert property', () => {
 		const node = global.document.createElement('div');
 
 		const inert = inertMiddleware().callback({
 			id: 'test',
 			middleware: {
-				destroy: sb.stub(),
+				icache,
+				destroy: stub(),
 				node: {
 					get() {
 						return node;
@@ -45,7 +61,8 @@ jsdomDescribe('inert middleware', () => {
 		const inert = inertMiddleware().callback({
 			id: 'test',
 			middleware: {
-				destroy: sb.stub(),
+				icache,
+				destroy: stub(),
 				node: {
 					get() {
 						return node;
@@ -77,11 +94,12 @@ jsdomDescribe('inert middleware', () => {
 		parent.appendChild(childTwo);
 		parent.appendChild(childThree);
 		parent.appendChild(node);
-		const destroyStub = sb.stub();
+		const destroyStub = stub();
 
 		const inert = inertMiddleware().callback({
 			id: 'test',
 			middleware: {
+				icache,
 				destroy: destroyStub,
 				node: {
 					get() {
