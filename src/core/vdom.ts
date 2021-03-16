@@ -1429,13 +1429,14 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const domValue = domNode.value;
 		const onInputValue = domNode['oninput-value'];
 		const onSelectValue = domNode['select-value'];
+		const valueChanged = domValue !== propValue;
 
 		if (onSelectValue && domValue !== onSelectValue) {
 			domNode.value = onSelectValue;
 			if (domNode.value === onSelectValue) {
 				domNode['select-value'] = undefined;
 			}
-		} else if ((onInputValue && domValue === onInputValue) || propValue !== previousValue) {
+		} else if (valueChanged && ((onInputValue && domValue === onInputValue) || propValue !== previousValue)) {
 			domNode.value = propValue;
 			domNode['oninput-value'] = undefined;
 		}

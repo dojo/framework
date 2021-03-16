@@ -5617,6 +5617,21 @@ jsdomDescribe('vdom', () => {
 			assert.strictEqual(root.value, typedKeys);
 		});
 
+		it('does not set value on dom node if the value property matches', () => {
+			const input = document.createElement('input');
+			const setStub = stub();
+			Object.defineProperty(input, 'value', {
+				get() {
+					return 'test';
+				},
+				set: setStub
+			});
+			const r = renderer(() => <div>{d({ node: input, props: { value: 'test' } })}</div>);
+			const div = document.createElement('div');
+			r.mount({ domNode: div });
+			assert.strictEqual(setStub.callCount, 0);
+		});
+
 		it('does not clear a value that was set by a testing tool which manipulates input.value directly', () => {
 			let typedKeys = '';
 
