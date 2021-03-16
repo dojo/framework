@@ -1679,13 +1679,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 		const domValue = _mountOptions.nodeApi.getProperty(domNode, 'value');
 		const onInputValue = _mountOptions.nodeApi.getProperty(domNode, 'oninput-value');
 		const onSelectValue = _mountOptions.nodeApi.getProperty(domNode, 'select-value');
-
+		const valueChanged = domValue !== propValue;
 		if (onSelectValue && domValue !== onSelectValue) {
 			_mountOptions.nodeApi.setProperty(domNode, 'value', onSelectValue);
 			if (domValue === onSelectValue) {
 				_mountOptions.nodeApi.setProperty(domNode, 'select-value', undefined);
 			}
-		} else if ((onInputValue && domValue === onInputValue) || propValue !== previousValue) {
+		} else if (valueChanged && ((onInputValue && domValue === onInputValue) || propValue !== previousValue)) {
 			_mountOptions.nodeApi.setProperty(domNode, 'value', propValue);
 			_mountOptions.nodeApi.setProperty(domNode, 'oninput-value', undefined);
 		}
