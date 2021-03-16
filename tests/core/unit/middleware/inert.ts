@@ -121,4 +121,56 @@ jsdomDescribe('inert middleware', () => {
 		assert.strictEqual(childTwo.inert, false);
 		assert.strictEqual(childThree.inert, false);
 	});
+
+	it('should only set inert state when properties change', () => {
+		const parent = global.document.createElement('div');
+		const childOne = global.document.createElement('div');
+		const childTwo = global.document.createElement('div');
+		const childThree = global.document.createElement('div');
+		const childFour = global.document.createElement('div');
+		const node = global.document.createElement('div');
+		parent.appendChild(childOne);
+		parent.appendChild(childTwo);
+		parent.appendChild(childThree);
+		parent.appendChild(node);
+		let _inert = false;
+		const inertStub = stub();
+		Object.defineProperty(childFour, 'inert', {
+			get() {
+				return _inert;
+			},
+			set(value: boolean) {
+				_inert = value;
+				inertStub();
+			}
+		});
+		const destroyStub = stub();
+		const inert = inertMiddleware().callback({
+			id: 'test',
+			middleware: {
+				icache,
+				destroy: destroyStub,
+				node: {
+					get() {
+						return node;
+					}
+				}
+			},
+			properties: () => ({}),
+			children: () => []
+		});
+		inert.set('key', true, true);
+		assert.strictEqual(node.inert, false);
+		assert.strictEqual(childOne.inert, true);
+		assert.strictEqual(childTwo.inert, true);
+		assert.strictEqual(childThree.inert, true);
+		assert.strictEqual(inertStub.callCount, 0);
+		parent.appendChild(childFour);
+		inert.set('key', true, true);
+		assert.strictEqual(node.inert, false);
+		assert.strictEqual(childOne.inert, true);
+		assert.strictEqual(childTwo.inert, true);
+		assert.strictEqual(childThree.inert, true);
+		assert.strictEqual(inertStub.callCount, 0);
+	});
 });

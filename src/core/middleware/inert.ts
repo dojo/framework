@@ -35,7 +35,7 @@ export const inert = factory(({ middleware: { node, destroy, icache } }) => {
 			if (previousSettings && enable === previousSettings.enable && invert === previousSettings.invert) {
 				return;
 			}
-
+			icache.set(key, { enable, invert });
 			if (invert) {
 				const inertNodes = inertInvertedNodeMap.get(key) || [];
 				if (enable) {
