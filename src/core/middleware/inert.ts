@@ -1,11 +1,21 @@
 import { create, node, destroy } from '../vdom';
+import { createICacheMiddleware } from './icache';
 import { from as arrayFrom } from '../../shim/array';
 import Map from '../../shim/Map';
 import '../../shim/inert';
 
-const factory = create({ node, destroy });
+interface InertState {
+	[index: string]: {
+		enable: boolean;
+		invert: boolean;
+	};
+}
 
-export const inert = factory(({ middleware: { node, destroy } }) => {
+const icache = createICacheMiddleware<InertState>();
+
+const factory = create({ node, destroy, icache });
+
+export const inert = factory(({ middleware: { node, destroy, icache } }) => {
 	const inertInvertedNodeMap = new Map<string | number, any[]>();
 	destroy(() => {
 		inertInvertedNodeMap.forEach((nodes) => {
@@ -21,7 +31,11 @@ export const inert = factory(({ middleware: { node, destroy } }) => {
 			if (!domNode) {
 				return;
 			}
-
+			const previousSettings = icache.get(key);
+			if (previousSettings && enable === previousSettings.enable && invert === previousSettings.invert) {
+				return;
+			}
+			icache.set(key, { enable, invert });
 			if (invert) {
 				const inertNodes = inertInvertedNodeMap.get(key) || [];
 				if (enable) {
