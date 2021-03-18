@@ -240,22 +240,22 @@ export function defaultFilter(query: ReadQuery, item: any, type: string = 'conta
 	return true;
 }
 
-export type WidgetFactory<T extends WNodeFactoryTypes> =
+type WidgetFactory<T extends WNodeFactoryTypes> =
 	| DefaultChildrenWNodeFactory<T>
 	| WNodeFactory<T>
 	| OptionalWNodeFactory<T>;
 
-export type WidgetResourceData<W extends WidgetFactory<any>> = W extends WidgetFactory<
+type WidgetResourceData<W extends WidgetFactory<any>> = W extends WidgetFactory<
 	WNodeFactoryTypes<ResourceProperties<infer D, any>>
 >
 	? D
 	: void;
-export type WidgetResourceApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
+type WidgetResourceApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
 	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
 >
 	? R extends CustomTemplate ? R : DefaultApi
 	: DefaultApi;
-export type WidgetResourceTemplateApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
+type WidgetResourceTemplateApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
 	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
 >
 	? R extends CustomTemplate ? CustomTemplateApi<R, D> : CustomTemplateApi<DefaultApi, D>

@@ -329,6 +329,7 @@ jsdomDescribe('Resources Middleware', () => {
 				const data = get(options(), { read: scan });
 				return <div>{JSON.stringify(data)}</div>;
 			});
+
 			const testTemplate = createResourceTemplate(Widget, {
 				idKey: 'value',
 				scan: (request, { put }) => {
