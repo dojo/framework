@@ -245,7 +245,6 @@ export type WidgetFactory<T extends WNodeFactoryTypes> =
 	| WNodeFactory<T>
 	| OptionalWNodeFactory<T>;
 
-// move this back to inline mayba
 export function createResourceTemplate<
 	P extends WidgetFactory<any>,
 	T extends TemplateFactory<
