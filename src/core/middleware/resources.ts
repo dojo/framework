@@ -3,6 +3,7 @@ import Map from '../../shim/Map';
 import { create, invalidator, diffProperty, destroy } from '../vdom';
 import icache from './icache';
 import { auto } from '../diff';
+import { DefaultChildrenWNodeFactory, WNodeFactory, OptionalWNodeFactory, WNodeFactoryTypes } from '../interfaces';
 
 export interface ReadQuery {
 	[index: string]: any;
@@ -239,6 +240,67 @@ export function defaultFilter(query: ReadQuery, item: any, type: string = 'conta
 	return true;
 }
 
+export type WidgetFactory<T extends WNodeFactoryTypes> =
+	| DefaultChildrenWNodeFactory<T>
+	| WNodeFactory<T>
+	| OptionalWNodeFactory<T>;
+
+// move this back to inline mayba
+export function createResourceTemplate<
+	P extends WidgetFactory<any>,
+	T extends TemplateFactory<
+		P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+			? D
+			: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, any>>> ? D : void,
+		any,
+		P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, infer R>>>
+			? R extends CustomTemplate ? CustomTemplateApi<R, D> : void
+			: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+				? CustomTemplateApi<DefaultApi, D>
+				: void
+	>
+>(
+	widget: P,
+	template: T
+): T extends TemplateFactory<any, infer O, any>
+	? P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+		? TemplateWithOptionsFactory<D, O, DefaultApi>
+		: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, infer R>>>
+			? TemplateWithOptionsFactory<D, O, R>
+			: void
+	: void;
+export function createResourceTemplate<P extends WidgetFactory<any>>(
+	widget: P,
+	template: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, infer R>>>
+		? R extends CustomTemplate ? Template<D> & CustomTemplateApi<R, D> : void
+		: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+			? Template<D> & CustomTemplateApi<DefaultApi, D>
+			: void
+): P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, infer R>>>
+	? R extends CustomTemplate
+		? {
+				template: {
+					template: () => Template<D>;
+					templateOptions: any;
+					api: R;
+				};
+		  }
+		: void
+	: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+		? {
+				template: {
+					template: () => Template<D>;
+					templateOptions: any;
+					api: DefaultApi;
+				};
+		  }
+		: void;
+export function createResourceTemplate<P extends WidgetFactory<any>>(
+	widget: P,
+	idKey: P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>> ? keyof D : void
+): P extends WidgetFactory<WNodeFactoryTypes<ResourceProperties<infer D, undefined>>>
+	? TemplateWithOptionsFactory<D, { data: D[] }, DefaultApi>
+	: void;
 export function createResourceTemplate<RESOURCE_DATA, TEMPLATE extends CustomTemplate = DefaultApi>(
 	template: Template<RESOURCE_DATA> & CustomTemplateApi<TEMPLATE, RESOURCE_DATA>
 ): {
@@ -254,7 +316,8 @@ export function createResourceTemplate<RESOURCE_DATA, OPTIONS, TEMPLATE extends 
 export function createResourceTemplate<RESOURCE_DATA>(
 	idKey: keyof RESOURCE_DATA
 ): TemplateWithOptionsFactory<RESOURCE_DATA, { data: RESOURCE_DATA[] }, DefaultApi>;
-export function createResourceTemplate<RESOURCE_DATA>(template?: any): any {
+export function createResourceTemplate<RESOURCE_DATA>(templateOrWidget: any, template?: any): any {
+	template = template || templateOrWidget;
 	if (typeof template === 'function') {
 		return (templateOptions: any) => {
 			return {

@@ -4,10 +4,11 @@ const { describe: jsdomDescribe } = intern.getPlugin('jsdom');
 const { assert } = intern.getPlugin('chai');
 import { stub } from 'sinon';
 
-import icacheMiddleware from '../../../../src/core/middleware/icache';
+import { createICacheMiddleware } from '../../../../src/core/middleware/icache';
 import inertMiddleware from '../../../../src/core/middleware/inert';
 
 let invalidatorStub = stub();
+const icacheMiddleware = createICacheMiddleware<any>();
 
 jsdomDescribe('inert middleware', () => {
 	let icache = icacheMiddleware().callback({
