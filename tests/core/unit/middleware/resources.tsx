@@ -9,7 +9,8 @@ import {
 	createResourceMiddleware,
 	createResourceTemplate,
 	DefaultApi,
-	ReadOptionsData
+	ReadOptionsData,
+	ReadRequest
 } from '../../../../src/core/middleware/resources';
 import icache from '../../../../src/core/middleware/icache';
 import { spy } from 'sinon';
@@ -200,6 +201,197 @@ jsdomDescribe('Resources Middleware', () => {
 				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
 			);
 		});
+
+		it('Should be able to infer the resource data from widget for the default template', () => {
+			const resource = createResourceMiddleware<TestData>();
+			const factory = create({ resource });
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const testTemplate = createResourceTemplate(Widget, 'value');
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return <Widget resource={resource({ template: testTemplate({ id, data: testData }) })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+
+		it('Should be able to infer the resource data from widget', () => {
+			const resource = createResourceMiddleware<TestData>();
+			const factory = create({ resource });
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const testTemplate = createResourceTemplate(Widget, {
+				idKey: 'value',
+				read: (request, { put }) => {
+					const { offset } = request;
+					put({ data: [...testData].slice(offset), total: testData.length }, request);
+				}
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return <Widget resource={resource({ template: testTemplate })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+
+		it('Should be able to infer the resource data from widget for custom template with options', () => {
+			const resource = createResourceMiddleware<TestData>();
+			const factory = create({ resource });
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { read }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const testTemplate = createResourceTemplate(Widget, ({ data }: { data: TestData[] }) => ({
+				idKey: 'value',
+				read: (request, { put }) => {
+					const { offset } = request;
+					put({ data: data.slice(offset), total: data.length }, request);
+				}
+			}));
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return <Widget resource={resource({ template: testTemplate({ id, data: testData }) })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+
+		it('Should be able to infer the resource data and api from widget', () => {
+			const resource = createResourceMiddleware<TestData, { scan: (request: ReadRequest) => void }>();
+			const factory = create({ resource });
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { scan }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: scan });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const testTemplate = createResourceTemplate(Widget, {
+				idKey: 'value',
+				scan: (request, { put }) => {
+					const { offset } = request;
+					put({ data: [...testData].slice(offset), total: testData.length }, request);
+				}
+			});
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return <Widget resource={resource({ template: testTemplate })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+
+		it('Should be able to infer the resource data and api from widget for custom template with options', () => {
+			const resource = createResourceMiddleware<TestData, { scan: (request: ReadRequest) => void }>();
+			const factory = create({ resource });
+			const Widget = factory(function App({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { scan }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: scan });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+			const testTemplate = createResourceTemplate(Widget, ({ data }: { data: TestData[] }) => ({
+				idKey: 'value',
+				scan: (request, { put }) => {
+					const { offset } = request;
+					put({ data: data.slice(offset), total: data.length }, request);
+				}
+			}));
+
+			const App = create({ resource: createResourceMiddleware() })(function App({
+				id,
+				middleware: { resource }
+			}) {
+				return <Widget resource={resource({ template: testTemplate({ id, data: testData }) })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+
 		it('Should support passing a template to a widget using the short hand', () => {
 			const resource = createResourceMiddleware<TestData>();
 			const factory = create({ resource });
@@ -2105,6 +2297,43 @@ jsdomDescribe('Resources Middleware', () => {
 				const options = createOptions(testOptionsSetter);
 				const data = get(options(), { read: scan });
 				return <div>{JSON.stringify(data)}</div>;
+			});
+			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
+				return <Widget resource={resource({ template })} />;
+			});
+			const domNode = document.createElement('div');
+			const r = renderer(() => <App />);
+			r.mount({ domNode });
+			assert.strictEqual(
+				domNode.innerHTML,
+				'<div>[{"value":"0"},{"value":"1"},{"value":"2"},{"value":"3"},{"value":"4"}]</div>'
+			);
+		});
+		it('Should be able infer the required custom api from a widget when creating the template', () => {
+			const resource = createResourceMiddleware<TestData, { scan: (request: ReadOptionsData) => void }>();
+			const factory = create({ resource });
+
+			const Widget = factory(function Widget({ properties, middleware: { resource } }) {
+				const {
+					resource: { template }
+				} = properties();
+				const {
+					get,
+					createOptions,
+					template: { scan }
+				} = resource.template(template);
+				const options = createOptions(testOptionsSetter);
+				const data = get(options(), { read: scan });
+				return <div>{JSON.stringify(data)}</div>;
+			});
+
+			const template = createResourceTemplate(Widget, {
+				idKey: 'value',
+				scan: (req, controls) => {
+					const { size, offset } = req;
+					let filteredData = [...testData];
+					controls.put({ data: filteredData.slice(offset, offset + size), total: filteredData.length }, req);
+				}
 			});
 			const App = create({ resource: createResourceMiddleware() })(function App({ middleware: { resource } }) {
 				return <Widget resource={resource({ template })} />;

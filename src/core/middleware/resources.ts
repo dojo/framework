@@ -3,6 +3,7 @@ import Map from '../../shim/Map';
 import { create, invalidator, diffProperty, destroy } from '../vdom';
 import icache from './icache';
 import { auto } from '../diff';
+import { DefaultChildrenWNodeFactory, WNodeFactory, OptionalWNodeFactory, WNodeFactoryTypes } from '../interfaces';
 
 export interface ReadQuery {
 	[index: string]: any;
@@ -239,6 +240,54 @@ export function defaultFilter(query: ReadQuery, item: any, type: string = 'conta
 	return true;
 }
 
+type WidgetFactory<T extends WNodeFactoryTypes> =
+	| DefaultChildrenWNodeFactory<T>
+	| WNodeFactory<T>
+	| OptionalWNodeFactory<T>;
+
+type WidgetResourceData<W extends WidgetFactory<any>> = W extends WidgetFactory<
+	WNodeFactoryTypes<ResourceProperties<infer D, any>>
+>
+	? D
+	: void;
+type WidgetResourceApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
+	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
+>
+	? R extends CustomTemplate ? R : DefaultApi
+	: DefaultApi;
+type WidgetResourceTemplateApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
+	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
+>
+	? R extends CustomTemplate ? CustomTemplateApi<R, D> : CustomTemplateApi<DefaultApi, D>
+	: CustomTemplateApi<DefaultApi, WidgetResourceData<W>>;
+
+export function createResourceTemplate<
+	W extends WidgetFactory<any>,
+	T extends TemplateFactory<
+		WidgetResourceData<W>,
+		any,
+		CustomTemplateApi<WidgetResourceApi<W>, WidgetResourceData<W>>
+	>
+>(
+	widget: W,
+	template: T
+): T extends TemplateFactory<any, infer O, any>
+	? TemplateWithOptionsFactory<WidgetResourceData<W>, O, WidgetResourceApi<W>>
+	: void;
+export function createResourceTemplate<W extends WidgetFactory<any>>(
+	widget: W,
+	template: Template<WidgetResourceData<W>> & WidgetResourceTemplateApi<W>
+): {
+	template: {
+		template: () => Template<WidgetResourceData<W>>;
+		templateOptions: any;
+		api: WidgetResourceApi<W>;
+	};
+};
+export function createResourceTemplate<W extends WidgetFactory<any>>(
+	widget: W,
+	idKey: keyof WidgetResourceData<W>
+): TemplateWithOptionsFactory<WidgetResourceData<W>, { data: WidgetResourceData<W>[] }, DefaultApi>;
 export function createResourceTemplate<RESOURCE_DATA, TEMPLATE extends CustomTemplate = DefaultApi>(
 	template: Template<RESOURCE_DATA> & CustomTemplateApi<TEMPLATE, RESOURCE_DATA>
 ): {
@@ -254,7 +303,8 @@ export function createResourceTemplate<RESOURCE_DATA, OPTIONS, TEMPLATE extends 
 export function createResourceTemplate<RESOURCE_DATA>(
 	idKey: keyof RESOURCE_DATA
 ): TemplateWithOptionsFactory<RESOURCE_DATA, { data: RESOURCE_DATA[] }, DefaultApi>;
-export function createResourceTemplate<RESOURCE_DATA>(template?: any): any {
+export function createResourceTemplate<RESOURCE_DATA>(templateOrWidget: any, template?: any): any {
+	template = template || templateOrWidget;
 	if (typeof template === 'function') {
 		return (templateOptions: any) => {
 			return {

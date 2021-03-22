@@ -95,11 +95,11 @@ export interface DecoratorResult<T> {
 	nodes: T;
 }
 
-function isWrappedNode(value: any): value is (WNode & { id: string }) | (WNode & { id: string }) {
+function isWrappedNode(value: any): value is Wrapped<any> {
 	return Boolean(value && value.id && (isWNode(value) || isVNode(value)));
 }
 
-function findNode<T extends Wrapped<any>>(renderResult: RenderResult, wrapped: T): VNode | WNode {
+function findNode(renderResult: RenderResult, wrapped: Wrapped<any>): VNode | WNode {
 	renderResult = decorateNodes(renderResult).nodes;
 	let nodes: any[] = Array.isArray(renderResult) ? [...renderResult] : [renderResult];
 	while (nodes.length) {
