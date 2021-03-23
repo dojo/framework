@@ -237,7 +237,7 @@ jsdomDescribe('Resources Middleware', () => {
 
 		it('Should be able to infer the resource data from widget', () => {
 			const resource = createResourceMiddleware<TestData>();
-			const factory = create({ resource });
+			const factory = create({ resource }).properties<{ foo?: string }>();
 			const Widget = factory(function App({ properties, middleware: { resource } }) {
 				const {
 					resource: { template }

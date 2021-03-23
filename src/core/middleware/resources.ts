@@ -245,20 +245,16 @@ type WidgetFactory<T extends WNodeFactoryTypes> =
 	| WNodeFactory<T>
 	| OptionalWNodeFactory<T>;
 
-type WidgetResourceData<W extends WidgetFactory<any>> = W extends WidgetFactory<
-	WNodeFactoryTypes<ResourceProperties<infer D, any>>
->
-	? D
+type WidgetResourceData<W extends WidgetFactory<any>> = W extends WidgetFactory<WNodeFactoryTypes<infer P>>
+	? P extends ResourceProperties<infer D, any> ? D : void
 	: void;
-type WidgetResourceApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
-	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
->
-	? R extends CustomTemplate ? R : DefaultApi
+type WidgetResourceApi<W extends WidgetFactory<any>> = W extends WidgetFactory<WNodeFactoryTypes<infer P>>
+	? P extends ResourceProperties<any, infer R> ? (R extends CustomTemplate ? R : DefaultApi) : DefaultApi
 	: DefaultApi;
-type WidgetResourceTemplateApi<W extends WidgetFactory<any>> = W extends WidgetFactory<
-	WNodeFactoryTypes<ResourceProperties<infer D, infer R>>
->
-	? R extends CustomTemplate ? CustomTemplateApi<R, D> : CustomTemplateApi<DefaultApi, D>
+type WidgetResourceTemplateApi<W extends WidgetFactory<any>> = W extends WidgetFactory<WNodeFactoryTypes<infer P>>
+	? P extends ResourceProperties<infer D, infer R>
+		? R extends CustomTemplate ? CustomTemplateApi<R, D> : CustomTemplateApi<DefaultApi, D>
+		: CustomTemplateApi<DefaultApi, WidgetResourceData<W>>
 	: CustomTemplateApi<DefaultApi, WidgetResourceData<W>>;
 
 export function createResourceTemplate<
