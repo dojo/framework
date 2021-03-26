@@ -16,6 +16,7 @@ import {
 	getRegistry,
 	invalidator,
 	node,
+	typeOf,
 	widgetInstanceMap,
 	v,
 	w,
@@ -8334,5 +8335,20 @@ jsdomDescribe('vdom', () => {
 		assert.strictEqual(root.children[0].getAttribute('lang'), 'en');
 		assert.strictEqual(root.children[0].getAttribute('dir'), 'rtl');
 		assert.strictEqual(root.children[0].innerHTML, 'hello dojo');
+	});
+
+	it('typeOf', () => {
+		const factory = create();
+		const WidgetOne = factory(() => '');
+		const WidgetTwo = factory(() => '');
+		const WidgetThree = factory.properties<{ foo: string }>()(() => '');
+
+		assert.isTrue(typeOf(<WidgetOne />, WidgetOne));
+		assert.isFalse(typeOf(<WidgetOne />, WidgetTwo));
+		assert.isFalse(typeOf(<WidgetTwo />, WidgetOne));
+		assert.isTrue(typeOf(<WidgetThree foo="" />, WidgetThree));
+		assert.isFalse(typeOf(<WidgetOne />, WidgetThree));
+		assert.isTrue(typeOf(<WidgetTwo />, WidgetTwo));
+		assert.isFalse(typeOf(<WidgetTwo />, WidgetThree));
 	});
 });

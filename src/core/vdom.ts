@@ -525,6 +525,13 @@ export function isElementNode(value: any): value is Element {
 	return !!value.tagName;
 }
 
+type WidgetFactory = WNodeFactory<any> | OptionalWNodeFactory<any> | DefaultChildrenWNodeFactory<any>;
+
+export function typeOf(node: WNode, factory: WidgetFactory) {
+	const compareTo = factory({}, []);
+	return isWNode(node) && compareTo.widgetConstructor === node.widgetConstructor;
+}
+
 function toTextVNode(data: any): VNode {
 	return {
 		tag: '',
