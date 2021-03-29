@@ -8343,6 +8343,34 @@ jsdomDescribe('vdom', () => {
 		const WidgetTwo = factory(() => '');
 		const WidgetThree = factory.properties<{ foo: string }>()(() => '');
 
+		const tsxNode = <WidgetThree foo="" />;
+		if (typeOf(tsxNode, WidgetThree)) {
+			// no error
+			tsxNode.properties.foo;
+			// no error
+			tsxNode.properties.key;
+			// errors
+			// tsxNode.properties.other;
+		}
+		const wNode = w(WidgetThree, { foo: '' });
+		if (typeOf(wNode, WidgetThree)) {
+			// no error
+			wNode.properties.foo;
+			// no error
+			wNode.properties.key;
+			// errors
+			// wNode.properties.other;
+		}
+		const functionNode = WidgetThree({ foo: '' });
+		if (typeOf(functionNode, WidgetThree)) {
+			// no error
+			functionNode.properties.foo;
+			// no error
+			functionNode.properties.key;
+			// errors
+			// functionNode.properties.other;
+		}
+
 		assert.isTrue(typeOf(<WidgetOne />, WidgetOne));
 		assert.isFalse(typeOf(<WidgetOne />, WidgetTwo));
 		assert.isFalse(typeOf(<WidgetTwo />, WidgetOne));

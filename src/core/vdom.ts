@@ -72,7 +72,8 @@ import {
 	ThAttributes,
 	TimeAttributes,
 	TrackAttributes,
-	VideoAttributes
+	VideoAttributes,
+	WNodeFactoryTypes
 } from './interfaces';
 import { Registry, isWidget, isWidgetBaseConstructor, isWidgetFunction, isWNodeFactory } from './Registry';
 import { auto } from './diff';
@@ -80,7 +81,7 @@ import RegistryHandler from './RegistryHandler';
 import { NodeHandler } from './NodeHandler';
 
 export namespace tsx.JSX {
-	export type Element = WNode;
+	export type Element = WNode<WidgetBaseTypes<unknown>>;
 	export interface ElementAttributesProperty {
 		__properties__: {};
 	}
@@ -525,9 +526,15 @@ export function isElementNode(value: any): value is Element {
 	return !!value.tagName;
 }
 
-type WidgetFactory = WNodeFactory<any> | OptionalWNodeFactory<any> | DefaultChildrenWNodeFactory<any>;
+type WidgetFactory<T extends WNodeFactoryTypes = WNodeFactoryTypes> =
+	| WNodeFactory<T>
+	| OptionalWNodeFactory<T>
+	| DefaultChildrenWNodeFactory<T>;
 
-export function typeOf(node: WNode, factory: WidgetFactory) {
+export function typeOf<W extends WidgetFactory>(
+	node: DNode,
+	factory: W
+): node is WNode<WidgetBaseTypes<ReturnType<W>['properties']>> {
 	const compareTo = factory({}, []);
 	return isWNode(node) && compareTo.widgetConstructor === node.widgetConstructor;
 }
