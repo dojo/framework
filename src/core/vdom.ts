@@ -152,13 +152,13 @@ export interface BaseNodeWrapper {
 	parentId: string;
 	childDomWrapperId?: string;
 	reparent?: string;
+	mergeNodes?: Node[];
 }
 
 export interface WNodeWrapper extends BaseNodeWrapper {
 	node: WNode<any>;
 	keys?: string[];
 	instance?: any;
-	mergeNodes?: Node[];
 	nodeHandlerCalled?: boolean;
 	registryItem?: Callback<any, any, any, RenderResult> | Constructor<any> | null;
 	properties: any;
@@ -2128,7 +2128,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 	function _processMergeNodes(next: DNodeWrapper, mergeNodes: Node[]) {
 		const { merge } = _mountOptions;
 		if (merge && mergeNodes.length) {
-			if (isVNodeWrapper(next)) {
+			if (isVNodeWrapper(next) && !isVirtualWrapper(next)) {
 				let {
 					node: { tag }
 				} = next;
@@ -2645,6 +2645,9 @@ export function renderer(renderer: () => RenderResult): Renderer {
 				if (parentDomNode === _allMergedNodes[0].parentNode) {
 					_insertBeforeMap.set(next, _allMergedNodes[0]);
 				}
+			}
+			if (isVirtualWrapper(next)) {
+				mergeNodes = next.mergeNodes || [];
 			}
 		} else if (_mountOptions.merge) {
 			next.merged = true;
