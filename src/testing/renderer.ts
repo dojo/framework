@@ -28,6 +28,12 @@ export interface ChildInstruction {
 	params: any;
 }
 
+export interface ChildFunctionInstruction {
+	type: 'child';
+	wrapped: Wrapped<any>;
+	childFactory: (children: any) => any;
+}
+
 export interface PropertyInstruction {
 	type: 'property';
 	id: string;
@@ -36,7 +42,15 @@ export interface PropertyInstruction {
 	params: any;
 }
 
-export type Instruction = ChildInstruction | PropertyInstruction;
+export function isChildFunctionInstruction(value: any): value is ChildFunctionInstruction {
+	return Boolean(value && !!value.childFactory);
+}
+
+export type Instruction = ChildFunctionInstruction | ChildInstruction | PropertyInstruction;
+
+export type TransformedChildren<P> = P extends (...args: any[]) => any
+	? RenderResult
+	: { [K in keyof P]: TransformedChildren<P[K]> };
 
 export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
@@ -48,6 +62,12 @@ export interface Child {
 						: Parameters<T['children'][P]>
 			  }
 			: T['children'] extends (...args: any[]) => RenderResult ? Parameters<T['children']> : never
+	): void;
+	<T extends WNodeFactory<{ properties: any; children: any }>>(
+		wrapped: Wrapped<T>,
+		childFactory: T['children'] extends { [index: string]: any }
+			? (children: T['children']) => TransformedChildren<T['children']>
+			: never
 	): void;
 }
 
@@ -463,7 +483,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 	let children: any = [];
 	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
-	let childInstructions = new Map<string, ChildInstruction>();
+	let childInstructions = new Map<string, ChildInstruction | ChildFunctionInstruction>();
 	let propertyInstructions: PropertyInstruction[] = [];
 	let mockMiddleware = options.middleware || [];
 
@@ -606,8 +626,12 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 	}
 
 	return {
-		child(wrapped: any, params: any) {
-			childInstructions.set(wrapped.id, { wrapped, params, type: 'child' });
+		child(wrapped: any, paramsOrFunction: any) {
+			if (typeof paramsOrFunction === 'function') {
+				childInstructions.set(wrapped.id, { wrapped, childFactory: paramsOrFunction, type: 'child' });
+			} else {
+				childInstructions.set(wrapped.id, { wrapped, params: paramsOrFunction, type: 'child' });
+			}
 			invalidated = true;
 		},
 		property(wrapped: any, key: any, ...params: any[]) {

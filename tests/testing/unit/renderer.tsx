@@ -479,6 +479,62 @@ describe('test renderer', () => {
 			r.expect(expected);
 		});
 
+		it('resolve nested functional children', () => {
+			interface Cells {
+				foo: (text: string) => RenderResult;
+			}
+			interface Children {
+				cells: Cells;
+			}
+
+			const childFunctionFactory = create().children<Children>();
+
+			const Child = childFunctionFactory(function ChildFunctionWidget() {
+				return '';
+			});
+
+			const WrappedChild = wrap(Child);
+
+			const factory = create();
+
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<Child>
+							{{
+								cells: {
+									foo: (text) => <div>{text}</div>
+								}
+							}}
+						</Child>
+					</div>
+				);
+			});
+
+			const r = renderer(() => <MyWidget />);
+
+			r.child(WrappedChild, (children) => {
+				return {
+					cells: {
+						foo: children.cells.foo('foo')
+					}
+				};
+			});
+
+			const expected = assertion(() => (
+				<div>
+					<WrappedChild>
+						{{
+							cells: {
+								foo: () => <div>foo</div>
+							}
+						}}
+					</WrappedChild>
+				</div>
+			));
+			r.expect(expected);
+		});
+
 		it('should selectively named children functions but resolve assert all children', () => {
 			const factory = create({ icache });
 
