@@ -432,6 +432,53 @@ describe('test renderer', () => {
 			});
 		});
 
+		it('resolve nested children', () => {
+			interface Cells {
+				foo: RenderResult;
+			}
+			interface Children {
+				cells: Cells;
+			}
+
+			const childFunctionFactory = create().children<Children>();
+
+			const Child = childFunctionFactory(function ChildFunctionWidget() {
+				return '';
+			});
+
+			const factory = create();
+
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<Child>
+							{{
+								cells: {
+									foo: <div>foo</div>
+								}
+							}}
+						</Child>
+					</div>
+				);
+			});
+
+			const r = renderer(() => <MyWidget />);
+
+			const expected = assertion(() => (
+				<div>
+					<Child>
+						{{
+							cells: {
+								foo: <div>foo</div>
+							}
+						}}
+					</Child>
+				</div>
+			));
+
+			r.expect(expected);
+		});
+
 		it('should selectively named children functions but resolve assert all children', () => {
 			const factory = create({ icache });
 
