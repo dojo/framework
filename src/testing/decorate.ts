@@ -58,6 +58,29 @@ export function decorateNodes(dNode: any, isDeferred = false): DecoratorResult<D
 	return { hasDeferredProperties, nodes };
 }
 
+function params(args: any[]): any[] {
+	return args;
+}
+
+function resolveChildren(children: any, params: any) {
+	const keys = Object.keys(children);
+	return keys.reduce(
+		(resolved, key) => {
+			const child = children[key];
+			const childParams = params[key];
+			if (typeof child === 'function') {
+				resolved[key] = childParams ? child(...childParams) : child;
+			} else if (typeof child === 'object' && !!child.type) {
+				resolved[key] = child;
+			} else {
+				resolved[key] = resolveChildren(child, childParams);
+			}
+			return resolved;
+		},
+		{} as any
+	);
+}
+
 export function decorate(actual: RenderResult, expected: RenderResult, instructions: Map<string, Instruction>) {
 	let nodes: DecorateTuple[] = [
 		[Array.isArray(actual) ? [...actual] : [actual], Array.isArray(expected) ? [...expected] : [expected]]
@@ -83,9 +106,10 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 						const expectedChild: any = expectedNode.children && expectedNode.children[0];
 						const actualChild: any = isNode(actualNode) && actualNode.children && actualNode.children[0];
 						if (isChildFunctionInstruction(instruction)) {
-							const newExpectedChildren = instruction.childFactory(expectedChild);
+							const childrenParams = instruction.childFactory(params);
+							const newExpectedChildren = resolveChildren(expectedChild, childrenParams);
 							(expectedNode as any).children[0] = newExpectedChildren;
-							const newActualChildren = instruction.childFactory(actualChild);
+							const newActualChildren = resolveChildren(actualChild, childrenParams);
 							(actualNode as any).children[0] = newActualChildren;
 						} else {
 							if (typeof expectedChild === 'function' || typeof actualChild === 'function') {

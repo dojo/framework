@@ -482,6 +482,8 @@ describe('test renderer', () => {
 		it('resolve nested functional children', () => {
 			interface Cells {
 				foo: (text: string) => RenderResult;
+				other: (text: string) => RenderResult;
+				boo: RenderResult;
 			}
 			interface Children {
 				cells: Cells;
@@ -503,7 +505,9 @@ describe('test renderer', () => {
 						<Child>
 							{{
 								cells: {
-									foo: (text) => <div>{text}</div>
+									foo: (text) => <div>{text}</div>,
+									other: (text) => <div>{text}</div>,
+									boo: <div>boo</div>
 								}
 							}}
 						</Child>
@@ -513,10 +517,10 @@ describe('test renderer', () => {
 
 			const r = renderer(() => <MyWidget />);
 
-			r.child(WrappedChild, (children) => {
+			r.child(WrappedChild, (params) => {
 				return {
 					cells: {
-						foo: children.cells.foo('foo')
+						foo: params(['foo'])
 					}
 				};
 			});
@@ -526,7 +530,9 @@ describe('test renderer', () => {
 					<WrappedChild>
 						{{
 							cells: {
-								foo: () => <div>foo</div>
+								foo: () => <div>foo</div>,
+								other: (text) => <div>{text}</div>,
+								boo: <div>boo</div>
 							}
 						}}
 					</WrappedChild>

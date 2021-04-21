@@ -49,8 +49,8 @@ export function isChildFunctionInstruction(value: any): value is ChildFunctionIn
 export type Instruction = ChildFunctionInstruction | ChildInstruction | PropertyInstruction;
 
 export type TransformedChildren<P> = P extends (...args: any[]) => any
-	? RenderResult
-	: { [K in keyof P]: TransformedChildren<P[K]> };
+	? Parameters<P>
+	: { [K in keyof P]: P[K] extends RenderResult ? never : Partial<TransformedChildren<P[K]>> };
 
 export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
@@ -66,7 +66,7 @@ export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
 		wrapped: Wrapped<T>,
 		childFactory: T['children'] extends { [index: string]: any }
-			? (children: T['children']) => TransformedChildren<T['children']>
+			? (params: <T>(args: T) => T) => TransformedChildren<T['children']>
 			: never
 	): void;
 }
