@@ -483,7 +483,11 @@ describe('test renderer', () => {
 			interface Cells {
 				foo: (text: string) => RenderResult;
 				other: (text: string) => RenderResult;
-				boo: RenderResult;
+				bar: RenderResult;
+				nested: {
+					foo: (text: number) => RenderResult;
+					bar: RenderResult;
+				};
 			}
 			interface Children {
 				cells: Cells;
@@ -507,7 +511,11 @@ describe('test renderer', () => {
 								cells: {
 									foo: (text) => <div>{text}</div>,
 									other: (text) => <div>{text}</div>,
-									boo: <div>boo</div>
+									bar: <div>boo</div>,
+									nested: {
+										foo: (num) => <div>{`${num}`}</div>,
+										bar: <div>boo</div>
+									}
 								}
 							}}
 						</Child>
@@ -520,7 +528,11 @@ describe('test renderer', () => {
 			r.child(WrappedChild, (params) => {
 				return {
 					cells: {
-						foo: params(['foo'])
+						foo: params(['foo']),
+						other: params(['1']),
+						nested: {
+							foo: params([1])
+						}
 					}
 				};
 			});
@@ -531,8 +543,12 @@ describe('test renderer', () => {
 						{{
 							cells: {
 								foo: () => <div>foo</div>,
-								other: (text) => <div>{text}</div>,
-								boo: <div>boo</div>
+								other: () => <div>1</div>,
+								bar: <div>boo</div>,
+								nested: {
+									foo: () => <div>1</div>,
+									bar: <div>boo</div>
+								}
 							}
 						}}
 					</WrappedChild>

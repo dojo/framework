@@ -48,9 +48,14 @@ export function isChildFunctionInstruction(value: any): value is ChildFunctionIn
 
 export type Instruction = ChildFunctionInstruction | ChildInstruction | PropertyInstruction;
 
-export type TransformedChildren<P> = P extends (...args: any[]) => any
-	? Parameters<P>
-	: { [K in keyof P]: P[K] extends RenderResult ? never : Partial<TransformedChildren<P[K]>> };
+export type NonNeverPropertyNames<T> = { [K in keyof T]: T[K] extends never ? never : K }[keyof T];
+export type ExcludeNeverProperties<T> = Pick<T, NonNeverPropertyNames<T>>;
+
+export type TransformedChildren<P> = {
+	[K in keyof P]: P[K] extends RenderResult
+		? never
+		: P[K] extends (...args: any[]) => any ? Parameters<P[K]> : ExcludeNeverProperties<TransformedChildren<P[K]>>
+};
 
 export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
@@ -66,7 +71,7 @@ export interface Child {
 	<T extends WNodeFactory<{ properties: any; children: any }>>(
 		wrapped: Wrapped<T>,
 		childFactory: T['children'] extends { [index: string]: any }
-			? (params: <T>(args: T) => T) => TransformedChildren<T['children']>
+			? (params: <T>(args: T) => T) => ExcludeNeverProperties<TransformedChildren<T['children']>>
 			: never
 	): void;
 }
