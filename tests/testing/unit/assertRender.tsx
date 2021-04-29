@@ -81,22 +81,22 @@ function getExpectedError() {
 (A)	>
 (A)	</${mockWidgetName}>
 (A)	<${widgetWithChildrenName}>
-(A)		{
-(A)			content: (
+(A)		{{
+(A)			"content": (
 (A)				<div>
 (A)					<span>
 (A)						Child
 (A)					</span>
 (A)				</div>
 (A)			),
-(A)			other: (
+(A)			"other": (
 (A)				<div>
 (A)					<span>
 (A)						Other
 (A)					</span>
 (A)				</div>
 (A)			)
-(A)		}
+(A)		}}
 (A)	</${widgetWithChildrenName}>
 </div>`;
 }

@@ -1,4 +1,4 @@
-import { DNode, WNode, VNode } from '../core/interfaces';
+import { DNode, WNode, VNode, RenderResult } from '../core/interfaces';
 import * as diff from 'diff';
 import WeakMap from '../shim/WeakMap';
 import Set from '../shim/Set';
@@ -14,6 +14,10 @@ const widgetMap = new WeakMap<any, number>();
 
 function getTabs(depth = 0): string {
 	return new Array(depth + 1).join(TAB);
+}
+
+function newLine(depth = 0): string {
+	return `${LINE_BREAK}${getTabs(depth)}`;
 }
 
 function isNode(value: any): value is DNode {
@@ -90,69 +94,50 @@ function formatObject(obj: { [index: string]: any }, depth = 0, style: 'prop' | 
 	}, '');
 }
 
-function format(nodes: DNode | DNode[], depth = 0): string {
+function format(nodes: RenderResult, depth = 0) {
 	nodes = Array.isArray(nodes) ? nodes : [nodes];
-	const nodeString = nodes.reduce((str: string, node, index) => {
-		if (node == null || node === true || node === false) {
-			return str;
+	let str = '';
+	for (let i = 0; i < nodes.length; i++) {
+		const node = nodes[i];
+		if (node === '' || node == null || node === true || node === false) {
+			continue;
 		}
-
-		if (index > 0) {
-			str = `${str}\n${getTabs(depth)}`;
+		if (i > 0 || depth > 0) {
+			str = `${str}${newLine(depth)}`;
 		}
-
 		if (typeof node === 'string' || typeof node === 'number') {
-			return `${str}${node}`;
+			str = `${str}${node}`;
+			continue;
 		}
-
-		const tag = getTagName(node);
-		str = `${str}<${tag}`;
-
-		const propertyKeys = Object.keys(node.properties).sort();
-		if (propertyKeys.length) {
-			str = `${str}${formatObject(node.properties, depth, 'prop')}`;
-			str = `${str}${LINE_BREAK}${getTabs(depth)}`;
-		}
-
-		str = `${str}>`;
-
-		if (node.children && node.children.length) {
-			for (let i = 0; i < node.children.length; i++) {
-				const child = node.children[i];
-				if (!child) {
-					continue;
-				}
-				if (isNode(child) || typeof child === 'string') {
-					str = `${str}${LINE_BREAK}${format(child, depth + 1)}`;
-				} else if (typeof child === 'function') {
-					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}{`;
-					str = `${str}${LINE_BREAK}${getTabs(depth + 2)}"child function"`;
-					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}}`;
-				} else if (typeof child === 'object') {
-					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}{`;
-					const childrenKeys = Object.keys(child);
-					for (let j = 0; j < childrenKeys.length; j++) {
-						str = `${str}${LINE_BREAK}${getTabs(depth + 2)}${childrenKeys[j]}: (`;
-						if (typeof child[childrenKeys[j]] !== 'function') {
-							str = `${str}${LINE_BREAK}${format(child[childrenKeys[j]], depth + 3)}`;
-						} else {
-							str = `${str}${LINE_BREAK}${getTabs(depth + 3)}"child function"`;
-						}
-						str = `${str}${LINE_BREAK}${getTabs(depth + 2)})`;
-						if (j < childrenKeys.length - 1) {
-							str = `${str},`;
-						}
-					}
-					str = `${str}${LINE_BREAK}${getTabs(depth + 1)}}`;
-				}
+		if (isNode(node)) {
+			const tag = getTagName(node);
+			str = `${str}<${tag}`;
+			const propertyNames = Object.keys(node.properties).sort();
+			if (propertyNames.length) {
+				str = `${str}${formatObject(node.properties, depth, 'prop')}`;
+				str = `${str}${newLine(depth)}>`;
+			} else {
+				str = `${str}>`;
 			}
+
+			if (node.children && node.children.length) {
+				str = `${str}${format(node.children, depth + 1)}`;
+			}
+			str = `${str}${newLine(depth)}</${tag}>`;
+		} else if (typeof node === 'object') {
+			str = `${str}{{`;
+			const nodeObjectKeys = Object.keys(node);
+			nodeObjectKeys.forEach((key, index) => {
+				str = `${str}${newLine(depth + 1)}"${key}": (${format(node[key], depth + 2)}${newLine(depth + 1)})${
+					index < nodeObjectKeys.length - 1 ? ',' : ''
+				}`;
+			});
+			str = `${str}${newLine(depth)}}}`;
+		} else {
+			str = `${str}"child function"`;
 		}
-		if (tag) {
-			str = `${str}${LINE_BREAK}${getTabs(depth)}</${tag}>`;
-		}
-		return str;
-	}, getTabs(depth));
-	return nodeString;
+	}
+	return str;
 }
 
 export function assertRender(actual: DNode | DNode[], expected: DNode | DNode[]): void {

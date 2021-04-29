@@ -28,6 +28,12 @@ export interface ChildInstruction {
 	params: any;
 }
 
+export interface ChildFunctionInstruction {
+	type: 'child';
+	wrapped: Wrapped<any>;
+	childFactory: (children: any) => any;
+}
+
 export interface PropertyInstruction {
 	type: 'property';
 	id: string;
@@ -36,7 +42,20 @@ export interface PropertyInstruction {
 	params: any;
 }
 
-export type Instruction = ChildInstruction | PropertyInstruction;
+export function isChildFunctionInstruction(value: any): value is ChildFunctionInstruction {
+	return Boolean(value && !!value.childFactory);
+}
+
+export type Instruction = ChildFunctionInstruction | ChildInstruction | PropertyInstruction;
+
+export type NonNeverPropertyNames<T> = { [K in keyof T]: T[K] extends never ? never : K }[keyof T];
+export type ExcludeNeverProperties<T> = Pick<T, NonNeverPropertyNames<T>>;
+
+export type TransformedChildren<P> = {
+	[K in keyof P]: P[K] extends RenderResult
+		? never
+		: P[K] extends (...args: any[]) => any ? Parameters<P[K]> : ExcludeNeverProperties<TransformedChildren<P[K]>>
+};
 
 export interface Child {
 	<T extends OptionalWNodeFactory<{ properties: any; children: any }>>(
@@ -62,6 +81,12 @@ export interface Child {
 							: Parameters<T['children'][P]>
 				  }
 				: never
+	): void;
+	<T extends WNodeFactory<{ properties: any; children: any }>>(
+		wrapped: Wrapped<T>,
+		childFactory: T['children'] extends { [index: string]: any }
+			? (params: <T>(args: T) => T) => ExcludeNeverProperties<TransformedChildren<T['children']>>
+			: never
 	): void;
 }
 
@@ -477,7 +502,7 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 	let children: any = [];
 	let customDiffs: [string, Function][] = [];
 	let customDiffNames: string[] = [];
-	let childInstructions = new Map<string, ChildInstruction>();
+	let childInstructions = new Map<string, ChildInstruction | ChildFunctionInstruction>();
 	let propertyInstructions: PropertyInstruction[] = [];
 	let mockMiddleware = options.middleware || [];
 
@@ -620,8 +645,12 @@ export function renderer(renderFunc: () => WNode, options: RendererOptions = {})
 	}
 
 	return {
-		child(wrapped: any, params: any) {
-			childInstructions.set(wrapped.id, { wrapped, params, type: 'child' });
+		child(wrapped: any, paramsOrFunction: any) {
+			if (typeof paramsOrFunction === 'function') {
+				childInstructions.set(wrapped.id, { wrapped, childFactory: paramsOrFunction, type: 'child' });
+			} else {
+				childInstructions.set(wrapped.id, { wrapped, params: paramsOrFunction, type: 'child' });
+			}
 			invalidated = true;
 		},
 		property(wrapped: any, key: any, ...params: any[]) {

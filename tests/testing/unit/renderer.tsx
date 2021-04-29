@@ -437,6 +437,131 @@ describe('test renderer', () => {
 			});
 		});
 
+		it('resolve nested children', () => {
+			interface Cells {
+				foo: RenderResult;
+			}
+			interface Children {
+				cells: Cells;
+			}
+
+			const childFunctionFactory = create().children<Children>();
+
+			const Child = childFunctionFactory(function ChildFunctionWidget() {
+				return '';
+			});
+
+			const factory = create();
+
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<Child>
+							{{
+								cells: {
+									foo: <div>foo</div>
+								}
+							}}
+						</Child>
+					</div>
+				);
+			});
+
+			const r = renderer(() => <MyWidget />);
+
+			const expected = assertion(() => (
+				<div>
+					<Child>
+						{{
+							cells: {
+								foo: <div>foo</div>
+							}
+						}}
+					</Child>
+				</div>
+			));
+
+			r.expect(expected);
+		});
+
+		it('resolve nested functional children', () => {
+			interface Cells {
+				foo: (text: string) => RenderResult;
+				other: (text: string) => RenderResult;
+				bar: RenderResult;
+				nested: {
+					foo: (text: number) => RenderResult;
+					bar: RenderResult;
+				};
+			}
+			interface Children {
+				cells: Cells;
+			}
+
+			const childFunctionFactory = create().children<Children>();
+
+			const Child = childFunctionFactory(function ChildFunctionWidget() {
+				return '';
+			});
+
+			const WrappedChild = wrap(Child);
+
+			const factory = create();
+
+			const MyWidget = factory(function MyWidget() {
+				return (
+					<div>
+						<Child>
+							{{
+								cells: {
+									foo: (text) => <div>{text}</div>,
+									other: (text) => <div>{text}</div>,
+									bar: <div>boo</div>,
+									nested: {
+										foo: (num) => <div>{`${num}`}</div>,
+										bar: <div>boo</div>
+									}
+								}
+							}}
+						</Child>
+					</div>
+				);
+			});
+
+			const r = renderer(() => <MyWidget />);
+
+			r.child(WrappedChild, (params) => {
+				return {
+					cells: {
+						foo: params(['foo']),
+						other: params(['1']),
+						nested: {
+							foo: params([1])
+						}
+					}
+				};
+			});
+
+			const expected = assertion(() => (
+				<div>
+					<WrappedChild>
+						{{
+							cells: {
+								foo: () => <div>foo</div>,
+								other: () => <div>1</div>,
+								bar: <div>boo</div>,
+								nested: {
+									foo: () => <div>1</div>,
+									bar: <div>boo</div>
+								}
+							}
+						}}
+					</WrappedChild>
+				</div>
+			));
+			r.expect(expected);
+		});
+
 		it('should selectively named children functions but resolve assert all children', () => {
 			const factory = create({ icache });
 

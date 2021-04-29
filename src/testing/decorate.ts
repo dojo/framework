@@ -1,6 +1,6 @@
 import { isVNode, isWNode } from '../core/vdom';
 import { RenderResult, DNode, VNode, WNode } from '../core/interfaces';
-import { Instruction } from './renderer';
+import { Instruction, isChildFunctionInstruction } from './renderer';
 import Map from '../shim/Map';
 import { findIndex } from '../shim/array';
 import { decorate as coreDecorate } from '../core/util';
@@ -58,6 +58,29 @@ export function decorateNodes(dNode: any, isDeferred = false): DecoratorResult<D
 	return { hasDeferredProperties, nodes };
 }
 
+function params(args: any[]): any[] {
+	return args;
+}
+
+function resolveChildren(children: any, params: any) {
+	const keys = Object.keys(children);
+	return keys.reduce(
+		(resolved, key) => {
+			const child = children[key];
+			const childParams = params[key];
+			if (typeof child === 'function') {
+				resolved[key] = childParams ? child(...childParams) : child;
+			} else if (typeof child === 'object' && !!child.type) {
+				resolved[key] = child;
+			} else {
+				resolved[key] = resolveChildren(child, childParams);
+			}
+			return resolved;
+		},
+		{} as any
+	);
+}
+
 export function decorate(actual: RenderResult, expected: RenderResult, instructions: Map<string, Instruction>) {
 	let nodes: DecorateTuple[] = [
 		[Array.isArray(actual) ? [...actual] : [actual], Array.isArray(expected) ? [...expected] : [expected]]
@@ -82,27 +105,34 @@ export function decorate(actual: RenderResult, expected: RenderResult, instructi
 					if (instruction.type === 'child') {
 						const expectedChild: any = expectedNode.children && expectedNode.children[0];
 						const actualChild: any = isNode(actualNode) && actualNode.children && actualNode.children[0];
-
-						if (typeof expectedChild === 'function' || typeof actualChild === 'function') {
-							if (typeof expectedChild === 'function') {
-								const newExpectedChildren = expectedChild();
-								(expectedNode as any).children[0] = newExpectedChildren;
-							}
-							if (typeof actualChild === 'function') {
-								const newActualChildren = actualChild(...instruction.params);
-								(actualNode as any).children[0] = newActualChildren;
-							}
-						} else if (typeof expectedChild === 'object') {
-							const keys = Object.keys(expectedChild);
-							for (let i = 0; i < keys.length; i++) {
-								const key = keys[i];
-								if (typeof expectedChild[key] === 'function') {
-									const newExpectedChildren = expectedChild[key]();
-									expectedChild[key] = newExpectedChildren;
+						if (isChildFunctionInstruction(instruction)) {
+							const childrenParams = instruction.childFactory(params);
+							const newExpectedChildren = resolveChildren(expectedChild, childrenParams);
+							(expectedNode as any).children[0] = newExpectedChildren;
+							const newActualChildren = resolveChildren(actualChild, childrenParams);
+							(actualNode as any).children[0] = newActualChildren;
+						} else {
+							if (typeof expectedChild === 'function' || typeof actualChild === 'function') {
+								if (typeof expectedChild === 'function') {
+									const newExpectedChildren = expectedChild();
+									(expectedNode as any).children[0] = newExpectedChildren;
 								}
-								if (typeof actualChild === 'object' && typeof actualChild[key] === 'function') {
-									const newActualChildren = actualChild[key](...(instruction.params[key] || []));
-									actualChild[key] = newActualChildren;
+								if (typeof actualChild === 'function') {
+									const newActualChildren = actualChild(...instruction.params);
+									(actualNode as any).children[0] = newActualChildren;
+								}
+							} else if (typeof expectedChild === 'object') {
+								const keys = Object.keys(expectedChild);
+								for (let i = 0; i < keys.length; i++) {
+									const key = keys[i];
+									if (typeof expectedChild[key] === 'function') {
+										const newExpectedChildren = expectedChild[key]();
+										expectedChild[key] = newExpectedChildren;
+									}
+									if (typeof actualChild === 'object' && typeof actualChild[key] === 'function') {
+										const newActualChildren = actualChild[key](...(instruction.params[key] || []));
+										actualChild[key] = newActualChildren;
+									}
 								}
 							}
 						}
