@@ -7468,7 +7468,7 @@ jsdomDescribe('vdom', () => {
 			const secondText = secondSpan.childNodes[0] as Text;
 			class App extends WidgetBase {
 				render() {
-					return v('div', [v('span', ['hello']), v('span', ['tests'])]);
+					return v('div', [v('virtual', [v('span', ['hello']), v('span', ['tests'])])]);
 				}
 			}
 			const r = renderer(() => w(App, {}));
