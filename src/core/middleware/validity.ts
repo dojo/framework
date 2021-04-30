@@ -4,14 +4,15 @@ const factory = create({ node, invalidator });
 
 export const validity = factory(function({ middleware: { node, invalidator } }) {
 	return {
-		get(key: string | number, value: string) {
+		get(key: string | number, value: string, required: boolean) {
 			const domNode = node.get(key) as HTMLFormElement | undefined;
 
 			if (!domNode) {
 				return { valid: undefined, message: '' };
 			}
 
-			if (value !== domNode.value) {
+			const nodeRequired = domNode.attributes.getNamedItem('required');
+			if (value !== domNode.value && required !== Boolean(nodeRequired && nodeRequired.value)) {
 				setTimeout(() => invalidator());
 			}
 
