@@ -365,7 +365,7 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 				Object.keys(params).forEach((paramKey) => {
 					redirect = redirect.replace(`{${paramKey}}`, params[paramKey]);
 				});
-				this.setPath(redirect);
+				this.replacePath(redirect);
 				return;
 			}
 			if (matchedRoute.type === 'partial') {
