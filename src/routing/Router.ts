@@ -118,7 +118,6 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 	 * @param params Optional Params for the generated link
 	 */
 	public link(outlet: string, params: Params = {}): string | undefined {
-		debugger;
 		let route = this._routeMap[outlet];
 		if (route === undefined) {
 			return;
