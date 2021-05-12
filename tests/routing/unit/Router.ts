@@ -711,7 +711,6 @@ describe('Router', () => {
 						defaultParams: {
 							param: 'default-param'
 						},
-						defaultRoute: true,
 						children: [
 							{
 								path: 'bar',
@@ -723,8 +722,14 @@ describe('Router', () => {
 				],
 				{ HistoryManager }
 			);
+
+			const setPathSpy = sinon.spy(router, 'setPath');
+			const replacePathSpy = sinon.spy(router, 'replacePath');
+			router.setPath('foo/param');
+			assert.isTrue(setPathSpy.calledOnce);
 			const contextMap = router.getOutlet('bar');
 			assert.isOk(contextMap);
+			assert.isTrue(replacePathSpy.calledOnce);
 			assert.strictEqual(contextMap!.size, 1);
 		});
 	});
