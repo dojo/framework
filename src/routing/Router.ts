@@ -118,36 +118,35 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 	 * @param params Optional Params for the generated link
 	 */
 	public link(outlet: string, params: Params = {}): string | undefined {
+		debugger;
 		let route = this._routeMap[outlet];
 		if (route === undefined) {
 			return;
 		}
 
 		let linkPath: string | undefined = route.fullPath;
-		if (route.fullQueryParams.length > 0) {
-			let queryString = route.fullQueryParams.reduce((queryParamString, param, index) => {
-				if (index > 0) {
-					return `${queryParamString}&${param}={${param}}`;
-				}
-				return `?${param}={${param}}`;
-			}, '');
-			linkPath = `${linkPath}${queryString}`;
-		}
 		params = { ...route.defaultParams, ...this._currentQueryParams, ...this._currentParams, ...params };
 
-		if (Object.keys(params).length === 0 && route.fullParams.length > 0) {
-			return undefined;
-		}
-
-		const fullParams = [...route.fullParams, ...route.fullQueryParams];
-		for (let i = 0; i < fullParams.length; i++) {
-			const param = fullParams[i];
+		for (let i = 0; i < route.fullParams.length; i++) {
+			const param = route.fullParams[i];
 			if (params[param]) {
 				linkPath = linkPath.replace(`{${param}}`, params[param]);
 			} else {
 				return undefined;
 			}
 		}
+
+		let paramSeparator = '?';
+		for (let i = 0; i < route.fullQueryParams.length; i++) {
+			const { param, optional } = route.fullQueryParams[i];
+			if (params[param]) {
+				linkPath = `${linkPath}${paramSeparator}${param}=${params[param]}`;
+				paramSeparator = '&';
+			} else if (!optional) {
+				return undefined;
+			}
+		}
+
 		return this._history.prefix(linkPath);
 	}
 
@@ -198,8 +197,12 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 		routes = routes ? routes : this._routes;
 		for (let i = 0; i < config.length; i++) {
 			let { path, outlet, children, defaultRoute = false, defaultParams = {}, id, title, redirect } = config[i];
-			let [parsedPath, queryParamString] = path.split('?');
-			let queryParams: string[] = [];
+			let [parsedPath, ...queryParamParts] = path.split('?');
+			let queryParamString = queryParamParts.join('?');
+			let queryParams: {
+				param: string;
+				optional: boolean;
+			}[] = [];
 			parsedPath = this._stripLeadingSlash(parsedPath);
 
 			const segments: string[] = parsedPath.split('/');
@@ -239,7 +242,9 @@ export class Router extends Evented<{ nav: NavEvent; route: RouteEvent; outlet: 
 			}
 			if (queryParamString) {
 				queryParams = queryParamString.split('&').map((queryParam) => {
-					return queryParam.replace('{', '').replace('}', '');
+					const param = queryParam.replace('{', '').replace(/\??}$/, '');
+					const optional = /\?}/.test(queryParam);
+					return { param, optional };
 				});
 			}
 			route.fullQueryParams = parentRoute ? [...parentRoute.fullQueryParams, ...queryParams] : queryParams;

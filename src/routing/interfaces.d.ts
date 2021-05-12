@@ -22,7 +22,10 @@ export interface Route {
 	redirect?: string;
 	fullPath: string;
 	fullParams: string[];
-	fullQueryParams: string[];
+	fullQueryParams: {
+		param: string;
+		optional: boolean;
+	}[];
 	defaultParams: Params;
 	score: number;
 }

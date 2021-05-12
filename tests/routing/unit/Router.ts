@@ -116,7 +116,7 @@ const routeConfigWithParamsAndQueryParams = [
 		},
 		children: [
 			{
-				path: '/bar/{bar}?{barQuery}',
+				path: '/bar/{bar}?{barQuery}&{optionalQuery?}',
 				outlet: 'bar',
 				id: 'bar',
 				defaultParams: {
@@ -578,6 +578,8 @@ describe('Router', () => {
 		router.setPath('foo/bar/bar/foo?fooQuery=bar&barQuery=foo');
 		assert.strictEqual(router.link('foo'), 'foo/bar?fooQuery=bar');
 		assert.strictEqual(router.link('bar'), 'foo/bar/bar/foo?fooQuery=bar&barQuery=foo');
+		router.setPath('foo/bar/bar/foo?fooQuery=bar&barQuery=foo&optionalQuery=optional');
+		assert.strictEqual(router.link('bar'), 'foo/bar/bar/foo?fooQuery=bar&barQuery=foo&optionalQuery=optional');
 	});
 
 	it('Should create link with params and query params with specified params', () => {
@@ -586,6 +588,17 @@ describe('Router', () => {
 		assert.strictEqual(
 			router.link('bar', { foo: 'qux', bar: 'baz', fooQuery: 'quxQuery', barQuery: 'bazQuery' }),
 			'foo/qux/bar/baz?fooQuery=quxQuery&barQuery=bazQuery'
+		);
+		assert.strictEqual(router.link('foo', { foo: 'qux', fooQuery: 'quxQuery' }), 'foo/qux?fooQuery=quxQuery');
+		assert.strictEqual(
+			router.link('bar', {
+				foo: 'qux',
+				bar: 'baz',
+				fooQuery: 'quxQuery',
+				barQuery: 'bazQuery',
+				optionalQuery: 'optional'
+			}),
+			'foo/qux/bar/baz?fooQuery=quxQuery&barQuery=bazQuery&optionalQuery=optional'
 		);
 	});
 
