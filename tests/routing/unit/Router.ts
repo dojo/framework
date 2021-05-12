@@ -6,6 +6,7 @@ import * as sinon from 'sinon';
 import global from '../../../src/shim/global';
 import { Router } from '../../../src/routing/Router';
 import { MemoryHistory as HistoryManager } from '../../../src/routing/history/MemoryHistory';
+import { RouteConfig } from '../../../src/routing/interfaces';
 
 const routeConfig = [
 	{
@@ -105,7 +106,7 @@ const routeWithChildrenAndMultipleParams = [
 	}
 ];
 
-const routeConfigWithParamsAndQueryParams = [
+const routeConfigWithParamsAndQueryParams: RouteConfig[] = [
 	{
 		path: '/foo/{foo}?{fooQuery}',
 		outlet: 'foo',
@@ -122,6 +123,14 @@ const routeConfigWithParamsAndQueryParams = [
 				defaultParams: {
 					bar: 'bar',
 					barQuery: 'barQuery'
+				}
+			},
+			{
+				path: '/bar/{bar}?{barQuery}&{optionalQuery?}',
+				outlet: 'bar',
+				id: 'qux',
+				defaultParams: {
+					bar: 'bar'
 				}
 			}
 		]
@@ -606,6 +615,28 @@ describe('Router', () => {
 		const router = new Router(routeConfigDefaultRoute, { HistoryManager });
 		const link = router.link('unknown');
 		assert.isUndefined(link);
+	});
+
+	it('Cannot generate link when missing required query params', () => {
+		const router = new Router(routeConfigWithParamsAndQueryParams, { HistoryManager });
+		assert.strictEqual(
+			router.link('qux', {
+				foo: 'qux',
+				bar: 'baz',
+				fooQuery: 'quxQuery',
+				barQuery: 'barQuery',
+				optionalQuery: 'optional'
+			}),
+			'foo/qux/bar/baz?fooQuery=quxQuery&barQuery=barQuery&optionalQuery=optional'
+		);
+		assert.isUndefined(
+			router.link('qux', {
+				foo: 'qux',
+				bar: 'baz',
+				fooQuery: 'quxQuery',
+				optionalQuery: 'optional'
+			})
+		);
 	});
 
 	it('The router will not start automatically if autostart is set to false', () => {
