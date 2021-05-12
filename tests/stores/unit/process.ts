@@ -69,7 +69,7 @@ const testAsyncCommandFactory = (path: string) => {
 
 const testAsyncProxyCommandFactory = (...paths: string[]) => {
 	return ({ payload, state }: CommandRequest) => {
-		const promise = new Promise<any>((resolve) => {
+		const promise = new Promise<void>((resolve) => {
 			const value = Object.keys(payload).length === 0 ? paths.join('/') : payload;
 			let intermediate = state;
 			paths.forEach((path, index) => {
@@ -216,7 +216,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 					},
 					[
 						(({ state }: any) => {
-							return new Promise((resolve) => {
+							return new Promise<void>((resolve) => {
 								setTimeout(() => {
 									assert.equal(state.foo, 0);
 									state.foo += 10;
@@ -225,7 +225,7 @@ const tests = (stateType: string, state?: () => MutableState<any>) => {
 							});
 						}) as any,
 						(({ state }: any) => {
-							return new Promise((resolve) => {
+							return new Promise<void>((resolve) => {
 								setTimeout(() => {
 									assert.equal(state.foo, 0);
 									state.foo = state.foo / 2;

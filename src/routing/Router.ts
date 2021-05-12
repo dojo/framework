@@ -1,3 +1,4 @@
+import Map from '../shim/Map';
 import global from '../shim/global';
 import Evented from '../core/Evented';
 import {

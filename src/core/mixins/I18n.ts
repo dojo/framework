@@ -46,7 +46,7 @@ interface I18nVNodeProperties extends VNodeProperties {
 
 const previousLocaleMap: WeakMap<WidgetBase, string> = new WeakMap();
 
-export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & Constructor<I18nMixin> {
+export function I18nMixin<T extends Constructor<WidgetBase<I18nProperties>>>(Base: T): T & Constructor<I18nMixin> {
 	@beforeProperties(function(this: WidgetBase & { own: Function }, properties: any) {
 		const injector = getInjector(this, INJECTOR_KEY);
 		let injectedLocale: string | undefined;
@@ -81,9 +81,7 @@ export function I18nMixin<T extends Constructor<WidgetBase<any>>>(Base: T): T & 
 			rtl: properties.rtl !== undefined ? properties.rtl : injectedRtl
 		};
 	})
-	abstract class I18n extends Base {
-		public abstract properties: I18nProperties;
-
+	class I18n extends Base {
 		public localizeBundle<T extends Messages>(baseBundle: Bundle<T>): LocalizedMessages<T> {
 			let { locale, i18nBundle } = this.properties;
 			if (i18nBundle) {

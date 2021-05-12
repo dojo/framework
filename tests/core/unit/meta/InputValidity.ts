@@ -74,7 +74,7 @@ registerSuite('meta - InputValidity', {
 			});
 
 			validity.get('input', 'test2');
-			return new Promise((resolve) => {
+			return new Promise<void>((resolve) => {
 				setTimeout(() => {
 					assert.isTrue(invalidateStub.calledOnce);
 					nodeStub.reset();

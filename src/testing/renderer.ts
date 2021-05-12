@@ -1,3 +1,4 @@
+import Map from '../shim/Map';
 import assertRender from './assertRender';
 import {
 	WNode,

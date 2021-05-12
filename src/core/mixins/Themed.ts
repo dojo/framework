@@ -117,9 +117,7 @@ export function ThemedMixin<E, T extends Constructor<WidgetBase<ThemedProperties
 			return {};
 		}
 	})
-	abstract class Themed extends Base {
-		public abstract properties: ThemedProperties<E>;
-
+	class Themed extends Base {
 		/**
 		 * The Themed baseClasses
 		 */

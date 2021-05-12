@@ -71,7 +71,7 @@ describe('validity middleware', () => {
 		nodeStub.get.withArgs('root').returns(domNode);
 		const result = validity.get('root', 'testValue');
 		assert.deepEqual(result, { valid: false, message: 'test validation message' });
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			setTimeout(() => {
 				assert.isTrue(invalidatorStub.calledOnce);
 				resolve();

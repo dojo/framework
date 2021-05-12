@@ -72,7 +72,7 @@ registerSuite('AbortController and AbortSignal', {
 		},
 
 		'dispatch event'() {
-			return new Promise((resolve) => {
+			return new Promise<void>((resolve) => {
 				let called = 0;
 				const expectedCalls = 2;
 				const createEvent = (type: string) => {

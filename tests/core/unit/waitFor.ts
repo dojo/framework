@@ -5,7 +5,7 @@ export async function waitFor(
 ) {
 	const startTime = new Date().valueOf() / 1000;
 
-	return new Promise((resolve, reject) => {
+	return new Promise<void>((resolve, reject) => {
 		function check() {
 			const now = new Date().valueOf() / 1000;
 

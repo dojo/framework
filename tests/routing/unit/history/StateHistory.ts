@@ -15,7 +15,7 @@ describe('StateHistory', () => {
 		sandbox.src = '../../tests/routing/support/sandbox.html';
 		document.body.appendChild(sandbox);
 		consoleWarnStub = stub(console, 'warn');
-		return new Promise((resolve) => {
+		return new Promise<void>((resolve) => {
 			sandbox.addEventListener('load', function() {
 				resolve();
 			});
