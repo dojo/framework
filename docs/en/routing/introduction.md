@@ -177,6 +177,24 @@ export default factory(function App() {
 
 If the browser is pointed to the URL path `/home/page?queryOne=modern&queryTwo=dojo`, then the query parameters are injected into the matching `Route`'s `renderer` method as an object of type `MatchDetails` and accessed via that object's `queryParams` property. Using this URL, the page would show "Hello modern-dojo". If a query parameter is not provided, then its value will be set to `undefined`.
 
+### Optional query parameters
+
+Path parameters are always required as they are part of the routes path, however query params can sometimes be optional. To define an optional query parameter add a `?` before the closing brace of the query param. This instructs the router to be able to generate links even when no value for this param has been provided.
+
+> src/routes.ts
+
+```tsx
+export default [
+	{
+		id: 'home',
+		path: 'home?{page?}',
+		outlet: 'home'
+	}
+];
+```
+
+In the example, `page` is now optional meaning that the router can generate a link without the page value and the query param will simply not be added to the URL.
+
 ### Default route and parameters
 
 -   Specify a default route by updating the routing configuration to include `defaultRoute: true` for the preferred route. The default route is used to redirect the application on initial load if no route has been provided or the requested route has not been registered.
