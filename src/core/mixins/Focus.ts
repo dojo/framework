@@ -20,9 +20,7 @@ function diffFocus(previousProperty: Function, newProperty: Function) {
 }
 
 export function FocusMixin<T extends Constructor<WidgetBase<FocusProperties>>>(Base: T): T & Constructor<FocusMixin> {
-	abstract class Focus extends Base {
-		public abstract properties: FocusProperties;
-
+	class Focus extends Base {
 		private _currentToken = 0;
 
 		private _previousToken = 0;

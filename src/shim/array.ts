@@ -436,15 +436,15 @@ if (!has('es7-array')) {
 }
 
 if (!has('es2019-array')) {
-	Array.prototype.flat = function flat(depth: number = 1) {
+	Array.prototype.flat = function flat(this: Array<any>, depth: number = 1) {
 		return depth > 0
 			? this.reduce((acc, val) => acc.concat(Array.isArray(val) ? val.flat(depth - 1) : val), [])
 			: this.slice();
-	};
+	} as typeof Array.prototype.flat;
 
-	Array.prototype.flatMap = function flatMap(callback: any) {
+	Array.prototype.flatMap = function flatMap(this: any, callback: any) {
 		return this.map(callback).flat();
-	};
+	} as typeof Array.prototype.flatMap;
 }
 
 from = Array.from;
