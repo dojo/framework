@@ -1,6 +1,6 @@
 {
   "name": "@dojo/framework",
-  "version": "8.0.0-pre",
+  "version": "8.0.0-beta.6",
   "description": "The Dojo Framework",
   "directories": {
     "doc": "docs",
