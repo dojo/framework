@@ -3953,6 +3953,11 @@ jsdomDescribe('vdom', () => {
 						const renderCount = icache.getOrSet('r', 1);
 						icache.set('r', renderCount + 1);
 						const PropertyWidget = A.unwrap();
+						const previousProperty = icache.getOrSet('previous', () => A);
+						let different = true;
+						if (previousProperty === A) {
+							different = false;
+						}
 						return (
 							<div>
 								<FunctionChild
@@ -3960,6 +3965,7 @@ jsdomDescribe('vdom', () => {
 										icache.set('n', result * multiplier);
 									}}
 								/>
+								<div>{`different: ${different}`}</div>
 								<div>{`result: ${result}`}</div>
 								<div>{`Parent Rendered: ${renderCount}`}</div>
 								<PropertyWidget>Class</PropertyWidget>
@@ -4002,31 +4008,31 @@ jsdomDescribe('vdom', () => {
 
 				assert.strictEqual(
 					root.outerHTML,
-					'<root><div><button>Multiplier++</button><div>Multiplier: 2</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 1</div><div>Parent Rendered: 1</div><div>Class0</div></div></div></root>'
+					'<root><div><button>Multiplier++</button><div>Multiplier: 2</div><div><div><button></button><div>Child Rendered: 1</div></div><div>different: false</div><div>result: 1</div><div>Parent Rendered: 1</div><div>Class0</div></div></div></root>'
 				);
 				(root.children[0].children[0] as HTMLButtonElement).click();
 				resolvers.resolve();
 				assert.strictEqual(
 					root.outerHTML,
-					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 1</div><div>Parent Rendered: 2</div><div>Class1</div></div></div></root>'
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>different: false</div><div>result: 1</div><div>Parent Rendered: 2</div><div>Class1</div></div></div></root>'
 				);
 				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
 				resolvers.resolve();
 				assert.strictEqual(
 					root.outerHTML,
-					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 3</div><div>Parent Rendered: 3</div><div>Class2</div></div></div></root>'
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>different: false</div><div>result: 3</div><div>Parent Rendered: 3</div><div>Class2</div></div></div></root>'
 				);
 				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
 				resolvers.resolve();
 				assert.strictEqual(
 					root.outerHTML,
-					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 9</div><div>Parent Rendered: 4</div><div>Class3</div></div></div></root>'
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>different: false</div><div>result: 9</div><div>Parent Rendered: 4</div><div>Class3</div></div></div></root>'
 				);
 				(root.children[0].children[2].children[0].children[0] as HTMLButtonElement).click();
 				resolvers.resolve();
 				assert.strictEqual(
 					root.outerHTML,
-					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>result: 27</div><div>Parent Rendered: 5</div><div>Class4</div></div></div></root>'
+					'<root><div><button>Multiplier++</button><div>Multiplier: 3</div><div><div><button></button><div>Child Rendered: 1</div></div><div>different: false</div><div>result: 27</div><div>Parent Rendered: 5</div><div>Class4</div></div></div></root>'
 				);
 			});
 

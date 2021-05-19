@@ -1,5 +1,5 @@
 import global from '../shim/global';
-import has from '../core/has';
+import has from './has';
 import WeakMap from '../shim/WeakMap';
 import Set from '../shim/Set';
 import Map from '../shim/Map';
@@ -184,6 +184,7 @@ export interface WidgetMeta {
 	customDiffProperties?: Set<string>;
 	customDiffMap?: Map<string, Map<string, (current: any, next: any) => any>>;
 	propertiesCalled: boolean;
+	wrappedFunctionMap: Map<string, Function>;
 }
 
 export interface WidgetData {
@@ -1171,26 +1172,31 @@ export const defer = factory(({ id }) => {
 	};
 });
 
-function wrapFunctionProperties(id: string, properties: any) {
+function wrapFunctionProperties(widgetMeta: WidgetMeta, id: string, properties: any) {
 	const props: any = {};
 	const propertyNames = Object.keys(properties);
 	for (let i = 0; i < propertyNames.length; i++) {
 		const propertyName = propertyNames[i];
 		if (typeof properties[propertyName] === 'function') {
-			props[propertyName] = function WrappedProperty(...args: any[]) {
-				const widgetMeta = widgetMetaMap.get(id);
-				if (widgetMeta) {
-					return widgetMeta.originalProperties[propertyName](...args);
-				}
-				return properties[propertyName](...args);
-			};
-			props[propertyName].unwrap = () => {
-				const widgetMeta = widgetMetaMap.get(id);
-				if (widgetMeta) {
-					return widgetMeta.originalProperties[propertyName];
-				}
-				return properties[propertyName];
-			};
+			let cachedWrapper = widgetMeta.wrappedFunctionMap.get(propertyName);
+			if (!cachedWrapper) {
+				cachedWrapper = function WrappedProperty(...args: any[]) {
+					const widgetMeta = widgetMetaMap.get(id);
+					if (widgetMeta) {
+						return widgetMeta.originalProperties[propertyName](...args);
+					}
+					return properties[propertyName](...args);
+				};
+				(cachedWrapper as any).unwrap = () => {
+					const widgetMeta = widgetMetaMap.get(id);
+					if (widgetMeta) {
+						return widgetMeta.originalProperties[propertyName];
+					}
+					return properties[propertyName];
+				};
+				widgetMeta.wrappedFunctionMap.set(propertyName, cachedWrapper);
+			}
+			props[propertyName] = cachedWrapper;
 		} else {
 			props[propertyName] = properties[propertyName];
 		}
@@ -2404,7 +2410,6 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					mountNode: _mountOptions.domNode,
 					dirty: false,
 					invalidator: invalidate,
-					properties: wrapFunctionProperties(id, next.node.properties),
 					originalProperties: { ...next.node.properties },
 					children: next.node.children,
 					deferRefs: 0,
@@ -2412,10 +2417,13 @@ export function renderer(renderer: () => RenderResult): Renderer {
 					middleware: {},
 					middlewareIds: [],
 					registry: _mountOptions.registry,
-					propertiesCalled: false
+					propertiesCalled: false,
+					wrappedFunctionMap: new Map(),
+					properties: {}
 				};
 
-				widgetMetaMap.set(next.id, widgetMeta);
+				(widgetMeta.properties = wrapFunctionProperties(widgetMeta, id, next.node.properties)),
+					widgetMetaMap.set(next.id, widgetMeta);
 				if ((Constructor as any).middlewares && Object.keys((Constructor as any).middlewares).length) {
 					const { middlewares, ids } = resolveMiddleware((Constructor as any).middlewares, id);
 					widgetMeta.middleware = middlewares;
@@ -2508,7 +2516,7 @@ export function renderer(renderer: () => RenderResult): Renderer {
 			const widgetMeta = widgetMetaMap.get(id);
 			if (widgetMeta) {
 				widgetMeta.originalProperties = { ...next.properties };
-				widgetMeta.properties = wrapFunctionProperties(id, widgetMeta.originalProperties);
+				widgetMeta.properties = wrapFunctionProperties(widgetMeta, id, widgetMeta.originalProperties);
 				widgetMeta.children = next.node.children;
 				widgetMeta.rendering = true;
 				const customProperties = runDiffs(widgetMeta, current.properties, widgetMeta.originalProperties);
