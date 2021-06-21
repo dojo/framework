@@ -17,7 +17,7 @@ export interface LinkProperties extends VNodeProperties {
 const factory = create({ injector }).properties<LinkProperties>();
 
 export const Link = factory(function Link({ middleware: { injector }, properties, children }) {
-	let { routerKey = 'router', to, isOutlet = true, target, params = {}, onClick, ...props } = properties();
+	let { routerKey = 'router', to, isOutlet = true, params = {}, onClick, ...props } = properties();
 	const router = injector.get<Router>(routerKey);
 	let href: string | undefined = to;
 
@@ -29,7 +29,13 @@ export const Link = factory(function Link({ middleware: { injector }, properties
 		const onclick = (event: MouseEvent) => {
 			onClick && onClick(event);
 
-			if (!event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !target) {
+			if (
+				!event.defaultPrevented &&
+				event.button === 0 &&
+				!event.metaKey &&
+				!event.ctrlKey &&
+				!linkProps.target
+			) {
 				if (!has('build-serve') || !has('build-time-rendered')) {
 					event.preventDefault();
 					href !== undefined && router.setPath(href);
