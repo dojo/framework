@@ -129,7 +129,7 @@ describe('Link', () => {
 		const r = renderer(() => w(Link, { to: 'foo', target: '_blank' }), {
 			middleware: [[getRegistry, mockGetRegistry]]
 		});
-		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop }));
+		const template = assertion(() => v(WrappedAnchor.tag, { href: 'foo', onclick: noop, target: '_blank' }));
 		r.expect(template);
 		r.property(WrappedAnchor, 'onclick', createMockEvent());
 		r.expect(template);
@@ -189,5 +189,16 @@ describe('Link', () => {
 		} catch (err) {
 			// nothing to see here
 		}
+	});
+
+	it('does pass target through to element', () => {
+		const WrappedAnchor = wrap('a');
+		const r = renderer(() => w(Link, { to: '#foo/static', isOutlet: false, target: '_blank' }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		const template = assertion(() =>
+			v(WrappedAnchor.tag, { href: '#foo/static', onclick: noop, target: '_blank' })
+		);
+		r.expect(template);
 	});
 });
