@@ -192,6 +192,40 @@ describe('i18n', () => {
 			assert.isFalse(isPlaceholder);
 		});
 
+		it('Resolves unregistered messages bundles', async () => {
+			const fallback = createAsyncMessageLoader();
+			const invalidator = stub();
+			setDefaultLocale('fr');
+			setSupportedLocales(['fr', 'en']);
+			setCldrLoaders({
+				fallback: fallback.loader
+			});
+			await setLocale({ locale: 'fr' });
+			const en = createAsyncMessageLoader();
+			const bundle = {
+				messages: { foo: 'bonjour, {name}', fallback: 'root/fr fallback' },
+				locales: {
+					en: en.loader
+				}
+			};
+
+			let { messages, format, isPlaceholder } = localizeBundle(bundle, { invalidator });
+			assert.deepEqual(messages, { foo: 'bonjour, {name}', fallback: 'root/fr fallback' });
+			assert.strictEqual(format('foo', { name: 'Steven' }), 'bonjour, Steven');
+			assert.isFalse(isPlaceholder);
+			await setLocale({ locale: 'en-GB' });
+			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'en-GB', invalidator }));
+			assert.deepEqual(messages, { foo: '', fallback: '' });
+			assert.strictEqual(format('foo', { name: 'Steven' }), '');
+			assert.isTrue(isPlaceholder);
+			en.resolver({ default: { foo: 'Hello, {name}' } });
+			await en.promise;
+			({ messages, format, isPlaceholder } = localizeBundle(bundle, { locale: 'en-GB', invalidator }));
+			assert.deepEqual(messages, { foo: 'Hello, {name}', fallback: 'root/fr fallback' });
+			assert.strictEqual(format('foo', { name: 'Steven' }), 'Hello, Steven');
+			assert.isFalse(isPlaceholder);
+		});
+
 		it('should use fallback message bundle resolution for a non localised app', async () => {
 			const invalidator = stub();
 			const bundle = {

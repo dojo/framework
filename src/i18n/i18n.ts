@@ -235,7 +235,7 @@ export function setLocale(options: SetLocaleOptions = {}): Promise<string> | str
 	if (loadFallback && fallbackLoader && fallbackLoader !== true) {
 		loaderPromises.push(fallbackLoader());
 	}
-
+	Globalize.loadMessages({ [requestedLocale]: {} });
 	if (loaderPromises.length) {
 		return loadCldrData(
 			loaderPromises,
@@ -246,8 +246,6 @@ export function setLocale(options: SetLocaleOptions = {}): Promise<string> | str
 			isLocal,
 			invalidator
 		);
-	} else if (!matchedLocale) {
-		Globalize.loadMessages({ [requestedLocale]: {} });
 	}
 
 	setI18nLocales(calculatedLocale, isDefault, isLocal);
