@@ -149,31 +149,16 @@ Static assets can be added to an `assets/` directory at the project root. At bui
 
 The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
 
-## Examples
-### Simple .css File
-
-A simple CSS file does not need to be treated as a statis asset and may be simply copied into `src` and referenced from the `src/index.html` file as:
-
-```html
-<link rel="stylesheet" href="simple.css">
-```
-
-The build process will produce a copy of the file with a hash in the filename in the output folder and reference that new name from the output `index.html`.
-
-### Third Party Library Example
-
-Sometimes a more complicated third party CSS file must be referenced by the project consisting of many self-referencing files, for example [FontAwesome](https://fontawesome.com) which you do not want renaming with a hashed version.  Copy the entire bundle into `/assets/` and reference from `src/index.html` using an absolute URI reference beginning with `/`:
+## Example favicon
 
 ```bash
-# Create the folder fontawesome-1.2.3-web in your assets folder
-cp -r /path/to/fontawesome-1.2.3-web ./assets/
+cp /path/to/favicon.ico ./assets/
 ```
 
 ```html
-<link rel="stylesheet" href="/assets/fontawesome-1.2.3-web/css/all.min.css">
+<link rel="shortcut icon" href="/assets/favicon.ico">
 ```
-
-The build process will copy the entire `assets` folder contents to the output directory and leave the references to the files from `index.html` untouched.
+Note the use of an absolute URI (starting with `/`) in the reference.
 
 # Progressive web applications
 
