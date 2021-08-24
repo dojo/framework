@@ -149,6 +149,17 @@ Static assets can be added to an `assets/` directory at the project root. At bui
 
 The build also parses `src/index.html` for CSS, JavaScript, and image assets, hashes them and includes them in the output directory. A favicon can be added to `src` and referenced by `src/index.html`. The build will then hash the file and copy it to the output directory with a file name of `favicon.[hash].ico`.
 
+## Example favicon
+
+```bash
+cp /path/to/favicon.ico ./assets/
+```
+
+```html
+<link rel="shortcut icon" href="/assets/favicon.ico">
+```
+Note the use of an absolute URI (starting with `/`) in the reference.
+
 # Progressive web applications
 
 Progressive web apps (PWAs) are made up of a collection of technologies and patterns that improve the user experience and help create a more reliable and usable application. Mobile users in particular will see the application as more integrated into their device similar to an installed app.
