@@ -73,7 +73,7 @@ Although this list cannot be exhaustive, we explicitly honor diversity in age, g
 
 ## Reporting Issues
 
-If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting us via [this google form](https://docs.google.com/forms/d/1ZiCUv3FsarWetoQ8J5QnCdIrHLj0xMmwNSLCyBkio7c/viewform?edit_requested=true). All reports will be handled with discretion. In your report please include:
+If you experience or witness unacceptable behavior—or have any other concerns—please report it by contacting us via [the OpenJSF Code of Conduct guidelines](https://github.com/openjs-foundation/cross-project-council/blob/main/CODE_OF_CONDUCT.md). All reports will be handled with discretion. In your report please include:
 
 - Your contact information.
 - Names (real, nicknames, or pseudonyms) of any individuals involved. If there are additional witnesses, please include them as well. Your account of what occurred, and if you believe the incident is ongoing.
