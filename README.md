@@ -100,6 +100,7 @@ TypeScript and Dojo both iterate rapidly. In general Dojo strives for maximum co
 | 5.0          | 2.6.x                        | 3.2.x                        |
 | 6.0          | 3.4.5                        | 3.4.5                        |
 | 7.0          | 3.4.5                        | 3.8.x                        |
+| 8.0          | 3.4.5                        | 4.1.x                        |
 
 ## Licensing information
 
