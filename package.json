@@ -75,7 +75,7 @@
     "bootstrap": "^3.3.7",
     "chromedriver": "2.40.0",
     "cldr-data": "36.0.0",
-    "codecov": "~3.0.4",
+    "codecov": "~3.8.3",
     "cpx": "~1.5.0",
     "eslint": "7.6.0",
     "husky": "~0.14.3",
