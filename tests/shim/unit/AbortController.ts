@@ -1,9 +1,7 @@
-import { AbortController, AbortSignal, ShimAbortController, ShimAbortSignal } from '../../../src/shim/AbortController';
+import { AbortController, AbortSignal, ShimAbortController } from '../../../src/shim/AbortController';
 
 let controller: AbortController;
 let signal: AbortSignal;
-
-import has from '../../../src/core/has';
 
 const { registerSuite } = intern.getInterface('object');
 const { assert } = intern.getPlugin('chai');
@@ -14,24 +12,6 @@ registerSuite('AbortController and AbortSignal', {
 		signal = controller.signal;
 	},
 	tests: {
-		'native AbortController'() {
-			if (!has('abort-controller')) {
-				this.skip('checking native implementation');
-			}
-			assert.include(
-				ShimAbortController.toString(),
-				'native',
-				'native implementation should represent native code'
-			);
-		},
-
-		'native AbortSignal'() {
-			if (!has('abort-signal')) {
-				this.skip('checking native implementation');
-			}
-			assert.include(ShimAbortSignal.toString(), 'native', 'native implementation should represent native code');
-		},
-
 		'AbortController defaults'() {
 			assert.isFunction(controller.abort, 'should provide an `abort` method');
 			assert.isDefined(controller.signal, 'should provide a signal property');
