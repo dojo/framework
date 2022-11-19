@@ -12,6 +12,6 @@ The following guide(s) are based on some shared assumptions:
   }
 }
 
-## Layer0
+## Edgio
 
-See [Creating and Deploying a Dojo App with Layer0](https://docs.layer0.co/guides/dojo).
+See [Creating and Deploying a Dojo App with Edgio](https://docs.edg.io/guides/dojo).
