@@ -83,6 +83,30 @@ describe('ActiveLink', () => {
 		r.expect(template);
 	});
 
+	it('Should add and remove aria-current as the outlet match status changes', () => {
+		router.setPath('/other');
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], ariaCurrent: 'page' }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		const WrappedLink = wrap(Link);
+		r.expect(assertion(() => w(WrappedLink, { classes: [], to: 'foo' })));
+
+		router.setPath('/foo');
+		r.expect(assertion(() => w(WrappedLink, { classes: ['foo'], to: 'foo', 'aria-current': 'page' })));
+
+		router.setPath('/other');
+		r.expect(assertion(() => w(WrappedLink, { classes: [], to: 'foo' })));
+	});
+
+	it('Should support true as an aria-current value', () => {
+		router.setPath('/foo');
+		const r = renderer(() => w(ActiveLink, { to: 'foo', activeClasses: ['foo'], ariaCurrent: true }), {
+			middleware: [[getRegistry, mockGetRegistry]]
+		});
+		const WrappedLink = wrap(Link);
+		r.expect(assertion(() => w(WrappedLink, { classes: ['foo'], to: 'foo', 'aria-current': 'true' })));
+	});
+
 	it('Should render the ActiveLink children when matching query params', () => {
 		router.setPath('/query/path?query=query');
 		const r = renderer(
